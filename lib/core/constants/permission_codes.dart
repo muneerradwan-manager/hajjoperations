@@ -12,6 +12,7 @@ class PermissionCodes {
   static const seasons = 'seasons';
   static const permissions = 'permissions';
   static const notifications = 'notifications';
+  static const modules = 'modules';
 
   // Children (actions)
   static const employeesView = 'employees.view';
@@ -24,4 +25,7 @@ class PermissionCodes {
   static const seasonsParticipants = 'seasons.participants';
   static const permissionsManage = 'permissions.manage';
   static const notificationsSend = 'notifications.send';
+  static const modulesManage = 'modules.manage';
+  static const modulesMembers = 'modules.members';
+  static const modulesTypes = 'modules.types';
 }

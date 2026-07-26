@@ -1,4 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Map tiles and Supabase. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Taking the admin's current position when pinning a hotel on the map.
+         Coarse is enough to place a building; fine sharpens it when granted. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <application
         android:label="hajjoperations"
         android:name="${applicationName}"
@@ -41,6 +47,11 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- url_launcher: opening a module's signed PDF link in a browser/viewer. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
         </intent>
     </queries>
 </manifest>

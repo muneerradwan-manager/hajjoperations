@@ -95,11 +95,21 @@ class ApprovalDetailScreen extends StatelessWidget {
                     icon: AppIcons.phoneSy,
                     label: l.profilePhoneSy,
                     value: profile.phoneSy,
+                    action: InfoAction.call,
                   ),
                   InfoRow(
                     icon: AppIcons.phoneSa,
                     label: l.profilePhoneSa,
                     value: profile.phoneSa,
+                    action: InfoAction.call,
+                  ),
+                  // The address the account signs in with — worth checking
+                  // before approving it.
+                  InfoRow(
+                    icon: AppIcons.email,
+                    label: l.profileEmail,
+                    value: profile.email,
+                    action: InfoAction.email,
                   ),
                 ],
               ),

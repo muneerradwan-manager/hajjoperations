@@ -6,6 +6,8 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/employees/presentation/employees_directory_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/modules/presentation/modules_screen.dart';
+import '../../features/modules/presentation/reference_data_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
 import '../../features/permissions/presentation/permissions_employees_screen.dart';
 import '../../features/profile/presentation/my_profile_screen.dart';
@@ -34,6 +36,8 @@ abstract class Routes {
   static const employees = '/employees';
   static const myProfile = '/my-profile';
   static const notifications = '/notifications';
+  static const modules = '/modules';
+  static const referenceData = '/reference-data';
 }
 
 GoRouter buildRouter(SessionCubit session) {
@@ -150,6 +154,18 @@ GoRouter buildRouter(SessionCubit session) {
         pageBuilder: (c, s) => fadeThroughPage(
           key: s.pageKey,
           child: const EmployeesDirectoryScreen(),
+        ),
+      ),
+      GoRoute(
+        path: Routes.modules,
+        pageBuilder: (c, s) =>
+            fadeThroughPage(key: s.pageKey, child: const ModulesScreen()),
+      ),
+      GoRoute(
+        path: Routes.referenceData,
+        pageBuilder: (c, s) => fadeThroughPage(
+          key: s.pageKey,
+          child: const ReferenceDataScreen(),
         ),
       ),
       GoRoute(

@@ -42,6 +42,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonBack => 'Back';
 
   @override
+  String get commonDone => 'Done';
+
+  @override
+  String get commonCopied => 'Copied';
+
+  @override
+  String get profileEmail => 'Email';
+
+  @override
   String get commonEdit => 'Edit';
 
   @override
@@ -509,6 +518,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get employeeSeasonBadgeCurrent => 'Current';
 
   @override
+  String get employeeModulesSection => 'Assigned modules';
+
+  @override
+  String get employeeModulesEmpty => 'Not assigned to any operational module';
+
+  @override
   String get navMyProfileSubtitle => 'View and edit your details';
 
   @override
@@ -543,4 +558,296 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get createEmployeeSubmit => 'Create account';
+
+  @override
+  String get commonDelete => 'Delete';
+
+  @override
+  String get perm_modules => 'Operational modules';
+
+  @override
+  String get permModulesManage => 'Create, edit & activate modules';
+
+  @override
+  String get permModulesMembers => 'Assign module members';
+
+  @override
+  String get permModulesTypes => 'Manage module types & master data';
+
+  @override
+  String get navModules => 'Operational modules';
+
+  @override
+  String get navModulesSubtitle => 'Season files, roles and tasks';
+
+  @override
+  String get navReferenceData => 'Master data';
+
+  @override
+  String get navReferenceDataSubtitle => 'Hotels, clusters and other lists';
+
+  @override
+  String get modulesTitle => 'Operational files';
+
+  @override
+  String get modulesEmpty => 'No files have been assigned to you yet';
+
+  @override
+  String get modulesEmptyManager => 'No files created yet';
+
+  @override
+  String get moduleActiveSection => 'Active files';
+
+  @override
+  String get moduleDraftSection => 'Drafts';
+
+  @override
+  String get moduleBadgeDraft => 'Draft';
+
+  @override
+  String get moduleNew => 'New file';
+
+  @override
+  String get moduleChooseType => 'Choose a file type';
+
+  @override
+  String get moduleNoTypes => 'No file types have been defined yet';
+
+  @override
+  String get moduleAllTypesUsed =>
+      'Every file type has already been opened for this season';
+
+  @override
+  String get moduleOnePerSeason =>
+      'A file of a kind is created once per season, and its type is its name';
+
+  @override
+  String get moduleSeasonLabel => 'Season';
+
+  @override
+  String get moduleStartDate => 'Work starts on';
+
+  @override
+  String get moduleEndCondition => 'Ends';
+
+  @override
+  String get moduleStepInfo => 'File';
+
+  @override
+  String get moduleStepSectors => 'Sectors';
+
+  @override
+  String get moduleStepTowers => 'Towers';
+
+  @override
+  String get moduleNodeName => 'Name';
+
+  @override
+  String moduleNodeAdd(String level) {
+    return 'Add $level';
+  }
+
+  @override
+  String moduleNodeEdit(String level) {
+    return 'Edit $level';
+  }
+
+  @override
+  String moduleNodeDelete(String level) {
+    return 'Delete $level';
+  }
+
+  @override
+  String moduleNodeDeleteConfirm(String name) {
+    return 'Delete “$name”? Everything inside it goes with it.';
+  }
+
+  @override
+  String moduleSectorSuggestedName(int number) {
+    return 'Sector $number';
+  }
+
+  @override
+  String moduleSectorsCount(int count) {
+    return '$count sectors';
+  }
+
+  @override
+  String get moduleNoSectors => 'No sectors have been added yet';
+
+  @override
+  String get moduleSectorsFirst =>
+      'Add the sectors first, then place the hotels in them';
+
+  @override
+  String get moduleBuildTree => 'Add sectors & towers';
+
+  @override
+  String get moduleNoLevels => 'This file type has no structure defined yet';
+
+  @override
+  String get moduleSectionInfo => 'File information';
+
+  @override
+  String get moduleSectionTasks => 'My role & duties';
+
+  @override
+  String moduleSectionTasksOf(String name) {
+    return '$name — role & duties';
+  }
+
+  @override
+  String get moduleJobDescription => 'Job description';
+
+  @override
+  String get moduleNoTasks => 'No tasks are defined for this role yet';
+
+  @override
+  String moduleMembersCount(int count) {
+    return '$count members';
+  }
+
+  @override
+  String get moduleNoMembers => 'No one has been assigned here yet';
+
+  @override
+  String get moduleRoleUnassigned => 'Not assigned';
+
+  @override
+  String get moduleSaved => 'Saved';
+
+  @override
+  String get moduleActivate => 'Activate file';
+
+  @override
+  String get moduleDeactivate => 'Deactivate file';
+
+  @override
+  String get moduleActivated => 'File activated — members have been notified';
+
+  @override
+  String get moduleDeactivated => 'File deactivated';
+
+  @override
+  String get moduleAttachPdf => 'Attach PDF';
+
+  @override
+  String get moduleReplacePdf => 'Replace file';
+
+  @override
+  String get moduleOpenPdf => 'Open PDF';
+
+  @override
+  String get moduleNoPdf => 'No file attached';
+
+  @override
+  String get modulePdfOpenFailed => 'Could not open the file';
+
+  @override
+  String get moduleDelete => 'Delete file';
+
+  @override
+  String get moduleDeleteConfirm =>
+      'Delete this file? Its sectors, towers, members and attachments are removed with it.';
+
+  @override
+  String get moduleDeleted => 'File deleted';
+
+  @override
+  String get moduleNoCurrentSeason =>
+      'Set a current season before creating files';
+
+  @override
+  String get moduleNoParticipants =>
+      'The current season has no participants yet';
+
+  @override
+  String get moduleContactSy => 'Syrian number';
+
+  @override
+  String get moduleContactSa => 'Saudi number';
+
+  @override
+  String get referenceDataTitle => 'Master data';
+
+  @override
+  String referenceItemsCount(int count) {
+    return '$count entries';
+  }
+
+  @override
+  String get referenceAddItem => 'Add entry';
+
+  @override
+  String get referenceItemName => 'Name (Arabic)';
+
+  @override
+  String get referenceItemNameEn => 'Name (English)';
+
+  @override
+  String get referenceItemSaved => 'Entry saved';
+
+  @override
+  String get referenceItemDeleted => 'Entry deleted';
+
+  @override
+  String get referenceEmpty => 'No entries yet';
+
+  @override
+  String referenceDeleteConfirm(String name) {
+    return 'Delete “$name”?';
+  }
+
+  @override
+  String get referenceInUse =>
+      'This entry is used by a module and cannot be deleted';
+
+  @override
+  String get referenceDuplicate =>
+      'An entry with this name already exists in the list';
+
+  @override
+  String get referenceOpenLink => 'Open link';
+
+  @override
+  String get locationPickerTitle => 'Set location';
+
+  @override
+  String get locationPickOnMap => 'On the map';
+
+  @override
+  String get locationUseCurrent => 'My location';
+
+  @override
+  String get locationOrPasteLink => 'Or paste a map link';
+
+  @override
+  String get locationTapToPlace => 'Tap the map to place the pin';
+
+  @override
+  String get locationConfirm => 'Confirm this location';
+
+  @override
+  String get locationCaptured => 'Current location captured';
+
+  @override
+  String get locationPermissionDenied => 'Location access was not granted';
+
+  @override
+  String get locationServiceDisabled => 'Location services are turned off';
+
+  @override
+  String get locationFailed => 'Could not determine your location';
+
+  @override
+  String get locationOpenMap => 'Open on map';
+
+  @override
+  String get referenceCall => 'Call';
+
+  @override
+  String get referenceLinkFailed => 'Could not open the link';
+
+  @override
+  String get referenceDetailsTitle => 'Details';
 }

@@ -64,14 +64,21 @@ class _FadeSlideInState extends State<FadeSlideIn>
 }
 
 /// Wraps [children] with an incrementally increasing entry delay.
+///
+/// The delay stops growing after [maxSteps]: on a long list the ramp stops
+/// reading as a cascade and starts reading as the screen being slow.
 List<Widget> staggered(
   List<Widget> children, {
   Duration step = const Duration(milliseconds: 70),
   Duration start = Duration.zero,
+  int maxSteps = 8,
 }) {
   return [
     for (var i = 0; i < children.length; i++)
-      FadeSlideIn(delay: start + step * i, child: children[i]),
+      FadeSlideIn(
+        delay: start + step * (i < maxSteps ? i : maxSteps),
+        child: children[i],
+      ),
   ];
 }
 

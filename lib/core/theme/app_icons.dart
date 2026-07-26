@@ -6,10 +6,47 @@ import 'package:iconsax_flutter/iconsax_flutter.dart';
 class AppIcons {
   const AppIcons._();
 
+  /// Iconsax declares every glyph without `matchTextDirection`, so an arrow it
+  /// draws pointing right keeps pointing right in Arabic — a "log out" arrow
+  /// aims back into the layout, a "send" plane flies against the reading
+  /// direction. Material's own arrows carry the flag and flip themselves; these
+  /// are re-declared with it so [Icon] mirrors them under an RTL
+  /// [Directionality] too.
+  ///
+  /// Re-declared rather than derived because the code points have to survive in
+  /// a `const` expression — `Iconsax.logout.codePoint` is not one. The Iconsax
+  /// name is named beside each, and `test/rtl_icons_test.dart` fails if the
+  /// package ever renumbers them.
+  static const _iconsaxFont = 'FlutterIconsax';
+  static const _iconsaxPackage = 'iconsax_flutter';
+
+  /// Iconsax.logout
+  static const logout = IconData(
+    0xed3b,
+    fontFamily: _iconsaxFont,
+    fontPackage: _iconsaxPackage,
+    matchTextDirection: true,
+  );
+
+  /// Iconsax.send_2
+  static const send = IconData(
+    0xef3d,
+    fontFamily: _iconsaxFont,
+    fontPackage: _iconsaxPackage,
+    matchTextDirection: true,
+  );
+
+  /// Iconsax.export_1
+  static const upload = IconData(
+    0xebbd,
+    fontFamily: _iconsaxFont,
+    fontPackage: _iconsaxPackage,
+    matchTextDirection: true,
+  );
+
   // Auth / account
   static const email = Iconsax.sms;
   static const password = Iconsax.lock;
-  static const logout = Iconsax.logout;
   static const settings = Iconsax.setting_2;
 
   // Selection
@@ -21,7 +58,6 @@ class AppIcons {
   static const gallery = Iconsax.gallery;
   static const addPhoto = Iconsax.gallery_add;
   static const image = Iconsax.gallery;
-  static const upload = Iconsax.export_1;
   static const view = Iconsax.eye;
 
   // Profile fields
@@ -47,13 +83,26 @@ class AppIcons {
 
   // Notifications
   static const notifications = Iconsax.notification;
-  static const send = Iconsax.send_2;
 
   // Seasons
   static const seasons = Iconsax.calendar_1;
   static const participants = Iconsax.people;
   static const current = Iconsax.star_1;
   static const manageParticipants = Iconsax.user_edit;
+
+  // Operational modules
+  static const modules = Iconsax.folder_2;
+  static const moduleType = Iconsax.category;
+  static const tasks = Iconsax.task_square;
+  static const roles = Iconsax.user_octagon;
+  static const pdf = Iconsax.document_download;
+  static const referenceData = Iconsax.data;
+  static const location = Iconsax.location;
+  static const myLocation = Iconsax.gps;
+  static const map = Iconsax.map_1;
+  static const activate = Iconsax.flash_1;
+  static const add = Iconsax.add;
+  static const delete = Iconsax.trash;
 
   // Employees management
   static const employees = Iconsax.profile_2user;
@@ -84,12 +133,16 @@ class NavChevron extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rtl = Directionality.of(context) == TextDirection.rtl;
     // Material's chevron rather than an Iconsax arrow: the Iconsax variants are
     // solid triangles that read as "play", and their LTR/RTL pair have visibly
     // different weights.
+    //
+    // Always the RIGHT chevron, in both directions. Material declares this glyph
+    // with `matchTextDirection: true`, so Flutter already flips it under an RTL
+    // Directionality — picking the left chevron for Arabic mirrored it a second
+    // time and pointed it back the way it came.
     return Icon(
-      rtl ? Icons.chevron_left_rounded : Icons.chevron_right_rounded,
+      Icons.chevron_right_rounded,
       size: 24,
       color: color ?? Theme.of(context).colorScheme.onSurfaceVariant,
     );

@@ -9,6 +9,7 @@ String permissionLabel(AppLocalizations l, String code) => switch (code) {
   'seasons' => l.perm_seasons,
   'permissions' => l.perm_permissions,
   'notifications' => l.perm_notifications,
+  'modules' => l.perm_modules,
   // Children
   'employees.view' => l.permEmployeesView,
   'employees.create' => l.permEmployeesCreate,
@@ -20,5 +21,8 @@ String permissionLabel(AppLocalizations l, String code) => switch (code) {
   'seasons.participants' => l.permSeasonsParticipants,
   'permissions.manage' => l.permPermissionsManage,
   'notifications.send' => l.permNotificationsSend,
+  'modules.manage' => l.permModulesManage,
+  'modules.members' => l.permModulesMembers,
+  'modules.types' => l.permModulesTypes,
   _ => code,
 };

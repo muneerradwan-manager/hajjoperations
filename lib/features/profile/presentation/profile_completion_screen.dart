@@ -10,7 +10,6 @@ import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/image_picker_field.dart';
 import '../../auth/application/session_cubit.dart';
 import '../../auth/data/auth_repository.dart';
-import '../../auth/presentation/widgets/settings_menu_button.dart';
 import '../application/profile_completion_cubit.dart';
 import '../data/profile_repository.dart';
 import '../domain/job_title.dart';
@@ -143,7 +142,6 @@ class _ProfileCompletionViewState extends State<_ProfileCompletionView> {
               onPressed: () => context.read<AuthRepository>().signOut(),
               icon: const Icon(AppIcons.logout),
             ),
-          const SettingsMenuButton(),
         ],
       ),
       body: BlocConsumer<ProfileCompletionCubit, ProfileCompletionState>(

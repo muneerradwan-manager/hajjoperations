@@ -42,6 +42,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commonBack => 'رجوع';
 
   @override
+  String get commonDone => 'إنهاء';
+
+  @override
+  String get commonCopied => 'تم النسخ';
+
+  @override
+  String get profileEmail => 'البريد الإلكتروني';
+
+  @override
   String get commonEdit => 'تعديل';
 
   @override
@@ -508,6 +517,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get employeeSeasonBadgeCurrent => 'حالي';
 
   @override
+  String get employeeModulesSection => 'الملفات التشغيلية المُسندة إليه';
+
+  @override
+  String get employeeModulesEmpty => 'لم يُسند إلى أي ملف تشغيلي';
+
+  @override
   String get navMyProfileSubtitle => 'عرض وتعديل بياناتك';
 
   @override
@@ -542,4 +557,290 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get createEmployeeSubmit => 'إنشاء الحساب';
+
+  @override
+  String get commonDelete => 'حذف';
+
+  @override
+  String get perm_modules => 'الملفات التشغيلية';
+
+  @override
+  String get permModulesManage => 'إنشاء وتعديل وتفعيل الملفات';
+
+  @override
+  String get permModulesMembers => 'إسناد أعضاء الملفات';
+
+  @override
+  String get permModulesTypes => 'إدارة أنواع الملفات والبيانات المرجعية';
+
+  @override
+  String get navModules => 'الملفات التشغيلية';
+
+  @override
+  String get navModulesSubtitle => 'ملفات الموسم والأدوار والمهام';
+
+  @override
+  String get navReferenceData => 'البيانات المرجعية';
+
+  @override
+  String get navReferenceDataSubtitle => 'الفنادق والتكتلات والقوائم الأخرى';
+
+  @override
+  String get modulesTitle => 'الملفات التشغيلية';
+
+  @override
+  String get modulesEmpty => 'لم يتم إسناد أي ملف إليك بعد';
+
+  @override
+  String get modulesEmptyManager => 'لم يتم إنشاء أي ملف بعد';
+
+  @override
+  String get moduleActiveSection => 'الملفات المفعّلة';
+
+  @override
+  String get moduleDraftSection => 'المسودات';
+
+  @override
+  String get moduleBadgeDraft => 'غير مفعّل';
+
+  @override
+  String get moduleNew => 'ملف جديد';
+
+  @override
+  String get moduleChooseType => 'اختر نوع الملف';
+
+  @override
+  String get moduleNoTypes => 'لم يتم تعريف أي نوع ملف بعد';
+
+  @override
+  String get moduleAllTypesUsed => 'تم إنشاء جميع أنواع الملفات في هذا الموسم';
+
+  @override
+  String get moduleOnePerSeason =>
+      'يُنشأ الملف مرة واحدة في الموسم، واسمه هو نوعه';
+
+  @override
+  String get moduleSeasonLabel => 'الموسم';
+
+  @override
+  String get moduleStartDate => 'تاريخ بدء العمل';
+
+  @override
+  String get moduleEndCondition => 'نهاية العمل';
+
+  @override
+  String get moduleStepInfo => 'الملف';
+
+  @override
+  String get moduleStepSectors => 'القطاعات';
+
+  @override
+  String get moduleStepTowers => 'الأبراج';
+
+  @override
+  String get moduleNodeName => 'الاسم';
+
+  @override
+  String moduleNodeAdd(String level) {
+    return 'إضافة $level';
+  }
+
+  @override
+  String moduleNodeEdit(String level) {
+    return 'تعديل $level';
+  }
+
+  @override
+  String moduleNodeDelete(String level) {
+    return 'حذف $level';
+  }
+
+  @override
+  String moduleNodeDeleteConfirm(String name) {
+    return 'حذف «$name»؟ سيُحذف كل ما بداخله معه.';
+  }
+
+  @override
+  String moduleSectorSuggestedName(int number) {
+    return 'القطاع $number';
+  }
+
+  @override
+  String moduleSectorsCount(int count) {
+    return '$count قطاعاً';
+  }
+
+  @override
+  String get moduleNoSectors => 'لم تُضف أي قطاعات بعد';
+
+  @override
+  String get moduleSectorsFirst => 'أضف القطاعات أولاً، ثم وزّع الفنادق عليها';
+
+  @override
+  String get moduleBuildTree => 'إضافة القطاعات والأبراج';
+
+  @override
+  String get moduleNoLevels => 'لم تُعرّف بنية هذا النوع من الملفات بعد';
+
+  @override
+  String get moduleSectionInfo => 'معلومات الملف';
+
+  @override
+  String get moduleSectionTasks => 'دوري ومهامي';
+
+  @override
+  String moduleSectionTasksOf(String name) {
+    return '$name — الدور والمهام';
+  }
+
+  @override
+  String get moduleJobDescription => 'الوصف الوظيفي';
+
+  @override
+  String get moduleNoTasks => 'لا توجد مهام معرّفة لهذا الدور بعد';
+
+  @override
+  String moduleMembersCount(int count) {
+    return '$count عضواً';
+  }
+
+  @override
+  String get moduleNoMembers => 'لم يُسند أي عضو هنا بعد';
+
+  @override
+  String get moduleRoleUnassigned => 'غير مُسند';
+
+  @override
+  String get moduleSaved => 'تم الحفظ';
+
+  @override
+  String get moduleActivate => 'تفعيل الملف';
+
+  @override
+  String get moduleDeactivate => 'إلغاء تفعيل الملف';
+
+  @override
+  String get moduleActivated => 'تم تفعيل الملف — وصل الإشعار إلى الأعضاء';
+
+  @override
+  String get moduleDeactivated => 'تم إلغاء تفعيل الملف';
+
+  @override
+  String get moduleAttachPdf => 'إرفاق ملف PDF';
+
+  @override
+  String get moduleReplacePdf => 'استبدال الملف';
+
+  @override
+  String get moduleOpenPdf => 'فتح ملف PDF';
+
+  @override
+  String get moduleNoPdf => 'لا يوجد ملف مرفق';
+
+  @override
+  String get modulePdfOpenFailed => 'تعذّر فتح الملف';
+
+  @override
+  String get moduleDelete => 'حذف الملف';
+
+  @override
+  String get moduleDeleteConfirm =>
+      'حذف هذا الملف؟ ستُحذف قطاعاته وأبراجه وأعضاؤه ومرفقاته معه.';
+
+  @override
+  String get moduleDeleted => 'تم حذف الملف';
+
+  @override
+  String get moduleNoCurrentSeason => 'حدّد الموسم الحالي قبل إنشاء الملفات';
+
+  @override
+  String get moduleNoParticipants => 'لا يوجد مشاركون في الموسم الحالي بعد';
+
+  @override
+  String get moduleContactSy => 'الرقم السوري';
+
+  @override
+  String get moduleContactSa => 'الرقم السعودي';
+
+  @override
+  String get referenceDataTitle => 'البيانات المرجعية';
+
+  @override
+  String referenceItemsCount(int count) {
+    return '$count عنصراً';
+  }
+
+  @override
+  String get referenceAddItem => 'إضافة عنصر';
+
+  @override
+  String get referenceItemName => 'الاسم (بالعربية)';
+
+  @override
+  String get referenceItemNameEn => 'الاسم (بالإنكليزية)';
+
+  @override
+  String get referenceItemSaved => 'تم حفظ العنصر';
+
+  @override
+  String get referenceItemDeleted => 'تم حذف العنصر';
+
+  @override
+  String get referenceEmpty => 'لا توجد عناصر بعد';
+
+  @override
+  String referenceDeleteConfirm(String name) {
+    return 'حذف «$name»؟';
+  }
+
+  @override
+  String get referenceInUse => 'هذا العنصر مستخدم في أحد الملفات ولا يمكن حذفه';
+
+  @override
+  String get referenceDuplicate => 'يوجد عنصر بهذا الاسم في القائمة بالفعل';
+
+  @override
+  String get referenceOpenLink => 'فتح الرابط';
+
+  @override
+  String get locationPickerTitle => 'تحديد الموقع';
+
+  @override
+  String get locationPickOnMap => 'من الخريطة';
+
+  @override
+  String get locationUseCurrent => 'موقعي الحالي';
+
+  @override
+  String get locationOrPasteLink => 'أو الصق رابط الموقع';
+
+  @override
+  String get locationTapToPlace => 'اضغط على الخريطة لتحديد الموقع';
+
+  @override
+  String get locationConfirm => 'تأكيد هذا الموقع';
+
+  @override
+  String get locationCaptured => 'تم التقاط الموقع الحالي';
+
+  @override
+  String get locationPermissionDenied => 'لم يُسمح بالوصول إلى الموقع';
+
+  @override
+  String get locationServiceDisabled => 'خدمة الموقع مغلقة في الجهاز';
+
+  @override
+  String get locationFailed => 'تعذّر تحديد موقعك';
+
+  @override
+  String get locationOpenMap => 'فتح على الخريطة';
+
+  @override
+  String get referenceCall => 'اتصال';
+
+  @override
+  String get referenceLinkFailed => 'تعذّر فتح الرابط';
+
+  @override
+  String get referenceDetailsTitle => 'التفاصيل';
 }

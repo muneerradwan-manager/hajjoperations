@@ -12,6 +12,9 @@ import '../../../core/widgets/info_section.dart';
 import '../../../core/widgets/profile_hero.dart';
 import '../../../core/widgets/responsive_center.dart';
 import '../../auth/application/session_cubit.dart';
+import '../../modules/data/modules_repository.dart';
+import '../../modules/domain/operational_module.dart';
+import '../../modules/presentation/module_detail_screen.dart';
 import '../../profile/domain/profile.dart';
 import '../../seasons/data/seasons_repository.dart';
 import '../../notifications/presentation/send_notification_sheet.dart';
@@ -49,6 +52,9 @@ class _View extends StatelessWidget {
       PermissionCodes.seasonsParticipants,
     );
     final canNotify = session.can(PermissionCodes.notificationsSend);
+    final canSeeModules =
+        session.can(PermissionCodes.modulesManage) ||
+        session.can(PermissionCodes.modulesMembers);
     final showManagement = canSuspend || canExternal || canManageParticipants;
     final employeeId = context.read<EmployeeManageCubit>().state.profile.id;
 
@@ -164,11 +170,19 @@ class _View extends StatelessWidget {
                         icon: AppIcons.phoneSy,
                         label: l.profilePhoneSy,
                         value: p.phoneSy,
+                        action: InfoAction.call,
                       ),
                       InfoRow(
                         icon: AppIcons.phoneSa,
                         label: l.profilePhoneSa,
                         value: p.phoneSa,
+                        action: InfoAction.call,
+                      ),
+                      InfoRow(
+                        icon: AppIcons.email,
+                        label: l.profileEmail,
+                        value: p.email,
+                        action: InfoAction.email,
                       ),
                     ],
                   ),
@@ -179,6 +193,16 @@ class _View extends StatelessWidget {
                     const SizedBox(height: AppSpacing.lg),
                     _SeasonHistorySection(state: state),
                   ],
+                  // Shown to anyone who got this far — reading what an employee
+                  // is responsible for is the point of opening their page. Only
+                  // the empty state is held back: RLS hides other people's
+                  // memberships from a viewer without one of these permissions,
+                  // and "assigned to nothing" would be a lie rather than a gap.
+                  const SizedBox(height: AppSpacing.lg),
+                  _ModuleAssignmentsSection(
+                    profileId: p.id,
+                    showWhenEmpty: canSeeModules,
+                  ),
                   if (p.isExternal) ...[
                     const SizedBox(height: AppSpacing.lg),
                     InfoSection(
@@ -297,6 +321,176 @@ class _SeasonHistorySection extends StatelessWidget {
               ),
             ),
       ],
+    );
+  }
+}
+
+/// The operational modules this employee is assigned to, and the role they hold
+/// in each. One person commonly serves in several — a sector supervisor covers
+/// more than one tower — so every assignment is listed, newest season first.
+class _ModuleAssignmentsSection extends StatefulWidget {
+  const _ModuleAssignmentsSection({
+    required this.profileId,
+    this.showWhenEmpty = true,
+  });
+
+  final String profileId;
+
+  /// Whether "not assigned to anything" is worth saying. It only is when the
+  /// viewer would have been shown the assignments had there been any.
+  final bool showWhenEmpty;
+
+  @override
+  State<_ModuleAssignmentsSection> createState() =>
+      _ModuleAssignmentsSectionState();
+}
+
+class _ModuleAssignmentsSectionState extends State<_ModuleAssignmentsSection> {
+  late final Future<List<ModuleAssignment>> _assignments = ModulesRepository()
+      .fetchAssignmentsForProfile(widget.profileId);
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+
+    return FutureBuilder<List<ModuleAssignment>>(
+      future: _assignments,
+      builder: (context, snapshot) {
+        final empty = (snapshot.data ?? const []).isEmpty;
+        if (!widget.showWhenEmpty &&
+            empty &&
+            snapshot.connectionState != ConnectionState.waiting) {
+          return const SizedBox.shrink();
+        }
+        return InfoSection(
+          title: l.employeeModulesSection,
+          icon: AppIcons.modules,
+          children: [
+            if (snapshot.connectionState == ConnectionState.waiting)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                child: Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              )
+            else if (snapshot.hasError)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                child: Text('${snapshot.error}', style: text.bodySmall),
+              )
+            else if (empty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                child: Text(
+                  l.employeeModulesEmpty,
+                  style: text.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              )
+            else
+              for (final assignment in snapshot.data!)
+                InkWell(
+                  onTap: () => Navigator.of(context).push(
+                    fadeThroughRoute(
+                      // Opened from this employee's page, so the file shows
+                      // THEIR role and duties — not the reader's own.
+                      (_) => ModuleDetailScreen(
+                        moduleId: assignment.module.id,
+                        viewAsProfileId: widget.profileId,
+                      ),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.md,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: scheme.primary.withValues(alpha: 0.10),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Icon(
+                            AppIcons.modules,
+                            size: 16,
+                            color: scheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                assignment.module.moduleTypeName?.of(
+                                      context,
+                                    ) ??
+                                    '—',
+                                style: text.bodyLarge,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              // Where in the file the role is held — one person
+                              // may run three towers under the same file.
+                              if ((assignment.placeName ?? '').isNotEmpty)
+                                Text(
+                                  assignment.placeName!,
+                                  style: text.bodySmall?.copyWith(
+                                    color: scheme.onSurfaceVariant,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              const SizedBox(height: 3),
+                              Wrap(
+                                spacing: AppSpacing.sm,
+                                runSpacing: AppSpacing.xs,
+                                children: [
+                                  GlassBadge(
+                                    label: assignment.roleName.of(context),
+                                    icon: AppIcons.roles,
+                                    dense: true,
+                                  ),
+                                  if (assignment.module.seasonHijriYear != null)
+                                    GlassBadge(
+                                      label: l.seasonHijriYear(
+                                        assignment.module.seasonHijriYear!,
+                                      ),
+                                      color: scheme.secondary,
+                                      icon: AppIcons.seasons,
+                                      dense: true,
+                                    ),
+                                  if (!assignment.module.isActive)
+                                    GlassBadge(
+                                      label: l.moduleBadgeDraft,
+                                      color: scheme.tertiary,
+                                      icon: AppIcons.edit,
+                                      dense: true,
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const NavChevron(),
+                      ],
+                    ),
+                  ),
+                ),
+          ],
+        );
+      },
     );
   }
 }

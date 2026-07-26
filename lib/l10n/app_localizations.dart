@@ -164,6 +164,24 @@ abstract class AppLocalizations {
   /// **'Back'**
   String get commonBack;
 
+  /// No description provided for @commonDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get commonDone;
+
+  /// No description provided for @commonCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied'**
+  String get commonCopied;
+
+  /// No description provided for @profileEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get profileEmail;
+
   /// No description provided for @commonEdit.
   ///
   /// In en, this message translates to:
@@ -1064,6 +1082,18 @@ abstract class AppLocalizations {
   /// **'Current'**
   String get employeeSeasonBadgeCurrent;
 
+  /// No description provided for @employeeModulesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned modules'**
+  String get employeeModulesSection;
+
+  /// No description provided for @employeeModulesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Not assigned to any operational module'**
+  String get employeeModulesEmpty;
+
   /// No description provided for @navMyProfileSubtitle.
   ///
   /// In en, this message translates to:
@@ -1135,6 +1165,534 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create account'**
   String get createEmployeeSubmit;
+
+  /// No description provided for @commonDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get commonDelete;
+
+  /// No description provided for @perm_modules.
+  ///
+  /// In en, this message translates to:
+  /// **'Operational modules'**
+  String get perm_modules;
+
+  /// No description provided for @permModulesManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create, edit & activate modules'**
+  String get permModulesManage;
+
+  /// No description provided for @permModulesMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign module members'**
+  String get permModulesMembers;
+
+  /// No description provided for @permModulesTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage module types & master data'**
+  String get permModulesTypes;
+
+  /// No description provided for @navModules.
+  ///
+  /// In en, this message translates to:
+  /// **'Operational modules'**
+  String get navModules;
+
+  /// No description provided for @navModulesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Season files, roles and tasks'**
+  String get navModulesSubtitle;
+
+  /// No description provided for @navReferenceData.
+  ///
+  /// In en, this message translates to:
+  /// **'Master data'**
+  String get navReferenceData;
+
+  /// No description provided for @navReferenceDataSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hotels, clusters and other lists'**
+  String get navReferenceDataSubtitle;
+
+  /// No description provided for @modulesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Operational files'**
+  String get modulesTitle;
+
+  /// No description provided for @modulesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No files have been assigned to you yet'**
+  String get modulesEmpty;
+
+  /// No description provided for @modulesEmptyManager.
+  ///
+  /// In en, this message translates to:
+  /// **'No files created yet'**
+  String get modulesEmptyManager;
+
+  /// No description provided for @moduleActiveSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Active files'**
+  String get moduleActiveSection;
+
+  /// No description provided for @moduleDraftSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Drafts'**
+  String get moduleDraftSection;
+
+  /// No description provided for @moduleBadgeDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft'**
+  String get moduleBadgeDraft;
+
+  /// No description provided for @moduleNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New file'**
+  String get moduleNew;
+
+  /// No description provided for @moduleChooseType.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a file type'**
+  String get moduleChooseType;
+
+  /// No description provided for @moduleNoTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'No file types have been defined yet'**
+  String get moduleNoTypes;
+
+  /// No description provided for @moduleAllTypesUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Every file type has already been opened for this season'**
+  String get moduleAllTypesUsed;
+
+  /// No description provided for @moduleOnePerSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'A file of a kind is created once per season, and its type is its name'**
+  String get moduleOnePerSeason;
+
+  /// No description provided for @moduleSeasonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Season'**
+  String get moduleSeasonLabel;
+
+  /// No description provided for @moduleStartDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Work starts on'**
+  String get moduleStartDate;
+
+  /// No description provided for @moduleEndCondition.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends'**
+  String get moduleEndCondition;
+
+  /// No description provided for @moduleStepInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get moduleStepInfo;
+
+  /// No description provided for @moduleStepSectors.
+  ///
+  /// In en, this message translates to:
+  /// **'Sectors'**
+  String get moduleStepSectors;
+
+  /// No description provided for @moduleStepTowers.
+  ///
+  /// In en, this message translates to:
+  /// **'Towers'**
+  String get moduleStepTowers;
+
+  /// No description provided for @moduleNodeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get moduleNodeName;
+
+  /// No description provided for @moduleNodeAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {level}'**
+  String moduleNodeAdd(String level);
+
+  /// No description provided for @moduleNodeEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit {level}'**
+  String moduleNodeEdit(String level);
+
+  /// No description provided for @moduleNodeDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {level}'**
+  String moduleNodeDelete(String level);
+
+  /// No description provided for @moduleNodeDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}”? Everything inside it goes with it.'**
+  String moduleNodeDeleteConfirm(String name);
+
+  /// No description provided for @moduleSectorSuggestedName.
+  ///
+  /// In en, this message translates to:
+  /// **'Sector {number}'**
+  String moduleSectorSuggestedName(int number);
+
+  /// No description provided for @moduleSectorsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} sectors'**
+  String moduleSectorsCount(int count);
+
+  /// No description provided for @moduleNoSectors.
+  ///
+  /// In en, this message translates to:
+  /// **'No sectors have been added yet'**
+  String get moduleNoSectors;
+
+  /// No description provided for @moduleSectorsFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the sectors first, then place the hotels in them'**
+  String get moduleSectorsFirst;
+
+  /// No description provided for @moduleBuildTree.
+  ///
+  /// In en, this message translates to:
+  /// **'Add sectors & towers'**
+  String get moduleBuildTree;
+
+  /// No description provided for @moduleNoLevels.
+  ///
+  /// In en, this message translates to:
+  /// **'This file type has no structure defined yet'**
+  String get moduleNoLevels;
+
+  /// No description provided for @moduleSectionInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'File information'**
+  String get moduleSectionInfo;
+
+  /// No description provided for @moduleSectionTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'My role & duties'**
+  String get moduleSectionTasks;
+
+  /// No description provided for @moduleSectionTasksOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} — role & duties'**
+  String moduleSectionTasksOf(String name);
+
+  /// No description provided for @moduleJobDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Job description'**
+  String get moduleJobDescription;
+
+  /// No description provided for @moduleNoTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks are defined for this role yet'**
+  String get moduleNoTasks;
+
+  /// No description provided for @moduleMembersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} members'**
+  String moduleMembersCount(int count);
+
+  /// No description provided for @moduleNoMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'No one has been assigned here yet'**
+  String get moduleNoMembers;
+
+  /// No description provided for @moduleRoleUnassigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Not assigned'**
+  String get moduleRoleUnassigned;
+
+  /// No description provided for @moduleSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get moduleSaved;
+
+  /// No description provided for @moduleActivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate file'**
+  String get moduleActivate;
+
+  /// No description provided for @moduleDeactivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivate file'**
+  String get moduleDeactivate;
+
+  /// No description provided for @moduleActivated.
+  ///
+  /// In en, this message translates to:
+  /// **'File activated — members have been notified'**
+  String get moduleActivated;
+
+  /// No description provided for @moduleDeactivated.
+  ///
+  /// In en, this message translates to:
+  /// **'File deactivated'**
+  String get moduleDeactivated;
+
+  /// No description provided for @moduleAttachPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach PDF'**
+  String get moduleAttachPdf;
+
+  /// No description provided for @moduleReplacePdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace file'**
+  String get moduleReplacePdf;
+
+  /// No description provided for @moduleOpenPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Open PDF'**
+  String get moduleOpenPdf;
+
+  /// No description provided for @moduleNoPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'No file attached'**
+  String get moduleNoPdf;
+
+  /// No description provided for @modulePdfOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the file'**
+  String get modulePdfOpenFailed;
+
+  /// No description provided for @moduleDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete file'**
+  String get moduleDelete;
+
+  /// No description provided for @moduleDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this file? Its sectors, towers, members and attachments are removed with it.'**
+  String get moduleDeleteConfirm;
+
+  /// No description provided for @moduleDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'File deleted'**
+  String get moduleDeleted;
+
+  /// No description provided for @moduleNoCurrentSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a current season before creating files'**
+  String get moduleNoCurrentSeason;
+
+  /// No description provided for @moduleNoParticipants.
+  ///
+  /// In en, this message translates to:
+  /// **'The current season has no participants yet'**
+  String get moduleNoParticipants;
+
+  /// No description provided for @moduleContactSy.
+  ///
+  /// In en, this message translates to:
+  /// **'Syrian number'**
+  String get moduleContactSy;
+
+  /// No description provided for @moduleContactSa.
+  ///
+  /// In en, this message translates to:
+  /// **'Saudi number'**
+  String get moduleContactSa;
+
+  /// No description provided for @referenceDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Master data'**
+  String get referenceDataTitle;
+
+  /// No description provided for @referenceItemsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} entries'**
+  String referenceItemsCount(int count);
+
+  /// No description provided for @referenceAddItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Add entry'**
+  String get referenceAddItem;
+
+  /// No description provided for @referenceItemName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name (Arabic)'**
+  String get referenceItemName;
+
+  /// No description provided for @referenceItemNameEn.
+  ///
+  /// In en, this message translates to:
+  /// **'Name (English)'**
+  String get referenceItemNameEn;
+
+  /// No description provided for @referenceItemSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry saved'**
+  String get referenceItemSaved;
+
+  /// No description provided for @referenceItemDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry deleted'**
+  String get referenceItemDeleted;
+
+  /// No description provided for @referenceEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries yet'**
+  String get referenceEmpty;
+
+  /// No description provided for @referenceDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{name}”?'**
+  String referenceDeleteConfirm(String name);
+
+  /// No description provided for @referenceInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'This entry is used by a module and cannot be deleted'**
+  String get referenceInUse;
+
+  /// No description provided for @referenceDuplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'An entry with this name already exists in the list'**
+  String get referenceDuplicate;
+
+  /// No description provided for @referenceOpenLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Open link'**
+  String get referenceOpenLink;
+
+  /// No description provided for @locationPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set location'**
+  String get locationPickerTitle;
+
+  /// No description provided for @locationPickOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'On the map'**
+  String get locationPickOnMap;
+
+  /// No description provided for @locationUseCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'My location'**
+  String get locationUseCurrent;
+
+  /// No description provided for @locationOrPasteLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Or paste a map link'**
+  String get locationOrPasteLink;
+
+  /// No description provided for @locationTapToPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the map to place the pin'**
+  String get locationTapToPlace;
+
+  /// No description provided for @locationConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm this location'**
+  String get locationConfirm;
+
+  /// No description provided for @locationCaptured.
+  ///
+  /// In en, this message translates to:
+  /// **'Current location captured'**
+  String get locationCaptured;
+
+  /// No description provided for @locationPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Location access was not granted'**
+  String get locationPermissionDenied;
+
+  /// No description provided for @locationServiceDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Location services are turned off'**
+  String get locationServiceDisabled;
+
+  /// No description provided for @locationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not determine your location'**
+  String get locationFailed;
+
+  /// No description provided for @locationOpenMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Open on map'**
+  String get locationOpenMap;
+
+  /// No description provided for @referenceCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get referenceCall;
+
+  /// No description provided for @referenceLinkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the link'**
+  String get referenceLinkFailed;
+
+  /// No description provided for @referenceDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get referenceDetailsTitle;
 }
 
 class _AppLocalizationsDelegate

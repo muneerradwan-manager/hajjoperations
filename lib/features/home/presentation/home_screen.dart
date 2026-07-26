@@ -29,6 +29,7 @@ const _accentGreen = AppColors.lightGreen;
 const _accentGreenDeep = AppColors.mediumGreen;
 const _accentGold = AppColors.darkGold;
 const _accentRed = AppColors.mediumRed;
+const _accentGreenDark = AppColors.darkGreen;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -84,8 +85,17 @@ class _HomeScreenState extends State<HomeScreen> {
     final canApprove = session.can(PermissionCodes.approvalsDecide);
     final canManagePermissions = session.can(PermissionCodes.permissionsManage);
     final canViewEmployees = session.can(PermissionCodes.employeesView);
+    final canManageReferenceData = session.can(PermissionCodes.modulesTypes);
 
     final adminCards = <Widget>[
+      if (canManageReferenceData)
+        DashboardCard(
+          icon: AppIcons.referenceData,
+          title: l.navReferenceData,
+          subtitle: l.navReferenceDataSubtitle,
+          color: _accentGreenDark,
+          onTap: () => context.push(Routes.referenceData),
+        ),
       if (canViewEmployees)
         DashboardCard(
           icon: AppIcons.employees,
@@ -112,8 +122,16 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
     ];
 
-    // Available to every approved user.
+    // Available to every approved user — a module reaches its members through
+    // assignment, not through a permission.
     final generalCards = <Widget>[
+      DashboardCard(
+        icon: AppIcons.modules,
+        title: l.navModules,
+        subtitle: l.navModulesSubtitle,
+        color: _accentGreenDeep,
+        onTap: () => context.push(Routes.modules),
+      ),
       DashboardCard(
         icon: AppIcons.seasons,
         title: l.navSeasons,
@@ -121,13 +139,9 @@ class _HomeScreenState extends State<HomeScreen> {
         color: _accentGold,
         onTap: _openSeasons,
       ),
-      DashboardCard(
-        icon: AppIcons.myProfile,
-        title: l.navMyProfile,
-        subtitle: l.navMyProfileSubtitle,
-        color: _accentGreen,
-        onTap: () => context.push(Routes.myProfile),
-      ),
+      // No tile for the profile: the greeting panel above already carries the
+      // user's face and name, and tapping a card with your own name on it is
+      // where anyone looks for it first.
     ];
 
     return Scaffold(
@@ -162,6 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   photoUrl: profile?.photoUrl,
                   isAdmin: session.isAdmin,
                   seasonYear: _seasonYear,
+                  onTap: () => context.push(Routes.myProfile),
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 SectionHeader(l.homeGeneralSection),
@@ -186,6 +201,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
 /// The screen's anchor: who you are, what you do, and which season the
 /// Administration is currently working through.
+///
+/// It is also the way into your own profile — a card showing your face and your
+/// name is where anyone reaches for that, so a separate tile below would be a
+/// second door to the same room.
 class _GreetingPanel extends StatelessWidget {
   const _GreetingPanel({
     required this.name,
@@ -193,6 +212,7 @@ class _GreetingPanel extends StatelessWidget {
     required this.photoUrl,
     required this.isAdmin,
     required this.seasonYear,
+    required this.onTap,
   });
 
   final String name;
@@ -203,6 +223,8 @@ class _GreetingPanel extends StatelessWidget {
   /// Hijri year of the season the Administration is currently working through.
   final int seasonYear;
 
+  final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -212,6 +234,7 @@ class _GreetingPanel extends StatelessWidget {
     return GlassCard(
       radius: AppRadius.xl,
       padding: const EdgeInsets.all(AppSpacing.xl),
+      onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -256,9 +279,17 @@ class _GreetingPanel extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
+                    const SizedBox(height: 4),
+                    // Says where the tap goes, now that the tile that used to
+                    // say it is gone.
+                    Text(
+                      l.navMyProfile,
+                      style: text.labelSmall?.copyWith(color: scheme.primary),
+                    ),
                   ],
                 ),
               ),
+              const NavChevron(),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
