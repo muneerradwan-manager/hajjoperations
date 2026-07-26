@@ -640,6 +640,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moduleStepTowers => 'Towers';
 
   @override
+  String get moduleStepMembers => 'Team';
+
+  @override
   String get moduleNodeName => 'Name';
 
   @override
@@ -703,6 +706,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moduleNoTasks => 'No tasks are defined for this role yet';
 
   @override
+  String get moduleAssignedTasks => 'Assigned duties';
+
+  @override
+  String moduleAssignedTasksCount(int count, int total) {
+    return '$count of $total duties';
+  }
+
+  @override
+  String get moduleNoAssignedTasks => 'No duties assigned yet';
+
+  @override
+  String get moduleNoAssignedTasksMine =>
+      'You have not been handed any duty from this role\'s list yet';
+
+  @override
+  String get moduleTeamPick => 'Choose members';
+
+  @override
+  String get moduleNoTeamMembers => 'No one has been put on this team yet';
+
+  @override
+  String get moduleNoRoles => 'This file type has no roles defined yet';
+
+  @override
   String moduleMembersCount(int count) {
     return '$count members';
   }
@@ -748,7 +775,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moduleDeleteConfirm =>
-      'Delete this file? Its sectors, towers, members and attachments are removed with it.';
+      'Delete this file? Everything in it — its members, the duties they were handed, and its attachments — goes with it.';
 
   @override
   String get moduleDeleted => 'File deleted';

@@ -16,12 +16,17 @@ import '../domain/module_type.dart';
 import '../domain/operational_module.dart';
 import 'widgets/module_field_input.dart';
 import 'widgets/node_editor_sheet.dart';
+import 'widgets/picker_sheet.dart';
 
-/// Builds one operational file, in the order it is really built:
+/// Builds one operational file, in the order it is really built. A file with a
+/// tree takes three steps:
 ///
 ///   1. the file itself — when work at the towers starts, and its attachments;
 ///   2. its sectors — each named, with a supervisor and his deputies;
 ///   3. the hotels inside each sector, and who runs each tower.
+///
+/// A file that is only a roster — الطوافة والنقل — takes two: the file, then its
+/// teams, each member put on one and handed the duties that are his.
 ///
 /// Each step is saved as it is finished, because a file is assembled over days:
 /// the sectors are known long before the last hotel is confirmed. Pops `true`
@@ -101,11 +106,77 @@ class _ViewState extends State<_View> {
       }
       return;
     }
-    if (state.step == 1) {
-      cubit.goTo(2);
+    if (state.step < state.lastStep) {
+      cubit.goTo(state.step + 1);
       return;
     }
     Navigator.of(context).pop(_dirty);
+  }
+
+  /// Puts people on one of the teams of a file that has no tree.
+  Future<void> _pickTeam(ModuleRole role) async {
+    final l = context.l10n;
+    final cubit = context.read<ModuleEditorCubit>();
+    final state = cubit.state;
+
+    final result = await showPickerSheet(
+      context,
+      title: role.name.of(context),
+      multiple: role.allowsMultiple,
+      selected: state.memberProfileIdsOf(role.id),
+      emptyMessage: l.moduleNoParticipants,
+      options: [
+        for (final e in state.employees)
+          PickerOption(
+            id: e.id,
+            label: e.fullName.isEmpty ? '—' : e.fullName,
+            subtitle: e.jobTitleName,
+            photoUrl: e.photoUrl,
+            showAvatar: true,
+          ),
+      ],
+    );
+    if (result == null || !mounted) return;
+
+    final error = await cubit.setRoleMembers(role.id, result);
+    if (!mounted) return;
+    if (error != null) {
+      _say(error);
+      return;
+    }
+    _dirty = true;
+  }
+
+  /// Hands one member his share of his team's duties — or takes them all back,
+  /// which leaves him on the team with none, and is allowed.
+  Future<void> _pickTasks(ModuleRole role, ModuleMember member) async {
+    final cubit = context.read<ModuleEditorCubit>();
+    final l = context.l10n;
+
+    final result = await showPickerSheet(
+      context,
+      title: member.profile?.fullName ?? role.name.of(context),
+      multiple: true,
+      selected: member.taskIds,
+      emptyMessage: l.moduleNoTasks,
+      options: [
+        for (final task in role.tasks)
+          PickerOption(
+            id: task.id,
+            label: task.title.of(context),
+            subtitle: task.description?.of(context),
+          ),
+      ],
+    );
+    if (result == null || !mounted) return;
+
+    final error = await cubit.setMemberTasks(member.id, result);
+    if (!mounted) return;
+    if (error != null) {
+      _say(error);
+      return;
+    }
+    _dirty = true;
   }
 
   /// Adds or edits a sector (no [parent]) or a hotel inside one.
@@ -191,7 +262,11 @@ class _ViewState extends State<_View> {
     final state = cubit.state;
     final saving = state.status == EditorStatus.saving;
 
-    final steps = [l.moduleStepInfo, l.moduleStepSectors, l.moduleStepTowers];
+    // A file with no tree has nothing to divide into sectors and towers: its
+    // people are the second and last step.
+    final steps = state.hasTree
+        ? [l.moduleStepInfo, l.moduleStepSectors, l.moduleStepTowers]
+        : [l.moduleStepInfo, l.moduleStepMembers];
 
     return PopScope(
       canPop: false,
@@ -221,9 +296,14 @@ class _ViewState extends State<_View> {
             icon: AppIcons.modules,
             title: state.error ?? '',
           ),
-          _ => switch (state.step) {
-            0 => _InfoStep(state: state),
-            1 => _NodesStep(
+          _ => switch ((state.step, state.hasTree)) {
+            (0, _) => _InfoStep(state: state),
+            (_, false) => _TeamsStep(
+              state: state,
+              onPickTeam: _pickTeam,
+              onPickTasks: _pickTasks,
+            ),
+            (1, true) => _NodesStep(
               state: state,
               onAdd: (level) => _editNode(level),
               onEdit: (level, node) => _editNode(level, node: node),
@@ -273,12 +353,14 @@ class _ViewState extends State<_View> {
                                     ),
                                   )
                                 : Icon(
-                                    state.step == 2
+                                    state.step >= state.lastStep
                                         ? AppIcons.approve
                                         : AppIcons.activate,
                                   ),
                             label: Text(
-                              state.step == 2 ? l.commonDone : l.commonNext,
+                              state.step >= state.lastStep
+                                  ? l.commonDone
+                                  : l.commonNext,
                             ),
                           ),
                         ),
@@ -578,6 +660,198 @@ class _TowersStep extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
           ],
         ]),
+      ),
+    );
+  }
+}
+
+/// The second and last step of a file with no tree — its teams. Each team is
+/// filled from the season's participants, and each person on it is then handed
+/// the duties that are actually his, out of the list his team owns.
+///
+/// Handing him none is a real answer, not an unfinished one: he is on the team,
+/// and the team's job description already says what that means.
+class _TeamsStep extends StatelessWidget {
+  const _TeamsStep({
+    required this.state,
+    required this.onPickTeam,
+    required this.onPickTasks,
+  });
+
+  final ModuleEditorState state;
+  final void Function(ModuleRole role) onPickTeam;
+  final void Function(ModuleRole role, ModuleMember member) onPickTasks;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final roles = state.type?.roles ?? const <ModuleRole>[];
+    if (roles.isEmpty) {
+      return EmptyState(icon: AppIcons.roles, title: l.moduleNoRoles);
+    }
+
+    return ResponsiveCenter(
+      child: ListView(
+        padding: context.scrollPadding(),
+        children: staggered([
+          SectionHeader(
+            l.moduleMembersCount(state.members.length),
+            icon: AppIcons.participants,
+          ),
+          for (final role in roles) ...[
+            _TeamCard(
+              role: role,
+              members: state.membersOf(role.id),
+              onPick: () => onPickTeam(role),
+              onPickTasks: (member) => onPickTasks(role, member),
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
+        ]),
+      ),
+    );
+  }
+}
+
+/// One team: who is on it, and what each of them was handed.
+class _TeamCard extends StatelessWidget {
+  const _TeamCard({
+    required this.role,
+    required this.members,
+    required this.onPick,
+    required this.onPickTasks,
+  });
+
+  final ModuleRole role;
+  final List<ModuleMember> members;
+  final VoidCallback onPick;
+  final void Function(ModuleMember member) onPickTasks;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+
+    return GlassCard(
+      blur: false,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(AppIcons.roles, size: 18, color: scheme.primary),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  role.name.of(context),
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              Text(
+                '${members.length}',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(color: scheme.primary),
+              ),
+            ],
+          ),
+          if (members.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.sm),
+              child: Text(
+                l.moduleNoTeamMembers,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            )
+          else
+            for (final member in members)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.md),
+                child: _TeamMemberRow(
+                  role: role,
+                  member: member,
+                  onTap: () => onPickTasks(member),
+                ),
+              ),
+          const SizedBox(height: AppSpacing.md),
+          OutlinedButton.icon(
+            onPressed: onPick,
+            icon: const Icon(AppIcons.participants),
+            label: Text(l.moduleTeamPick),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One person on a team, and how much of its list is his. Tapping opens the
+/// list to hand him more of it, or take some back.
+class _TeamMemberRow extends StatelessWidget {
+  const _TeamMemberRow({
+    required this.role,
+    required this.member,
+    required this.onTap,
+  });
+
+  final ModuleRole role;
+  final ModuleMember member;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final profile = member.profile;
+    final assigned = member.taskIds.length;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppRadius.sm),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+        child: Row(
+          children: [
+            ProfileAvatar(
+              photoUrl: profile?.photoUrl,
+              name: profile?.fullName ?? '',
+              radius: 18,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    (profile?.fullName.isEmpty ?? true)
+                        ? '—'
+                        : profile!.fullName,
+                    style: Theme.of(context).textTheme.titleSmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    assigned == 0
+                        ? l.moduleNoAssignedTasks
+                        : l.moduleAssignedTasksCount(assigned, role.tasks.length),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: assigned == 0
+                          ? scheme.onSurfaceVariant
+                          : scheme.primary,
+                      fontStyle: assigned == 0 ? FontStyle.italic : null,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(AppIcons.tasks, size: 18, color: scheme.primary),
+          ],
+        ),
       ),
     );
   }

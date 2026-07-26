@@ -1322,6 +1322,12 @@ abstract class AppLocalizations {
   /// **'Towers'**
   String get moduleStepTowers;
 
+  /// No description provided for @moduleStepMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Team'**
+  String get moduleStepMembers;
+
   /// No description provided for @moduleNodeName.
   ///
   /// In en, this message translates to:
@@ -1418,6 +1424,48 @@ abstract class AppLocalizations {
   /// **'No tasks are defined for this role yet'**
   String get moduleNoTasks;
 
+  /// No description provided for @moduleAssignedTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned duties'**
+  String get moduleAssignedTasks;
+
+  /// No description provided for @moduleAssignedTasksCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of {total} duties'**
+  String moduleAssignedTasksCount(int count, int total);
+
+  /// No description provided for @moduleNoAssignedTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'No duties assigned yet'**
+  String get moduleNoAssignedTasks;
+
+  /// No description provided for @moduleNoAssignedTasksMine.
+  ///
+  /// In en, this message translates to:
+  /// **'You have not been handed any duty from this role\'s list yet'**
+  String get moduleNoAssignedTasksMine;
+
+  /// No description provided for @moduleTeamPick.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose members'**
+  String get moduleTeamPick;
+
+  /// No description provided for @moduleNoTeamMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'No one has been put on this team yet'**
+  String get moduleNoTeamMembers;
+
+  /// No description provided for @moduleNoRoles.
+  ///
+  /// In en, this message translates to:
+  /// **'This file type has no roles defined yet'**
+  String get moduleNoRoles;
+
   /// No description provided for @moduleMembersCount.
   ///
   /// In en, this message translates to:
@@ -1505,7 +1553,7 @@ abstract class AppLocalizations {
   /// No description provided for @moduleDeleteConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Delete this file? Its sectors, towers, members and attachments are removed with it.'**
+  /// **'Delete this file? Everything in it — its members, the duties they were handed, and its attachments — goes with it.'**
   String get moduleDeleteConfirm;
 
   /// No description provided for @moduleDeleted.

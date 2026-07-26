@@ -64,6 +64,7 @@ class ModuleEditorState extends Equatable {
     this.values = const {},
     this.pendingFiles = const {},
     this.nodes = const [],
+    this.members = const [],
     this.employees = const [],
     this.referenceSets = const [],
     this.error,
@@ -71,7 +72,9 @@ class ModuleEditorState extends Equatable {
 
   final EditorStatus status;
 
-  /// 0 — the file itself, 1 — its sectors, 2 — the towers inside them.
+  /// For a file built as a tree: 0 — the file itself, 1 — its sectors, 2 — the
+  /// towers inside them. For a file that is only a roster, the tree steps
+  /// collapse into one: 0 — the file, 1 — its people.
   final int step;
 
   final ModuleType? type;
@@ -90,11 +93,29 @@ class ModuleEditorState extends Equatable {
   final Map<String, File> pendingFiles;
 
   final List<ModuleNode> nodes;
+
+  /// The people on the file itself, for a type with no tree. Each carries the
+  /// duties handed to them.
+  final List<ModuleMember> members;
+
   final List<Profile> employees;
   final List<ReferenceSet> referenceSets;
   final String? error;
 
   bool get isCreated => moduleId != null;
+
+  /// Whether this file is built as sectors and towers, or is simply its roster.
+  bool get hasTree => type?.hasTree ?? true;
+
+  /// The last step of the wizard — the towers of a tree, or the roster of a
+  /// file that has none.
+  int get lastStep => hasTree ? 2 : 1;
+
+  List<ModuleMember> membersOf(String roleId) =>
+      members.where((m) => m.roleId == roleId).toList();
+
+  Set<String> memberProfileIdsOf(String roleId) =>
+      members.where((m) => m.roleId == roleId).map((m) => m.profileId).toSet();
 
   /// The sector level, and the tower level inside it.
   ModuleLevel? get parentLevel => type?.outermostLevel;
@@ -143,6 +164,7 @@ class ModuleEditorState extends Equatable {
     Map<String, dynamic>? values,
     Map<String, File>? pendingFiles,
     List<ModuleNode>? nodes,
+    List<ModuleMember>? members,
     List<Profile>? employees,
     List<ReferenceSet>? referenceSets,
     String? error,
@@ -156,6 +178,7 @@ class ModuleEditorState extends Equatable {
       values: values ?? this.values,
       pendingFiles: pendingFiles ?? this.pendingFiles,
       nodes: nodes ?? this.nodes,
+      members: members ?? this.members,
       employees: employees ?? this.employees,
       referenceSets: referenceSets ?? this.referenceSets,
       error: error,
@@ -172,6 +195,7 @@ class ModuleEditorState extends Equatable {
     values,
     pendingFiles,
     nodes,
+    members,
     employees,
     referenceSets,
     error,
@@ -216,9 +240,12 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
       final employees = await _repo.fetchAssignableEmployees(seasonId);
       // Inactive entries stay loaded: a tower may already point at one.
       final sets = await _repo.fetchReferenceSets(activeOnly: false);
-      final nodes = existing == null
+      final nodes = existing == null || !type.hasTree
           ? const <ModuleNode>[]
           : await _repo.fetchNodes(existing!.id);
+      final members = existing == null || type.hasTree
+          ? const <ModuleMember>[]
+          : await _repo.fetchMembers(existing!.id);
 
       emit(
         state.copyWith(
@@ -228,6 +255,7 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
           startsOn: existing?.startsOn,
           values: Map<String, dynamic>.from(existing?.data ?? const {}),
           nodes: nodes,
+          members: members,
           employees: employees,
           referenceSets: sets,
         ),
@@ -241,6 +269,12 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
     final id = state.moduleId;
     if (id == null) return;
     emit(state.copyWith(nodes: await _repo.fetchNodes(id)));
+  }
+
+  Future<void> _reloadMembers() async {
+    final id = state.moduleId;
+    if (id == null) return;
+    emit(state.copyWith(members: await _repo.fetchMembers(id)));
   }
 
   void goTo(int step) => emit(state.copyWith(step: step));
@@ -391,6 +425,47 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
     } catch (e) {
       emit(state.copyWith(status: EditorStatus.ready));
       return SaveResult(SaveOutcome.failed, message: e.toString());
+    }
+  }
+
+  /// Step 2 of a file with no tree: puts people on one of its teams. Returns
+  /// null on success, else the failure.
+  ///
+  /// Someone dropped from a team loses the duties he was handed there with him;
+  /// someone who stays keeps his, which is why membership is diffed rather than
+  /// rewritten.
+  Future<String?> setRoleMembers(String roleId, Set<String> profileIds) async {
+    final moduleId = state.moduleId;
+    if (moduleId == null) return null;
+
+    emit(state.copyWith(status: EditorStatus.saving));
+    try {
+      await _repo.setModuleRoleMembers(
+        moduleId: moduleId,
+        roleId: roleId,
+        profileIds: profileIds,
+      );
+      await _reloadMembers();
+      emit(state.copyWith(status: EditorStatus.ready));
+      return null;
+    } catch (e) {
+      emit(state.copyWith(status: EditorStatus.ready));
+      return e.toString();
+    }
+  }
+
+  /// Hands one member his share of his team's duties. Handing him none is a
+  /// legitimate outcome — he is on the team, and that is the posting.
+  Future<String?> setMemberTasks(String memberId, Set<String> taskIds) async {
+    emit(state.copyWith(status: EditorStatus.saving));
+    try {
+      await _repo.setAssignedTasks(memberId: memberId, taskIds: taskIds);
+      await _reloadMembers();
+      emit(state.copyWith(status: EditorStatus.ready));
+      return null;
+    } catch (e) {
+      emit(state.copyWith(status: EditorStatus.ready));
+      return e.toString();
     }
   }
 

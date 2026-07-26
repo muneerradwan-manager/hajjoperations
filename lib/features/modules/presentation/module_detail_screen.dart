@@ -324,49 +324,134 @@ class _Body extends StatelessWidget {
               ],
             ],
 
-            // File-level roles: none of today's types define any, so this
-            // renders nothing rather than an empty heading.
-            for (final role in type?.roles ?? const <ModuleRole>[])
-              if (state.membersOf(role.id).isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.md),
-                SectionHeader(role.name.of(context), icon: AppIcons.roles),
-                for (final member in state.membersOf(role.id))
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                    child: _MemberTile(member: member),
-                  ),
-              ],
-
             const SizedBox(height: AppSpacing.lg),
             SectionHeader(
               l.moduleMembersCount(state.peopleCount),
               icon: AppIcons.participants,
             ),
-            if (sectorLevel == null || sectors.isEmpty)
+
+            // Roles held on the file itself — the entire roster of a file with
+            // no tree, and each member's share of his team's duties.
+            for (final role in type?.roles ?? const <ModuleRole>[])
+              _RoleRosterCard(state: state, role: role),
+
+            if (type?.hasTree ?? true)
+              if (sectorLevel == null || sectors.isEmpty)
+                GlassCard(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(l.moduleNoSectors),
+                      if (canManage) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        OutlinedButton.icon(
+                          onPressed: onBuildTree,
+                          icon: const Icon(AppIcons.add),
+                          label: Text(l.moduleBuildTree),
+                        ),
+                      ],
+                    ],
+                  ),
+                )
+              else
+                for (final sector in sectors)
+                  _SectorCard(state: state, level: sectorLevel, sector: sector)
+            else if (state.members.isEmpty)
               GlassCard(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(l.moduleNoSectors),
+                    Text(l.moduleNoMembers),
                     if (canManage) ...[
                       const SizedBox(height: AppSpacing.md),
                       OutlinedButton.icon(
                         onPressed: onBuildTree,
                         icon: const Icon(AppIcons.add),
-                        label: Text(l.moduleBuildTree),
+                        label: Text(l.moduleTeamPick),
                       ),
                     ],
                   ],
                 ),
-              )
-            else
-              for (final sector in sectors)
-                _SectorCard(state: state, level: sectorLevel, sector: sector),
+              ),
           ]),
         ),
       ),
     );
+  }
+}
+
+/// One team of a file with no tree: everyone on it, and under each of them the
+/// duties he was actually handed.
+///
+/// The duties are on the roster rather than tucked behind a tap because that is
+/// what this file is for — "who is doing the passports" is the question it
+/// exists to answer.
+class _RoleRosterCard extends StatelessWidget {
+  const _RoleRosterCard({required this.state, required this.role});
+
+  final ModuleDetailState state;
+  final ModuleRole role;
+
+  @override
+  Widget build(BuildContext context) {
+    final members = state.membersOf(role.id);
+    if (members.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: AppSpacing.sm),
+        SectionHeader(role.name.of(context), icon: AppIcons.roles),
+        for (final member in members)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+            child: GlassCard(
+              blur: false,
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _MemberTile(member: member, dense: true),
+                  ..._duties(context, role.tasksFor(member.taskIds)),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// What this person was handed. A team member with nothing handed to him is
+  /// not an oversight — the team's own job description already binds him — so
+  /// this says so plainly rather than leaving a gap.
+  List<Widget> _duties(BuildContext context, List<RoleTask> tasks) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    if (!role.tasksAreAssigned) return const [];
+
+    return [
+      const SizedBox(height: AppSpacing.md),
+      if (tasks.isEmpty)
+        Text(
+          l.moduleNoAssignedTasks,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: scheme.onSurfaceVariant,
+            fontStyle: FontStyle.italic,
+          ),
+        )
+      else ...[
+        Text(
+          l.moduleAssignedTasks,
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        for (final task in tasks) _TaskLine(task: task),
+      ],
+    ];
   }
 }
 
@@ -537,9 +622,13 @@ class _PdfCard extends StatelessWidget {
   }
 }
 
-/// What a role actually is: its job description, and any standing duties on top
-/// of it. Both are defined once on the module type, so they appear here without
-/// ever being re-entered per file.
+/// What a role actually is: its job description, and the duties on top of it.
+/// The description is defined once on the module type, so it appears here
+/// without ever being re-entered per file.
+///
+/// The duties are whichever of the two kinds the role uses — the standing list
+/// every holder carries, or only the share this person was handed. Nobody
+/// should be shown a duty that is not his.
 ///
 /// The places are on the card because the same role is often held in several
 /// towers at once, and "which towers" is half the answer.
@@ -553,6 +642,7 @@ class _TaskCard extends StatelessWidget {
     final l = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final role = held.role;
+    final tasks = held.tasks;
 
     return GlassCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -593,10 +683,20 @@ class _TaskCard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: AppSpacing.md),
-          if (role.tasks.isEmpty)
-            // A role with a description needs no apology for having no extra
-            // duties on top of it.
-            if (role.description == null)
+          if (tasks.isEmpty)
+            // Two different silences. A role whose duties are handed out one by
+            // one and has handed this person none says so — it is a fact about
+            // him, not about the role. A role with a description and no extra
+            // duties needs no apology at all.
+            if (role.tasksAreAssigned)
+              Text(
+                l.moduleNoAssignedTasksMine,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  fontStyle: FontStyle.italic,
+                ),
+              )
+            else if (role.description == null)
               Text(
                 l.moduleNoTasks,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -606,42 +706,64 @@ class _TaskCard extends StatelessWidget {
               )
             else
               const SizedBox.shrink()
-          else
-            for (final task in role.tasks)
-              Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 3),
-                      child: Icon(
-                        AppIcons.tasks,
-                        size: 15,
-                        color: scheme.primary,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            task.title.of(context),
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          if (task.description != null)
-                            Text(
-                              task.description!.of(context),
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: scheme.onSurfaceVariant),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+          else ...[
+            if (role.tasksAreAssigned) ...[
+              Text(
+                l.moduleAssignedTasks,
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
               ),
+              const SizedBox(height: AppSpacing.sm),
+            ],
+            for (final task in tasks) _TaskLine(task: task),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// One duty, wherever it is listed.
+class _TaskLine extends StatelessWidget {
+  const _TaskLine({required this.task});
+
+  final RoleTask task;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 3),
+            child: Icon(AppIcons.tasks, size: 15, color: scheme.primary),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  task.title.of(context),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.5),
+                ),
+                if (task.description != null)
+                  Text(
+                    task.description!.of(context),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );

@@ -70,8 +70,11 @@ class ModuleField {
   );
 }
 
-/// A standing duty attached to a role — defined once per module type and shown
-/// to every holder of that role, in every module of that type.
+/// A duty attached to a role, defined once per module type.
+///
+/// Whether it is carried by every holder of that role or handed to particular
+/// ones is the role's business, not the task's — see
+/// [ModuleRole.tasksAreAssigned].
 class RoleTask {
   const RoleTask({required this.id, required this.title, this.description});
 
@@ -98,6 +101,7 @@ class ModuleRole {
     this.levelId,
     this.allowsMultiple = false,
     this.isRequired = false,
+    this.tasksAreAssigned = false,
     this.tasks = const [],
   });
 
@@ -117,7 +121,21 @@ class ModuleRole {
   /// Roles such as "mission members" hold several people; a supervisor holds one.
   final bool allowsMultiple;
   final bool isRequired;
+
+  /// How [tasks] is meant to be read. False — the standing list — is every duty
+  /// of the post, carried by whoever holds it. True makes the list a menu: each
+  /// holder is handed his own share of it, possibly none, and it is what he was
+  /// handed rather than the whole list that is his.
+  final bool tasksAreAssigned;
+
   final List<RoleTask> tasks;
+
+  /// The subset of [tasks] handed to one person, in the order the type lists
+  /// them. For a standing list this is simply all of them: nothing was handed
+  /// out because nothing needed to be.
+  List<RoleTask> tasksFor(Set<String> assigned) => tasksAreAssigned
+      ? tasks.where((t) => assigned.contains(t.id)).toList()
+      : tasks;
 
   factory ModuleRole.fromMap(Map<String, dynamic> map) => ModuleRole(
     id: map['id'] as String,
@@ -129,6 +147,7 @@ class ModuleRole {
     levelId: map['level_id'] as String?,
     allowsMultiple: (map['allows_multiple'] as bool?) ?? false,
     isRequired: (map['is_required'] as bool?) ?? false,
+    tasksAreAssigned: (map['tasks_are_assigned'] as bool?) ?? false,
     tasks: _bySortOrder(map['module_type_role_tasks'])
         .map(RoleTask.fromMap)
         .toList(),
@@ -216,8 +235,14 @@ class ModuleType {
   /// live on their [ModuleLevel] instead.
   final List<ModuleRole> roles;
 
-  /// The tree this type's files are built as, outermost level first.
+  /// The tree this type's files are built as, outermost level first. Empty for
+  /// a type that has no tree: الطوافة والنقل is a roster, not a hierarchy, and
+  /// its people sit on the file itself.
   final List<ModuleLevel> levels;
+
+  /// Whether files of this type are built as sectors and towers, or are simply
+  /// the list of the people in them.
+  bool get hasTree => levels.isNotEmpty;
 
   ModuleLevel? levelById(String? id) =>
       levels.where((l) => l.id == id).firstOrNull;

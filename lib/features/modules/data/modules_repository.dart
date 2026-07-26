@@ -162,7 +162,10 @@ class ModulesRepository {
         .from('module_nodes')
         // Embedded through `profile_id` explicitly: the table also points at
         // profiles via `assigned_by`, and a bare `profiles(...)` is ambiguous.
-        .select('*, module_node_members(*, profiles:profile_id(*, job_titles(name)))')
+        .select(
+          '*, module_node_members(*, module_assigned_tasks(task_id), '
+          'profiles:profile_id(*, job_titles(name)))',
+        )
         .eq('module_id', moduleId)
         .order('sort_order');
     return (rows as List)
@@ -216,15 +219,22 @@ class ModulesRepository {
   // --------------------------------------------------------------- members
 
   /// The people holding a role on the file itself, rather than on one of its
-  /// nodes. Types with a tree — every type today — have none.
+  /// nodes — the whole roster of a file with no tree, and each one's duties.
   Future<List<ModuleMember>> fetchMembers(String moduleId) async {
     final rows = await supabase
         .from('module_members')
-        .select('*, profiles:profile_id(*, job_titles(name))')
+        .select(
+          '*, module_assigned_tasks(task_id), '
+          'profiles:profile_id(*, job_titles(name))',
+        )
         .eq('module_id', moduleId);
-    return (rows as List)
+    final members = (rows as List)
         .map((r) => ModuleMember.fromMap(r as Map<String, dynamic>))
         .toList();
+    members.sort(
+      (a, b) => (a.profile?.fullName ?? '').compareTo(b.profile?.fullName ?? ''),
+    );
+    return members;
   }
 
   /// Every file this employee holds a role in, and where in it, newest season
@@ -307,6 +317,85 @@ class ModulesRepository {
             'node_id': nodeId,
             'role_id': roleId,
             'profile_id': id,
+            'assigned_by': supabase.auth.currentUser?.id,
+          },
+      ]);
+    }
+  }
+
+  /// The same, for a file with no tree: replaces the people holding [roleId] on
+  /// the file itself. Members that stay are left untouched, so they are neither
+  /// re-notified nor stripped of the duties they were already handed — those
+  /// hang off the membership row and would go with it.
+  Future<void> setModuleRoleMembers({
+    required String moduleId,
+    required String roleId,
+    required Set<String> profileIds,
+  }) async {
+    final existing = await supabase
+        .from('module_members')
+        .select('profile_id')
+        .eq('module_id', moduleId)
+        .eq('role_id', roleId);
+    final current = (existing as List)
+        .map((r) => r['profile_id'] as String)
+        .toSet();
+
+    final removed = current.difference(profileIds);
+    if (removed.isNotEmpty) {
+      await supabase
+          .from('module_members')
+          .delete()
+          .eq('module_id', moduleId)
+          .eq('role_id', roleId)
+          .inFilter('profile_id', removed.toList());
+    }
+
+    final added = profileIds.difference(current);
+    if (added.isNotEmpty) {
+      await supabase.from('module_members').insert([
+        for (final id in added)
+          {
+            'module_id': moduleId,
+            'role_id': roleId,
+            'profile_id': id,
+            'assigned_by': supabase.auth.currentUser?.id,
+          },
+      ]);
+    }
+  }
+
+  /// Hands one member the duties that are his, and takes back the ones that are
+  /// no longer. Diffed rather than wiped and rewritten so that who assigned what,
+  /// and when, survives an unrelated edit.
+  Future<void> setAssignedTasks({
+    required String memberId,
+    required Set<String> taskIds,
+  }) async {
+    final existing = await supabase
+        .from('module_assigned_tasks')
+        .select('task_id')
+        .eq('member_id', memberId);
+    final current = (existing as List)
+        .map((r) => r['task_id'] as String)
+        .toSet();
+
+    final removed = current.difference(taskIds);
+    if (removed.isNotEmpty) {
+      await supabase
+          .from('module_assigned_tasks')
+          .delete()
+          .eq('member_id', memberId)
+          .inFilter('task_id', removed.toList());
+    }
+
+    final added = taskIds.difference(current);
+    if (added.isNotEmpty) {
+      await supabase.from('module_assigned_tasks').insert([
+        for (final id in added)
+          {
+            'member_id': memberId,
+            'task_id': id,
             'assigned_by': supabase.auth.currentUser?.id,
           },
       ]);

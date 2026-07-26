@@ -13,10 +13,22 @@ enum ModuleDetailStatus { loading, ready, error }
 /// A role someone holds here, and the places they hold it in. One person may
 /// run three towers under the same file, so the places are a list.
 class RoleHere {
-  const RoleHere({required this.role, this.places = const []});
+  const RoleHere({
+    required this.role,
+    this.places = const [],
+    this.taskIds = const {},
+  });
 
   final ModuleRole role;
   final List<LocalizedName> places;
+
+  /// The duties handed to this person in this role, for a role whose list is a
+  /// menu. Gathered across every place they hold it.
+  final Set<String> taskIds;
+
+  /// What this person is actually answerable for: his share of a menu, or the
+  /// whole of a standing list.
+  List<RoleTask> get tasks => role.tasksFor(taskIds);
 }
 
 class ModuleDetailState extends Equatable {
@@ -99,8 +111,11 @@ class ModuleDetailState extends Equatable {
     if (id == null || type == null) return const [];
 
     final places = <String, List<LocalizedName>>{};
+    final duties = <String, Set<String>>{};
     for (final m in members) {
-      if (m.profileId == id) places.putIfAbsent(m.roleId, () => []);
+      if (m.profileId != id) continue;
+      places.putIfAbsent(m.roleId, () => []);
+      (duties[m.roleId] ??= {}).addAll(m.taskIds);
     }
     for (final node in nodes) {
       final level = type.levelById(node.levelId);
@@ -112,6 +127,7 @@ class ModuleDetailState extends Equatable {
       for (final m in node.members) {
         if (m.profileId != id) continue;
         final list = places.putIfAbsent(m.roleId, () => []);
+        (duties[m.roleId] ??= {}).addAll(m.taskIds);
         if (name != null && !list.any((p) => p.ar == name.ar)) list.add(name);
       }
     }
@@ -119,7 +135,11 @@ class ModuleDetailState extends Equatable {
     return [
       for (final role in type.allRoles)
         if (places.containsKey(role.id))
-          RoleHere(role: role, places: places[role.id]!),
+          RoleHere(
+            role: role,
+            places: places[role.id]!,
+            taskIds: duties[role.id] ?? const {},
+          ),
     ];
   }
 

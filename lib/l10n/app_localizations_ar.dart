@@ -638,6 +638,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get moduleStepTowers => 'الأبراج';
 
   @override
+  String get moduleStepMembers => 'الفريق';
+
+  @override
   String get moduleNodeName => 'الاسم';
 
   @override
@@ -700,6 +703,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get moduleNoTasks => 'لا توجد مهام معرّفة لهذا الدور بعد';
 
   @override
+  String get moduleAssignedTasks => 'المهام المسندة';
+
+  @override
+  String moduleAssignedTasksCount(int count, int total) {
+    return '$count من $total مهام';
+  }
+
+  @override
+  String get moduleNoAssignedTasks => 'لم تُسند إليه مهام بعد';
+
+  @override
+  String get moduleNoAssignedTasksMine =>
+      'لم تُسند إليك مهام من قائمة هذا الدور بعد';
+
+  @override
+  String get moduleTeamPick => 'اختيار الأعضاء';
+
+  @override
+  String get moduleNoTeamMembers => 'لم يُختر أعضاء هذا الفريق بعد';
+
+  @override
+  String get moduleNoRoles => 'لا توجد أدوار معرّفة لهذا النوع من الملفات بعد';
+
+  @override
   String moduleMembersCount(int count) {
     return '$count عضواً';
   }
@@ -745,7 +772,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get moduleDeleteConfirm =>
-      'حذف هذا الملف؟ ستُحذف قطاعاته وأبراجه وأعضاؤه ومرفقاته معه.';
+      'حذف هذا الملف؟ سيُحذف كل ما فيه — أعضاؤه ومهامهم المسندة ومرفقاته — معه.';
 
   @override
   String get moduleDeleted => 'تم حذف الملف';
