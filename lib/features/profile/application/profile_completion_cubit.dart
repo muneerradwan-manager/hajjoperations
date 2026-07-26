@@ -1,0 +1,145 @@
+import 'dart:io';
+
+import 'package:equatable/equatable.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../data/profile_repository.dart';
+import '../domain/job_title.dart';
+import '../domain/profile.dart';
+import '../domain/profile_enums.dart';
+
+enum ProfileFormStatus { loading, ready, submitting, submitted, error }
+
+class ProfileCompletionState extends Equatable {
+  const ProfileCompletionState({
+    this.status = ProfileFormStatus.loading,
+    this.jobTitles = const [],
+    this.error,
+  });
+
+  final ProfileFormStatus status;
+  final List<JobTitle> jobTitles;
+  final String? error;
+
+  ProfileCompletionState copyWith({
+    ProfileFormStatus? status,
+    List<JobTitle>? jobTitles,
+    String? error,
+  }) {
+    return ProfileCompletionState(
+      status: status ?? this.status,
+      jobTitles: jobTitles ?? this.jobTitles,
+      error: error,
+    );
+  }
+
+  @override
+  List<Object?> get props => [status, jobTitles, error];
+}
+
+class ProfileCompletionCubit extends Cubit<ProfileCompletionState> {
+  ProfileCompletionCubit(this._repo, {this.existing})
+    : super(const ProfileCompletionState()) {
+    _load();
+  }
+
+  final ProfileRepository _repo;
+
+  /// When non-null, the form edits an existing (approved) profile instead of
+  /// completing a new one — status is preserved and the photo is optional.
+  final Profile? existing;
+  bool get isEdit => existing != null;
+
+  Future<void> _load() async {
+    emit(state.copyWith(status: ProfileFormStatus.loading));
+    try {
+      final titles = await _repo.fetchActiveJobTitles();
+      emit(state.copyWith(status: ProfileFormStatus.ready, jobTitles: titles));
+    } catch (e) {
+      emit(
+        state.copyWith(status: ProfileFormStatus.error, error: e.toString()),
+      );
+    }
+  }
+
+  Future<void> retry() => _load();
+
+  /// Uploads any newly picked images then persists the profile. In create mode
+  /// this submits for approval; in edit mode it updates the fields in place.
+  Future<void> submit({
+    required String firstName,
+    required String surname,
+    required String fatherName,
+    File? photo,
+    required String jobTitleId,
+    required Gender gender,
+    required DateTime dateOfBirth,
+    required MissionType missionType,
+    required String phoneSy,
+    String? phoneSa,
+    File? passport,
+    File? visa,
+    File? nusuk,
+  }) async {
+    emit(state.copyWith(status: ProfileFormStatus.submitting));
+    try {
+      // Upload a newly picked avatar; null means "keep the existing one".
+      final photoUrl = photo == null
+          ? null
+          : await _repo.uploadImage(
+              bucket: 'avatars',
+              name: 'avatar.jpg',
+              file: photo,
+            );
+
+      Future<String?> uploadDoc(String name, File? f) async {
+        if (f == null) return null;
+        return _repo.uploadImage(bucket: 'documents', name: name, file: f);
+      }
+
+      final passportUrl = await uploadDoc('passport.jpg', passport);
+      final visaUrl = await uploadDoc('visa.jpg', visa);
+      final nusukUrl = await uploadDoc('nusuk.jpg', nusuk);
+
+      if (isEdit) {
+        await _repo.updateOwnProfile(
+          firstName: firstName,
+          surname: surname,
+          fatherName: fatherName,
+          jobTitleId: jobTitleId,
+          gender: gender,
+          dateOfBirth: dateOfBirth,
+          missionType: missionType,
+          phoneSy: phoneSy,
+          phoneSa: phoneSa,
+          photoUrl: photoUrl,
+          passportImageUrl: passportUrl,
+          visaImageUrl: visaUrl,
+          nusukCardImageUrl: nusukUrl,
+        );
+      } else {
+        await _repo.submitForApproval(
+          firstName: firstName,
+          surname: surname,
+          fatherName: fatherName,
+          photoUrl: photoUrl!,
+          jobTitleId: jobTitleId,
+          gender: gender,
+          dateOfBirth: dateOfBirth,
+          missionType: missionType,
+          phoneSy: phoneSy,
+          phoneSa: phoneSa,
+          passportImageUrl: passportUrl,
+          visaImageUrl: visaUrl,
+          nusukCardImageUrl: nusukUrl,
+        );
+      }
+
+      emit(state.copyWith(status: ProfileFormStatus.submitted));
+    } catch (e) {
+      emit(
+        state.copyWith(status: ProfileFormStatus.error, error: e.toString()),
+      );
+    }
+  }
+}

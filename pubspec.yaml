@@ -1,0 +1,49 @@
+name: hajjoperations
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.12.1
+
+dependencies:
+  bloc: ^9.2.1
+  cached_network_image: ^3.4.1
+  equatable: ^2.1.0
+  firebase_core: ^4.12.1
+  firebase_messaging: ^16.4.3
+  flutter:
+    sdk: flutter
+  flutter_bloc: ^9.1.1
+  flutter_dotenv: ^6.0.1
+  flutter_local_notifications: ^22.2.0
+  flutter_localizations:
+    sdk: flutter
+  go_router: ^17.3.0
+  google_sign_in: ^7.2.0
+  hijri: ^3.0.1
+  iconsax_flutter: 1.0.1
+  image_picker: ^1.2.3
+  intl: ^0.20.2
+  shared_preferences: ^2.5.5
+  supabase_flutter: ^2.16.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true
+  assets:
+    - .env
+  fonts:
+    - family: itfQomra
+      fonts:
+        - asset: assets/fonts/itfQomra/itfQomraArabic-Light.otf
+          weight: 300
+        - asset: assets/fonts/itfQomra/itfQomraArabic-Regular.otf
+          weight: 400
+        - asset: assets/fonts/itfQomra/itfQomraArabic-Bold.otf
+          weight: 700

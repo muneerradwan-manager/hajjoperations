@@ -1,0 +1,244 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../core/animations/animations.dart';
+import '../../../core/l10n/l10n_extension.dart';
+import '../../../core/l10n/permission_labels.dart';
+import '../../../core/theme/app_icons.dart';
+import '../../../core/theme/glass_tokens.dart';
+import '../../../core/widgets/responsive_center.dart';
+import '../application/permission_editor_cubit.dart';
+import '../data/permissions_repository.dart';
+import '../domain/permission.dart';
+import '../../../core/widgets/glass.dart';
+import '../../../core/widgets/states.dart';
+
+class PermissionEditorScreen extends StatelessWidget {
+  const PermissionEditorScreen({
+    super.key,
+    required this.userId,
+    required this.employeeName,
+  });
+
+  final String userId;
+  final String employeeName;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => PermissionEditorCubit(PermissionsRepository(), userId),
+      child: _View(employeeName: employeeName),
+    );
+  }
+}
+
+class _View extends StatelessWidget {
+  const _View({required this.employeeName});
+  final String employeeName;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return Scaffold(
+      appBar: GlassAppBar(
+        title: Text(
+          employeeName.isEmpty ? l.permissionEditorTitle : employeeName,
+        ),
+      ),
+      body: SafeArea(
+        child: ResponsiveCenter(
+          child: BlocConsumer<PermissionEditorCubit, PermissionEditorState>(
+            listenWhen: (p, c) => c.error != null && p.error != c.error,
+            listener: (context, state) {
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(SnackBar(content: Text(state.error!)));
+            },
+            builder: (context, state) {
+              if (state.status == PermissionEditorStatus.loading) {
+                return const SkeletonList();
+              }
+              final parents = state.catalog.where((p) => p.isParent).toList();
+              final grantedActions = state.granted
+                  .where(
+                    (id) => state.catalog.any((p) => p.id == id && !p.isParent),
+                  )
+                  .length;
+              final totalActions = state.catalog
+                  .where((p) => !p.isParent)
+                  .length;
+              final cubit = context.read<PermissionEditorCubit>();
+
+              return ListView(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  12,
+                  16,
+                  24 + MediaQuery.viewPaddingOf(context).bottom,
+                ),
+                children: [
+                  _CountHeader(granted: grantedActions, total: totalActions),
+                  const SizedBox(height: 12),
+                  ...staggered([
+                    for (final parent in parents)
+                      _PermissionSection(
+                        parent: parent,
+                        children: cubit.childrenOf(parent.id),
+                        granted: state.granted,
+                        busy: state.busy,
+                        onToggle: cubit.toggle,
+                      ),
+                  ], step: const Duration(milliseconds: 40)),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CountHeader extends StatelessWidget {
+  const _CountHeader({required this.granted, required this.total});
+  final int granted;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final ratio = total == 0 ? 0.0 : granted / total;
+
+    return GlassCard(
+      tint: scheme.primary,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(AppIcons.shield, color: scheme.primary, size: 20),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(
+                  context.l10n.permissionGrantedCount(granted, total),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          // At-a-glance sense of how much access this person holds.
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: ratio),
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, _) => LinearProgressIndicator(
+                value: value,
+                minHeight: 5,
+                backgroundColor: scheme.primary.withValues(alpha: 0.14),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A collapsible section: a parent permission (section access) with a switch,
+/// and — when granted — its child actions as indented switches.
+class _PermissionSection extends StatelessWidget {
+  const _PermissionSection({
+    required this.parent,
+    required this.children,
+    required this.granted,
+    required this.busy,
+    required this.onToggle,
+  });
+
+  final Permission parent;
+  final List<Permission> children;
+  final Set<String> granted;
+  final Set<String> busy;
+  final ValueChanged<String> onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final parentGranted = granted.contains(parent.id);
+    final grantedChildren = children
+        .where((c) => granted.contains(c.id))
+        .length;
+
+    return GlassCard(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        children: [
+          SwitchListTile(
+            secondary: _busyOr(
+              parent.id,
+              Icon(AppIcons.shield, color: scheme.primary),
+            ),
+            title: Text(
+              permissionLabel(l, parent.code),
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            subtitle: (children.isEmpty || !parentGranted)
+                ? null
+                : Text('$grantedChildren / ${children.length}'),
+            value: parentGranted,
+            onChanged: busy.contains(parent.id)
+                ? null
+                : (_) => onToggle(parent.id),
+          ),
+          // Children are revealed only while the parent section is granted.
+          AnimatedSize(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            alignment: Alignment.topCenter,
+            child: (!parentGranted || children.isEmpty)
+                ? const SizedBox(width: double.infinity)
+                : Column(
+                    children: [
+                      Divider(height: 1, color: scheme.outlineVariant),
+                      for (final child in children)
+                        SwitchListTile(
+                          contentPadding: const EdgeInsetsDirectional.only(
+                            start: 32,
+                            end: 16,
+                          ),
+                          dense: true,
+                          secondary: _busyOr(
+                            child.id,
+                            const SizedBox(width: 1),
+                          ),
+                          title: Text(permissionLabel(l, child.code)),
+                          value: granted.contains(child.id),
+                          onChanged: busy.contains(child.id)
+                              ? null
+                              : (_) => onToggle(child.id),
+                        ),
+                      const SizedBox(height: 4),
+                    ],
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _busyOr(String id, Widget fallback) {
+    if (busy.contains(id)) {
+      return const SizedBox(
+        width: 22,
+        height: 22,
+        child: CircularProgressIndicator(strokeWidth: 2.2),
+      );
+    }
+    return fallback;
+  }
+}
