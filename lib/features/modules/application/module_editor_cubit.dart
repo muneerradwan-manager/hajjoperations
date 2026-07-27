@@ -355,6 +355,7 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
           moduleId: id,
           fileName: name,
           file: entry.value,
+          fieldKey: entry.key,
         );
         values[entry.key] = ModuleFile(path: path, name: name).toJson();
       }

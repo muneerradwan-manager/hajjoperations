@@ -2,41 +2,34 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../core/l10n/l10n_extension.dart';
-import '../../../../core/theme/app_icons.dart';
-import '../../../../core/theme/glass_tokens.dart';
-import '../../../../core/widgets/glass.dart';
-import '../../data/notifications_repository.dart';
-import '../../domain/app_notification.dart';
+import '../l10n/l10n_extension.dart';
+import '../theme/app_icons.dart';
+import '../theme/glass_tokens.dart';
+import '../widgets/glass.dart';
+// For the icon and the kind's name, which come with the attachment itself.
+import 'attachment_picker.dart';
 
-IconData attachmentIcon(AttachmentKind kind) => switch (kind) {
-  AttachmentKind.image => AppIcons.image,
-  AttachmentKind.video => AppIcons.video,
-  AttachmentKind.audio => AppIcons.audio,
-  AttachmentKind.file => AppIcons.file,
-};
+/// Mints a short-lived link to a stored file. Every bucket in this app is
+/// private, and each one has its own repository that knows how to sign for it —
+/// so the view is handed the signing rather than a repository.
+typedef AttachmentSigner =
+    Future<String> Function(
+      String path, {
+      bool download,
+      String? downloadName,
+    });
 
-String attachmentKindLabel(BuildContext context, AttachmentKind kind) {
-  final l = context.l10n;
-  return switch (kind) {
-    AttachmentKind.image => l.attachmentImage,
-    AttachmentKind.video => l.attachmentVideo,
-    AttachmentKind.audio => l.attachmentAudio,
-    AttachmentKind.file => l.attachmentFile,
-  };
-}
-
-/// Everything that came with one notification: the photos as a strip you can
-/// see without opening anything, and the rest as rows.
+/// Everything attached to one thing: the photos as a strip you can see without
+/// opening anything, and the rest as rows.
 class AttachmentsView extends StatelessWidget {
   const AttachmentsView({
     super.key,
     required this.attachments,
-    required this.repo,
+    required this.signer,
   });
 
-  final List<NotificationAttachment> attachments;
-  final NotificationsRepository repo;
+  final List<StoredAttachment> attachments;
+  final AttachmentSigner signer;
 
   @override
   Widget build(BuildContext context) {
@@ -61,13 +54,13 @@ class AttachmentsView extends StatelessWidget {
               itemCount: images.length,
               separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
               itemBuilder: (context, i) =>
-                  _ImageThumb(attachment: images[i], all: images, repo: repo),
+                  _ImageThumb(attachment: images[i], all: images, signer: signer),
             ),
           ),
         ],
         for (final attachment in others) ...[
           const SizedBox(height: AppSpacing.sm),
-          _AttachmentRow(attachment: attachment, repo: repo),
+          _AttachmentRow(attachment: attachment, signer: signer),
         ],
       ],
     );
@@ -79,14 +72,14 @@ class AttachmentsView extends StatelessWidget {
 /// player already knows the codecs, the scrubbing and the volume keys.
 Future<void> _openExternally(
   BuildContext context,
-  NotificationsRepository repo,
-  NotificationAttachment attachment, {
+  AttachmentSigner signer,
+  StoredAttachment attachment, {
   bool download = false,
 }) async {
   final l = context.l10n;
   final messenger = ScaffoldMessenger.of(context);
   try {
-    final url = await repo.signedUrl(
+    final url = await signer(
       attachment.path,
       download: download,
       downloadName: attachment.name,
@@ -111,16 +104,16 @@ class _ImageThumb extends StatefulWidget {
   const _ImageThumb({
     required this.attachment,
     required this.all,
-    required this.repo,
+    required this.signer,
   });
 
-  final NotificationAttachment attachment;
+  final StoredAttachment attachment;
 
-  /// The other photos in the same notification, so the viewer can be swiped
-  /// through instead of backed out of and reopened.
-  final List<NotificationAttachment> all;
+  /// The other photos alongside it, so the viewer can be swiped through instead
+  /// of backed out of and reopened.
+  final List<StoredAttachment> all;
 
-  final NotificationsRepository repo;
+  final AttachmentSigner signer;
 
   @override
   State<_ImageThumb> createState() => _ImageThumbState();
@@ -132,13 +125,13 @@ class _ImageThumbState extends State<_ImageThumb> {
   @override
   void initState() {
     super.initState();
-    _url = widget.repo.signedUrl(widget.attachment.path);
+    _url = widget.signer(widget.attachment.path);
   }
 
   Future<void> _open() async {
     final urls = <String>[];
     for (final a in widget.all) {
-      urls.add(await widget.repo.signedUrl(a.path));
+      urls.add(await widget.signer(a.path));
     }
     if (!mounted) return;
     Navigator.of(context).push(
@@ -147,7 +140,7 @@ class _ImageThumbState extends State<_ImageThumb> {
           attachments: widget.all,
           urls: urls,
           initialIndex: widget.all.indexOf(widget.attachment),
-          repo: widget.repo,
+          signer: widget.signer,
         ),
       ),
     );
@@ -181,7 +174,7 @@ class _ImageThumbState extends State<_ImageThumb> {
                 imageUrl: snapshot.data!,
                 // Keyed on the storage path, not the URL: every signature is a
                 // different URL, so without this the cache would never once hit
-                // and the inbox would re-download its photos on every rebuild.
+                // and the screen would re-download its photos on every rebuild.
                 cacheKey: widget.attachment.path,
                 fit: BoxFit.cover,
                 errorWidget: (context, _, _) => Container(
@@ -200,10 +193,10 @@ class _ImageThumbState extends State<_ImageThumb> {
 /// A video, a voice note or a document: what it is, how big, and the two things
 /// you can do with it.
 class _AttachmentRow extends StatelessWidget {
-  const _AttachmentRow({required this.attachment, required this.repo});
+  const _AttachmentRow({required this.attachment, required this.signer});
 
-  final NotificationAttachment attachment;
-  final NotificationsRepository repo;
+  final StoredAttachment attachment;
+  final AttachmentSigner signer;
 
   @override
   Widget build(BuildContext context) {
@@ -215,7 +208,7 @@ class _AttachmentRow extends StatelessWidget {
     return GlassCard(
       blur: false,
       padding: const EdgeInsets.all(AppSpacing.md),
-      onTap: () => _openExternally(context, repo, attachment),
+      onTap: () => _openExternally(context, signer, attachment),
       child: Row(
         children: [
           Container(
@@ -259,7 +252,7 @@ class _AttachmentRow extends StatelessWidget {
             tooltip: l.attachmentDownload,
             visualDensity: VisualDensity.compact,
             onPressed: () =>
-                _openExternally(context, repo, attachment, download: true),
+                _openExternally(context, signer, attachment, download: true),
             icon: const Icon(AppIcons.download, size: 18),
           ),
         ],
@@ -274,13 +267,13 @@ class _ImageViewer extends StatefulWidget {
     required this.attachments,
     required this.urls,
     required this.initialIndex,
-    required this.repo,
+    required this.signer,
   });
 
-  final List<NotificationAttachment> attachments;
+  final List<StoredAttachment> attachments;
   final List<String> urls;
   final int initialIndex;
-  final NotificationsRepository repo;
+  final AttachmentSigner signer;
 
   @override
   State<_ImageViewer> createState() => _ImageViewerState();
@@ -316,7 +309,7 @@ class _ImageViewerState extends State<_ImageViewer> {
           IconButton(
             tooltip: l.attachmentDownload,
             onPressed: () =>
-                _openExternally(context, widget.repo, current, download: true),
+                _openExternally(context, widget.signer, current, download: true),
             icon: const Icon(AppIcons.download),
           ),
         ],

@@ -735,7 +735,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moduleReportEdit => 'Edit my report';
 
   @override
-  String get moduleReportBody => 'The report';
+  String get moduleReportNotes => 'Notes';
+
+  @override
+  String get moduleReportNotesHint =>
+      'Optional — anything to add about what you attached';
+
+  @override
+  String get moduleReportAttachHint =>
+      'The report is what you upload: photos, files or a voice note';
+
+  @override
+  String get moduleReportNothingAttached => 'Nothing attached';
 
   @override
   String get moduleReportSaved => 'Report filed';

@@ -1,5 +1,8 @@
+import '../../../core/attachments/attachment.dart';
 import '../../../core/l10n/localized_name.dart';
 import '../../profile/domain/profile.dart';
+
+export '../../../core/attachments/attachment.dart';
 
 /// A PDF stored in the private `modules` bucket. The path is what lives in
 /// `modules.data`; a signed URL is minted on demand when someone opens it.
@@ -208,19 +211,25 @@ enum ReportCadence {
 }
 
 /// One report filed against a file by one of its members.
+///
+/// The report is what was attached — the signed sheet, the photo of the tower,
+/// the voice note recorded in the bus. [notes] is whatever the filer wanted to
+/// say about them, and is usually nothing.
 class ModuleReport {
   const ModuleReport({
     required this.id,
     required this.authorId,
-    required this.body,
     required this.createdAt,
+    this.notes,
+    this.attachments = const [],
     this.periodStart,
     this.author,
   });
 
   final String id;
   final String authorId;
-  final String body;
+  final String? notes;
+  final List<StoredAttachment> attachments;
   final DateTime createdAt;
 
   /// The stretch it accounts for — the day, or the Monday of the week. Null for
@@ -232,10 +241,23 @@ class ModuleReport {
 
   factory ModuleReport.fromMap(Map<String, dynamic> map) {
     final joined = map['profiles'];
+    final rows = ((map['module_report_attachments'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>()
+        .toList()
+      // Sorted here rather than in the query: an embedded resource comes back
+      // in whatever order it comes back in, and the strip should read in the
+      // order things were attached.
+      ..sort(
+        (a, b) => ((a['sort_order'] as num?) ?? 0).compareTo(
+          (b['sort_order'] as num?) ?? 0,
+        ),
+      );
+    final attachments = rows.map(StoredAttachment.fromMap).toList();
     return ModuleReport(
       id: map['id'] as String,
       authorId: map['author_id'] as String,
-      body: map['body'] as String,
+      notes: map['body'] as String?,
+      attachments: attachments,
       createdAt: DateTime.parse(map['created_at'] as String),
       periodStart: map['period_start'] == null
           ? null

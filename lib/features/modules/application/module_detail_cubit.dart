@@ -223,11 +223,21 @@ class ModuleDetailCubit extends Cubit<ModuleDetailState> {
   /// page rather than from the reader's own list.
   final String? viewAsProfileId;
 
-  /// Files the viewer's report for the period in force. Returns null on
-  /// success, else what went wrong.
-  Future<String?> submitReport(String body) async {
+  /// Files the viewer's report for the period in force: what they attached,
+  /// what they took back off, and any notes. Returns null on success, else what
+  /// went wrong.
+  Future<String?> submitReport({
+    String? notes,
+    List<PendingAttachment> attachments = const [],
+    List<StoredAttachment> removed = const [],
+  }) async {
     try {
-      await _repo.submitReport(moduleId: moduleId, body: body);
+      await _repo.submitReport(
+        moduleId: moduleId,
+        notes: notes,
+        attachments: attachments,
+        removed: removed,
+      );
       await load();
       return null;
     } catch (e) {
@@ -313,4 +323,12 @@ class ModuleDetailCubit extends Cubit<ModuleDetailState> {
       return null;
     }
   }
+
+  /// The same, for the attachment views, which want the failure rather than a
+  /// null they would have to explain to the reader themselves.
+  Future<String> signAttachment(
+    String path, {
+    bool download = false,
+    String? downloadName,
+  }) => _repo.signedUrl(path, download: download, downloadName: downloadName);
 }

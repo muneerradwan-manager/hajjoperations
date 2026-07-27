@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/animations/animations.dart';
+import '../../../core/attachments/attachment_picker.dart';
+import '../../../core/attachments/attachments_view.dart';
 import '../../../core/constants/permission_codes.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_colors.dart';
@@ -976,68 +978,30 @@ class _ReportsCard extends StatelessWidget {
   final OperationalModule module;
   final List<ModuleReport> reports;
 
-  Future<void> _write(BuildContext context) async {
+  Future<void> _file(BuildContext context) async {
     final l = context.l10n;
     final cubit = context.read<ModuleDetailCubit>();
     final messenger = ScaffoldMessenger.of(context);
-    final controller = TextEditingController(
-      text: cubit.state.myReportForThisPeriod?.body ?? '',
-    );
 
-    final body = await showModalBottomSheet<String>(
+    final filed = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-        ),
+      builder: (sheetContext) => BlocProvider.value(
+        value: cubit,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            0,
-            AppSpacing.lg,
-            AppSpacing.xl,
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                l.moduleReportWrite,
-                style: Theme.of(sheetContext).textTheme.titleLarge,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextField(
-                controller: controller,
-                maxLines: 8,
-                autofocus: true,
-                decoration: InputDecoration(
-                  labelText: l.moduleReportBody,
-                  alignLabelWithHint: true,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              FilledButton.icon(
-                onPressed: () =>
-                    Navigator.of(sheetContext).pop(controller.text.trim()),
-                icon: const Icon(AppIcons.approve),
-                label: Text(l.commonSave),
-              ),
-            ],
-          ),
+          child: _ReportSheet(existing: cubit.state.myReportForThisPeriod),
         ),
       ),
     );
-    controller.dispose();
-    if (body == null || body.isEmpty) return;
+    if (filed != true) return;
 
-    final error = await cubit.submitReport(body);
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(error ?? l.moduleReportSaved)),
-      );
+      ..showSnackBar(SnackBar(content: Text(l.moduleReportSaved)));
   }
 
   @override
@@ -1056,8 +1020,8 @@ class _ReportsCard extends StatelessWidget {
           // so too, and this keeps the button from being a trap.
           if (state.isMember)
             OutlinedButton.icon(
-              onPressed: () => _write(context),
-              icon: const Icon(AppIcons.edit),
+              onPressed: () => _file(context),
+              icon: const Icon(AppIcons.attach),
               label: Text(
                 mine == null ? l.moduleReportWrite : l.moduleReportEdit,
               ),
@@ -1077,34 +1041,246 @@ class _ReportsCard extends StatelessWidget {
             for (final report in reports)
               Padding(
                 padding: const EdgeInsets.only(top: AppSpacing.md),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            report.author?.fullName ?? '',
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                        ),
-                        Text(
-                          formatDate(report.periodStart ?? report.createdAt),
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(color: scheme.onSurfaceVariant),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      report.body,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(height: 1.5),
-                    ),
-                  ],
-                ),
+                child: _ReportTile(report: report),
               ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One report as it is read: who filed it and for when, what came with it, and
+/// their notes underneath if they left any.
+class _ReportTile extends StatelessWidget {
+  const _ReportTile({required this.report});
+
+  final ModuleReport report;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    final notes = report.notes?.trim() ?? '';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                report.author?.fullName ?? '',
+                style: text.titleSmall,
+              ),
+            ),
+            Text(
+              formatDate(report.periodStart ?? report.createdAt),
+              style: text.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+          ],
+        ),
+        AttachmentsView(
+          attachments: report.attachments,
+          signer: context.read<ModuleDetailCubit>().signAttachment,
+        ),
+        // A report with neither is not possible to file, but one filed before
+        // attachments existed has only notes, and one filed since may have only
+        // files — so both sides are optional here.
+        if (report.attachments.isEmpty && notes.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              l.moduleReportNothingAttached,
+              style: text.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        if (notes.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.sm),
+            child: Text(
+              notes,
+              style: text.bodyMedium?.copyWith(height: 1.5),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Filing one: the files themselves, and a box for notes if there are any.
+///
+/// Re-opened for a report already filed this period, it shows what is on it —
+/// attachments can be taken back off, more added, the notes rewritten — because
+/// the database edits that report rather than adding a second.
+class _ReportSheet extends StatefulWidget {
+  const _ReportSheet({required this.existing});
+
+  final ModuleReport? existing;
+
+  @override
+  State<_ReportSheet> createState() => _ReportSheetState();
+}
+
+class _ReportSheetState extends State<_ReportSheet> {
+  late final _notes = TextEditingController(text: widget.existing?.notes ?? '');
+
+  /// What is already filed, minus whatever has been taken off in this sheet.
+  late final _kept = [...?widget.existing?.attachments];
+  final _removed = <StoredAttachment>[];
+  final _added = <PendingAttachment>[];
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _notes.dispose();
+    super.dispose();
+  }
+
+  Future<void> _attach() async {
+    final picked = await pickAttachment(context);
+    if (picked != null) setState(() => _added.add(picked));
+  }
+
+  /// A report is the things attached to it, so there is nothing to file until
+  /// something is.
+  bool get _canFile => _kept.isNotEmpty || _added.isNotEmpty;
+
+  Future<void> _save() async {
+    setState(() => _busy = true);
+    final notes = _notes.text.trim();
+    final error = await context.read<ModuleDetailCubit>().submitReport(
+      notes: notes.isEmpty ? null : notes,
+      attachments: _added,
+      removed: _removed,
+    );
+    if (!mounted) return;
+    if (error != null) {
+      setState(() => _busy = false);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(error)));
+      return;
+    }
+    Navigator.of(context).pop(true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        0,
+        AppSpacing.lg,
+        AppSpacing.xl,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              widget.existing == null ? l.moduleReportWrite : l.moduleReportEdit,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              l.moduleReportAttachHint,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            for (final attachment in _kept)
+              _KeptAttachmentRow(
+                attachment: attachment,
+                onRemove: _busy
+                    ? null
+                    : () => setState(() {
+                        _kept.remove(attachment);
+                        _removed.add(attachment);
+                      }),
+              ),
+            for (var i = 0; i < _added.length; i++)
+              PendingAttachmentRow(
+                attachment: _added[i],
+                onRemove: _busy ? null : () => setState(() => _added.removeAt(i)),
+              ),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                onPressed: _busy ? null : _attach,
+                icon: const Icon(AppIcons.attach, size: 18),
+                label: Text(l.notificationAttach),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            TextField(
+              controller: _notes,
+              maxLines: 4,
+              decoration: InputDecoration(
+                labelText: l.moduleReportNotes,
+                helperText: l.moduleReportNotesHint,
+                alignLabelWithHint: true,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            FilledButton.icon(
+              onPressed: _busy || !_canFile ? null : _save,
+              icon: _busy
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2.2),
+                    )
+                  : const Icon(AppIcons.approve),
+              label: Text(l.commonSave),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// An attachment already filed, in the sheet that is editing it.
+class _KeptAttachmentRow extends StatelessWidget {
+  const _KeptAttachmentRow({required this.attachment, this.onRemove});
+
+  final StoredAttachment attachment;
+  final VoidCallback? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+      child: Row(
+        children: [
+          Icon(attachmentIcon(attachment.kind), size: 18, color: scheme.primary),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              attachment.name,
+              style: text.bodySmall,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          IconButton(
+            tooltip: context.l10n.commonDelete,
+            visualDensity: VisualDensity.compact,
+            onPressed: onRemove,
+            icon: const Icon(AppIcons.delete, size: 16),
+          ),
         ],
       ),
     );

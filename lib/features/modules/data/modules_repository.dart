@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/supabase/storage_key.dart';
 import '../../../core/supabase/supabase_client.dart';
 import '../../profile/domain/profile.dart';
 import '../domain/assignable_employee.dart';
@@ -175,7 +176,10 @@ class ModulesRepository {
   Future<List<ModuleReport>> fetchReports(String moduleId) async {
     final rows = await supabase
         .from('module_reports')
-        .select('*, profiles:author_id(*, job_titles(name))')
+        .select(
+          '*, module_report_attachments(*), '
+          'profiles:author_id(*, job_titles(name))',
+        )
         .eq('module_id', moduleId)
         .order('created_at', ascending: false);
     return (rows as List)
@@ -183,19 +187,79 @@ class ModulesRepository {
         .toList();
   }
 
-  /// Files a report for the period the file is currently in.
+  /// Files a report for the period the file is currently in: what was attached,
+  /// and whatever notes came with it.
   ///
   /// The period is worked out in the database, not here: a phone with a wrong
   /// clock, or in another timezone, would otherwise decide for itself which day
-  /// it was reporting for. Filing twice in one period edits the first.
+  /// it was reporting for. Filing twice in one period edits the first — which is
+  /// why [removed] exists, so a photo of the wrong tower can be taken back off.
   Future<void> submitReport({
     required String moduleId,
-    required String body,
+    String? notes,
+    List<PendingAttachment> attachments = const [],
+    List<StoredAttachment> removed = const [],
   }) async {
-    await supabase.rpc(
-      'submit_module_report',
-      params: {'p_module_id': moduleId, 'p_body': body},
-    );
+    // The row first: the files are stored under its id, and storage will not
+    // accept them until it exists.
+    final reportId =
+        await supabase.rpc(
+              'submit_module_report',
+              params: {'p_module_id': moduleId, 'p_body': notes},
+            )
+            as String;
+
+    for (final attachment in removed) {
+      await supabase.from('module_report_attachments').delete().eq(
+        'id',
+        attachment.id,
+      );
+      await supabase.storage.from(_bucket).remove([attachment.path]);
+    }
+
+    if (attachments.isEmpty) return;
+
+    // Where the next one starts, so re-filing does not overwrite what is
+    // already there — two photos off one camera roll can share a name, and the
+    // second must not replace the first.
+    final existing = await supabase
+        .from('module_report_attachments')
+        .select('sort_order')
+        .eq('report_id', reportId)
+        .order('sort_order', ascending: false)
+        .limit(1);
+    var next =
+        ((existing as List).firstOrNull as Map<String, dynamic>?)?['sort_order']
+                as int? ??
+            -1;
+
+    final rows = <Map<String, dynamic>>[];
+    for (final attachment in attachments) {
+      next++;
+      final path =
+          '$moduleId/reports/$reportId/${next}_'
+          '${storageKey(attachment.name, fallback: '$next')}';
+      await supabase.storage
+          .from(_bucket)
+          .upload(
+            path,
+            attachment.file,
+            fileOptions: FileOptions(
+              upsert: true,
+              contentType: attachment.mimeType,
+            ),
+          );
+      rows.add({
+        'report_id': reportId,
+        'kind': attachment.kind.name,
+        'path': path,
+        'name': attachment.name,
+        'mime_type': attachment.mimeType,
+        'size_bytes': attachment.file.lengthSync(),
+        'sort_order': next,
+      });
+    }
+    await supabase.from('module_report_attachments').insert(rows);
   }
 
   // ----------------------------------------------------------------- nodes
@@ -553,14 +617,20 @@ class ModulesRepository {
 
   // -------------------------------------------------------------- storage
 
-  /// Uploads [file] under `{moduleId}/{name}` in the private `modules` bucket
+  /// Uploads [file] under `{moduleId}/{key}` in the private `modules` bucket
   /// and returns the storage path.
+  ///
+  /// The key is not the file name: storage refuses a non-ASCII one, and these
+  /// arrive named in Arabic. [fieldKey] — the module field the file belongs to —
+  /// keeps two of them apart when both names strip to nothing.
   Future<String> uploadModuleFile({
     required String moduleId,
     required String fileName,
     required File file,
+    String? fieldKey,
   }) async {
-    final path = '$moduleId/$fileName';
+    final path =
+        '$moduleId/${storageKey(fileName, fallback: fieldKey ?? 'file')}';
     await supabase.storage
         .from(_bucket)
         .upload(path, file, fileOptions: const FileOptions(upsert: true));
@@ -569,8 +639,25 @@ class ModulesRepository {
 
   /// A short-lived link to a module attachment. Signing goes through RLS, so a
   /// non-member cannot mint one.
-  Future<String> signedUrl(String path, {int expiresInSeconds = 600}) {
-    return supabase.storage.from(_bucket).createSignedUrl(path, expiresInSeconds);
+  ///
+  /// [download] asks storage to serve it as a download named [downloadName]
+  /// rather than rendering it in place — which is the difference between "open
+  /// the photo" and "save the photo".
+  Future<String> signedUrl(
+    String path, {
+    int expiresInSeconds = 600,
+    bool download = false,
+    String? downloadName,
+  }) {
+    return supabase.storage
+        .from(_bucket)
+        .createSignedUrl(path, expiresInSeconds)
+        .then((url) {
+          if (!download) return url;
+          final separator = url.contains('?') ? '&' : '?';
+          final name = Uri.encodeComponent(downloadName ?? '');
+          return '$url${separator}download${name.isEmpty ? '' : '=$name'}';
+        });
   }
 
   // ------------------------------------------------------------- employees

@@ -1,18 +1,12 @@
-import 'dart:io';
-
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 
+import '../../../core/attachments/attachment_picker.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
-import '../../../core/theme/glass_tokens.dart';
 import '../../modules/data/modules_repository.dart';
 import '../../modules/domain/operational_module.dart';
 import '../../seasons/data/seasons_repository.dart';
 import '../data/notifications_repository.dart';
-import '../domain/app_notification.dart';
-import 'widgets/attachment_view.dart';
 
 /// Who a notification is going to.
 enum SendAudience { person, module, all }
@@ -81,104 +75,9 @@ class _FormState extends State<_Form> {
     super.dispose();
   }
 
-  void _add(PendingAttachment attachment) =>
-      setState(() => _attachments.add(attachment));
-
-  /// A photo, from the camera or the roll. Goes through `image_picker` rather
-  /// than the file browser: on a phone this is the common case and it should
-  /// take one tap, not a trip through the file system.
-  Future<void> _pickImage(ImageSource source) async {
-    final picked = await ImagePicker().pickImage(
-      source: source,
-      imageQuality: 85,
-    );
-    if (picked == null) return;
-    _add(
-      PendingAttachment(
-        file: File(picked.path),
-        name: picked.name,
-        kind: AttachmentKind.image,
-        mimeType: picked.mimeType ?? 'image/jpeg',
-      ),
-    );
-  }
-
-  Future<void> _pickVideo() async {
-    final picked = await ImagePicker().pickVideo(source: ImageSource.gallery);
-    if (picked == null) return;
-    _add(
-      PendingAttachment(
-        file: File(picked.path),
-        name: picked.name,
-        kind: AttachmentKind.video,
-        mimeType: picked.mimeType ?? 'video/mp4',
-      ),
-    );
-  }
-
-  /// Audio and anything else, through the file browser. [kind] is what the
-  /// sender said they were attaching — the recipient's app shows a voice note
-  /// as a voice note because of this, not because of the file extension.
-  Future<void> _pickFile(AttachmentKind kind) async {
-    final result = await FilePicker.platform.pickFiles(
-      type: kind == AttachmentKind.audio ? FileType.audio : FileType.any,
-      withData: false,
-    );
-    final picked = result?.files.singleOrNull;
-    if (picked?.path == null) return;
-    _add(
-      PendingAttachment(
-        file: File(picked!.path!),
-        name: picked.name,
-        kind: kind,
-      ),
-    );
-  }
-
-  Future<void> _showAttachMenu() async {
-    final l = context.l10n;
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final (icon, label, action) in <(IconData, String, VoidCallback)>[
-              (
-                AppIcons.camera,
-                l.notificationAttachCamera,
-                () => _pickImage(ImageSource.camera),
-              ),
-              (
-                AppIcons.image,
-                l.notificationAttachPhoto,
-                () => _pickImage(ImageSource.gallery),
-              ),
-              (AppIcons.video, l.notificationAttachVideo, _pickVideo),
-              (
-                AppIcons.audio,
-                l.notificationAttachAudio,
-                () => _pickFile(AttachmentKind.audio),
-              ),
-              (
-                AppIcons.file,
-                l.notificationAttachFile,
-                () => _pickFile(AttachmentKind.file),
-              ),
-            ])
-              ListTile(
-                leading: Icon(icon),
-                title: Text(label),
-                onTap: () {
-                  Navigator.of(sheetContext).pop();
-                  action();
-                },
-              ),
-          ],
-        ),
-      ),
-    );
+  Future<void> _attach() async {
+    final picked = await pickAttachment(context);
+    if (picked != null) setState(() => _attachments.add(picked));
   }
 
   Future<void> _send() async {
@@ -236,10 +135,13 @@ class _FormState extends State<_Form> {
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
       child: Form(
         key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+        // Scrollable, because the sheet has to fit above the keyboard: with
+        // two attachments on it and the audience field showing, it does not.
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             Text(
               l.notificationSend,
               style: Theme.of(context).textTheme.titleLarge,
@@ -304,13 +206,13 @@ class _FormState extends State<_Form> {
             Align(
               alignment: AlignmentDirectional.centerStart,
               child: TextButton.icon(
-                onPressed: _busy ? null : _showAttachMenu,
+                onPressed: _busy ? null : _attach,
                 icon: const Icon(AppIcons.attach, size: 18),
                 label: Text(l.notificationAttach),
               ),
             ),
             for (var i = 0; i < _attachments.length; i++)
-              _PendingRow(
+              PendingAttachmentRow(
                 attachment: _attachments[i],
                 onRemove: _busy
                     ? null
@@ -331,55 +233,13 @@ class _FormState extends State<_Form> {
                   : const Icon(AppIcons.send),
               label: Text(l.notificationSend),
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
-
-/// One file already chosen, with the way to change your mind about it.
-class _PendingRow extends StatelessWidget {
-  const _PendingRow({required this.attachment, this.onRemove});
-
-  final PendingAttachment attachment;
-  final VoidCallback? onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-      child: Row(
-        children: [
-          Icon(
-            attachmentIcon(attachment.kind),
-            size: 18,
-            color: scheme.primary,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              attachment.name,
-              style: text.bodySmall,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          IconButton(
-            tooltip: context.l10n.commonDelete,
-            visualDensity: VisualDensity.compact,
-            onPressed: onRemove,
-            icon: const Icon(AppIcons.delete, size: 16),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 
 /// Everyone, or the members of one file. A person is not offered here — that
 /// send starts from their page, where you already know who you mean.

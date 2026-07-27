@@ -734,7 +734,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get moduleReportEdit => 'تعديل تقريري';
 
   @override
-  String get moduleReportBody => 'نص التقرير';
+  String get moduleReportNotes => 'ملاحظات';
+
+  @override
+  String get moduleReportNotesHint =>
+      'اختياري — إن كان لديك ما تضيفه على المرفقات';
+
+  @override
+  String get moduleReportAttachHint =>
+      'التقرير هو ما ترفعه: صور، ملفات، أو تسجيل صوتي';
+
+  @override
+  String get moduleReportNothingAttached => 'بلا مرفقات';
 
   @override
   String get moduleReportSaved => 'تم رفع التقرير';

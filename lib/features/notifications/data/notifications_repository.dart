@@ -1,24 +1,8 @@
-import 'dart:io';
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/supabase/storage_key.dart';
 import '../../../core/supabase/supabase_client.dart';
 import '../domain/app_notification.dart';
-
-/// One file chosen to go out with a notification, before it has been uploaded.
-class PendingAttachment {
-  const PendingAttachment({
-    required this.file,
-    required this.name,
-    required this.kind,
-    this.mimeType,
-  });
-
-  final File file;
-  final String name;
-  final AttachmentKind kind;
-  final String? mimeType;
-}
 
 class NotificationsRepository {
   static const _bucket = 'notifications';
@@ -157,7 +141,7 @@ class NotificationsRepository {
         final attachment = attachments[i];
         // Prefixed with the index: two photos straight from a camera roll can
         // arrive with the same name, and the second must not replace the first.
-        final path = '$id/${i}_${attachment.name}';
+        final path = '$id/${i}_${storageKey(attachment.name, fallback: '$i')}';
         await supabase.storage
             .from(_bucket)
             .upload(
@@ -247,7 +231,7 @@ class NotificationsRepository {
       final attachment = attachments[i];
       // Prefixed with the index: two photos straight from a camera roll can
       // arrive with the same name, and the second must not replace the first.
-      final path = '$groupId/${i}_${attachment.name}';
+      final path = '$groupId/${i}_${storageKey(attachment.name, fallback: '$i')}';
       await supabase.storage
           .from(_bucket)
           .upload(

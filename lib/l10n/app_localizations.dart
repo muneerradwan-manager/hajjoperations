@@ -1490,11 +1490,29 @@ abstract class AppLocalizations {
   /// **'Edit my report'**
   String get moduleReportEdit;
 
-  /// No description provided for @moduleReportBody.
+  /// No description provided for @moduleReportNotes.
   ///
   /// In en, this message translates to:
-  /// **'The report'**
-  String get moduleReportBody;
+  /// **'Notes'**
+  String get moduleReportNotes;
+
+  /// No description provided for @moduleReportNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — anything to add about what you attached'**
+  String get moduleReportNotesHint;
+
+  /// No description provided for @moduleReportAttachHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The report is what you upload: photos, files or a voice note'**
+  String get moduleReportAttachHint;
+
+  /// No description provided for @moduleReportNothingAttached.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing attached'**
+  String get moduleReportNothingAttached;
 
   /// No description provided for @moduleReportSaved.
   ///

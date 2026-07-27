@@ -12,7 +12,7 @@ import '../application/notifications_cubit.dart';
 import '../data/notifications_repository.dart';
 import '../domain/app_notification.dart';
 import 'send_notification_sheet.dart';
-import 'widgets/attachment_view.dart';
+import '../../../core/attachments/attachments_view.dart';
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
@@ -166,7 +166,7 @@ class _NotificationCard extends StatelessWidget {
                   ],
                   AttachmentsView(
                     attachments: notification.attachments,
-                    repo: repo,
+                    signer: repo.signedUrl,
                   ),
                   const SizedBox(height: 6),
                   Text(
