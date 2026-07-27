@@ -41,6 +41,7 @@ class ModuleDetailState extends Equatable {
     this.nodes = const [],
     this.members = const [],
     this.referenceSets = const [],
+    this.reports = const [],
     this.viewAsProfileId,
     this.error,
   });
@@ -56,6 +57,45 @@ class ModuleDetailState extends Equatable {
   final List<ModuleMember> members;
 
   final List<ReferenceSet> referenceSets;
+
+  /// The reports filed against this file, newest first. RLS already narrowed
+  /// them: a member gets their own, a manager gets everyone's.
+  final List<ModuleReport> reports;
+
+  /// The signed-in person, always — reports are filed by whoever is looking,
+  /// never by the employee whose page this was opened from.
+  String? get _viewerId => supabase.auth.currentUser?.id;
+
+  Set<String> get _holders => {
+    for (final m in members) m.profileId,
+    for (final n in nodes)
+      for (final m in n.members) m.profileId,
+  };
+
+  /// Whether the viewer holds a role anywhere in this file. Only they may file
+  /// a report — the database says so too, and this keeps the button honest.
+  bool get isMember => _viewerId != null && _holders.contains(_viewerId);
+
+  /// The report the viewer has already filed for the period in force, if any.
+  /// Filing again edits it rather than adding a second, so the button says
+  /// "edit" when this is set.
+  ModuleReport? get myReportForThisPeriod {
+    final me = _viewerId;
+    if (me == null) return null;
+    final cadence = module?.reportCadence ?? ReportCadence.none;
+    final now = DateTime.now();
+    return reports.where((r) {
+      if (r.authorId != me) return false;
+      return switch (cadence) {
+        ReportCadence.once => true,
+        ReportCadence.none => false,
+        ReportCadence.daily || ReportCadence.weekly => r.periodStart != null &&
+            !r.periodStart!.isAfter(now) &&
+            now.difference(r.periodStart!).inDays <
+                (cadence == ReportCadence.daily ? 1 : 7),
+      };
+    }).firstOrNull;
+  }
 
   /// Whose duties this screen is about. Set when the file was opened from
   /// someone's employee page: the reader wants to know what THAT person is
@@ -164,6 +204,7 @@ class ModuleDetailState extends Equatable {
     nodes,
     members,
     referenceSets,
+    reports,
     viewAsProfileId,
     error,
   ];
@@ -181,6 +222,18 @@ class ModuleDetailCubit extends Cubit<ModuleDetailState> {
   /// Whose duties to show, when the file was opened from someone's employee
   /// page rather than from the reader's own list.
   final String? viewAsProfileId;
+
+  /// Files the viewer's report for the period in force. Returns null on
+  /// success, else what went wrong.
+  Future<String?> submitReport(String body) async {
+    try {
+      await _repo.submitReport(moduleId: moduleId, body: body);
+      await load();
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
 
   Future<void> load() async {
     try {
@@ -200,6 +253,9 @@ class ModuleDetailCubit extends Cubit<ModuleDetailState> {
       final members = await _repo.fetchMembers(moduleId);
       // Inactive entries stay loaded: a tower may already point at one.
       final sets = await _repo.fetchReferenceSets(activeOnly: false);
+      final reports = module.reportCadence.asksForReports
+          ? await _repo.fetchReports(moduleId)
+          : const <ModuleReport>[];
       emit(
         ModuleDetailState(
           status: ModuleDetailStatus.ready,
@@ -208,6 +264,7 @@ class ModuleDetailCubit extends Cubit<ModuleDetailState> {
           nodes: nodes,
           members: members,
           referenceSets: sets,
+          reports: reports,
           viewAsProfileId: viewAsProfileId,
         ),
       );

@@ -115,6 +115,7 @@ class ModulesRepository {
     required String seasonId,
     required DateTime startsOn,
     required Map<String, dynamic> data,
+    ReportCadence? reportCadence,
   }) async {
     final row = await supabase
         .from('modules')
@@ -123,6 +124,7 @@ class ModulesRepository {
           'season_id': seasonId,
           'starts_on': _asDate(startsOn),
           'data': data,
+          'report_cadence': (reportCadence ?? ReportCadence.none).name,
           'created_by': supabase.auth.currentUser?.id,
         })
         .select('id')
@@ -134,12 +136,14 @@ class ModulesRepository {
     String id, {
     required DateTime startsOn,
     required Map<String, dynamic> data,
+    ReportCadence? reportCadence,
   }) async {
     await supabase
         .from('modules')
         .update({
           'starts_on': _asDate(startsOn),
           'data': data,
+          if (reportCadence != null) 'report_cadence': reportCadence.name,
           'updated_at': DateTime.now().toUtc().toIso8601String(),
         })
         .eq('id', id);
@@ -162,6 +166,36 @@ class ModulesRepository {
 
   Future<void> deleteModule(String id) async {
     await supabase.from('modules').delete().eq('id', id);
+  }
+
+  // --------------------------------------------------------------- reports
+
+  /// The reports filed against a file. RLS decides the scope: a member sees
+  /// their own, a manager sees everyone's.
+  Future<List<ModuleReport>> fetchReports(String moduleId) async {
+    final rows = await supabase
+        .from('module_reports')
+        .select('*, profiles:author_id(*, job_titles(name))')
+        .eq('module_id', moduleId)
+        .order('created_at', ascending: false);
+    return (rows as List)
+        .map((r) => ModuleReport.fromMap(r as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Files a report for the period the file is currently in.
+  ///
+  /// The period is worked out in the database, not here: a phone with a wrong
+  /// clock, or in another timezone, would otherwise decide for itself which day
+  /// it was reporting for. Filing twice in one period edits the first.
+  Future<void> submitReport({
+    required String moduleId,
+    required String body,
+  }) async {
+    await supabase.rpc(
+      'submit_module_report',
+      params: {'p_module_id': moduleId, 'p_body': body},
+    );
   }
 
   // ----------------------------------------------------------------- nodes

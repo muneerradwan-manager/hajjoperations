@@ -82,7 +82,16 @@ class AppTheme {
       fontFamily: _fontFamily,
       // Transparent: the aurora behind the app is the background.
       scaffoldBackgroundColor: Colors.transparent,
-      canvasColor: Colors.transparent,
+      // NOT transparent, and this is the one place the rule has to stop.
+      // `DropdownButtonFormField` paints its open menu with `canvasColor`, so a
+      // transparent one left every dropdown in the app see-through: the list of
+      // job titles read over whatever the page behind it happened to be. A menu
+      // is a thing you read a list from, and it has to be solid.
+      //
+      // Safe to make opaque because nothing else here reaches it — no Drawer,
+      // no Stepper, no `MaterialType.canvas` — and the aurora shows through
+      // `scaffoldBackgroundColor`, which is still transparent above.
+      canvasColor: isDark ? AppColors.nightTop : AppColors.white,
       splashFactory: InkSparkle.splashFactory,
     );
 

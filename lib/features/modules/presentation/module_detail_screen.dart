@@ -19,6 +19,7 @@ import '../data/modules_repository.dart';
 import '../domain/module_type.dart';
 import '../domain/operational_module.dart';
 import 'module_editor_screen.dart';
+import 'widgets/cadence_label.dart';
 
 /// Everything an operational file holds, for whoever is allowed to see it: when
 /// it starts and what ends it, its attachment, the duties that come with a
@@ -294,6 +295,12 @@ class _Body extends StatelessWidget {
                     label: l.moduleStartCondition,
                     value: type!.startCondition!.of(context),
                   ),
+                if (module.reportCadence.asksForReports)
+                  InfoRow(
+                    icon: AppIcons.tasks,
+                    label: l.moduleReportCadence,
+                    value: cadenceLabel(context, module.reportCadence),
+                  ),
                 InfoRow(
                   icon: AppIcons.pending,
                   label: l.moduleEndCondition,
@@ -329,6 +336,12 @@ class _Body extends StatelessWidget {
                 _TaskCard(type: type!, held: held),
                 const SizedBox(height: AppSpacing.md),
               ],
+            ],
+
+            if (module.reportCadence.asksForReports) ...[
+              const SizedBox(height: AppSpacing.lg),
+              SectionHeader(l.moduleReports, icon: AppIcons.tasks),
+              _ReportsCard(module: module, reports: state.reports),
             ],
 
             const SizedBox(height: AppSpacing.lg),
@@ -946,6 +959,154 @@ class _MemberTile extends StatelessWidget {
       blur: false,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: body,
+    );
+  }
+}
+
+
+/// The reports of one file: a way in for whoever is in it, and the ones already
+/// filed underneath.
+///
+/// RLS decides what "already filed" means — a member sees their own, a manager
+/// sees everyone's — so this widget renders whatever came back without asking
+/// who is looking.
+class _ReportsCard extends StatelessWidget {
+  const _ReportsCard({required this.module, required this.reports});
+
+  final OperationalModule module;
+  final List<ModuleReport> reports;
+
+  Future<void> _write(BuildContext context) async {
+    final l = context.l10n;
+    final cubit = context.read<ModuleDetailCubit>();
+    final messenger = ScaffoldMessenger.of(context);
+    final controller = TextEditingController(
+      text: cubit.state.myReportForThisPeriod?.body ?? '',
+    );
+
+    final body = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            0,
+            AppSpacing.lg,
+            AppSpacing.xl,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l.moduleReportWrite,
+                style: Theme.of(sheetContext).textTheme.titleLarge,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              TextField(
+                controller: controller,
+                maxLines: 8,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: l.moduleReportBody,
+                  alignLabelWithHint: true,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              FilledButton.icon(
+                onPressed: () =>
+                    Navigator.of(sheetContext).pop(controller.text.trim()),
+                icon: const Icon(AppIcons.approve),
+                label: Text(l.commonSave),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    controller.dispose();
+    if (body == null || body.isEmpty) return;
+
+    final error = await cubit.submitReport(body);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(error ?? l.moduleReportSaved)),
+      );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final state = context.watch<ModuleDetailCubit>().state;
+    final mine = state.myReportForThisPeriod;
+
+    return GlassCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Only someone actually in the file may file one — the database says
+          // so too, and this keeps the button from being a trap.
+          if (state.isMember)
+            OutlinedButton.icon(
+              onPressed: () => _write(context),
+              icon: const Icon(AppIcons.edit),
+              label: Text(
+                mine == null ? l.moduleReportWrite : l.moduleReportEdit,
+              ),
+            ),
+          if (reports.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.md),
+              child: Text(
+                l.moduleReportsEmpty,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            )
+          else
+            for (final report in reports)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            report.author?.fullName ?? '',
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                        ),
+                        Text(
+                          formatDate(report.periodStart ?? report.createdAt),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      report.body,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(height: 1.5),
+                    ),
+                  ],
+                ),
+              ),
+        ],
+      ),
     );
   }
 }

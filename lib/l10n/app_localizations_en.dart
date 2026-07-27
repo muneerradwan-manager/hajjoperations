@@ -707,6 +707,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moduleStartDate => 'Work starts on';
 
   @override
+  String get moduleReportCadence => 'Reports';
+
+  @override
+  String get moduleReportCadenceHint =>
+      'How often the people in this file file one';
+
+  @override
+  String get cadenceNone => 'No reports';
+
+  @override
+  String get cadenceDaily => 'Daily';
+
+  @override
+  String get cadenceWeekly => 'Weekly';
+
+  @override
+  String get cadenceOnce => 'Once';
+
+  @override
+  String get moduleReports => 'Reports';
+
+  @override
+  String get moduleReportWrite => 'File a report';
+
+  @override
+  String get moduleReportEdit => 'Edit my report';
+
+  @override
+  String get moduleReportBody => 'The report';
+
+  @override
+  String get moduleReportSaved => 'Report filed';
+
+  @override
+  String get moduleReportsEmpty => 'No reports filed yet';
+
+  @override
+  String moduleReportPeriodDay(String date) {
+    return 'Report for $date';
+  }
+
+  @override
+  String moduleReportPeriodWeek(String date) {
+    return 'Week of $date';
+  }
+
+  @override
   String get moduleStartCondition => 'Work begins';
 
   @override

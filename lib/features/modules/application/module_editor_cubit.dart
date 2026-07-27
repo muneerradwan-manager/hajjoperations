@@ -63,6 +63,7 @@ class ModuleEditorState extends Equatable {
     this.startsOn,
     this.values = const {},
     this.pendingFiles = const {},
+    this.reportCadence = ReportCadence.none,
     this.nodes = const [],
     this.members = const [],
     this.employees = const [],
@@ -91,6 +92,9 @@ class ModuleEditorState extends Equatable {
   /// PDFs chosen on this device but not uploaded yet — a file id is needed for
   /// the storage path, so uploads wait until the row exists.
   final Map<String, File> pendingFiles;
+
+  /// How often this file will ask its members for a report.
+  final ReportCadence reportCadence;
 
   final List<ModuleNode> nodes;
 
@@ -163,6 +167,7 @@ class ModuleEditorState extends Equatable {
     DateTime? startsOn,
     Map<String, dynamic>? values,
     Map<String, File>? pendingFiles,
+    ReportCadence? reportCadence,
     List<ModuleNode>? nodes,
     List<ModuleMember>? members,
     List<Profile>? employees,
@@ -177,6 +182,7 @@ class ModuleEditorState extends Equatable {
       startsOn: startsOn ?? this.startsOn,
       values: values ?? this.values,
       pendingFiles: pendingFiles ?? this.pendingFiles,
+      reportCadence: reportCadence ?? this.reportCadence,
       nodes: nodes ?? this.nodes,
       members: members ?? this.members,
       employees: employees ?? this.employees,
@@ -194,6 +200,7 @@ class ModuleEditorState extends Equatable {
     startsOn,
     values,
     pendingFiles,
+    reportCadence,
     nodes,
     members,
     employees,
@@ -253,6 +260,7 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
           type: type,
           moduleId: existing?.id,
           startsOn: existing?.startsOn,
+          reportCadence: existing?.reportCadence ?? ReportCadence.none,
           values: Map<String, dynamic>.from(existing?.data ?? const {}),
           nodes: nodes,
           members: members,
@@ -278,6 +286,9 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
   }
 
   void goTo(int step) => emit(state.copyWith(step: step));
+
+  void setReportCadence(ReportCadence value) =>
+      emit(state.copyWith(reportCadence: value));
 
   void setStartsOn(DateTime value) => emit(state.copyWith(startsOn: value));
 
@@ -330,6 +341,7 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
             moduleTypeId: type.id,
             seasonId: seasonId,
             startsOn: startsOn,
+            reportCadence: state.reportCadence,
             data: {
               for (final e in values.entries)
                 if (!state.pendingFiles.containsKey(e.key)) e.key: e.value,
@@ -347,7 +359,12 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
         values[entry.key] = ModuleFile(path: path, name: name).toJson();
       }
 
-      await _repo.updateModule(id, startsOn: startsOn, data: values);
+      await _repo.updateModule(
+        id,
+        startsOn: startsOn,
+        data: values,
+        reportCadence: state.reportCadence,
+      );
 
       emit(
         state.copyWith(

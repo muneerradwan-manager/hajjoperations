@@ -15,6 +15,7 @@ import '../data/modules_repository.dart';
 import '../domain/module_type.dart';
 import '../domain/operational_module.dart';
 import 'employee_picker_screen.dart';
+import 'widgets/cadence_label.dart';
 import 'widgets/module_field_input.dart';
 import 'widgets/node_editor_sheet.dart';
 import 'widgets/picker_sheet.dart';
@@ -542,6 +543,27 @@ class _InfoStep extends StatelessWidget {
                     ],
                   ),
                 ],
+                const SizedBox(height: AppSpacing.lg),
+                // Per file, not per type: the same kind of file may want a
+                // daily report one season and nothing the next.
+                DropdownButtonFormField<ReportCadence>(
+                  initialValue: state.reportCadence,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: l.moduleReportCadence,
+                    prefixIcon: const Icon(AppIcons.tasks),
+                    helperText: l.moduleReportCadenceHint,
+                  ),
+                  items: [
+                    for (final cadence in ReportCadence.values)
+                      DropdownMenuItem(
+                        value: cadence,
+                        child: Text(cadenceLabel(context, cadence)),
+                      ),
+                  ],
+                  onChanged: (v) =>
+                      cubit.setReportCadence(v ?? ReportCadence.none),
+                ),
                 for (final field in type.fields) ...[
                   const SizedBox(height: AppSpacing.lg),
                   ModuleFieldInput(

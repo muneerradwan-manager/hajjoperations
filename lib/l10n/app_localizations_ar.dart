@@ -707,6 +707,52 @@ class AppLocalizationsAr extends AppLocalizations {
   String get moduleStartDate => 'تاريخ بدء العمل';
 
   @override
+  String get moduleReportCadence => 'التقارير';
+
+  @override
+  String get moduleReportCadenceHint => 'كم مرة يرفع أعضاء الملف تقريراً';
+
+  @override
+  String get cadenceNone => 'لا تقارير';
+
+  @override
+  String get cadenceDaily => 'تقرير يومي';
+
+  @override
+  String get cadenceWeekly => 'تقرير أسبوعي';
+
+  @override
+  String get cadenceOnce => 'تقرير لمرة واحدة';
+
+  @override
+  String get moduleReports => 'التقارير';
+
+  @override
+  String get moduleReportWrite => 'رفع تقرير';
+
+  @override
+  String get moduleReportEdit => 'تعديل تقريري';
+
+  @override
+  String get moduleReportBody => 'نص التقرير';
+
+  @override
+  String get moduleReportSaved => 'تم رفع التقرير';
+
+  @override
+  String get moduleReportsEmpty => 'لم تُرفع تقارير بعد';
+
+  @override
+  String moduleReportPeriodDay(String date) {
+    return 'تقرير يوم $date';
+  }
+
+  @override
+  String moduleReportPeriodWeek(String date) {
+    return 'أسبوع $date';
+  }
+
+  @override
   String get moduleStartCondition => 'بداية العمل';
 
   @override

@@ -186,6 +186,65 @@ class ModuleAssignment {
       );
 }
 
+/// How often a file asks the people in it for a report. Mirrors the
+/// `report_cadence` enum (0044).
+///
+/// [none] is a real answer, and the usual one — most files ask for nothing, and
+/// a file that asks for a report nobody reads is worse than one that does not.
+enum ReportCadence {
+  none,
+  daily,
+  weekly,
+  once;
+
+  static ReportCadence fromDb(String? value) => switch (value) {
+    'daily' => ReportCadence.daily,
+    'weekly' => ReportCadence.weekly,
+    'once' => ReportCadence.once,
+    _ => ReportCadence.none,
+  };
+
+  bool get asksForReports => this != ReportCadence.none;
+}
+
+/// One report filed against a file by one of its members.
+class ModuleReport {
+  const ModuleReport({
+    required this.id,
+    required this.authorId,
+    required this.body,
+    required this.createdAt,
+    this.periodStart,
+    this.author,
+  });
+
+  final String id;
+  final String authorId;
+  final String body;
+  final DateTime createdAt;
+
+  /// The stretch it accounts for — the day, or the Monday of the week. Null for
+  /// a file that asks once.
+  final DateTime? periodStart;
+
+  /// Joined when the query embeds `profiles(...)`.
+  final Profile? author;
+
+  factory ModuleReport.fromMap(Map<String, dynamic> map) {
+    final joined = map['profiles'];
+    return ModuleReport(
+      id: map['id'] as String,
+      authorId: map['author_id'] as String,
+      body: map['body'] as String,
+      createdAt: DateTime.parse(map['created_at'] as String),
+      periodStart: map['period_start'] == null
+          ? null
+          : DateTime.tryParse(map['period_start'] as String),
+      author: joined is Map<String, dynamic> ? Profile.fromMap(joined) : null,
+    );
+  }
+}
+
 /// An operational file: one unit of season work, shaped by its type.
 ///
 /// It has no title — a file is created once per season and its type names it.
@@ -199,6 +258,7 @@ class OperationalModule {
     this.startsOn,
     this.data = const {},
     this.isActive = false,
+    this.reportCadence = ReportCadence.none,
     this.seasonHijriYear,
     this.moduleTypeName,
     this.endCondition,
@@ -217,6 +277,11 @@ class OperationalModule {
 
   /// Files stay invisible to their members until an admin activates them.
   final bool isActive;
+
+  /// How often this file asks its members for a report. Chosen by whoever
+  /// creates or edits it, per file rather than per type: الطوافة والنقل wants one
+  /// every day and الإنشاءات wants one at the end.
+  final ReportCadence reportCadence;
 
   /// Joined for list rendering, so a card can be drawn without a second query.
   final int? seasonHijriYear;
@@ -240,6 +305,7 @@ class OperationalModule {
         (map['data'] as Map?) ?? const <String, dynamic>{},
       ),
       isActive: (map['is_active'] as bool?) ?? false,
+      reportCadence: ReportCadence.fromDb(map['report_cadence'] as String?),
       seasonHijriYear: season is Map ? season['hijri_year'] as int? : null,
       moduleTypeName: type == null ? null : LocalizedName.fromMap(type),
       endCondition: type == null || type['end_condition_ar'] == null

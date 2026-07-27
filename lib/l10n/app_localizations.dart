@@ -1436,6 +1436,90 @@ abstract class AppLocalizations {
   /// **'Work starts on'**
   String get moduleStartDate;
 
+  /// No description provided for @moduleReportCadence.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get moduleReportCadence;
+
+  /// No description provided for @moduleReportCadenceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'How often the people in this file file one'**
+  String get moduleReportCadenceHint;
+
+  /// No description provided for @cadenceNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No reports'**
+  String get cadenceNone;
+
+  /// No description provided for @cadenceDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get cadenceDaily;
+
+  /// No description provided for @cadenceWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get cadenceWeekly;
+
+  /// No description provided for @cadenceOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Once'**
+  String get cadenceOnce;
+
+  /// No description provided for @moduleReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get moduleReports;
+
+  /// No description provided for @moduleReportWrite.
+  ///
+  /// In en, this message translates to:
+  /// **'File a report'**
+  String get moduleReportWrite;
+
+  /// No description provided for @moduleReportEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit my report'**
+  String get moduleReportEdit;
+
+  /// No description provided for @moduleReportBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The report'**
+  String get moduleReportBody;
+
+  /// No description provided for @moduleReportSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Report filed'**
+  String get moduleReportSaved;
+
+  /// No description provided for @moduleReportsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No reports filed yet'**
+  String get moduleReportsEmpty;
+
+  /// No description provided for @moduleReportPeriodDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Report for {date}'**
+  String moduleReportPeriodDay(String date);
+
+  /// No description provided for @moduleReportPeriodWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week of {date}'**
+  String moduleReportPeriodWeek(String date);
+
   /// No description provided for @moduleStartCondition.
   ///
   /// In en, this message translates to:
