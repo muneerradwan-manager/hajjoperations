@@ -244,6 +244,7 @@
   "moduleOnePerSeason": "A file of a kind is created once per season, and its type is its name",
   "moduleSeasonLabel": "Season",
   "moduleStartDate": "Work starts on",
+  "moduleStartCondition": "Work begins",
   "moduleEndCondition": "Ends",
   "moduleStepInfo": "File",
   "moduleStepSectors": "Sectors",

@@ -66,6 +66,10 @@ class _View extends StatelessWidget {
         ? available.single
         : await showModalBottomSheet<ModuleType>(
             context: context,
+            // The list of types is as long as the season has kinds of file —
+            // ten of them now — and a sheet left unscrollable stops at half the
+            // screen and overflows the rest.
+            isScrollControlled: true,
             showDragHandle: true,
             builder: (_) => _TypePickerSheet(types: available),
           );
@@ -119,7 +123,9 @@ class _View extends StatelessWidget {
             return EmptyState(
               icon: AppIcons.modules,
               title: canManage ? l.modulesEmptyManager : l.modulesEmpty,
-              message: canManage && state.types.isEmpty ? l.moduleNoTypes : null,
+              message: canManage && state.types.isEmpty
+                  ? l.moduleNoTypes
+                  : null,
             );
           }
 
@@ -130,7 +136,10 @@ class _View extends StatelessWidget {
                 padding: context.scrollPadding(),
                 children: staggered([
                   if (state.active.isNotEmpty) ...[
-                    SectionHeader(l.moduleActiveSection, icon: AppIcons.modules),
+                    SectionHeader(
+                      l.moduleActiveSection,
+                      icon: AppIcons.modules,
+                    ),
                     ...state.active.map((m) => _ModuleCard(module: m)),
                   ],
                   if (state.drafts.isNotEmpty) ...[
@@ -251,63 +260,86 @@ class _TypePickerSheet extends StatelessWidget {
     final l = context.l10n;
     final scheme = Theme.of(context).colorScheme;
 
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          0,
-          AppSpacing.lg,
-          AppSpacing.xl,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              l.moduleChooseType,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            for (final type in types)
-              Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: GlassCard(
-                  blur: false,
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  onTap: () => Navigator.of(context).pop(type),
-                  child: Row(
-                    children: [
-                      Icon(
-                        AppIcons.moduleType,
-                        size: 20,
-                        color: scheme.primary,
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              type.name.of(context),
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            if (type.description != null) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                type.description!.of(context),
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(color: scheme.onSurfaceVariant),
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+      ),
+      // Sizes to the content and scrolls only once it would pass the cap: three
+      // types should not open a sheet built for ten.
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        heightFactor: 1,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            0,
+            AppSpacing.lg,
+            AppSpacing.xl + MediaQuery.viewPaddingOf(context).bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l.moduleChooseType,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  children: [
+                    for (final type in types)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                        child: GlassCard(
+                          blur: false,
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          onTap: () => Navigator.of(context).pop(type),
+                          child: Row(
+                            children: [
+                              Icon(
+                                AppIcons.moduleType,
+                                size: 20,
+                                color: scheme.primary,
                               ),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      type.name.of(context),
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.titleMedium,
+                                    ),
+                                    if (type.description != null) ...[
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        type.description!.of(context),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: scheme.onSurfaceVariant,
+                                            ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              const NavChevron(),
                             ],
-                          ],
+                          ),
                         ),
                       ),
-                      const NavChevron(),
-                    ],
-                  ),
+                  ],
                 ),
               ),
-          ],
+            ],
+          ),
         ),
       ),
     );

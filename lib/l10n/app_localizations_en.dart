@@ -678,6 +678,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moduleStartDate => 'Work starts on';
 
   @override
+  String get moduleStartCondition => 'Work begins';
+
+  @override
   String get moduleEndCondition => 'Ends';
 
   @override

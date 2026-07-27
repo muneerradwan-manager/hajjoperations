@@ -493,6 +493,31 @@ class _InfoStep extends StatelessWidget {
                     ),
                   ),
                 ),
+                // What the date above is the date OF. Sits under the picker
+                // rather than replacing it: somebody still has to say when the
+                // work actually began.
+                if (type.startCondition != null) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        AppIcons.seasons,
+                        size: 16,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          '${l.moduleStartCondition}: '
+                          '${type.startCondition!.of(context)}',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 if (type.endCondition != null) ...[
                   const SizedBox(height: AppSpacing.md),
                   // Not a date and not editable: every file of this type ends

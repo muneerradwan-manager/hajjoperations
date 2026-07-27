@@ -237,6 +237,7 @@
   "moduleOnePerSeason": "يُنشأ الملف مرة واحدة في الموسم، واسمه هو نوعه",
   "moduleSeasonLabel": "الموسم",
   "moduleStartDate": "تاريخ بدء العمل",
+  "moduleStartCondition": "بداية العمل",
   "moduleEndCondition": "نهاية العمل",
   "moduleStepInfo": "الملف",
   "moduleStepSectors": "القطاعات",

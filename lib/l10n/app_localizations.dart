@@ -1382,6 +1382,12 @@ abstract class AppLocalizations {
   /// **'Work starts on'**
   String get moduleStartDate;
 
+  /// No description provided for @moduleStartCondition.
+  ///
+  /// In en, this message translates to:
+  /// **'Work begins'**
+  String get moduleStartCondition;
+
   /// No description provided for @moduleEndCondition.
   ///
   /// In en, this message translates to:

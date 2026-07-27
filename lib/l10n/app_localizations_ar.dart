@@ -678,6 +678,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get moduleStartDate => 'تاريخ بدء العمل';
 
   @override
+  String get moduleStartCondition => 'بداية العمل';
+
+  @override
   String get moduleEndCondition => 'نهاية العمل';
 
   @override

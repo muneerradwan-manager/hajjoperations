@@ -240,6 +240,7 @@ class ModuleType {
     required this.code,
     required this.name,
     this.description,
+    this.startCondition,
     this.endCondition,
     this.fields = const [],
     this.roles = const [],
@@ -252,6 +253,11 @@ class ModuleType {
   final String code;
   final LocalizedName name;
   final LocalizedName? description;
+
+  /// What opens a file of this type — "من تاريخ اعتماد مجموعات الحج السوري".
+  /// The file still carries the date somebody entered; this says what that date
+  /// is the date OF. Null for a type whose start was never stated as an event.
+  final LocalizedName? startCondition;
 
   /// What closes a file of this type — the same event every season, so it is
   /// stated here rather than entered as a date on each file.
@@ -346,6 +352,9 @@ class ModuleType {
       description: map['description_ar'] == null
           ? null
           : LocalizedName.fromMap(map, prefix: 'description'),
+      startCondition: map['start_condition_ar'] == null
+          ? null
+          : LocalizedName.fromMap(map, prefix: 'start_condition'),
       endCondition: map['end_condition_ar'] == null
           ? null
           : LocalizedName.fromMap(map, prefix: 'end_condition'),

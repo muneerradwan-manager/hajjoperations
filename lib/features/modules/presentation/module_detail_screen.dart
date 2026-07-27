@@ -287,6 +287,13 @@ class _Body extends StatelessWidget {
                   label: l.moduleStartDate,
                   value: formatDate(module.startsOn),
                 ),
+                // What that date is the date of, when the type states it.
+                if (type?.startCondition != null)
+                  InfoRow(
+                    icon: AppIcons.seasons,
+                    label: l.moduleStartCondition,
+                    value: type!.startCondition!.of(context),
+                  ),
                 InfoRow(
                   icon: AppIcons.pending,
                   label: l.moduleEndCondition,
