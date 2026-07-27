@@ -70,6 +70,11 @@ class ApprovalDetailScreen extends StatelessWidget {
                     value: profile.surname,
                   ),
                   InfoRow(
+                    icon: AppIcons.location,
+                    label: l.profileCity,
+                    value: profile.cityName?.of(context),
+                  ),
+                  InfoRow(
                     icon: AppIcons.gender,
                     label: l.profileGender,
                     value: profile.gender?.label(l),

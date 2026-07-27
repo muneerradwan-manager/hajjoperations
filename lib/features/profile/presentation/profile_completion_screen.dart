@@ -12,6 +12,7 @@ import '../../auth/application/session_cubit.dart';
 import '../../auth/data/auth_repository.dart';
 import '../application/profile_completion_cubit.dart';
 import '../data/profile_repository.dart';
+import '../domain/city.dart';
 import '../domain/job_title.dart';
 import '../domain/profile.dart';
 import '../domain/profile_enums.dart';
@@ -57,6 +58,7 @@ class _ProfileCompletionViewState extends State<_ProfileCompletionView> {
   File? _visa;
   File? _nusuk;
   String? _jobTitleId;
+  String? _cityId;
   Gender? _gender;
   MissionType? _mission;
   DateTime? _dob;
@@ -75,6 +77,7 @@ class _ProfileCompletionViewState extends State<_ProfileCompletionView> {
       _phoneSy.text = e.phoneSy ?? '';
       _phoneSa.text = e.phoneSa ?? '';
       _jobTitleId = e.jobTitleId;
+      _cityId = e.cityId;
       _gender = e.gender;
       _mission = e.missionType;
       _dob = e.dateOfBirth;
@@ -121,6 +124,7 @@ class _ProfileCompletionViewState extends State<_ProfileCompletionView> {
       missionType: _mission!,
       phoneSy: _phoneSy.text.trim(),
       phoneSa: _phoneSa.text.trim().isEmpty ? null : _phoneSa.text.trim(),
+      cityId: _cityId,
       passport: _passport,
       visa: _visa,
       nusuk: _nusuk,
@@ -226,6 +230,8 @@ class _ProfileCompletionViewState extends State<_ProfileCompletionView> {
                   const SizedBox(height: 16),
                   _text(_surname, l.profileSurname, AppIcons.surname),
                   const SizedBox(height: 16),
+                  _cityDropdown(l, state.cities),
+                  const SizedBox(height: 16),
                   _jobTitleDropdown(l, state.jobTitles),
                   const SizedBox(height: 16),
                   _genderDropdown(l),
@@ -300,6 +306,29 @@ class _ProfileCompletionViewState extends State<_ProfileCompletionView> {
       validator: required
           ? (v) => (v ?? '').trim().isEmpty ? context.l10n.commonRequired : null
           : null,
+    );
+  }
+
+  /// Which Syrian city the employee is from.
+  ///
+  /// Required, but only once there is something to require: if the list came
+  /// back empty the field cannot be answered, and blocking the form on it would
+  /// strand somebody in the middle of registering.
+  Widget _cityDropdown(dynamic l, List<City> cities) {
+    return DropdownButtonFormField<String>(
+      initialValue: cities.any((c) => c.id == _cityId) ? _cityId : null,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: l.profileCity,
+        prefixIcon: const Icon(AppIcons.location),
+      ),
+      items: [
+        for (final c in cities)
+          DropdownMenuItem(value: c.id, child: Text(c.name.of(context))),
+      ],
+      validator: (v) =>
+          cities.isNotEmpty && v == null ? l.commonRequired : null,
+      onChanged: (v) => setState(() => _cityId = v),
     );
   }
 

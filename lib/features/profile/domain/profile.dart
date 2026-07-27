@@ -1,3 +1,4 @@
+import '../../../core/l10n/localized_name.dart';
 import 'profile_enums.dart';
 
 /// A single employee profile row (public.profiles).
@@ -25,6 +26,8 @@ class Profile {
     this.externalOrganization,
     this.externalTitle,
     this.jobTitleName,
+    this.cityId,
+    this.cityName,
     this.email,
   });
 
@@ -52,6 +55,14 @@ class Profile {
 
   /// Joined from job_titles(name) when the query embeds it.
   final String? jobTitleName;
+
+  /// The Syrian city this employee is from — an entry of the admin-managed
+  /// `syrian_cities` list. Null for the accounts that registered before the
+  /// question was asked.
+  final String? cityId;
+
+  /// Joined from reference_items when the query embeds it.
+  final LocalizedName? cityName;
 
   /// Joined from the auth user when available (admin views).
   final String? email;
@@ -92,6 +103,8 @@ class Profile {
       externalOrganization: externalOrganization ?? this.externalOrganization,
       externalTitle: externalTitle ?? this.externalTitle,
       jobTitleName: jobTitleName,
+      cityId: cityId,
+      cityName: cityName,
       email: email,
     );
   }
@@ -124,6 +137,12 @@ class Profile {
       jobTitleName: map['job_titles'] is Map
           ? (map['job_titles'] as Map)['name'] as String?
           : map['job_title_name'] as String?,
+      cityId: map['city_id'] as String?,
+      cityName: map['reference_items'] is Map
+          ? LocalizedName.fromMap(
+              (map['reference_items'] as Map).cast<String, dynamic>(),
+            )
+          : null,
       email: map['email'] as String?,
     );
   }

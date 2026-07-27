@@ -380,6 +380,12 @@ abstract class AppLocalizations {
   /// **'Job title'**
   String get profileJobTitle;
 
+  /// No description provided for @profileCity.
+  ///
+  /// In en, this message translates to:
+  /// **'City'**
+  String get profileCity;
+
   /// No description provided for @profileGender.
   ///
   /// In en, this message translates to:
@@ -883,6 +889,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mark all as read'**
   String get notificationMarkAllRead;
+
+  /// No description provided for @notificationAttach.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach'**
+  String get notificationAttach;
+
+  /// No description provided for @notificationAttachPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo'**
+  String get notificationAttachPhoto;
+
+  /// No description provided for @notificationAttachCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo'**
+  String get notificationAttachCamera;
+
+  /// No description provided for @notificationAttachVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get notificationAttachVideo;
+
+  /// No description provided for @notificationAttachAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get notificationAttachAudio;
+
+  /// No description provided for @notificationAttachFile.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get notificationAttachFile;
+
+  /// No description provided for @notificationAttachmentsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 attachment} other{{count} attachments}}'**
+  String notificationAttachmentsCount(int count);
+
+  /// No description provided for @attachmentImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get attachmentImage;
+
+  /// No description provided for @attachmentVideo.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get attachmentVideo;
+
+  /// No description provided for @attachmentAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get attachmentAudio;
+
+  /// No description provided for @attachmentFile.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get attachmentFile;
+
+  /// No description provided for @attachmentDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get attachmentDownload;
+
+  /// No description provided for @attachmentOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the attachment'**
+  String get attachmentOpenFailed;
 
   /// No description provided for @navSeasons.
   ///
@@ -1585,6 +1669,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Saudi number'**
   String get moduleContactSa;
+
+  /// No description provided for @modulePickerSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or job title'**
+  String get modulePickerSearchHint;
+
+  /// No description provided for @modulePickerAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone'**
+  String get modulePickerAll;
+
+  /// No description provided for @modulePickerInternal.
+  ///
+  /// In en, this message translates to:
+  /// **'Mission staff'**
+  String get modulePickerInternal;
+
+  /// No description provided for @modulePickerExternal.
+  ///
+  /// In en, this message translates to:
+  /// **'External'**
+  String get modulePickerExternal;
+
+  /// No description provided for @modulePickerNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody matches that search'**
+  String get modulePickerNoMatches;
+
+  /// No description provided for @modulePickerFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Not in any file'**
+  String get modulePickerFree;
+
+  /// No description provided for @modulePickerAlreadyIn.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Already in 1 file} other{Already in {count} files}}'**
+  String modulePickerAlreadyIn(int count);
+
+  /// No description provided for @modulePickerConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Confirm with nobody chosen} =1{Confirm 1 person} other{Confirm {count} people}}'**
+  String modulePickerConfirm(int count);
 
   /// No description provided for @referenceDataTitle.
   ///

@@ -319,7 +319,7 @@ class _Body extends StatelessWidget {
                 icon: AppIcons.tasks,
               ),
               for (final held in roles) ...[
-                _TaskCard(held: held),
+                _TaskCard(type: type!, held: held),
                 const SizedBox(height: AppSpacing.md),
               ],
             ],
@@ -414,7 +414,7 @@ class _RoleRosterCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _MemberTile(member: member, dense: true),
-                  ..._duties(context, role.tasksFor(member.taskIds)),
+                  ..._duties(context, member.taskIds),
                 ],
               ),
             ),
@@ -423,13 +423,15 @@ class _RoleRosterCard extends StatelessWidget {
     );
   }
 
-  /// What this person was handed. A team member with nothing handed to him is
-  /// not an oversight — the team's own job description already binds him — so
-  /// this says so plainly rather than leaving a gap.
-  List<Widget> _duties(BuildContext context, List<RoleTask> tasks) {
+  /// What this person was handed, in the stages the work happens in. Someone
+  /// with nothing handed to him is not an oversight — being in the file is
+  /// itself the posting — so this says so plainly rather than leaving a gap.
+  List<Widget> _duties(BuildContext context, Set<String> assigned) {
     final l = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    if (!role.tasksAreAssigned) return const [];
+    final type = state.type;
+    if (type == null || !role.tasksAreAssigned) return const [];
+    final tasks = type.dutiesOf(role, assigned);
 
     return [
       const SizedBox(height: AppSpacing.md),
@@ -449,7 +451,7 @@ class _RoleRosterCard extends StatelessWidget {
           ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
         ),
         const SizedBox(height: AppSpacing.sm),
-        for (final task in tasks) _TaskLine(task: task),
+        ...stagedTasks(context, type, tasks),
       ],
     ];
   }
@@ -633,8 +635,9 @@ class _PdfCard extends StatelessWidget {
 /// The places are on the card because the same role is often held in several
 /// towers at once, and "which towers" is half the answer.
 class _TaskCard extends StatelessWidget {
-  const _TaskCard({required this.held});
+  const _TaskCard({required this.type, required this.held});
 
+  final ModuleType type;
   final RoleHere held;
 
   @override
@@ -716,12 +719,39 @@ class _TaskCard extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.sm),
             ],
-            for (final task in tasks) _TaskLine(task: task),
+            ...stagedTasks(context, type, tasks),
           ],
         ],
       ),
     );
   }
+}
+
+/// [tasks] laid out in the stages of the work, each under its heading — or as a
+/// plain list, for a type whose duties fall into no stages.
+List<Widget> stagedTasks(
+  BuildContext context,
+  ModuleType type,
+  List<RoleTask> tasks,
+) {
+  final scheme = Theme.of(context).colorScheme;
+
+  return [
+    for (final (stage, inStage) in type.byStage(tasks)) ...[
+      if (stage != null)
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+          child: Text(
+            stage.name.of(context),
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: scheme.primary),
+          ),
+        ),
+      for (final task in inStage) _TaskLine(task: task),
+      if (stage != null) const SizedBox(height: AppSpacing.xs),
+    ],
+  ];
 }
 
 /// One duty, wherever it is listed.

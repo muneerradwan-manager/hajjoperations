@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../data/profile_repository.dart';
+import '../domain/city.dart';
 import '../domain/job_title.dart';
 import '../domain/profile.dart';
 import '../domain/profile_enums.dart';
@@ -14,27 +15,35 @@ class ProfileCompletionState extends Equatable {
   const ProfileCompletionState({
     this.status = ProfileFormStatus.loading,
     this.jobTitles = const [],
+    this.cities = const [],
     this.error,
   });
 
   final ProfileFormStatus status;
   final List<JobTitle> jobTitles;
+
+  /// The Syrian cities to choose from. Read before the account is approved,
+  /// which is the whole reason the list is readable that early.
+  final List<City> cities;
+
   final String? error;
 
   ProfileCompletionState copyWith({
     ProfileFormStatus? status,
     List<JobTitle>? jobTitles,
+    List<City>? cities,
     String? error,
   }) {
     return ProfileCompletionState(
       status: status ?? this.status,
       jobTitles: jobTitles ?? this.jobTitles,
+      cities: cities ?? this.cities,
       error: error,
     );
   }
 
   @override
-  List<Object?> get props => [status, jobTitles, error];
+  List<Object?> get props => [status, jobTitles, cities, error];
 }
 
 class ProfileCompletionCubit extends Cubit<ProfileCompletionState> {
@@ -54,7 +63,14 @@ class ProfileCompletionCubit extends Cubit<ProfileCompletionState> {
     emit(state.copyWith(status: ProfileFormStatus.loading));
     try {
       final titles = await _repo.fetchActiveJobTitles();
-      emit(state.copyWith(status: ProfileFormStatus.ready, jobTitles: titles));
+      final cities = await _repo.fetchSyrianCities();
+      emit(
+        state.copyWith(
+          status: ProfileFormStatus.ready,
+          jobTitles: titles,
+          cities: cities,
+        ),
+      );
     } catch (e) {
       emit(
         state.copyWith(status: ProfileFormStatus.error, error: e.toString()),
@@ -77,6 +93,7 @@ class ProfileCompletionCubit extends Cubit<ProfileCompletionState> {
     required MissionType missionType,
     required String phoneSy,
     String? phoneSa,
+    String? cityId,
     File? passport,
     File? visa,
     File? nusuk,
@@ -112,6 +129,7 @@ class ProfileCompletionCubit extends Cubit<ProfileCompletionState> {
           missionType: missionType,
           phoneSy: phoneSy,
           phoneSa: phoneSa,
+          cityId: cityId,
           photoUrl: photoUrl,
           passportImageUrl: passportUrl,
           visaImageUrl: visaUrl,
@@ -129,6 +147,7 @@ class ProfileCompletionCubit extends Cubit<ProfileCompletionState> {
           missionType: missionType,
           phoneSy: phoneSy,
           phoneSa: phoneSa,
+          cityId: cityId,
           passportImageUrl: passportUrl,
           visaImageUrl: visaUrl,
           nusukCardImageUrl: nusukUrl,

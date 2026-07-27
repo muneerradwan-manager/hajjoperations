@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/supabase/supabase_client.dart';
+import '../domain/city.dart';
 import '../domain/job_title.dart';
 import '../domain/profile.dart';
 import '../domain/profile_enums.dart';
@@ -14,10 +15,25 @@ class ProfileRepository {
     if (uid == null) return null;
     final row = await supabase
         .from('profiles')
-        .select()
+        .select('*, job_titles(name), reference_items(name_ar, name_en)')
         .eq('id', uid)
         .maybeSingle();
     return row == null ? null : Profile.fromMap(row);
+  }
+
+  /// The Syrian cities an employee may say they are from — the admin-managed
+  /// `syrian_cities` list, which a signed-in account can read before it is
+  /// approved because the registration form itself needs it.
+  Future<List<City>> fetchSyrianCities() async {
+    final rows = await supabase
+        .from('reference_items')
+        .select('id, name_ar, name_en, reference_sets!inner(code)')
+        .eq('reference_sets.code', 'syrian_cities')
+        .eq('is_active', true)
+        .order('sort_order');
+    return (rows as List)
+        .map((r) => City.fromMap(r as Map<String, dynamic>))
+        .toList();
   }
 
   Future<List<JobTitle>> fetchActiveJobTitles() async {
@@ -62,6 +78,7 @@ class ProfileRepository {
     required MissionType missionType,
     required String phoneSy,
     String? phoneSa,
+    String? cityId,
     String? photoUrl,
     String? passportImageUrl,
     String? visaImageUrl,
@@ -78,6 +95,7 @@ class ProfileRepository {
       'mission_type': missionType.db,
       'phone_sy': phoneSy,
       'phone_sa': phoneSa,
+      'city_id': cityId,
     };
     // Only overwrite images when a new one was provided.
     if (photoUrl != null) data['photo_url'] = photoUrl;
@@ -101,6 +119,7 @@ class ProfileRepository {
     required MissionType missionType,
     required String phoneSy,
     String? phoneSa,
+    String? cityId,
     String? passportImageUrl,
     String? visaImageUrl,
     String? nusukCardImageUrl,
@@ -119,6 +138,7 @@ class ProfileRepository {
           'mission_type': missionType.db,
           'phone_sy': phoneSy,
           'phone_sa': phoneSa,
+          'city_id': cityId,
           'passport_image_url': passportImageUrl,
           'visa_image_url': visaImageUrl,
           'nusuk_card_image_url': nusukCardImageUrl,

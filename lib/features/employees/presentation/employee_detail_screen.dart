@@ -145,6 +145,11 @@ class _View extends StatelessWidget {
                         value: p.surname,
                       ),
                       InfoRow(
+                        icon: AppIcons.location,
+                        label: l.profileCity,
+                        value: p.cityName?.of(context),
+                      ),
+                      InfoRow(
                         icon: AppIcons.gender,
                         label: l.profileGender,
                         value: p.gender?.label(l),

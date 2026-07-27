@@ -152,6 +152,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileJobTitle => 'Job title';
 
   @override
+  String get profileCity => 'City';
+
+  @override
   String get profileGender => 'Gender';
 
   @override
@@ -412,6 +415,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationMarkAllRead => 'Mark all as read';
+
+  @override
+  String get notificationAttach => 'Attach';
+
+  @override
+  String get notificationAttachPhoto => 'Photo';
+
+  @override
+  String get notificationAttachCamera => 'Take a photo';
+
+  @override
+  String get notificationAttachVideo => 'Video';
+
+  @override
+  String get notificationAttachAudio => 'Audio';
+
+  @override
+  String get notificationAttachFile => 'File';
+
+  @override
+  String notificationAttachmentsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attachments',
+      one: '1 attachment',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get attachmentImage => 'Image';
+
+  @override
+  String get attachmentVideo => 'Video';
+
+  @override
+  String get attachmentAudio => 'Audio';
+
+  @override
+  String get attachmentFile => 'File';
+
+  @override
+  String get attachmentDownload => 'Download';
+
+  @override
+  String get attachmentOpenFailed => 'Could not open the attachment';
 
   @override
   String get navSeasons => 'Seasons';
@@ -793,6 +843,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moduleContactSa => 'Saudi number';
+
+  @override
+  String get modulePickerSearchHint => 'Search by name or job title';
+
+  @override
+  String get modulePickerAll => 'Everyone';
+
+  @override
+  String get modulePickerInternal => 'Mission staff';
+
+  @override
+  String get modulePickerExternal => 'External';
+
+  @override
+  String get modulePickerNoMatches => 'Nobody matches that search';
+
+  @override
+  String get modulePickerFree => 'Not in any file';
+
+  @override
+  String modulePickerAlreadyIn(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Already in $count files',
+      one: 'Already in 1 file',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String modulePickerConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Confirm $count people',
+      one: 'Confirm 1 person',
+      zero: 'Confirm with nobody chosen',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get referenceDataTitle => 'Master data';

@@ -27,13 +27,39 @@ class NotificationsState extends Equatable {
 
 class NotificationsCubit extends Cubit<NotificationsState> {
   NotificationsCubit(this._repo) : super(const NotificationsState()) {
-    _sub = _repo.streamMine().listen((items) {
-      emit(state.copyWith(items: items, loading: false));
-    }, onError: (_) => emit(state.copyWith(loading: false)));
+    _sub = _repo.streamMine().listen(
+      _onNotifications,
+      onError: (_) => emit(state.copyWith(loading: false)),
+    );
   }
 
   final NotificationsRepository _repo;
   late final StreamSubscription<List<AppNotification>> _sub;
+
+  /// The list lands first and the attachments follow, in one query for the
+  /// whole inbox. Shown straight away rather than held back: the title and the
+  /// body are the notification, and a photo arriving a moment later is a photo
+  /// arriving a moment later.
+  Future<void> _onNotifications(List<AppNotification> items) async {
+    emit(state.copyWith(items: items, loading: false));
+    if (items.isEmpty) return;
+    try {
+      final byNotification = await _repo.fetchAttachments([
+        for (final n in items) n.id,
+      ]);
+      if (isClosed || byNotification.isEmpty) return;
+      emit(
+        state.copyWith(
+          items: [
+            for (final n in items)
+              n.withAttachments(byNotification[n.id] ?? const []),
+          ],
+        ),
+      );
+    } catch (_) {
+      // The inbox is already on screen; attachments simply do not appear.
+    }
+  }
 
   Future<void> markRead(String id) => _repo.markRead(id);
   Future<void> markAllRead() => _repo.markAllRead();

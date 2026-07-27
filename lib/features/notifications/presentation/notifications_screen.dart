@@ -9,21 +9,27 @@ import '../../../core/widgets/responsive_center.dart';
 import '../application/notifications_cubit.dart';
 import '../data/notifications_repository.dart';
 import '../domain/app_notification.dart';
+import 'widgets/attachment_view.dart';
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final repo = NotificationsRepository();
     return BlocProvider(
-      create: (_) => NotificationsCubit(NotificationsRepository()),
-      child: const _View(),
+      create: (_) => NotificationsCubit(repo),
+      // The same instance the cubit reads through: signing an attachment URL
+      // goes through it too, and it holds nothing worth having twice.
+      child: _View(repo: repo),
     );
   }
 }
 
 class _View extends StatelessWidget {
-  const _View();
+  const _View({required this.repo});
+
+  final NotificationsRepository repo;
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +76,7 @@ class _View extends StatelessWidget {
                     delay: Duration(milliseconds: 25 * i),
                     child: _NotificationCard(
                       notification: n,
+                      repo: repo,
                       onTap: n.isRead
                           ? null
                           : () => context.read<NotificationsCubit>().markRead(
@@ -88,8 +95,14 @@ class _View extends StatelessWidget {
 }
 
 class _NotificationCard extends StatelessWidget {
-  const _NotificationCard({required this.notification, this.onTap});
+  const _NotificationCard({
+    required this.notification,
+    required this.repo,
+    this.onTap,
+  });
+
   final AppNotification notification;
+  final NotificationsRepository repo;
   final VoidCallback? onTap;
 
   @override
@@ -127,6 +140,10 @@ class _NotificationCard extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
+                  AttachmentsView(
+                    attachments: notification.attachments,
+                    repo: repo,
+                  ),
                   const SizedBox(height: 6),
                   Text(
                     _fmt(notification.createdAt),

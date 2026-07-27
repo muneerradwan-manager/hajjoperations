@@ -17,6 +17,7 @@ class RoleHere {
     required this.role,
     this.places = const [],
     this.taskIds = const {},
+    this.tasks = const [],
   });
 
   final ModuleRole role;
@@ -26,9 +27,10 @@ class RoleHere {
   /// menu. Gathered across every place they hold it.
   final Set<String> taskIds;
 
-  /// What this person is actually answerable for: his share of a menu, or the
-  /// whole of a standing list.
-  List<RoleTask> get tasks => role.tasksFor(taskIds);
+  /// What this person is actually answerable for: the standing duties of the
+  /// post, plus his share of whatever is handed out — resolved against the type,
+  /// which knows whether the menu is the role's own or the file's.
+  final List<RoleTask> tasks;
 }
 
 class ModuleDetailState extends Equatable {
@@ -139,6 +141,7 @@ class ModuleDetailState extends Equatable {
             role: role,
             places: places[role.id]!,
             taskIds: duties[role.id] ?? const {},
+            tasks: type.dutiesOf(role, duties[role.id] ?? const {}),
           ),
     ];
   }

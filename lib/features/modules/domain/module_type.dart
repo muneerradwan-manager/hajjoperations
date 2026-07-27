@@ -70,17 +70,44 @@ class ModuleField {
   );
 }
 
-/// A duty attached to a role, defined once per module type.
+/// A stage of a type's work — التخطيط والإعداد, then مكة المكرمة, then المشاعر.
+/// Duties fall into one, and a list of fifteen read in one run says far less
+/// than three lists read in the order the work happens.
+class TaskGroup {
+  const TaskGroup({required this.id, required this.code, required this.name});
+
+  final String id;
+  final String code;
+  final LocalizedName name;
+
+  factory TaskGroup.fromMap(Map<String, dynamic> map) => TaskGroup(
+    id: map['id'] as String,
+    code: map['code'] as String,
+    name: LocalizedName.fromMap(map),
+  );
+}
+
+/// A duty, defined once per module type.
 ///
-/// Whether it is carried by every holder of that role or handed to particular
-/// ones is the role's business, not the task's — see
+/// It belongs either to a role — the duties of that post — or to the file
+/// itself, when the Administration lists duties for the work without tying any
+/// of them to one of its specialities. Whether it is carried by everyone or
+/// handed to particular people is the role's business, not the duty's; see
 /// [ModuleRole.tasksAreAssigned].
 class RoleTask {
-  const RoleTask({required this.id, required this.title, this.description});
+  const RoleTask({
+    required this.id,
+    required this.title,
+    this.description,
+    this.groupId,
+  });
 
   final String id;
   final LocalizedName title;
   final LocalizedName? description;
+
+  /// The stage of the work this duty falls in, for a type that has stages.
+  final String? groupId;
 
   factory RoleTask.fromMap(Map<String, dynamic> map) => RoleTask(
     id: map['id'] as String,
@@ -88,6 +115,7 @@ class RoleTask {
     description: map['description_ar'] == null
         ? null
         : LocalizedName.fromMap(map, prefix: 'description'),
+    groupId: map['group_id'] as String?,
   );
 }
 
@@ -148,9 +176,7 @@ class ModuleRole {
     allowsMultiple: (map['allows_multiple'] as bool?) ?? false,
     isRequired: (map['is_required'] as bool?) ?? false,
     tasksAreAssigned: (map['tasks_are_assigned'] as bool?) ?? false,
-    tasks: _bySortOrder(map['module_type_role_tasks'])
-        .map(RoleTask.fromMap)
-        .toList(),
+    tasks: _bySortOrder(map['module_type_tasks']).map(RoleTask.fromMap).toList(),
   );
 }
 
@@ -218,6 +244,8 @@ class ModuleType {
     this.fields = const [],
     this.roles = const [],
     this.levels = const [],
+    this.tasks = const [],
+    this.taskGroups = const [],
   });
 
   final String id;
@@ -240,9 +268,46 @@ class ModuleType {
   /// its people sit on the file itself.
   final List<ModuleLevel> levels;
 
+  /// The duties of the file itself — a list the Administration wrote for the
+  /// work rather than for any one of its roles, which every role draws on.
+  /// Empty for a type whose duties all belong to particular posts.
+  final List<RoleTask> tasks;
+
+  /// The stages those duties fall into, in the order the work happens.
+  final List<TaskGroup> taskGroups;
+
   /// Whether files of this type are built as sectors and towers, or are simply
   /// the list of the people in them.
   bool get hasTree => levels.isNotEmpty;
+
+  /// Every duty that may be handed to a holder of [role]: the role's own, and
+  /// the file's. Empty for a role whose duties are standing — those are his by
+  /// holding the post at all, and there is nothing to hand out.
+  List<RoleTask> assignableFor(ModuleRole role) =>
+      role.tasksAreAssigned ? [...role.tasks, ...tasks] : const [];
+
+  /// Everything a holder of [role] is answerable for, given what he was handed:
+  /// his post's standing duties, plus his share of whatever is handed out.
+  List<RoleTask> dutiesOf(ModuleRole role, Set<String> assigned) => [
+    ...role.tasksFor(assigned),
+    if (role.tasksAreAssigned)
+      ...tasks.where((t) => assigned.contains(t.id)),
+  ];
+
+  /// [tasks] split into the stages of the work, in order. Duties belonging to
+  /// no stage come first under no heading, and empty stages are dropped — a
+  /// heading with nothing under it says only that something is missing.
+  List<(TaskGroup?, List<RoleTask>)> byStage(List<RoleTask> tasks) {
+    if (taskGroups.isEmpty) {
+      return tasks.isEmpty ? const [] : [(null, tasks)];
+    }
+    return [
+      for (final stage in <TaskGroup?>[null, ...taskGroups])
+        if (tasks.where((t) => t.groupId == stage?.id).toList()
+            case final inStage when inStage.isNotEmpty)
+          (stage, inStage),
+    ];
+  }
 
   ModuleLevel? levelById(String? id) =>
       levels.where((l) => l.id == id).firstOrNull;
@@ -286,6 +351,12 @@ class ModuleType {
           : LocalizedName.fromMap(map, prefix: 'end_condition'),
       fields: _bySortOrder(map['module_type_fields'])
           .map(ModuleField.fromMap)
+          .toList(),
+      tasks: _bySortOrder(map['module_type_tasks'])
+          .map(RoleTask.fromMap)
+          .toList(),
+      taskGroups: _bySortOrder(map['module_type_task_groups'])
+          .map(TaskGroup.fromMap)
           .toList(),
       roles: roles.where((r) => r.levelId == null).toList(),
       levels: [

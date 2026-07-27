@@ -60,6 +60,14 @@ class AppIcons {
   static const image = Iconsax.gallery;
   static const view = Iconsax.eye;
 
+  // Attachments. `attach` is the act; the rest name what was attached, so a
+  // recipient can tell a voice note from a document without opening either.
+  static const attach = Iconsax.paperclip_2;
+  static const video = Iconsax.video_play;
+  static const audio = Iconsax.musicnote;
+  static const file = Iconsax.document_text;
+  static const download = Iconsax.import_1;
+
   // Profile fields
   static const firstName = Iconsax.user;
   static const fatherName = Iconsax.profile_2user;

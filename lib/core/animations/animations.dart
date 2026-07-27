@@ -137,11 +137,20 @@ CustomTransitionPage<T> fadeThroughPage<T>({
 /// Use this instead of [MaterialPageRoute]: the default Material route slides
 /// the incoming page across while the outgoing one stays put, which reveals
 /// both through the transparent scaffolds.
-Route<T> fadeThroughRoute<T>(WidgetBuilder builder) {
+///
+/// [opaque] is what to reach for when the route underneath is not one of these.
+/// A page pushed over another page is fine left transparent — the one below
+/// fades itself out on its secondary animation, and staying transparent lets
+/// the aurora through unbroken. A page pushed over a MODAL BOTTOM SHEET is not:
+/// the sheet has no such animation, so it simply stays there, showing through
+/// the new page along with its barrier. Marking the route opaque stops the
+/// navigator painting anything below it once it settles; the aurora is mounted
+/// outside the navigator and still shows through the transparent scaffold.
+Route<T> fadeThroughRoute<T>(WidgetBuilder builder, {bool opaque = false}) {
   return PageRouteBuilder<T>(
     transitionDuration: _transitionDuration,
     reverseTransitionDuration: _reverseTransitionDuration,
-    opaque: false,
+    opaque: opaque,
     pageBuilder: (context, animation, secondary) => builder(context),
     transitionsBuilder: (context, animation, secondary, child) =>
         _fadeThroughTransition(animation, secondary, child),

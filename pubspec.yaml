@@ -29,6 +29,9 @@ dependencies:
   flutter_map: ^8.2.2
   geolocator: ^14.0.2
   go_router: ^17.3.0
+  # Direct, not transitive-via-supabase: the debug HTTP log wraps the client
+  # Supabase is handed, so the app imports http itself.
+  http: ^1.6.0
   google_sign_in: ^7.2.0
   hijri: ^3.0.1
   iconsax_flutter: 1.0.1

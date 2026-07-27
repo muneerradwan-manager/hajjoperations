@@ -151,6 +151,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profileJobTitle => 'الوصف الوظيفي';
 
   @override
+  String get profileCity => 'المدينة';
+
+  @override
   String get profileGender => 'الجنس';
 
   @override
@@ -411,6 +414,55 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notificationMarkAllRead => 'تعليم الكل كمقروء';
+
+  @override
+  String get notificationAttach => 'إرفاق';
+
+  @override
+  String get notificationAttachPhoto => 'صورة';
+
+  @override
+  String get notificationAttachCamera => 'التقاط صورة';
+
+  @override
+  String get notificationAttachVideo => 'فيديو';
+
+  @override
+  String get notificationAttachAudio => 'ملف صوتي';
+
+  @override
+  String get notificationAttachFile => 'ملف';
+
+  @override
+  String notificationAttachmentsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مرفقاً',
+      few: '$count مرفقات',
+      two: 'مرفقان',
+      one: 'مرفق واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get attachmentImage => 'صورة';
+
+  @override
+  String get attachmentVideo => 'فيديو';
+
+  @override
+  String get attachmentAudio => 'صوت';
+
+  @override
+  String get attachmentFile => 'ملف';
+
+  @override
+  String get attachmentDownload => 'تحميل';
+
+  @override
+  String get attachmentOpenFailed => 'تعذّر فتح المرفق';
 
   @override
   String get navSeasons => 'المواسم';
@@ -788,6 +840,51 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get moduleContactSa => 'الرقم السعودي';
+
+  @override
+  String get modulePickerSearchHint => 'ابحث بالاسم أو الاختصاص الوظيفي';
+
+  @override
+  String get modulePickerAll => 'الجميع';
+
+  @override
+  String get modulePickerInternal => 'من البعثة';
+
+  @override
+  String get modulePickerExternal => 'من خارج البعثة';
+
+  @override
+  String get modulePickerNoMatches => 'لا أحد يطابق البحث';
+
+  @override
+  String get modulePickerFree => 'غير مُسند إلى أي ملف';
+
+  @override
+  String modulePickerAlreadyIn(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'مُسند إلى $count ملفاً',
+      few: 'مُسند إلى $count ملفات',
+      two: 'مُسند إلى ملفين',
+      one: 'مُسند إلى ملف واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String modulePickerConfirm(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تأكيد اختيار $count شخصاً',
+      few: 'تأكيد اختيار $count أشخاص',
+      two: 'تأكيد اختيار شخصين',
+      one: 'تأكيد اختيار شخص واحد',
+      zero: 'تأكيد بلا اختيار',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get referenceDataTitle => 'البيانات المرجعية';

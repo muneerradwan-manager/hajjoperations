@@ -53,7 +53,9 @@ class EmployeesRepository {
   Future<List<Profile>> fetchPermanent() async {
     final rows = await supabase
         .from('permanent_employees')
-        .select('*, job_titles(name)')
+        // `reference_items` is the city: profiles points at it once, through
+        // city_id, so the embed needs no disambiguating.
+        .select('*, job_titles(name), reference_items(name_ar, name_en)')
         .order('first_name');
     return (rows as List)
         .map((r) => Profile.fromMap(r as Map<String, dynamic>))
@@ -64,7 +66,7 @@ class EmployeesRepository {
   Future<List<Profile>> fetchExternal() async {
     final rows = await supabase
         .from('profiles')
-        .select('*, job_titles(name)')
+        .select('*, job_titles(name), reference_items(name_ar, name_en)')
         .eq('account_status', 'approved')
         .eq('is_external', true)
         .order('first_name');

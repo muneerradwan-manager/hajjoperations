@@ -14,6 +14,7 @@ import '../application/module_editor_cubit.dart';
 import '../data/modules_repository.dart';
 import '../domain/module_type.dart';
 import '../domain/operational_module.dart';
+import 'employee_picker_screen.dart';
 import 'widgets/module_field_input.dart';
 import 'widgets/node_editor_sheet.dart';
 import 'widgets/picker_sheet.dart';
@@ -115,26 +116,14 @@ class _ViewState extends State<_View> {
 
   /// Puts people on one of the teams of a file that has no tree.
   Future<void> _pickTeam(ModuleRole role) async {
-    final l = context.l10n;
     final cubit = context.read<ModuleEditorCubit>();
-    final state = cubit.state;
 
-    final result = await showPickerSheet(
+    final result = await showEmployeePicker(
       context,
       title: role.name.of(context),
+      seasonId: cubit.seasonId,
       multiple: role.allowsMultiple,
-      selected: state.memberProfileIdsOf(role.id),
-      emptyMessage: l.moduleNoParticipants,
-      options: [
-        for (final e in state.employees)
-          PickerOption(
-            id: e.id,
-            label: e.fullName.isEmpty ? '—' : e.fullName,
-            subtitle: e.jobTitleName,
-            photoUrl: e.photoUrl,
-            showAvatar: true,
-          ),
-      ],
+      selected: cubit.state.memberProfileIdsOf(role.id),
     );
     if (result == null || !mounted) return;
 
@@ -147,11 +136,16 @@ class _ViewState extends State<_View> {
     _dirty = true;
   }
 
-  /// Hands one member his share of his team's duties — or takes them all back,
-  /// which leaves him on the team with none, and is allowed.
+  /// Hands one member his share of the duties open to him — or takes them all
+  /// back, which leaves him in the file with none, and is allowed.
+  ///
+  /// What is open to him is his role's own list and the file's, whichever the
+  /// type declares, laid out in the stages the work happens in.
   Future<void> _pickTasks(ModuleRole role, ModuleMember member) async {
     final cubit = context.read<ModuleEditorCubit>();
+    final type = cubit.state.type;
     final l = context.l10n;
+    if (type == null) return;
 
     final result = await showPickerSheet(
       context,
@@ -160,12 +154,14 @@ class _ViewState extends State<_View> {
       selected: member.taskIds,
       emptyMessage: l.moduleNoTasks,
       options: [
-        for (final task in role.tasks)
-          PickerOption(
-            id: task.id,
-            label: task.title.of(context),
-            subtitle: task.description?.of(context),
-          ),
+        for (final (stage, tasks) in type.byStage(type.assignableFor(role)))
+          for (final task in tasks)
+            PickerOption(
+              id: task.id,
+              label: task.title.of(context),
+              subtitle: task.description?.of(context),
+              group: stage?.name.of(context),
+            ),
       ],
     );
     if (result == null || !mounted) return;
@@ -191,6 +187,7 @@ class _ViewState extends State<_View> {
     final draft = await showNodeEditorSheet(
       context,
       level: level,
+      seasonId: cubit.seasonId,
       employees: state.employees,
       referenceSet: state.referenceSetById(level.referenceSetId),
       takenEntries: state.takenEntries(level.id, except: node?.id),
@@ -206,7 +203,8 @@ class _ViewState extends State<_View> {
               referenceItemId: node.referenceItemId,
               label: node.label,
               roleMembers: {
-                for (final role in level.roles) role.id: node.profileIdsOf(role.id),
+                for (final role in level.roles)
+                  role.id: node.profileIdsOf(role.id),
               },
             ),
     );
@@ -225,7 +223,11 @@ class _ViewState extends State<_View> {
     }
   }
 
-  Future<void> _deleteNode(ModuleLevel level, ModuleNode node, String name) async {
+  Future<void> _deleteNode(
+    ModuleLevel level,
+    ModuleNode node,
+    String name,
+  ) async {
     final l = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -573,7 +575,10 @@ class _NodesStep extends StatelessWidget {
       child: ListView(
         padding: context.scrollPadding(),
         children: staggered([
-          SectionHeader(l.moduleSectorsCount(sectors.length), icon: AppIcons.roles),
+          SectionHeader(
+            l.moduleSectorsCount(sectors.length),
+            icon: AppIcons.roles,
+          ),
           if (sectors.isEmpty)
             GlassCard(
               padding: const EdgeInsets.all(AppSpacing.lg),
@@ -685,8 +690,9 @@ class _TeamsStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final roles = state.type?.roles ?? const <ModuleRole>[];
-    if (roles.isEmpty) {
+    final type = state.type;
+    final roles = type?.roles ?? const <ModuleRole>[];
+    if (type == null || roles.isEmpty) {
       return EmptyState(icon: AppIcons.roles, title: l.moduleNoRoles);
     }
 
@@ -702,6 +708,9 @@ class _TeamsStep extends StatelessWidget {
             _TeamCard(
               role: role,
               members: state.membersOf(role.id),
+              // How much there is to hand out — the role's own list plus the
+              // file's, which is where this type keeps all of its duties.
+              menuSize: type.assignableFor(role).length,
               onPick: () => onPickTeam(role),
               onPickTasks: (member) => onPickTasks(role, member),
             ),
@@ -718,12 +727,17 @@ class _TeamCard extends StatelessWidget {
   const _TeamCard({
     required this.role,
     required this.members,
+    required this.menuSize,
     required this.onPick,
     required this.onPickTasks,
   });
 
   final ModuleRole role;
   final List<ModuleMember> members;
+
+  /// How many duties there are to hand out here, for the "3 of 15" on each row.
+  final int menuSize;
+
   final VoidCallback onPick;
   final void Function(ModuleMember member) onPickTasks;
 
@@ -772,8 +786,8 @@ class _TeamCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: AppSpacing.md),
                 child: _TeamMemberRow(
-                  role: role,
                   member: member,
+                  menuSize: menuSize,
                   onTap: () => onPickTasks(member),
                 ),
               ),
@@ -793,13 +807,13 @@ class _TeamCard extends StatelessWidget {
 /// list to hand him more of it, or take some back.
 class _TeamMemberRow extends StatelessWidget {
   const _TeamMemberRow({
-    required this.role,
     required this.member,
+    required this.menuSize,
     required this.onTap,
   });
 
-  final ModuleRole role;
   final ModuleMember member;
+  final int menuSize;
   final VoidCallback onTap;
 
   @override
@@ -838,7 +852,7 @@ class _TeamMemberRow extends StatelessWidget {
                   Text(
                     assigned == 0
                         ? l.moduleNoAssignedTasks
-                        : l.moduleAssignedTasksCount(assigned, role.tasks.length),
+                        : l.moduleAssignedTasksCount(assigned, menuSize),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: assigned == 0
                           ? scheme.onSurfaceVariant
@@ -877,7 +891,10 @@ class _NodeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final entry = state.referenceItem(level.referenceSetId, node.referenceItemId);
+    final entry = state.referenceItem(
+      level.referenceSetId,
+      node.referenceItemId,
+    );
     final name = entry?.name.of(context) ?? node.label ?? '—';
 
     return GlassCard(
@@ -890,7 +907,9 @@ class _NodeCard extends StatelessWidget {
           Row(
             children: [
               Icon(
-                level.isNamedByHand ? AppIcons.moduleType : AppIcons.organization,
+                level.isNamedByHand
+                    ? AppIcons.moduleType
+                    : AppIcons.organization,
                 size: 18,
                 color: scheme.primary,
               ),

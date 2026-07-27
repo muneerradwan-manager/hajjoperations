@@ -5,11 +5,11 @@ import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/glass_tokens.dart';
 import '../../../../core/widgets/glass.dart';
 import '../../../../core/widgets/profile_avatar.dart';
-import '../../../../core/widgets/responsive_center.dart';
 import '../../../profile/domain/profile.dart';
 import '../../application/module_editor_cubit.dart';
 import '../../domain/module_type.dart';
 import '../../domain/reference_item.dart';
+import '../employee_picker_screen.dart';
 import 'picker_sheet.dart';
 
 /// Adds or edits one place in a file — a sector, or a hotel inside one — with
@@ -22,6 +22,7 @@ import 'picker_sheet.dart';
 Future<NodeDraft?> showNodeEditorSheet(
   BuildContext context, {
   required ModuleLevel level,
+  required String seasonId,
   required List<Profile> employees,
   ReferenceSet? referenceSet,
   Set<String> takenEntries = const {},
@@ -34,6 +35,7 @@ Future<NodeDraft?> showNodeEditorSheet(
     showDragHandle: true,
     builder: (_) => _NodeEditorSheet(
       level: level,
+      seasonId: seasonId,
       employees: employees,
       referenceSet: referenceSet,
       takenEntries: takenEntries,
@@ -46,6 +48,7 @@ Future<NodeDraft?> showNodeEditorSheet(
 class _NodeEditorSheet extends StatefulWidget {
   const _NodeEditorSheet({
     required this.level,
+    required this.seasonId,
     required this.employees,
     required this.referenceSet,
     required this.takenEntries,
@@ -54,6 +57,10 @@ class _NodeEditorSheet extends StatefulWidget {
   });
 
   final ModuleLevel level;
+  final String seasonId;
+
+  /// The season's participants, kept for rendering the names already chosen.
+  /// Choosing someone new goes to the picker page, which asks the database.
   final List<Profile> employees;
   final ReferenceSet? referenceSet;
   final Set<String> takenEntries;
@@ -100,25 +107,16 @@ class _NodeEditorSheetState extends State<_NodeEditorSheet> {
   }
 
   Future<void> _pickRole(ModuleRole role) async {
-    final l = context.l10n;
-    final result = await showPickerSheet(
+    final result = await showEmployeePicker(
       context,
       title: role.name.of(context),
+      seasonId: widget.seasonId,
       multiple: role.allowsMultiple,
       selected: _members[role.id] ?? const {},
-      emptyMessage: l.moduleNoParticipants,
-      options: [
-        for (final e in widget.employees)
-          PickerOption(
-            id: e.id,
-            label: e.fullName.isEmpty ? '—' : e.fullName,
-            subtitle: e.jobTitleName,
-            photoUrl: e.photoUrl,
-            showAvatar: true,
-          ),
-      ],
     );
-    if (result != null) setState(() => _members[role.id] = result);
+    if (result != null && mounted) {
+      setState(() => _members[role.id] = result);
+    }
   }
 
   void _submit() {
@@ -146,95 +144,109 @@ class _NodeEditorSheetState extends State<_NodeEditorSheet> {
         constraints: BoxConstraints(
           maxHeight: MediaQuery.sizeOf(context).height * 0.85,
         ),
-        child: ResponsiveCenter(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  0,
-                  AppSpacing.lg,
-                  AppSpacing.md,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        widget.existing == null
-                            ? l.moduleNodeAdd(level.name.of(context))
-                            : l.moduleNodeEdit(level.name.of(context)),
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Flexible(
-                child: ListView(
-                  shrinkWrap: true,
-                  padding: EdgeInsets.fromLTRB(
+        // Not ResponsiveCenter: its `Center` expands to whatever height it is
+        // allowed, which here is the 0.85 cap — so a sheet with four rows in it
+        // stood nearly full-height with its content marooned in the middle.
+        // `heightFactor: 1` sizes this to the content instead, and the cap goes
+        // back to being a cap rather than a height.
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
                     AppSpacing.lg,
                     0,
                     AppSpacing.lg,
-                    AppSpacing.lg,
+                    AppSpacing.md,
                   ),
-                  children: [
-                    if (level.isNamedByHand)
-                      TextField(
-                        controller: _label,
-                        textInputAction: TextInputAction.done,
-                        decoration: InputDecoration(
-                          labelText: '${l.moduleNodeName} *',
-                          prefixIcon: const Icon(AppIcons.moduleType),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          widget.existing == null
+                              ? l.moduleNodeAdd(level.name.of(context))
+                              : l.moduleNodeEdit(level.name.of(context)),
+                          style: Theme.of(context).textTheme.titleLarge,
                         ),
-                      )
-                    else
-                      InkWell(
-                        borderRadius: BorderRadius.circular(AppRadius.sm),
-                        onTap: _pickEntry,
-                        child: InputDecorator(
-                          decoration: InputDecoration(
-                            labelText: '${level.name.of(context)} *',
-                            prefixIcon: const Icon(AppIcons.organization),
-                            suffixIcon: const Icon(Icons.arrow_drop_down),
-                          ),
-                          child: Text(
-                            entry?.name.of(context) ?? l.moduleRoleUnassigned,
-                            style: entry == null
-                                ? TextStyle(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                                    fontStyle: FontStyle.italic,
-                                  )
-                                : null,
-                          ),
-                        ),
-                      ),
-                    for (final role in level.roles) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      _RolePicker(
-                        role: role,
-                        people: [
-                          for (final e in widget.employees)
-                            if ((_members[role.id] ?? const {}).contains(e.id))
-                              e,
-                        ],
-                        onTap: () => _pickRole(role),
                       ),
                     ],
-                    const SizedBox(height: AppSpacing.lg),
-                    FilledButton.icon(
-                      onPressed: _submit,
-                      icon: const Icon(AppIcons.approve),
-                      label: Text(l.commonSave),
-                    ),
-                    SizedBox(height: MediaQuery.viewPaddingOf(context).bottom),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+                Flexible(
+                  child: ListView(
+                    shrinkWrap: true,
+                    padding: EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      0,
+                      AppSpacing.lg,
+                      AppSpacing.lg,
+                    ),
+                    children: [
+                      if (level.isNamedByHand)
+                        TextField(
+                          controller: _label,
+                          textInputAction: TextInputAction.done,
+                          decoration: InputDecoration(
+                            labelText: '${l.moduleNodeName} *',
+                            prefixIcon: const Icon(AppIcons.moduleType),
+                          ),
+                        )
+                      else
+                        InkWell(
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                          onTap: _pickEntry,
+                          child: InputDecorator(
+                            decoration: InputDecoration(
+                              labelText: '${level.name.of(context)} *',
+                              prefixIcon: const Icon(AppIcons.organization),
+                              suffixIcon: const Icon(Icons.arrow_drop_down),
+                            ),
+                            child: Text(
+                              entry?.name.of(context) ?? l.moduleRoleUnassigned,
+                              style: entry == null
+                                  ? TextStyle(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                      fontStyle: FontStyle.italic,
+                                    )
+                                  : null,
+                            ),
+                          ),
+                        ),
+                      for (final role in level.roles) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        _RolePicker(
+                          role: role,
+                          people: [
+                            for (final e in widget.employees)
+                              if ((_members[role.id] ?? const {}).contains(
+                                e.id,
+                              ))
+                                e,
+                          ],
+                          onTap: () => _pickRole(role),
+                        ),
+                      ],
+                      const SizedBox(height: AppSpacing.lg),
+                      FilledButton.icon(
+                        onPressed: _submit,
+                        icon: const Icon(AppIcons.approve),
+                        label: Text(l.commonSave),
+                      ),
+                      SizedBox(
+                        height: MediaQuery.viewPaddingOf(context).bottom,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

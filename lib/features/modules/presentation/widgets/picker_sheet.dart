@@ -15,12 +15,18 @@ class PickerOption {
     this.subtitle,
     this.photoUrl,
     this.showAvatar = false,
+    this.group,
   });
 
   final String id;
   final String label;
   final String? subtitle;
   final String? photoUrl;
+
+  /// The heading this option sits under. Options are expected to arrive already
+  /// ordered by it: fifteen duties read in one run say far less than three
+  /// stages read in the order the work happens.
+  final String? group;
 
   /// People are recognised by face before name; master-data entries are not.
   final bool showAvatar;
@@ -174,7 +180,14 @@ class _PickerSheetState extends State<_PickerSheet> {
                       itemBuilder: (context, i) {
                         final option = visible[i];
                         final isSelected = _selected.contains(option.id);
-                        return GlassCard(
+                        // A heading whenever the group changes — which survives
+                        // filtering, since it is read off the visible list.
+                        final heading =
+                            option.group != null &&
+                                (i == 0 || visible[i - 1].group != option.group)
+                            ? option.group
+                            : null;
+                        final card = GlassCard(
                           blur: false,
                           emphasised: isSelected,
                           padding: EdgeInsets.zero,
@@ -207,6 +220,29 @@ class _PickerSheetState extends State<_PickerSheet> {
                                   )
                                 : null,
                           ),
+                        );
+
+                        if (heading == null) return card;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.only(
+                                top: i == 0 ? 0 : AppSpacing.md,
+                                bottom: AppSpacing.sm,
+                              ),
+                              child: Text(
+                                heading,
+                                style: Theme.of(context).textTheme.labelMedium
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
+                              ),
+                            ),
+                            card,
+                          ],
                         );
                       },
                     ),

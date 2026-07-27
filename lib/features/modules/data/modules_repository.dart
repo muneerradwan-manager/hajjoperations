@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/supabase/supabase_client.dart';
 import '../../profile/domain/profile.dart';
+import '../domain/assignable_employee.dart';
 import '../domain/module_type.dart';
 import '../domain/operational_module.dart';
 import '../domain/reference_item.dart';
@@ -21,13 +22,20 @@ class ModulesRepository {
       'module_types(name_ar, name_en, end_condition_ar, end_condition_en), '
       'seasons(hijri_year)';
 
-  /// A type's whole schema: its fields, the levels of its tree, and every role
-  /// with the standing tasks that come with it.
+  /// A type's whole schema: its fields, the levels of its tree, the duties of
+  /// the file itself and the stages they fall into, and every role with the
+  /// duties that belong to that post.
+  ///
+  /// `module_type_tasks` is embedded twice on purpose, once down each of the two
+  /// paths that reach it — a duty belongs either to the file or to one of its
+  /// roles, so neither embed sees the other's rows.
   static const _typeColumns =
       '*, '
       'module_type_fields(*), '
       'module_type_levels(*), '
-      'module_type_roles(*, module_type_role_tasks(*))';
+      'module_type_task_groups(*), '
+      'module_type_tasks(*), '
+      'module_type_roles(*, module_type_tasks(*))';
 
   // ------------------------------------------------------------- type catalog
 
@@ -502,8 +510,41 @@ class ModulesRepository {
 
   // ------------------------------------------------------------- employees
 
+  /// One page of candidates for a role, searched and filtered in the database.
+  ///
+  /// [query] matches a name however it was typed — the three name columns are
+  /// joined before matching — and the job title with it. [isExternal] narrows to
+  /// one kind of participant, or to neither when null. Each candidate carries
+  /// the files they already serve in, which is the fact that decides most of
+  /// these choices and could not be seen while choosing until now.
+  Future<List<AssignableEmployee>> searchAssignableEmployees({
+    required String seasonId,
+    String query = '',
+    bool? isExternal,
+    int limit = 40,
+    int offset = 0,
+  }) async {
+    final rows = await supabase.rpc(
+      'assignable_employees',
+      params: {
+        'p_season_id': seasonId,
+        'p_query': query.trim().isEmpty ? null : query.trim(),
+        'p_is_external': isExternal,
+        'p_limit': limit,
+        'p_offset': offset,
+      },
+    );
+    return ((rows as List?) ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map(AssignableEmployee.fromMap)
+        .toList();
+  }
+
   /// Employees assignable to a module: the active participants of [seasonId].
-  /// Roles are filled from the people actually taking part in the season.
+  ///
+  /// Still the whole list, and still the right call for the editor itself,
+  /// which resolves names for people already placed. Choosing someone new goes
+  /// through [searchAssignableEmployees] instead.
   Future<List<Profile>> fetchAssignableEmployees(String seasonId) async {
     final rows = await supabase
         .from('season_participants')
