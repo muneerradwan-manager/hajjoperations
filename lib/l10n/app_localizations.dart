@@ -200,6 +200,30 @@ abstract class AppLocalizations {
   /// **'Language'**
   String get settingsLanguage;
 
+  /// No description provided for @settingsLanguageSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get settingsLanguageSystem;
+
+  /// No description provided for @settingsNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications on this device'**
+  String get settingsNotifications;
+
+  /// No description provided for @settingsNotificationsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Turning this off only silences the device — messages still reach your inbox'**
+  String get settingsNotificationsHint;
+
+  /// No description provided for @settingsLogoutConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out of this device?'**
+  String get settingsLogoutConfirm;
+
   /// No description provided for @settingsTheme.
   ///
   /// In en, this message translates to:
@@ -889,6 +913,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mark all as read'**
   String get notificationMarkAllRead;
+
+  /// No description provided for @notificationAudience.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to'**
+  String get notificationAudience;
+
+  /// No description provided for @notificationAudienceAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone'**
+  String get notificationAudienceAll;
+
+  /// No description provided for @notificationAudienceModule.
+  ///
+  /// In en, this message translates to:
+  /// **'Members of a file'**
+  String get notificationAudienceModule;
+
+  /// No description provided for @notificationChooseModule.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the file'**
+  String get notificationChooseModule;
+
+  /// No description provided for @notificationBroadcastHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Reaches everyone holding a role in the file'**
+  String get notificationBroadcastHint;
 
   /// No description provided for @notificationAttach.
   ///
@@ -1735,6 +1789,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} entries'**
   String referenceItemsCount(int count);
+
+  /// No description provided for @referenceImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from another season'**
+  String get referenceImport;
+
+  /// No description provided for @referenceImportPick.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the list from an earlier season. The copies are independent — deleting one here does not touch the other season.'**
+  String get referenceImportPick;
+
+  /// No description provided for @referenceImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {count} entries'**
+  String referenceImported(int count);
+
+  /// No description provided for @referenceImportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed'**
+  String get referenceImportFailed;
+
+  /// No description provided for @referenceImportNoSeasons.
+  ///
+  /// In en, this message translates to:
+  /// **'No other seasons'**
+  String get referenceImportNoSeasons;
 
   /// No description provided for @referenceAddItem.
   ///

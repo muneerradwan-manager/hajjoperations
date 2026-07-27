@@ -453,6 +453,30 @@ class ModulesRepository {
     ];
   }
 
+  /// Copies a season-scoped list from one season into another, as COPIES.
+  ///
+  /// Every entry becomes a new row: from then on the two seasons know nothing
+  /// about each other, and deleting a hotel from 1449 leaves 1448 untouched.
+  /// Names already present in the target are skipped, so it can be run twice,
+  /// or after a few entries were typed by hand.
+  ///
+  /// Returns how many were added.
+  Future<int> copyReferenceItems({
+    required String setId,
+    required String fromSeasonId,
+    required String toSeasonId,
+  }) async {
+    final copied = await supabase.rpc(
+      'copy_reference_items',
+      params: {
+        'p_set_id': setId,
+        'p_from_season': fromSeasonId,
+        'p_to_season': toSeasonId,
+      },
+    );
+    return (copied as num?)?.toInt() ?? 0;
+  }
+
   Future<void> addReferenceItem({
     required String setId,
     required String nameAr,

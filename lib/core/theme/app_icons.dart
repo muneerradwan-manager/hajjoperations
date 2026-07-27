@@ -68,6 +68,10 @@ class AppIcons {
   static const file = Iconsax.document_text;
   static const download = Iconsax.import_1;
 
+  // Settings
+  static const language = Iconsax.language_square;
+  static const theme = Iconsax.moon;
+
   // Profile fields
   static const firstName = Iconsax.user;
   static const fatherName = Iconsax.profile_2user;

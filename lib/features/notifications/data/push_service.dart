@@ -2,8 +2,11 @@ import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/logging/app_logger.dart';
 import '../../../core/supabase/supabase_client.dart';
+import 'notifications_repository.dart';
 
 /// Registers this device's FCM token for the signed-in user and surfaces
 /// foreground push messages as local notifications.
@@ -46,6 +49,94 @@ class PushService {
     FirebaseMessaging.instance.onTokenRefresh.listen((_) => _upsertToken());
 
     await _upsertToken();
+    await syncTopics();
+  }
+
+  static const _prefsKey = 'fcm_topics';
+
+  /// Brings this device's subscriptions in line with what the user is actually
+  /// part of: the whole mission, plus every file they hold a role in.
+  ///
+  /// The previous set is remembered on the device because FCM will not tell us
+  /// what it is subscribed to — without that record, a member removed from a
+  /// file would go on receiving that file's messages forever.
+  Future<void> syncTopics() async {
+    final uid = supabase.auth.currentUser?.id;
+    if (uid == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final previous = prefs.getStringList(_prefsKey)?.toSet() ?? <String>{};
+
+      final wanted = <String>{PushTopics.all};
+      for (final id in await _myModuleIds(uid)) {
+        wanted.add(PushTopics.module(id));
+      }
+
+      for (final topic in wanted.difference(previous)) {
+        await FirebaseMessaging.instance.subscribeToTopic(topic);
+      }
+      for (final topic in previous.difference(wanted)) {
+        await FirebaseMessaging.instance.unsubscribeFromTopic(topic);
+      }
+
+      await prefs.setStringList(_prefsKey, wanted.toList());
+      AppLogger.info('push', 'topics: ${wanted.join(', ')}');
+    } catch (e) {
+      AppLogger.warn('push', 'topic sync failed: $e');
+    }
+  }
+
+  /// Every file this person holds a role in — on the file itself or anywhere in
+  /// its tree. RLS already limits both tables to what they may see.
+  Future<Set<String>> _myModuleIds(String uid) async {
+    final direct = await supabase
+        .from('module_members')
+        .select('module_id')
+        .eq('profile_id', uid);
+    final viaNodes = await supabase
+        .from('module_node_members')
+        .select('module_nodes(module_id)')
+        .eq('profile_id', uid);
+
+    return {
+      for (final r in (direct as List).cast<Map<String, dynamic>>())
+        r['module_id'] as String,
+      for (final r in (viaNodes as List).cast<Map<String, dynamic>>())
+        if (r['module_nodes'] case final Map node) node['module_id'] as String,
+    };
+  }
+
+  /// Stops delivery to this device: no topics, and no token to send to. The
+  /// inbox is untouched — the messages still arrive, the phone just stays quiet.
+  Future<void> mute() async {
+    await forgetTopics();
+    final uid = supabase.auth.currentUser?.id;
+    if (uid == null) return;
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token == null) return;
+      await supabase
+          .from('device_tokens')
+          .delete()
+          .eq('user_id', uid)
+          .eq('token', token);
+    } catch (_) {
+      // Best effort; the topics are already gone, which is most of it.
+    }
+  }
+
+  /// Drops every subscription. Called on sign-out, so the next person to use
+  /// this device does not receive the last one's files.
+  Future<void> forgetTopics() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      for (final topic in prefs.getStringList(_prefsKey) ?? const <String>[]) {
+        await FirebaseMessaging.instance.unsubscribeFromTopic(topic);
+      }
+      await prefs.remove(_prefsKey);
+    } catch (_) {
+      // Best effort: a stale subscription is not worth blocking sign-out.
+    }
   }
 
   Future<void> _upsertToken() async {

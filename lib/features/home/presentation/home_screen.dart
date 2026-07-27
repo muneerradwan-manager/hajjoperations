@@ -15,8 +15,6 @@ import '../../../core/widgets/profile_avatar.dart';
 import '../../../core/widgets/responsive_center.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
-import '../../auth/data/auth_repository.dart';
-import '../../auth/presentation/widgets/settings_menu_button.dart';
 import '../../notifications/presentation/widgets/notification_bell.dart';
 import '../../seasons/data/seasons_repository.dart';
 import 'widgets/dashboard_card.dart';
@@ -151,15 +149,15 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: GlassAppBar(
         title: Text(l.homeTitle),
         automaticallyImplyLeading: false,
-        actions: [
-          const NotificationBell(),
-          IconButton(
-            tooltip: l.commonLogout,
-            onPressed: () => context.read<AuthRepository>().signOut(),
-            icon: const Icon(AppIcons.logout),
-          ),
-          const SettingsMenuButton(),
-        ],
+        // Settings on the leading side, the bell on the trailing one: two
+        // things, at opposite ends, neither buried in a menu. Logging out moved
+        // into settings, where a confirmation can sit beside it.
+        leading: IconButton(
+          tooltip: l.commonSettings,
+          onPressed: () => context.push(Routes.settings),
+          icon: const Icon(AppIcons.settings),
+        ),
+        actions: const [NotificationBell()],
       ),
       body: Builder(
         // Inside the Scaffold body, so `scrollPadding` sees the inset the

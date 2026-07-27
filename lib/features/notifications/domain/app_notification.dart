@@ -72,10 +72,16 @@ class AppNotification {
     this.body,
     this.readAt,
     required this.createdAt,
+    required this.groupId,
     this.attachments = const [],
   });
 
   final String id;
+
+  /// The send this row belongs to. One id shared by every recipient of a
+  /// broadcast, and what its attachments hang off.
+  final String groupId;
+
   final String title;
   final String? body;
   final DateTime? readAt;
@@ -93,9 +99,23 @@ class AppNotification {
   List<NotificationAttachment> get others =>
       attachments.where((a) => a.kind != AttachmentKind.image).toList();
 
+  /// The same notification, read now. Used to show the change before the write
+  /// comes back: the server is the truth, but a tap should not look ignored for
+  /// three seconds while it says so.
+  AppNotification markedRead() => AppNotification(
+    id: id,
+    groupId: groupId,
+    title: title,
+    body: body,
+    readAt: readAt ?? DateTime.now(),
+    createdAt: createdAt,
+    attachments: attachments,
+  );
+
   AppNotification withAttachments(List<NotificationAttachment> attachments) =>
       AppNotification(
         id: id,
+        groupId: groupId,
         title: title,
         body: body,
         readAt: readAt,
@@ -105,6 +125,7 @@ class AppNotification {
 
   factory AppNotification.fromMap(Map<String, dynamic> map) => AppNotification(
     id: map['id'] as String,
+    groupId: (map['group_id'] as String?) ?? map['id'] as String,
     title: map['title'] as String,
     body: map['body'] as String?,
     readAt: map['read_at'] == null

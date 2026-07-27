@@ -36,6 +36,70 @@ class _ReferenceSetScreenState extends State<ReferenceSetScreen> {
         item.data.values.any((v) => '$v'.toLowerCase().contains(q));
   }
 
+  /// Copies another season's entries into this one. They arrive as copies and
+  /// stay unrelated: deleting one here leaves the season it came from alone.
+  Future<void> _import(BuildContext context, ReferenceSet set) async {
+    final l = context.l10n;
+    final cubit = context.read<ReferenceDataCubit>();
+    final messenger = ScaffoldMessenger.of(context);
+    final seasons = await cubit.otherSeasons();
+    if (!context.mounted) return;
+
+    if (seasons.isEmpty) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l.referenceImportNoSeasons)));
+      return;
+    }
+
+    final from = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                0,
+                AppSpacing.lg,
+                AppSpacing.md,
+              ),
+              child: Text(
+                l.referenceImportPick,
+                style: Theme.of(sheetContext).textTheme.bodyMedium,
+              ),
+            ),
+            for (final season in seasons)
+              ListTile(
+                leading: const Icon(AppIcons.seasons),
+                title: Text(l.seasonHijriYear(season.hijriYear)),
+                onTap: () => Navigator.of(sheetContext).pop(season.id),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (from == null) return;
+
+    final copied = await cubit.importFromSeason(
+      setId: set.id,
+      fromSeasonId: from,
+    );
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            copied == null
+                ? l.referenceImportFailed
+                : l.referenceImported(copied),
+          ),
+        ),
+      );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -59,7 +123,19 @@ class _ReferenceSetScreenState extends State<ReferenceSetScreen> {
 
         return Scaffold(
           extendBodyBehindAppBar: true,
-          appBar: GlassAppBar(title: Text(set.name.of(context))),
+          appBar: GlassAppBar(
+            title: Text(set.name.of(context)),
+            actions: [
+              // Only a season-scoped list has anything to import: the cities do
+              // not start over each year.
+              if (set.isSeasonScoped && state.season != null)
+                IconButton(
+                  tooltip: l.referenceImport,
+                  icon: const Icon(AppIcons.download),
+                  onPressed: () => _import(context, set),
+                ),
+            ],
+          ),
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () => showReferenceItemForm(context, set: set),
             icon: const Icon(AppIcons.add),
@@ -171,10 +247,7 @@ class _ItemCard extends StatelessWidget {
           fadeThroughRoute(
             (_) => BlocProvider.value(
               value: cubit,
-              child: ReferenceItemDetailScreen(
-                setId: set.id,
-                itemId: item.id,
-              ),
+              child: ReferenceItemDetailScreen(setId: set.id, itemId: item.id),
             ),
           ),
         );

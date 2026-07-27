@@ -3,6 +3,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/supabase/supabase_client.dart';
+import '../../notifications/data/push_service.dart';
 
 /// Domain-level auth error carrying a user-presentable message.
 class AuthFailure implements Exception {
@@ -97,5 +98,11 @@ class AuthRepository {
     }
   }
 
-  Future<void> signOut() => supabase.auth.signOut();
+  /// Signs out, dropping this device's push subscriptions first: FCM topics
+  /// outlive a session, and the next person to use the phone must not receive
+  /// the last one's files.
+  Future<void> signOut() async {
+    await PushService.instance.forgetTopics();
+    await supabase.auth.signOut();
+  }
 }

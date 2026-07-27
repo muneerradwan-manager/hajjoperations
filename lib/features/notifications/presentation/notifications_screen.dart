@@ -6,9 +6,12 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive_center.dart';
+import '../../../core/constants/permission_codes.dart';
+import '../../auth/application/session_cubit.dart';
 import '../application/notifications_cubit.dart';
 import '../data/notifications_repository.dart';
 import '../domain/app_notification.dart';
+import 'send_notification_sheet.dart';
 import 'widgets/attachment_view.dart';
 
 class NotificationsScreen extends StatelessWidget {
@@ -35,6 +38,24 @@ class _View extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     return Scaffold(
+      floatingActionButton:
+          context.watch<SessionCubit>().state.can(
+            PermissionCodes.notificationsSend,
+          )
+          ? Builder(
+              builder: (context) => FloatingActionButton.extended(
+                onPressed: () async {
+                  final cubit = context.read<NotificationsCubit>();
+                  await showSendNotificationSheet(context);
+                  // A broadcast reaches the sender too, and it should appear
+                  // without waiting to be told about it.
+                  await cubit.refresh();
+                },
+                icon: const Icon(AppIcons.send),
+                label: Text(l.notificationSend),
+              ),
+            )
+          : null,
       appBar: GlassAppBar(
         title: Text(l.navNotifications),
         actions: [
@@ -61,30 +82,33 @@ class _View extends StatelessWidget {
               if (state.items.isEmpty) {
                 return _Empty(message: l.notificationsEmpty);
               }
-              return ListView.separated(
-                padding: EdgeInsets.fromLTRB(
-                  16,
-                  12,
-                  16,
-                  24 + MediaQuery.viewPaddingOf(context).bottom,
+              return RefreshIndicator(
+                onRefresh: () => context.read<NotificationsCubit>().refresh(),
+                child: ListView.separated(
+                  padding: EdgeInsets.fromLTRB(
+                    16,
+                    12,
+                    16,
+                    24 + MediaQuery.viewPaddingOf(context).bottom,
+                  ),
+                  itemCount: state.items.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 10),
+                  itemBuilder: (context, i) {
+                    final n = state.items[i];
+                    return FadeSlideIn(
+                      delay: Duration(milliseconds: 25 * i),
+                      child: _NotificationCard(
+                        notification: n,
+                        repo: repo,
+                        onTap: n.isRead
+                            ? null
+                            : () => context.read<NotificationsCubit>().markRead(
+                                n.id,
+                              ),
+                      ),
+                    );
+                  },
                 ),
-                itemCount: state.items.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 10),
-                itemBuilder: (context, i) {
-                  final n = state.items[i];
-                  return FadeSlideIn(
-                    delay: Duration(milliseconds: 25 * i),
-                    child: _NotificationCard(
-                      notification: n,
-                      repo: repo,
-                      onTap: n.isRead
-                          ? null
-                          : () => context.read<NotificationsCubit>().markRead(
-                              n.id,
-                            ),
-                    ),
-                  );
-                },
               );
             },
           ),

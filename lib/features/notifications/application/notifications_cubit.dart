@@ -44,15 +44,15 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     emit(state.copyWith(items: items, loading: false));
     if (items.isEmpty) return;
     try {
-      final byNotification = await _repo.fetchAttachments([
-        for (final n in items) n.id,
+      final byGroup = await _repo.fetchAttachments([
+        for (final n in items) n.groupId,
       ]);
-      if (isClosed || byNotification.isEmpty) return;
+      if (isClosed || byGroup.isEmpty) return;
       emit(
         state.copyWith(
           items: [
             for (final n in items)
-              n.withAttachments(byNotification[n.id] ?? const []),
+              n.withAttachments(byGroup[n.groupId] ?? const []),
           ],
         ),
       );
@@ -61,8 +61,50 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     }
   }
 
-  Future<void> markRead(String id) => _repo.markRead(id);
-  Future<void> markAllRead() => _repo.markAllRead();
+  /// Re-reads the inbox now. The stream covers the normal case; this covers
+  /// the two it does not — a pull-to-refresh, and having just sent something to
+  /// yourself, where waiting on a socket to tell you what you already know
+  /// reads as the app being broken.
+  Future<void> refresh() async {
+    try {
+      await _onNotifications(await _repo.fetchMine());
+    } catch (_) {
+      // The list on screen stays; it is not worse than it was.
+    }
+  }
+
+  /// Marks one as read, on screen first.
+  ///
+  /// The write took the better part of three seconds on a slow connection, and
+  /// waiting for it — or for Realtime to report it back — left the tap looking
+  /// like it had done nothing. So the state moves now and the server catches
+  /// up; if the write fails, a re-read puts the truth back.
+  Future<void> markRead(String id) async {
+    emit(
+      state.copyWith(
+        items: [
+          for (final n in state.items)
+            if (n.id == id) n.markedRead() else n,
+        ],
+      ),
+    );
+    try {
+      await _repo.markRead(id);
+    } catch (_) {
+      await refresh();
+    }
+  }
+
+  Future<void> markAllRead() async {
+    emit(
+      state.copyWith(items: [for (final n in state.items) n.markedRead()]),
+    );
+    try {
+      await _repo.markAllRead();
+    } catch (_) {
+      await refresh();
+    }
+  }
 
   @override
   Future<void> close() {

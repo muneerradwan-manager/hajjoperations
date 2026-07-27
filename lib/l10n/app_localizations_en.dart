@@ -60,6 +60,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLanguage => 'Language';
 
   @override
+  String get settingsLanguageSystem => 'System';
+
+  @override
+  String get settingsNotifications => 'Notifications on this device';
+
+  @override
+  String get settingsNotificationsHint =>
+      'Turning this off only silences the device — messages still reach your inbox';
+
+  @override
+  String get settingsLogoutConfirm => 'Log out of this device?';
+
+  @override
   String get settingsTheme => 'Appearance';
 
   @override
@@ -415,6 +428,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationMarkAllRead => 'Mark all as read';
+
+  @override
+  String get notificationAudience => 'Send to';
+
+  @override
+  String get notificationAudienceAll => 'Everyone';
+
+  @override
+  String get notificationAudienceModule => 'Members of a file';
+
+  @override
+  String get notificationChooseModule => 'Choose the file';
+
+  @override
+  String get notificationBroadcastHint =>
+      'Reaches everyone holding a role in the file';
 
   @override
   String get notificationAttach => 'Attach';
@@ -895,6 +924,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String referenceItemsCount(int count) {
     return '$count entries';
   }
+
+  @override
+  String get referenceImport => 'Import from another season';
+
+  @override
+  String get referenceImportPick =>
+      'Copy the list from an earlier season. The copies are independent — deleting one here does not touch the other season.';
+
+  @override
+  String referenceImported(int count) {
+    return 'Imported $count entries';
+  }
+
+  @override
+  String get referenceImportFailed => 'Import failed';
+
+  @override
+  String get referenceImportNoSeasons => 'No other seasons';
 
   @override
   String get referenceAddItem => 'Add entry';

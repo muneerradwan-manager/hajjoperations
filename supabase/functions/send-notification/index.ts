@@ -115,9 +115,21 @@ Deno.serve(async (req) => {
       prof?.is_admin && prof?.account_status === 'approved' && !prof?.is_suspended;
     if (!isAdmin && allowed !== true) return json({ error: 'forbidden' }, 403);
 
-    const { recipient_id, title, body } = (await req.json()) ?? {};
-    if (!recipient_id || !title) {
-      return json({ error: 'recipient_id and title are required' }, 400);
+    // Two shapes of send:
+    //
+    //   { recipient_id } — one person, fanned out over their devices here.
+    //   { topic }        — everyone subscribed to it, fanned out by Google.
+    //
+    // The second is the one that scales. A file with five hundred members is a
+    // single HTTP call instead of five hundred, and the function does not have
+    // to hold the token list at all.
+    const { recipient_id, topic, title, body } = (await req.json()) ?? {};
+    if (!title || (!recipient_id && !topic)) {
+      return json({ error: 'title and one of recipient_id / topic are required' }, 400);
+    }
+    // A topic name reaches FCM verbatim, so it is checked rather than trusted.
+    if (topic && !/^[a-zA-Z0-9\-_.~%]{1,900}$/.test(topic)) {
+      return json({ error: 'invalid topic' }, 400);
     }
 
     if (!saRaw) {
@@ -126,17 +138,10 @@ Deno.serve(async (req) => {
     }
     const sa = JSON.parse(saRaw);
 
-    const { data: tokens } = await admin
-      .from('device_tokens')
-      .select('token')
-      .eq('user_id', recipient_id);
-    if (!tokens || tokens.length === 0) return json({ pushed: 0 });
-
     const accessToken = await getAccessToken(sa);
     const endpoint = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`;
 
-    let pushed = 0;
-    for (const t of tokens) {
+    const send = async (target: Record<string, unknown>) => {
       const r = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -145,13 +150,29 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           message: {
-            token: t.token,
+            ...target,
             notification: { title, body: body ?? '' },
             android: { priority: 'high' },
           },
         }),
       });
-      if (r.ok) pushed++;
+      return r.ok;
+    };
+
+    if (topic) {
+      const ok = await send({ topic });
+      return json({ pushed: ok ? 1 : 0, topic });
+    }
+
+    const { data: tokens } = await admin
+      .from('device_tokens')
+      .select('token')
+      .eq('user_id', recipient_id);
+    if (!tokens || tokens.length === 0) return json({ pushed: 0 });
+
+    let pushed = 0;
+    for (const t of tokens) {
+      if (await send({ token: t.token })) pushed++;
     }
     return json({ pushed });
   } catch (e) {

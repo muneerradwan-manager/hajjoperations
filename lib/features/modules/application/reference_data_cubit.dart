@@ -92,6 +92,33 @@ class ReferenceDataCubit extends Cubit<ReferenceDataState> {
     }
   }
 
+  /// Brings another season's entries into the current one. Returns how many
+  /// were added, or null when it failed.
+  Future<int?> importFromSeason({
+    required String setId,
+    required String fromSeasonId,
+  }) async {
+    final to = state.season?.id;
+    if (to == null) return null;
+    try {
+      final copied = await _repo.copyReferenceItems(
+        setId: setId,
+        fromSeasonId: fromSeasonId,
+        toSeasonId: to,
+      );
+      await load();
+      return copied;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// The seasons an import could draw from: every one but the one in force.
+  Future<List<Season>> otherSeasons() async {
+    final seasons = await _seasons.fetchSeasons();
+    return seasons.where((s) => s.id != state.season?.id).toList();
+  }
+
   Future<ReferenceResult> addItem({
     required String setId,
     required String nameAr,

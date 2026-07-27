@@ -7,14 +7,23 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
+import '../../modules/data/modules_repository.dart';
+import '../../modules/domain/operational_module.dart';
+import '../../seasons/data/seasons_repository.dart';
 import '../data/notifications_repository.dart';
 import '../domain/app_notification.dart';
 import 'widgets/attachment_view.dart';
 
-/// Compose + send a notification to a single recipient.
+/// Who a notification is going to.
+enum SendAudience { person, module, all }
+
+/// Compose + send a notification.
+///
+/// With [recipientId] it goes to that one person. Without, the sheet asks who
+/// to send to — everyone, or the members of one operational file.
 Future<void> showSendNotificationSheet(
   BuildContext context, {
-  required String recipientId,
+  String? recipientId,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -31,7 +40,7 @@ Future<void> showSendNotificationSheet(
 
 class _Form extends StatefulWidget {
   const _Form({required this.recipientId});
-  final String recipientId;
+  final String? recipientId;
 
   @override
   State<_Form> createState() => _FormState();
@@ -44,6 +53,26 @@ class _FormState extends State<_Form> {
   final _repo = NotificationsRepository();
   final _attachments = <PendingAttachment>[];
   bool _busy = false;
+
+  late SendAudience _audience = widget.recipientId != null
+      ? SendAudience.person
+      : SendAudience.all;
+
+  /// The season's files, to choose one from. Loaded once when the sheet opens.
+  Future<List<OperationalModule>>? _modules;
+  String? _moduleId;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.recipientId == null) _modules = _loadModules();
+  }
+
+  Future<List<OperationalModule>> _loadModules() async {
+    final season = await SeasonsRepository().fetchCurrentSeason();
+    if (season == null) return const [];
+    return ModulesRepository().fetchModules(seasonId: season.id);
+  }
 
   @override
   void dispose() {
@@ -156,12 +185,35 @@ class _FormState extends State<_Form> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     setState(() => _busy = true);
     try {
-      await _repo.send(
-        recipientId: widget.recipientId,
-        title: _title.text.trim(),
-        body: _body.text.trim().isEmpty ? null : _body.text.trim(),
-        attachments: _attachments,
-      );
+      final title = _title.text.trim();
+      final body = _body.text.trim().isEmpty ? null : _body.text.trim();
+
+      switch (_audience) {
+        case SendAudience.person:
+          await _repo.send(
+            recipientId: widget.recipientId!,
+            title: title,
+            body: body,
+            attachments: _attachments,
+          );
+        case SendAudience.module:
+          if (_moduleId == null) {
+            setState(() => _busy = false);
+            return;
+          }
+          await _repo.broadcastToModule(
+            moduleId: _moduleId!,
+            title: title,
+            body: body,
+            attachments: _attachments,
+          );
+        case SendAudience.all:
+          await _repo.broadcastToAll(
+            title: title,
+            body: body,
+            attachments: _attachments,
+          );
+      }
       if (!mounted) return;
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context)
@@ -193,6 +245,43 @@ class _FormState extends State<_Form> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
+            if (widget.recipientId == null) ...[
+              _AudienceField(
+                audience: _audience,
+                onChanged: (v) => setState(() => _audience = v),
+              ),
+              if (_audience == SendAudience.module) ...[
+                const SizedBox(height: 12),
+                FutureBuilder<List<OperationalModule>>(
+                  future: _modules,
+                  builder: (context, snapshot) {
+                    final modules = snapshot.data ?? const <OperationalModule>[];
+                    return DropdownButtonFormField<String>(
+                      initialValue: _moduleId,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        labelText: l.notificationChooseModule,
+                        prefixIcon: const Icon(AppIcons.modules),
+                        helperText: l.notificationBroadcastHint,
+                      ),
+                      items: [
+                        for (final m in modules)
+                          DropdownMenuItem(
+                            value: m.id,
+                            child: Text(
+                              m.moduleTypeName?.of(context) ?? '—',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                      ],
+                      validator: (v) => v == null ? l.commonRequired : null,
+                      onChanged: (v) => setState(() => _moduleId = v),
+                    );
+                  },
+                ),
+              ],
+              const SizedBox(height: 12),
+            ],
             TextFormField(
               controller: _title,
               decoration: InputDecoration(
@@ -287,6 +376,41 @@ class _PendingRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+
+/// Everyone, or the members of one file. A person is not offered here — that
+/// send starts from their page, where you already know who you mean.
+class _AudienceField extends StatelessWidget {
+  const _AudienceField({required this.audience, required this.onChanged});
+
+  final SendAudience audience;
+  final ValueChanged<SendAudience> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+
+    return DropdownButtonFormField<SendAudience>(
+      initialValue: audience,
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: l.notificationAudience,
+        prefixIcon: const Icon(AppIcons.participants),
+      ),
+      items: [
+        DropdownMenuItem(
+          value: SendAudience.all,
+          child: Text(l.notificationAudienceAll),
+        ),
+        DropdownMenuItem(
+          value: SendAudience.module,
+          child: Text(l.notificationAudienceModule),
+        ),
+      ],
+      onChanged: (v) => onChanged(v ?? SendAudience.all),
     );
   }
 }

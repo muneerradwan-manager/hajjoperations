@@ -41,25 +41,47 @@ class NotificationsRepository {
         });
   }
 
-  /// The attachments of [notificationIds], grouped by notification. One query
-  /// for the whole inbox rather than one per row.
+  /// One read of the inbox, newest first.
+  ///
+  /// The stream is the usual source, but it only re-reads when Realtime says
+  /// something changed. This is what pull-to-refresh and "I just sent that"
+  /// call, so the list is right even when the socket is not.
+  Future<List<AppNotification>> fetchMine() async {
+    final uid = supabase.auth.currentUser?.id;
+    if (uid == null) return const [];
+    final rows = await supabase
+        .from('notifications')
+        .select()
+        .eq('recipient_id', uid)
+        .order('created_at', ascending: false);
+    return (rows as List)
+        .cast<Map<String, dynamic>>()
+        .map(AppNotification.fromMap)
+        .toList();
+  }
+
+  /// The attachments of [groupIds], keyed by group. One query for the whole
+  /// inbox rather than one per row.
+  ///
+  /// Keyed on the GROUP because a broadcast is one upload read by everyone it
+  /// went to — five hundred recipients share one file, not five hundred copies.
   Future<Map<String, List<NotificationAttachment>>> fetchAttachments(
-    List<String> notificationIds,
+    List<String> groupIds,
   ) async {
-    if (notificationIds.isEmpty) return const {};
+    if (groupIds.isEmpty) return const {};
     final rows = await supabase
         .from('notification_attachments')
         .select()
-        .inFilter('notification_id', notificationIds)
+        .inFilter('group_id', groupIds)
         .order('sort_order');
 
-    final byNotification = <String, List<NotificationAttachment>>{};
+    final byGroup = <String, List<NotificationAttachment>>{};
     for (final row in (rows as List).cast<Map<String, dynamic>>()) {
-      (byNotification[row['notification_id'] as String] ??= []).add(
+      (byGroup[row['group_id'] as String] ??= []).add(
         NotificationAttachment.fromMap(row),
       );
     }
-    return byNotification;
+    return byGroup;
   }
 
   /// A short-lived link to an attachment. Signing goes through RLS, so nobody
@@ -125,9 +147,9 @@ class NotificationsRepository {
           'title': title,
           'body': body,
         })
-        .select('id')
+        .select('id, group_id')
         .single();
-    final id = row['id'] as String;
+    final id = row['group_id'] as String;
 
     if (attachments.isNotEmpty) {
       final rows = <Map<String, dynamic>>[];
@@ -147,7 +169,7 @@ class NotificationsRepository {
               ),
             );
         rows.add({
-          'notification_id': id,
+          'group_id': id,
           'kind': attachment.kind.name,
           'path': path,
           'name': attachment.name,
@@ -159,13 +181,111 @@ class NotificationsRepository {
       await supabase.from('notification_attachments').insert(rows);
     }
 
-    try {
-      await supabase.functions.invoke(
-        'send-notification',
-        body: {'recipient_id': recipientId, 'title': title, 'body': body},
-      );
-    } catch (_) {
-      // Push is best-effort; the in-app notification was already stored.
-    }
+    await _push({'recipient_id': recipientId, 'title': title, 'body': body});
   }
+
+  /// Sends to everyone holding a role anywhere in [moduleId].
+  ///
+  /// The inbox rows are written by one statement inside the database, and the
+  /// push is one call to the file topic. Neither cost grows with the number of
+  /// members, which at five hundred is the whole point.
+  Future<void> broadcastToModule({
+    required String moduleId,
+    required String title,
+    String? body,
+    List<PendingAttachment> attachments = const [],
+  }) async {
+    final groupId =
+        await supabase.rpc(
+              'broadcast_to_module',
+              params: {
+                'p_module_id': moduleId,
+                'p_title': title,
+                'p_body': body,
+              },
+            )
+            as String;
+
+    await _uploadAttachments(groupId, attachments);
+    await _push({
+      'topic': PushTopics.module(moduleId),
+      'title': title,
+      'body': body,
+    });
+  }
+
+  /// Sends to every working account, or to one season's participants.
+  Future<void> broadcastToAll({
+    required String title,
+    String? body,
+    String? seasonId,
+    List<PendingAttachment> attachments = const [],
+  }) async {
+    final groupId =
+        await supabase.rpc(
+              'broadcast_to_all',
+              params: {
+                'p_title': title,
+                'p_body': body,
+                'p_season_id': seasonId,
+              },
+            )
+            as String;
+
+    await _uploadAttachments(groupId, attachments);
+    await _push({'topic': PushTopics.all, 'title': title, 'body': body});
+  }
+
+  /// Uploads once, under the group. Every recipient reads the same file.
+  Future<void> _uploadAttachments(
+    String groupId,
+    List<PendingAttachment> attachments,
+  ) async {
+    if (attachments.isEmpty) return;
+    final rows = <Map<String, dynamic>>[];
+    for (var i = 0; i < attachments.length; i++) {
+      final attachment = attachments[i];
+      // Prefixed with the index: two photos straight from a camera roll can
+      // arrive with the same name, and the second must not replace the first.
+      final path = '$groupId/${i}_${attachment.name}';
+      await supabase.storage
+          .from(_bucket)
+          .upload(
+            path,
+            attachment.file,
+            fileOptions: FileOptions(
+              upsert: true,
+              contentType: attachment.mimeType,
+            ),
+          );
+      rows.add({
+        'group_id': groupId,
+        'kind': attachment.kind.name,
+        'path': path,
+        'name': attachment.name,
+        'mime_type': attachment.mimeType,
+        'size_bytes': attachment.file.lengthSync(),
+        'sort_order': i,
+      });
+    }
+    await supabase.from('notification_attachments').insert(rows);
+  }
+
+  /// Best effort, always: the inbox row is the source of truth and a failed
+  /// push must never lose the message.
+  Future<void> _push(Map<String, dynamic> body) async {
+    try {
+      await supabase.functions.invoke('send-notification', body: body);
+    } catch (_) {}
+  }
+}
+
+/// The FCM topics this app uses. Kept beside the sender so the name a broadcast
+/// pushes to and the name a device subscribes to cannot drift apart.
+class PushTopics {
+  const PushTopics._();
+
+  static const all = 'all';
+
+  static String module(String moduleId) => 'module_$moduleId';
 }

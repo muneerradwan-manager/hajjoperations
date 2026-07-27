@@ -60,6 +60,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsLanguage => 'اللغة';
 
   @override
+  String get settingsLanguageSystem => 'حسب النظام';
+
+  @override
+  String get settingsNotifications => 'إشعارات هذا الجهاز';
+
+  @override
+  String get settingsNotificationsHint =>
+      'إيقافها يوقف تنبيه الجهاز فقط — الإشعارات تبقى تصلك داخل التطبيق';
+
+  @override
+  String get settingsLogoutConfirm => 'تسجيل الخروج من هذا الجهاز؟';
+
+  @override
   String get settingsTheme => 'المظهر';
 
   @override
@@ -414,6 +427,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notificationMarkAllRead => 'تعليم الكل كمقروء';
+
+  @override
+  String get notificationAudience => 'المرسل إليهم';
+
+  @override
+  String get notificationAudienceAll => 'الجميع';
+
+  @override
+  String get notificationAudienceModule => 'أعضاء ملف تشغيلي';
+
+  @override
+  String get notificationChooseModule => 'اختر الملف';
+
+  @override
+  String get notificationBroadcastHint =>
+      'يصل الإشعار إلى كل من يحمل دوراً في الملف';
 
   @override
   String get notificationAttach => 'إرفاق';
@@ -896,6 +925,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String referenceItemsCount(int count) {
     return '$count عنصراً';
   }
+
+  @override
+  String get referenceImport => 'استيراد من موسم آخر';
+
+  @override
+  String get referenceImportPick =>
+      'انسخ القائمة من موسم سابق. النسخ مستقلة — حذف عنصر هنا لا يمسّ الموسم الآخر.';
+
+  @override
+  String referenceImported(int count) {
+    return 'تم استيراد $count عنصراً';
+  }
+
+  @override
+  String get referenceImportFailed => 'تعذّر الاستيراد';
+
+  @override
+  String get referenceImportNoSeasons => 'لا توجد مواسم أخرى';
 
   @override
   String get referenceAddItem => 'إضافة عنصر';

@@ -13,6 +13,7 @@ import '../../features/permissions/presentation/permissions_employees_screen.dar
 import '../../features/profile/presentation/my_profile_screen.dart';
 import '../../features/profile/presentation/profile_completion_screen.dart';
 import '../../features/seasons/presentation/seasons_screen.dart';
+import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/status/presentation/pending_screen.dart';
 import '../../features/status/presentation/rejected_screen.dart';
 import '../../features/status/presentation/splash_screen.dart';
@@ -38,6 +39,7 @@ abstract class Routes {
   static const notifications = '/notifications';
   static const modules = '/modules';
   static const referenceData = '/reference-data';
+  static const settings = '/settings';
 }
 
 GoRouter buildRouter(SessionCubit session) {
@@ -131,6 +133,11 @@ GoRouter buildRouter(SessionCubit session) {
         path: Routes.notifications,
         pageBuilder: (c, s) =>
             fadeThroughPage(key: s.pageKey, child: const NotificationsScreen()),
+      ),
+      GoRoute(
+        path: Routes.settings,
+        pageBuilder: (c, s) =>
+            fadeThroughPage(key: s.pageKey, child: const SettingsScreen()),
       ),
       GoRoute(
         path: Routes.approvals,
