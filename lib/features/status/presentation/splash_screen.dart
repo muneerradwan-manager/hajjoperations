@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_icons.dart';
+import '../../../core/widgets/app_logo.dart';
 import '../../../core/theme/glass_tokens.dart';
 
 /// Shown while the session is being resolved at startup: the brand mark rises
@@ -34,20 +34,15 @@ class SplashScreen extends StatelessWidget {
                 height: 96,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: AppGradients.greenSphere,
                   boxShadow: [
                     BoxShadow(
-                      color: scheme.primary.withValues(alpha: 0.45),
-                      blurRadius: 40,
+                      color: scheme.primary.withValues(alpha: 0.35),
+                      blurRadius: 44,
                       offset: const Offset(0, 16),
                     ),
                   ],
                 ),
-                child: const Icon(
-                  AppIcons.brand,
-                  size: 44,
-                  color: Colors.white,
-                ),
+                child: const AppLogo(size: 140),
               ),
               const SizedBox(height: AppSpacing.xxl),
               SizedBox(

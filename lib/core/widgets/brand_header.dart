@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../theme/app_icons.dart';
+import 'app_logo.dart';
 import '../theme/glass_tokens.dart';
 
 /// The brand mark on the auth screens: a glass medallion holding the crescent,
@@ -83,25 +83,22 @@ class _BrandHeaderState extends State<BrandHeader>
                   final t = Curves.easeInOut.transform(_breathe.value);
                   return Transform.scale(scale: 0.97 + 0.05 * t, child: child);
                 },
-                child: Container(
-                  width: 92,
-                  height: 92,
+                // The logo carries its own medallion, border and background,
+                // so it replaces the green sphere rather than sitting inside
+                // it — a badge within a badge reads as a mistake. Only the glow
+                // stays, and only as a glow.
+                child: DecoratedBox(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: AppGradients.greenSphere,
                     boxShadow: [
                       BoxShadow(
-                        color: scheme.primary.withValues(alpha: 0.45),
-                        blurRadius: 36,
+                        color: scheme.primary.withValues(alpha: 0.35),
+                        blurRadius: 40,
                         offset: const Offset(0, 14),
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    AppIcons.brand,
-                    size: 42,
-                    color: Colors.white,
-                  ),
+                  child: const AppLogo(size: 132),
                 ),
               ),
             ],
