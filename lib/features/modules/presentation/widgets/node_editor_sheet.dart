@@ -89,7 +89,12 @@ class _NodeEditorSheetState extends State<_NodeEditorSheet> {
 
   Future<void> _pickEntry() async {
     final l = context.l10n;
-    final items = widget.referenceSet?.items ?? const <ReferenceItem>[];
+    // This season's hotels only. The set still holds every season's — a tower
+    // saved last year has to keep resolving to its name — but you cannot pick
+    // one of them for a tower this year.
+    final items =
+        widget.referenceSet?.itemsForSeason(widget.seasonId) ??
+        const <ReferenceItem>[];
     final result = await showPickerSheet(
       context,
       title: widget.level.name.of(context),

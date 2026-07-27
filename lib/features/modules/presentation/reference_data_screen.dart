@@ -9,6 +9,7 @@ import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive_center.dart';
 import '../../../core/widgets/states.dart';
 import '../application/reference_data_cubit.dart';
+import '../../seasons/data/seasons_repository.dart';
 import '../data/modules_repository.dart';
 import '../domain/reference_item.dart';
 import 'reference_set_screen.dart';
@@ -22,7 +23,8 @@ class ReferenceDataScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ReferenceDataCubit(ModulesRepository()),
+      create: (_) =>
+          ReferenceDataCubit(ModulesRepository(), SeasonsRepository()),
       child: const _View(),
     );
   }
@@ -130,10 +132,17 @@ class _SetCard extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  l.referenceItemsCount(set.items.length),
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                  // Counts what the set screen will actually show: this season's.
+                  l.referenceItemsCount(
+                    set
+                        .itemsForSeason(
+                          context.watch<ReferenceDataCubit>().state.season?.id,
+                        )
+                        .length,
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),

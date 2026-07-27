@@ -50,7 +50,12 @@ class _ReferenceSetScreenState extends State<ReferenceSetScreen> {
           );
         }
 
-        final items = set.items.where((i) => _matches(context, i)).toList();
+        // This season's entries, for a set that is scoped to one. The hotels of
+        // 1447 are not the hotels of 1448.
+        final items = state
+            .visibleItems(set.id)
+            .where((i) => _matches(context, i))
+            .toList();
 
         return Scaffold(
           extendBodyBehindAppBar: true,

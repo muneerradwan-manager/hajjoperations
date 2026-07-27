@@ -13,6 +13,7 @@ class ReferenceSet {
     required this.name,
     this.fields = const [],
     this.items = const [],
+    this.isSeasonScoped = false,
   });
 
   final String id;
@@ -21,12 +22,27 @@ class ReferenceSet {
   final List<ModuleField> fields;
   final List<ReferenceItem> items;
 
+  /// Whether an entry of this set belongs to one season. The hotels and the
+  /// clusters are contracted per year; the cities simply exist.
+  final bool isSeasonScoped;
+
+  /// The entries to CHOOSE from in [seasonId] — this season's for a scoped set,
+  /// all of them otherwise.
+  ///
+  /// Never use this to resolve an id to a name: a tower in last season's file
+  /// points at last season's hotel, and it still has to render.
+  List<ReferenceItem> itemsForSeason(String? seasonId) {
+    if (!isSeasonScoped || seasonId == null) return items;
+    return items.where((i) => i.seasonId == seasonId).toList();
+  }
+
   ReferenceSet copyWith({List<ReferenceItem>? items}) => ReferenceSet(
     id: id,
     code: code,
     name: name,
     fields: fields,
     items: items ?? this.items,
+    isSeasonScoped: isSeasonScoped,
   );
 
   factory ReferenceSet.fromMap(Map<String, dynamic> map) {
@@ -52,6 +68,7 @@ class ReferenceSet {
       name: LocalizedName.fromMap(map),
       fields: fields.map(ModuleField.fromMap).toList(),
       items: items,
+      isSeasonScoped: (map['is_season_scoped'] as bool?) ?? false,
     );
   }
 }
@@ -66,6 +83,7 @@ class ReferenceItem {
     this.data = const {},
     this.isActive = true,
     this.sortOrder = 0,
+    this.seasonId,
   });
 
   final String id;
@@ -74,6 +92,10 @@ class ReferenceItem {
   final Map<String, dynamic> data;
   final bool isActive;
   final int sortOrder;
+
+  /// The season this entry was contracted for, for a set that is scoped to one.
+  /// Null on the sets that are not, and on entries that predate the scoping.
+  final String? seasonId;
 
   factory ReferenceItem.fromMap(Map<String, dynamic> map) => ReferenceItem(
     id: map['id'] as String,
@@ -84,5 +106,6 @@ class ReferenceItem {
     ),
     isActive: (map['is_active'] as bool?) ?? true,
     sortOrder: (map['sort_order'] as int?) ?? 0,
+    seasonId: map['season_id'] as String?,
   );
 }

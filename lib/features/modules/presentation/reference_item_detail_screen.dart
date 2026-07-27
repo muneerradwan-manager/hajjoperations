@@ -100,46 +100,54 @@ class ReferenceItemDetailScreen extends StatelessWidget {
               ),
             ],
           ),
-          body: ResponsiveCenter(
-            child: ListView(
-              padding: context.scrollPadding(),
-              children: staggered([
-                InfoSection(
-                  title: l.referenceDetailsTitle,
-                  icon: AppIcons.referenceData,
-                  children: [
-                    InfoRow(
-                      icon: AppIcons.referenceData,
-                      label: l.referenceItemName,
-                      value: item.name.ar,
-                    ),
-                    if (item.name.en != null && item.name.en!.isNotEmpty)
+          // Builder, and it matters: `scrollPadding` reads the MediaQuery that
+          // Scaffold rewrites for its BODY, where the top inset includes the
+          // app bar. The BlocBuilder context above returns only the status bar,
+          // and the list slid under the bar — which is what test/
+          // scroll_padding_test.dart was written to guard and this screen
+          // slipped past by reading the wrong context.
+          body: Builder(
+            builder: (context) => ResponsiveCenter(
+              child: ListView(
+                padding: context.scrollPadding(),
+                children: staggered([
+                  InfoSection(
+                    title: l.referenceDetailsTitle,
+                    icon: AppIcons.referenceData,
+                    children: [
                       InfoRow(
                         icon: AppIcons.referenceData,
-                        label: l.referenceItemNameEn,
-                        value: item.name.en,
+                        label: l.referenceItemName,
+                        value: item.name.ar,
                       ),
-                    for (final field in set.fields)
-                      if (!_isActionable(field.kind))
+                      if (item.name.en != null && item.name.en!.isNotEmpty)
                         InfoRow(
-                          icon: _iconFor(field.kind),
-                          label: field.label.of(context),
-                          value: _display(context, state, field, item),
+                          icon: AppIcons.referenceData,
+                          label: l.referenceItemNameEn,
+                          value: item.name.en,
                         ),
-                  ],
-                ),
-                // These get their own card rather than a row: a location is
-                // there to be opened and a number to be dialled, not read.
-                for (final field in set.fields)
-                  if (_isActionable(field.kind)) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    _ActionCard(
-                      label: field.label.of(context),
-                      value: item.data[field.key]?.toString(),
-                      kind: field.kind,
-                    ),
-                  ],
-              ]),
+                      for (final field in set.fields)
+                        if (!_isActionable(field.kind))
+                          InfoRow(
+                            icon: _iconFor(field.kind),
+                            label: field.label.of(context),
+                            value: _display(context, state, field, item),
+                          ),
+                    ],
+                  ),
+                  // These get their own card rather than a row: a location is
+                  // there to be opened and a number to be dialled, not read.
+                  for (final field in set.fields)
+                    if (_isActionable(field.kind)) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      _ActionCard(
+                        label: field.label.of(context),
+                        value: item.data[field.key]?.toString(),
+                        kind: field.kind,
+                      ),
+                    ],
+                ]),
+              ),
             ),
           ),
         );

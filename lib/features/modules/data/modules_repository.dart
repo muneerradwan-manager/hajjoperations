@@ -63,11 +63,15 @@ class ModulesRepository {
 
   /// Every file the caller may see: managers get all of them, everyone else
   /// gets the activated files they hold a role in.
-  Future<List<OperationalModule>> fetchModules() async {
-    final rows = await supabase
-        .from('modules')
-        .select(_moduleColumns)
-        .order('created_at', ascending: false);
+  ///
+  /// [seasonId] narrows it to one season, which is what the list wants: the
+  /// season in force is a choice the admin makes, and everything shown under it
+  /// should belong to it. Null returns every season, for callers that mean to
+  /// look across them.
+  Future<List<OperationalModule>> fetchModules({String? seasonId}) async {
+    var query = supabase.from('modules').select(_moduleColumns);
+    if (seasonId != null) query = query.eq('season_id', seasonId);
+    final rows = await query.order('created_at', ascending: false);
     final modules = (rows as List)
         .map((r) => OperationalModule.fromMap(r as Map<String, dynamic>))
         .toList();
@@ -454,12 +458,15 @@ class ModulesRepository {
     required String nameAr,
     String? nameEn,
     Map<String, dynamic> data = const {},
+    String? seasonId,
   }) async {
     await supabase.from('reference_items').insert({
       'set_id': setId,
       'name_ar': nameAr,
       'name_en': (nameEn == null || nameEn.isEmpty) ? null : nameEn,
       'data': data,
+      // Null for a set that is not season-scoped — a city belongs to no year.
+      'season_id': seasonId,
     });
   }
 

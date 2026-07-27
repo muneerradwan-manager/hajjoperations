@@ -28,7 +28,7 @@ class ModulesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ModulesCubit(ModulesRepository()),
+      create: (_) => ModulesCubit(ModulesRepository(), SeasonsRepository()),
       child: const _View(),
     );
   }
@@ -46,9 +46,8 @@ class _View extends StatelessWidget {
       ..showSnackBar(SnackBar(content: Text(message)));
 
     // Roles are filled from the current season's participants, so a file
-    // cannot be created before a season is running.
-    final season = await SeasonsRepository().fetchCurrentSeason();
-    if (!context.mounted) return;
+    // cannot be created before a season is running. The list already loaded it.
+    final season = state.season;
     if (season == null) {
       say(l.moduleNoCurrentSeason);
       return;
@@ -56,7 +55,7 @@ class _View extends StatelessWidget {
 
     // A file of a kind exists once in a season, so a kind already opened this
     // season is not on offer at all — rather than failing at the save.
-    final available = state.typesAvailableIn(season.id);
+    final available = state.typesAvailable();
     if (available.isEmpty) {
       say(state.types.isEmpty ? l.moduleNoTypes : l.moduleAllTypesUsed);
       return;
@@ -91,7 +90,19 @@ class _View extends StatelessWidget {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: GlassAppBar(title: Text(l.modulesTitle)),
+      // The season is in the title because the list is now only ever one
+      // season's: without it, switching the season silently changes what this
+      // screen means.
+      appBar: GlassAppBar(
+        title: BlocBuilder<ModulesCubit, ModulesState>(
+          buildWhen: (p, c) => p.season != c.season,
+          builder: (context, state) => Text(
+            state.season == null
+                ? l.modulesTitle
+                : '${l.modulesTitle} — ${l.seasonHijriYear(state.season!.hijriYear)}',
+          ),
+        ),
+      ),
       floatingActionButton: canManage
           ? BlocBuilder<ModulesCubit, ModulesState>(
               buildWhen: (p, c) => p.types != c.types,

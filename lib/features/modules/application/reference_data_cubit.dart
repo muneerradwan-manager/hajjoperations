@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../seasons/data/seasons_repository.dart';
+import '../../seasons/domain/season.dart';
 import '../data/modules_repository.dart';
 import '../domain/reference_item.dart';
 
@@ -24,36 +26,62 @@ class ReferenceDataState extends Equatable {
   const ReferenceDataState({
     this.status = ReferenceDataStatus.loading,
     this.sets = const [],
+    this.season,
     this.error,
   });
 
   final ReferenceDataStatus status;
+
+  /// Every set with every entry it has, in every season. The screen shows only
+  /// [season]'s for a scoped set — but the whole list stays here, because
+  /// resolving an id to a name must work for last season's entries too.
   final List<ReferenceSet> sets;
+
+  final Season? season;
   final String? error;
 
   ReferenceSet? setById(String id) =>
       sets.where((s) => s.id == id).firstOrNull;
 
+  /// The entries to SHOW for [setId]: this season's, for a set that is scoped.
+  List<ReferenceItem> visibleItems(String setId) {
+    final set = setById(setId);
+    if (set == null) return const [];
+    return set.itemsForSeason(season?.id);
+  }
+
   ReferenceItem? itemById(String setId, String itemId) =>
       setById(setId)?.items.where((i) => i.id == itemId).firstOrNull;
 
   @override
-  List<Object?> get props => [status, sets, error];
+  List<Object?> get props => [status, sets, season, error];
 }
 
 /// Master data the admin owns: the lists that back every dropdown, kept out of
 /// free text so the same hotel is one hotel everywhere.
 class ReferenceDataCubit extends Cubit<ReferenceDataState> {
-  ReferenceDataCubit(this._repo) : super(const ReferenceDataState()) {
+  ReferenceDataCubit(this._repo, this._seasons)
+    : super(const ReferenceDataState()) {
     load();
   }
 
   final ModulesRepository _repo;
+  final SeasonsRepository _seasons;
+
+  /// The season an entry is created into, for a set that is scoped to one.
+  String? get seasonId => state.season?.id;
 
   Future<void> load() async {
     try {
+      final season = await _seasons.fetchCurrentSeason();
       final sets = await _repo.fetchReferenceSets(activeOnly: false);
-      emit(ReferenceDataState(status: ReferenceDataStatus.ready, sets: sets));
+      emit(
+        ReferenceDataState(
+          status: ReferenceDataStatus.ready,
+          sets: sets,
+          season: season,
+        ),
+      );
     } catch (e) {
       emit(
         ReferenceDataState(
@@ -76,6 +104,11 @@ class ReferenceDataCubit extends Cubit<ReferenceDataState> {
         nameAr: nameAr,
         nameEn: nameEn,
         data: data,
+        // Stamped only for a scoped set: a new hotel is a hotel of THIS season,
+        // a new city is a city.
+        seasonId: (state.setById(setId)?.isSeasonScoped ?? false)
+            ? seasonId
+            : null,
       ),
     );
   }

@@ -63,16 +63,45 @@ class EmployeesRepository {
   }
 
   /// External participants: approved accounts flagged as external.
-  Future<List<Profile>> fetchExternal() async {
+  ///
+  /// Scoped to [seasonId] when given, and it usually should be. Permanent staff
+  /// are permanent — they are the Administration whatever year it is — but an
+  /// external is external FOR A SEASON: a delegate from the foreign ministry
+  /// this year is not on the mission next year, and listing them all together
+  /// says otherwise.
+  Future<List<Profile>> fetchExternal({String? seasonId}) async {
+    if (seasonId == null) {
+      final rows = await supabase
+          .from('profiles')
+          .select('*, job_titles(name), reference_items(name_ar, name_en)')
+          .eq('account_status', 'approved')
+          .eq('is_external', true)
+          .order('first_name');
+      return (rows as List)
+          .map((r) => Profile.fromMap(r as Map<String, dynamic>))
+          .toList();
+    }
+
+    // Through the participation row: an external belongs to the directory of a
+    // season because they were put into that season, not because they exist.
     final rows = await supabase
-        .from('profiles')
-        .select('*, job_titles(name), reference_items(name_ar, name_en)')
-        .eq('account_status', 'approved')
-        .eq('is_external', true)
-        .order('first_name');
-    return (rows as List)
-        .map((r) => Profile.fromMap(r as Map<String, dynamic>))
+        .from('season_participants')
+        .select(
+          'profiles!inner(*, job_titles(name), reference_items(name_ar, name_en))',
+        )
+        .eq('season_id', seasonId)
+        .eq('status', 'active')
+        .eq('profiles.is_external', true)
+        .eq('profiles.account_status', 'approved');
+    final people = (rows as List)
+        .map(
+          (r) => Profile.fromMap(
+            (r as Map<String, dynamic>)['profiles'] as Map<String, dynamic>,
+          ),
+        )
         .toList();
+    people.sort((a, b) => a.fullName.compareTo(b.fullName));
+    return people;
   }
 
   /// Admin-only: suspend or reactivate an account.

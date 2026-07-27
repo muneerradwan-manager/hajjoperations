@@ -13,6 +13,7 @@ import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
 import '../../profile/domain/profile.dart';
 import '../application/employees_directory_cubit.dart';
+import '../../seasons/data/seasons_repository.dart';
 import '../data/employees_repository.dart';
 import 'create_employee_screen.dart';
 import 'employee_detail_screen.dart';
@@ -23,7 +24,8 @@ class EmployeesDirectoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => EmployeesDirectoryCubit(EmployeesRepository()),
+      create: (_) =>
+          EmployeesDirectoryCubit(EmployeesRepository(), SeasonsRepository()),
       child: const _View(),
     );
   }
