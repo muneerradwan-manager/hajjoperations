@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,8 +25,17 @@ class PushService {
     importance: Importance.high,
   );
 
+  /// Whether there is a Firebase to talk to at all.
+  ///
+  /// False on a platform this project was never configured for — the app runs
+  /// there, it simply cannot be told anything while closed. Asked of Firebase
+  /// itself rather than kept as a flag, so it cannot fall out of step with what
+  /// [bootstrap] actually managed to start.
+  bool get _available => Firebase.apps.isNotEmpty;
+
   /// Call once the user is approved. Safe to call repeatedly.
   Future<void> start() async {
+    if (!_available) return;
     if (_started) {
       await _upsertToken();
       return;
@@ -61,6 +71,7 @@ class PushService {
   /// what it is subscribed to — without that record, a member removed from a
   /// file would go on receiving that file's messages forever.
   Future<void> syncTopics() async {
+    if (!_available) return;
     final uid = supabase.auth.currentUser?.id;
     if (uid == null) return;
     try {
@@ -109,6 +120,7 @@ class PushService {
   /// Stops delivery to this device: no topics, and no token to send to. The
   /// inbox is untouched — the messages still arrive, the phone just stays quiet.
   Future<void> mute() async {
+    if (!_available) return;
     await forgetTopics();
     final uid = supabase.auth.currentUser?.id;
     if (uid == null) return;
@@ -128,6 +140,7 @@ class PushService {
   /// Drops every subscription. Called on sign-out, so the next person to use
   /// this device does not receive the last one's files.
   Future<void> forgetTopics() async {
+    if (!_available) return;
     try {
       final prefs = await SharedPreferences.getInstance();
       for (final topic in prefs.getStringList(_prefsKey) ?? const <String>[]) {

@@ -11,6 +11,7 @@ import '../../../core/widgets/brand_header.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/password_field.dart';
 import '../application/auth_cubit.dart';
+import '../data/auth_repository.dart';
 import 'widgets/google_button.dart';
 import 'widgets/settings_menu_button.dart';
 
@@ -176,15 +177,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     ],
                                   ),
                                 ),
-                                const SizedBox(height: AppSpacing.xl),
-                                GoogleButton(
-                                  label: l.authGoogle,
-                                  onPressed: state.isSubmitting
-                                      ? null
-                                      : () => context
-                                            .read<AuthCubit>()
-                                            .signInWithGoogle(),
-                                ),
+                                if (isGoogleSignInSupported) ...[
+                                  const SizedBox(height: AppSpacing.xl),
+                                  GoogleButton(
+                                    label: l.authGoogle,
+                                    onPressed: state.isSubmitting
+                                        ? null
+                                        : () => context
+                                              .read<AuthCubit>()
+                                              .signInWithGoogle(),
+                                  ),
+                                ],
                                 const SizedBox(height: AppSpacing.lg),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,

@@ -46,6 +46,12 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  # Generates the launcher icons for web and Windows from the one logo, so the
+  # sizes are derived rather than hand-cut and can be regenerated when the logo
+  # changes. Android is deliberately NOT listed: its adaptive icon — background,
+  # foreground and monochrome layers — was cut by hand and is better than
+  # anything derived from a single flat square.
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
@@ -62,3 +68,16 @@ flutter:
           weight: 400
         - asset: assets/fonts/itfQomra/itfQomraArabic-Bold.otf
           weight: 700
+
+# Run with: dart run flutter_launcher_icons
+flutter_launcher_icons:
+  image_path: assets/images/app_icon.png
+  web:
+    generate: true
+    image_path: assets/images/app_icon.png
+    background_color: "#001613"
+    theme_color: "#016D5D"
+  windows:
+    generate: true
+    image_path: assets/images/app_icon.png
+    icon_size: 256

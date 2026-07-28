@@ -19,6 +19,29 @@ class AppDependencies {
   final SharedPreferences prefs;
 }
 
+/// Brings Firebase up where there is a Firebase to bring up.
+///
+/// `firebase_options.dart` is generated per platform, and this project was
+/// configured for Android — which is where the app ships and where push is
+/// wanted. Every other platform's getter THROWS rather than returning null, so
+/// running the same code on Chrome or Windows died at startup, before a single
+/// screen: the whole app unavailable for want of notifications.
+///
+/// The app does not need Firebase to work. It needs it to be TOLD things while
+/// closed. So a platform without options starts without it, and push is simply
+/// off there — which [PushService] is told by there being no Firebase app at
+/// all, rather than by a flag somebody has to remember to set.
+///
+/// Add a platform with `flutterfire configure`, and this starts working there
+/// with nothing here to change.
+Future<void> _initFirebaseIfConfigured() async {
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  } on UnsupportedError {
+    AppLogger.info('app', 'no Firebase for this platform — push is off');
+  }
+}
+
 /// Initializes env, Supabase, Firebase (messaging only) and shared prefs.
 Future<AppDependencies> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,7 +77,7 @@ Future<AppDependencies> bootstrap() async {
     debug: kDebugMode,
   );
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await _initFirebaseIfConfigured();
 
   final prefs = await SharedPreferences.getInstance();
 

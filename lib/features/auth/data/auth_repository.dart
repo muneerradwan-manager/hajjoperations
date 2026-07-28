@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -14,6 +16,28 @@ class AuthFailure implements Exception {
   final String message;
   @override
   String toString() => message;
+}
+
+/// Whether Google sign-in exists on the platform the app is running on.
+///
+/// `google_sign_in` declares four: android, ios, macos and web. Windows and
+/// Linux have no implementation at all, so the button there fails on the tap
+/// rather than at sign-in — no OAuth client of any kind changes that, because
+/// there is no code to use one.
+///
+/// Web is excluded too. It is a supported platform for the package, but this
+/// app hands `serverClientId` to it, which is the mobile arrangement; making
+/// the browser flow work is its own piece of setup, and until it is done the
+/// button would be an offer the app cannot keep.
+///
+/// A button that cannot work is worse than no button: it reads as the way in,
+/// and the person who taps it concludes the app is broken rather than that this
+/// door was never open here.
+bool get isGoogleSignInSupported {
+  if (kIsWeb) return false;
+  return defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS ||
+      defaultTargetPlatform == TargetPlatform.macOS;
 }
 
 /// Wraps Supabase Auth. Supabase is the sole identity provider; Google is used

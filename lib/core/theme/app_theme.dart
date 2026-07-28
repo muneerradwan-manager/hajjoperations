@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -92,7 +93,14 @@ class AppTheme {
       // no Stepper, no `MaterialType.canvas` — and the aurora shows through
       // `scaffoldBackgroundColor`, which is still transparent above.
       canvasColor: isDark ? AppColors.nightTop : AppColors.white,
-      splashFactory: InkSparkle.splashFactory,
+      // The sparkle is a FRAGMENT SHADER, and the web engine loads it by
+      // fetching `ink_sparkle.frag` and decoding it as UTF-8 — which throws on
+      // the first byte that is not text, before anything is drawn. So the web
+      // gets the classic ripple, which needs no shader and looks near enough,
+      // and every other platform keeps the sparkle it was chosen for.
+      splashFactory: kIsWeb
+          ? InkRipple.splashFactory
+          : InkSparkle.splashFactory,
     );
 
     final glass = isDark ? GlassTokens.dark : GlassTokens.light;
