@@ -93,7 +93,7 @@ class _View extends StatelessWidget {
                   ProfileHero(
                     name: p.fullName,
                     photoUrl: p.photoUrl,
-                    roleLabel: p.jobTitleName,
+                    roleLabel: p.jobTitleName?.of(context),
                     badges: [
                       if (p.isAdmin)
                         GlassBadge(

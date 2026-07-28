@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/constants/permission_codes.dart';
 import '../../notifications/data/push_service.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../profile/domain/profile.dart';
@@ -33,6 +34,23 @@ class SessionState extends Equatable {
 
   bool get isAdmin => profile?.isAdmin ?? false;
   bool can(String code) => isAdmin || permissions.contains(code);
+
+  /// Whether seasons are this person's business at all — the section itself, or
+  /// either of the two things one can do inside it.
+  ///
+  /// A getter rather than a check written out at each call site, because it is
+  /// asked in two places that must not drift: the dashboard decides whether to
+  /// show the door, and the router decides whether the door opens. A rule kept
+  /// in one of those places only is decoration.
+  ///
+  /// All three codes are asked. The permissions editor grants the section
+  /// before it will show the actions, but nothing in the database enforces that
+  /// order, and a row written any other way still means this person works with
+  /// seasons.
+  bool get canSeeSeasons =>
+      can(PermissionCodes.seasons) ||
+      can(PermissionCodes.seasonsManage) ||
+      can(PermissionCodes.seasonsParticipants);
 
   SessionState copyWith({
     SessionStatus? status,

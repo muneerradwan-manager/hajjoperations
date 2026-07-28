@@ -85,6 +85,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final canViewEmployees = session.can(PermissionCodes.employeesView);
     final canManageReferenceData = session.can(PermissionCodes.modulesTypes);
 
+    final canSeeSeasons = session.canSeeSeasons;
+
     final adminCards = <Widget>[
       if (canManageReferenceData)
         DashboardCard(
@@ -120,8 +122,11 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
     ];
 
-    // Available to every approved user — a module reaches its members through
-    // assignment, not through a permission.
+    // The files are available to every approved user — a file reaches its
+    // members through assignment, not through a permission. Seasons are not:
+    // which season the Administration is working through, and who takes part in
+    // it, is the Administration's to set. An ordinary member has nothing to do
+    // in there, and a door that opens on nothing is worse than no door.
     final generalCards = <Widget>[
       DashboardCard(
         icon: AppIcons.modules,
@@ -130,13 +135,14 @@ class _HomeScreenState extends State<HomeScreen> {
         color: _accentGreenDeep,
         onTap: () => context.push(Routes.modules),
       ),
-      DashboardCard(
-        icon: AppIcons.seasons,
-        title: l.navSeasons,
-        subtitle: l.navSeasonsSubtitle,
-        color: _accentGold,
-        onTap: _openSeasons,
-      ),
+      if (canSeeSeasons)
+        DashboardCard(
+          icon: AppIcons.seasons,
+          title: l.navSeasons,
+          subtitle: l.navSeasonsSubtitle,
+          color: _accentGold,
+          onTap: _openSeasons,
+        ),
       // No tile for the profile: the greeting panel above already carries the
       // user's face and name, and tapping a card with your own name on it is
       // where anyone looks for it first.
@@ -170,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: staggered([
                 _GreetingPanel(
                   name: profile?.firstName ?? '',
-                  subtitle: profile?.jobTitleName,
+                  subtitle: profile?.jobTitleName?.of(context),
                   photoUrl: profile?.photoUrl,
                   isAdmin: session.isAdmin,
                   seasonYear: _seasonYear,

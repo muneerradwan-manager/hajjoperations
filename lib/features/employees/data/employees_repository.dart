@@ -55,7 +55,7 @@ class EmployeesRepository {
         .from('permanent_employees')
         // `reference_items` is the city: profiles points at it once, through
         // city_id, so the embed needs no disambiguating.
-        .select('*, job_titles(name), reference_items(name_ar, name_en)')
+        .select('*, job_titles(name, name_en), reference_items(name_ar, name_en)')
         .order('first_name');
     return (rows as List)
         .map((r) => Profile.fromMap(r as Map<String, dynamic>))
@@ -73,7 +73,7 @@ class EmployeesRepository {
     if (seasonId == null) {
       final rows = await supabase
           .from('profiles')
-          .select('*, job_titles(name), reference_items(name_ar, name_en)')
+          .select('*, job_titles(name, name_en), reference_items(name_ar, name_en)')
           .eq('account_status', 'approved')
           .eq('is_external', true)
           .order('first_name');
@@ -87,7 +87,7 @@ class EmployeesRepository {
     final rows = await supabase
         .from('season_participants')
         .select(
-          'profiles!inner(*, job_titles(name), reference_items(name_ar, name_en))',
+          'profiles!inner(*, job_titles(name, name_en), reference_items(name_ar, name_en))',
         )
         .eq('season_id', seasonId)
         .eq('status', 'active')

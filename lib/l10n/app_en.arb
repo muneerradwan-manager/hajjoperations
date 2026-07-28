@@ -8,6 +8,7 @@
   "commonSubmit": "Submit",
   "commonRetry": "Retry",
   "commonLogout": "Log out",
+  "commonLoggingOut": "Signing out…",
   "commonRequired": "Required",
   "commonLoading": "Loading…",
   "commonOptional": "Optional",

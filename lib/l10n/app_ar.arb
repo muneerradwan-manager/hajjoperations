@@ -7,6 +7,7 @@
   "commonSubmit": "إرسال",
   "commonRetry": "إعادة المحاولة",
   "commonLogout": "تسجيل الخروج",
+  "commonLoggingOut": "جارٍ تسجيل الخروج…",
   "commonRequired": "مطلوب",
   "commonLoading": "جارٍ التحميل…",
   "commonOptional": "اختياري",

@@ -5,6 +5,7 @@ import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/glass_tokens.dart';
 import '../../../../core/widgets/glass.dart';
 import '../../../../core/widgets/profile_avatar.dart';
+import '../../../../core/widgets/selection_indicator.dart';
 import '../../../../core/widgets/states.dart';
 
 /// One selectable row in a [showPickerSheet].
@@ -188,35 +189,36 @@ class _PickerSheetState extends State<_PickerSheet> {
                             ? option.group
                             : null;
                         final card = GlassCard(
-                          blur: false,
                           emphasised: isSelected,
                           padding: EdgeInsets.zero,
                           onTap: () => _toggle(option.id),
                           child: ListTile(
+                            // The sheet already knows whether it takes one
+                            // answer or several, so the control can say so: a
+                            // circle lets go of the last choice, a square does
+                            // not.
                             leading: option.showAvatar
                                 ? ProfileAvatar(
                                     photoUrl: option.photoUrl,
                                     name: option.label,
                                     radius: 20,
                                   )
-                                : Icon(
-                                    isSelected
-                                        ? AppIcons.selected
-                                        : AppIcons.unselected,
-                                    color: Theme.of(context).colorScheme.primary,
+                                : SelectionIndicator(
+                                    selected: isSelected,
+                                    shape: widget.multiple
+                                        ? SelectionShape.many
+                                        : SelectionShape.one,
                                   ),
                             title: Text(option.label),
                             subtitle: option.subtitle == null
                                 ? null
                                 : Text(option.subtitle!),
                             trailing: option.showAvatar
-                                ? Icon(
-                                    isSelected
-                                        ? AppIcons.selected
-                                        : AppIcons.unselected,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
+                                ? SelectionIndicator(
+                                    selected: isSelected,
+                                    shape: widget.multiple
+                                        ? SelectionShape.many
+                                        : SelectionShape.one,
                                   )
                                 : null,
                           ),

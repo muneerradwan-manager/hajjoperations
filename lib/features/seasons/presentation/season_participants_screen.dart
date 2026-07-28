@@ -128,7 +128,7 @@ class _View extends StatelessWidget {
                                   ),
                                   subtitle: e.jobTitleName == null
                                       ? null
-                                      : Text(e.jobTitleName!),
+                                      : Text(e.jobTitleName!.of(context)),
                                 ),
                               ),
                             );

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/l10n/l10n_extension.dart';
 import '../../../../core/settings/settings_cubit.dart';
 import '../../../../core/theme/app_icons.dart';
+import '../../../../core/widgets/selection_indicator.dart';
 
 /// AppBar action exposing quick theme + language switching.
 class SettingsMenuButton extends StatelessWidget {
@@ -72,13 +73,15 @@ class SettingsMenuButton extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Icon(
-          selected ? AppIcons.selected : AppIcons.unselected,
-          size: 18,
-          color: selected ? scheme.primary : scheme.outline,
-        ),
+        SelectionIndicator(selected: selected, size: 18),
         const SizedBox(width: 12),
-        Text(label),
+        Text(
+          label,
+          style: TextStyle(
+            color: selected ? scheme.primary : null,
+            fontWeight: selected ? FontWeight.w600 : null,
+          ),
+        ),
       ],
     );
   }

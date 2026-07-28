@@ -94,7 +94,7 @@ class _View extends StatelessWidget {
                             child: EmployeeTile(
                               name: e.fullName,
                               photoUrl: e.photoUrl,
-                              subtitle: e.jobTitleName,
+                              subtitle: e.jobTitleName?.of(context),
                               isExternal: e.isExternal,
                               trailing: const NavChevron(),
                               onTap: () => _openEditor(context, e),

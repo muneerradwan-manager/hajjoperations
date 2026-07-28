@@ -27,6 +27,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commonLogout => 'تسجيل الخروج';
 
   @override
+  String get commonLoggingOut => 'جارٍ تسجيل الخروج…';
+
+  @override
   String get commonRequired => 'مطلوب';
 
   @override

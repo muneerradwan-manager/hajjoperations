@@ -133,7 +133,6 @@ class _PendingCard extends StatelessWidget {
       opacity: processing ? 0.55 : 1,
       child: GlassCard(
         onTap: processing ? null : onTap,
-        blur: false,
         tint: scheme.secondary,
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Row(
@@ -157,7 +156,7 @@ class _PendingCard extends StatelessWidget {
                   if (profile.jobTitleName != null) ...[
                     const SizedBox(height: 2),
                     Text(
-                      profile.jobTitleName!,
+                      profile.jobTitleName!.of(context),
                       style: text.bodySmall?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),

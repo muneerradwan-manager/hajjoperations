@@ -34,9 +34,13 @@ class GlassSurface extends StatelessWidget {
   final EdgeInsetsGeometry? margin;
   final double radius;
 
-  /// Real backdrop blur. Disable for items repeated in long scrolling lists —
-  /// the aurora behind them is low-frequency enough that the translucent fill
-  /// alone still reads as glass, at a fraction of the cost.
+  /// Real backdrop blur. Defaults on HERE because what uses [GlassSurface]
+  /// directly is chrome — an app bar, a bottom bar, a sheet — of which one is
+  /// on screen at a time, and which must stay legible over whatever scrolls
+  /// beneath it.
+  ///
+  /// Content panes are the other case entirely, and [GlassCard] defaults this
+  /// off for them: see the note there.
   final bool blur;
 
   /// Denser fill, for surfaces that must stay legible over anything (app bars,
@@ -110,27 +114,33 @@ class GlassSurface extends StatelessWidget {
       );
     }
 
+    if (shadow) {
+      content = CustomPaint(
+        painter: _AmbientShadowPainter(color: glass.shadow, radius: radius),
+        child: content,
+      );
+    }
+
     return Container(
       width: width,
       height: height,
       margin: margin,
       alignment: alignment,
-      decoration: shadow
-          ? BoxDecoration(
-              borderRadius: borderRadius,
-              boxShadow: [
-                BoxShadow(
-                  color: glass.shadow,
-                  blurRadius: 28,
-                  spreadRadius: -6,
-                  offset: const Offset(0, 12),
-                ),
-              ],
-            )
-          : null,
       child: content,
     );
   }
+
+  /// The seat under a pane.
+  ///
+  /// Small numbers, and they have to be: the reach below the pane —
+  /// [shadowOffset] plus [shadowBlur] less [shadowSpread] — must stay inside the
+  /// gap between two panes ([AppSpacing.md]). Every pane in this app is
+  /// see-through, so a shadow that carries past the gap is not a shadow on the
+  /// background, it is a grey band printed across the glass below it. That is
+  /// the whole reason these are not the usual generous elevation numbers.
+  static const shadowBlur = 12.0;
+  static const shadowSpread = -4.0;
+  static const shadowOffset = Offset(0, 4);
 
   Widget _body(BuildContext context) {
     // Transparent Material so InkWell ripples from callers still render and
@@ -155,7 +165,7 @@ class GlassCard extends StatefulWidget {
     this.padding,
     this.margin,
     this.radius = AppRadius.lg,
-    this.blur = true,
+    this.blur = false,
     this.subtle = false,
     this.emphasised = false,
     this.shadow = true,
@@ -168,6 +178,20 @@ class GlassCard extends StatefulWidget {
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final double radius;
+
+  /// Real backdrop blur, OFF by default — this is a content pane, and content
+  /// panes come several to a screen.
+  ///
+  /// Each blur is a save-layer that re-reads and re-blurs everything behind it
+  /// on every frame, and behind it is an aurora that repaints on every frame
+  /// too. One is affordable; the home dashboard had seven and the employee page
+  /// six, stacked inside a scrolling list, which is what made those two screens
+  /// crawl while the files list — the one screen that had already turned this
+  /// off — stayed smooth.
+  ///
+  /// Nothing is really lost: the aurora is low-frequency, so the translucent
+  /// fill, the hairline and the shadow carry the glass on their own. Pass true
+  /// only for a pane that sits over something busy AND is alone on the screen.
   final bool blur;
   final bool subtle;
   final bool emphasised;
@@ -382,6 +406,51 @@ class GlassIconButton extends StatelessWidget {
     );
     return tooltip == null ? button : Tooltip(message: tooltip!, child: button);
   }
+}
+
+/// Paints a pane's shadow everywhere EXCEPT under the pane itself.
+///
+/// `BoxDecoration.boxShadow` cannot do this: it draws a filled blurred
+/// rectangle, the pane's own footprint included, and then the pane is painted
+/// over it. That is invisible under an opaque card and ruinous under this one —
+/// the dark fill is a white at eight per cent opacity, so what sat underneath
+/// was a black blob showing through the body of every pane on the screen. It
+/// read as dirt, and it moved as you scrolled.
+class _AmbientShadowPainter extends CustomPainter {
+  const _AmbientShadowPainter({required this.color, required this.radius});
+
+  final Color color;
+  final double radius;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final pane = RRect.fromRectAndRadius(rect, Radius.circular(radius));
+    const shadow = BoxShadow(
+      blurRadius: GlassSurface.shadowBlur,
+      spreadRadius: GlassSurface.shadowSpread,
+      offset: GlassSurface.shadowOffset,
+    );
+
+    canvas.save();
+    // Everything around the pane, and nothing beneath it.
+    canvas.clipPath(
+      Path.combine(
+        PathOperation.difference,
+        Path()..addRect(rect.inflate(GlassSurface.shadowBlur * 3)),
+        Path()..addRRect(pane),
+      ),
+    );
+    canvas.drawRRect(
+      pane.shift(shadow.offset).inflate(shadow.spreadRadius),
+      (shadow.copyWith(color: color)).toPaint(),
+    );
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _AmbientShadowPainter old) =>
+      old.color != color || old.radius != radius;
 }
 
 /// Paints the gradient hairline that defines a pane's edge.

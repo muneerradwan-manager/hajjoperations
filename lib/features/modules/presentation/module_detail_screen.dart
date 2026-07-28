@@ -430,7 +430,6 @@ class _RoleRosterCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.md),
             child: GlassCard(
-              blur: false,
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -918,7 +917,7 @@ class _MemberTile extends StatelessWidget {
                     )
                   else if (profile.jobTitleName != null)
                     Text(
-                      profile.jobTitleName!,
+                      profile.jobTitleName!.of(context),
                       style: text.bodySmall?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
@@ -958,7 +957,6 @@ class _MemberTile extends StatelessWidget {
 
     if (dense) return body;
     return GlassCard(
-      blur: false,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: body,
     );

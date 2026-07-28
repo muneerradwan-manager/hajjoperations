@@ -27,8 +27,9 @@ import 'widgets/picker_sheet.dart';
 ///   2. its sectors — each named, with a supervisor and his deputies;
 ///   3. the hotels inside each sector, and who runs each tower.
 ///
-/// A file that is only a roster — الطوافة والنقل — takes two: the file, then its
-/// teams, each member put on one and handed the duties that are his.
+/// A file that is only a roster — الطوافة والنقل — takes two: the file, then
+/// its people, a مشرف and as many أعضاء as the work needs, each handed the
+/// duties that are his.
 ///
 /// Each step is saved as it is finished, because a file is assembled over days:
 /// the sectors are known long before the last hotel is confirmed. Pops `true`
@@ -794,7 +795,6 @@ class _TeamCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return GlassCard(
-      blur: false,
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -945,7 +945,6 @@ class _NodeCard extends StatelessWidget {
     final name = entry?.name.of(context) ?? node.label ?? '—';
 
     return GlassCard(
-      blur: false,
       padding: const EdgeInsets.all(AppSpacing.lg),
       onTap: onEdit,
       child: Column(

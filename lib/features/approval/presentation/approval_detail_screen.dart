@@ -39,7 +39,7 @@ class ApprovalDetailScreen extends StatelessWidget {
               ProfileHero(
                 name: profile.fullName,
                 photoUrl: profile.photoUrl,
-                roleLabel: profile.jobTitleName,
+                roleLabel: profile.jobTitleName?.of(context),
                 badges: [
                   if (profile.isExternal)
                     GlassBadge(

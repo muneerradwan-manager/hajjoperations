@@ -239,7 +239,6 @@ class _ItemCard extends StatelessWidget {
     final summary = _summary(context, state);
 
     return GlassCard(
-      blur: false,
       padding: const EdgeInsets.all(AppSpacing.md),
       onTap: () {
         final cubit = context.read<ReferenceDataCubit>();

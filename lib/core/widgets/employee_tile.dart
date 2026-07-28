@@ -36,7 +36,6 @@ class EmployeeTile extends StatelessWidget {
 
     return GlassCard(
       onTap: onTap,
-      blur: false,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: [

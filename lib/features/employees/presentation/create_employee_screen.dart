@@ -292,6 +292,11 @@ class _ViewState extends State<_View> {
   }
 
   Widget _jobTitleDropdown(dynamic l, List<JobTitle> titles) {
+    // Sorted by the name being READ. The query orders by the Arabic column,
+    // which in an English list is no order at all.
+    final sorted = [...titles]
+      ..sort((a, b) => a.name.of(context).compareTo(b.name.of(context)));
+
     return DropdownButtonFormField<String>(
       initialValue: _jobTitleId,
       isExpanded: true,
@@ -300,8 +305,8 @@ class _ViewState extends State<_View> {
         prefixIcon: const Icon(AppIcons.jobTitle),
       ),
       items: [
-        for (final t in titles)
-          DropdownMenuItem(value: t.id, child: Text(t.name)),
+        for (final t in sorted)
+          DropdownMenuItem(value: t.id, child: Text(t.name.of(context))),
       ],
       validator: (v) => v == null ? l.commonRequired : null,
       onChanged: (v) => setState(() => _jobTitleId = v),

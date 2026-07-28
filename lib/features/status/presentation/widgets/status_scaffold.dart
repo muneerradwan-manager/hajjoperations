@@ -5,6 +5,7 @@ import '../../../../core/animations/animations.dart';
 import '../../../../core/l10n/l10n_extension.dart';
 import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/glass_tokens.dart';
+import '../../../../core/widgets/blocking_progress.dart';
 import '../../../../core/widgets/glass.dart';
 import '../../../auth/data/auth_repository.dart';
 import '../../../auth/presentation/widgets/settings_menu_button.dart';
@@ -108,7 +109,11 @@ class StatusScaffold extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   TextButton.icon(
-                    onPressed: () => context.read<AuthRepository>().signOut(),
+                    onPressed: () => runBlocking(
+                      context,
+                      context.read<AuthRepository>().signOut,
+                      message: l.commonLoggingOut,
+                    ),
                     icon: const Icon(AppIcons.logout, size: 18),
                     label: Text(l.commonLogout),
                     style: TextButton.styleFrom(

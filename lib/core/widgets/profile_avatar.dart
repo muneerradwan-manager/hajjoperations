@@ -29,6 +29,19 @@ class ProfileAvatar extends StatelessWidget {
 
     if (photoUrl == null || photoUrl!.isEmpty) return fallback;
 
+    // Decoded at the size it will actually be drawn. A profile photo comes off
+    // a phone camera at a few thousand pixels a side; held in memory whole,
+    // that is megabytes per face for something painted into a circle a
+    // centimetre wide — and a texture that large has to be sampled down again
+    // on every frame it scrolls through.
+    //
+    // Width only, not both: giving `instantiateImageCodec` a target width AND
+    // height stretches the source to fit them exactly, which would distort a
+    // photo that is not square. Constraining the width keeps the aspect ratio
+    // and is what caps the decode.
+    final decodeWidth = (radius * 2 * MediaQuery.devicePixelRatioOf(context))
+        .round();
+
     return CircleAvatar(
       radius: radius,
       backgroundColor: scheme.surfaceContainerHighest,
@@ -37,6 +50,7 @@ class ProfileAvatar extends StatelessWidget {
           imageUrl: photoUrl!,
           width: radius * 2,
           height: radius * 2,
+          memCacheWidth: decodeWidth,
           fit: BoxFit.cover,
           placeholder: (_, _) => const Center(
             child: SizedBox(

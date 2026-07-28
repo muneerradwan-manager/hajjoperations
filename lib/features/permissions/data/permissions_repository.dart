@@ -7,7 +7,7 @@ class PermissionsRepository {
   Future<List<Profile>> fetchEmployees() async {
     final rows = await supabase
         .from('profiles')
-        .select('*, job_titles(name)')
+        .select('*, job_titles(name, name_en)')
         .eq('account_status', 'approved')
         .eq('is_admin', false)
         .order('first_name');

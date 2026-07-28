@@ -170,7 +170,7 @@ class _SeasonDetailScreenState extends State<SeasonDetailScreen> {
                                       child: EmployeeTile(
                                         name: p.fullName,
                                         photoUrl: p.photoUrl,
-                                        subtitle: p.jobTitleName,
+                                        subtitle: p.jobTitleName?.of(context),
                                         isExternal: p.isExternal,
                                       ),
                                     );

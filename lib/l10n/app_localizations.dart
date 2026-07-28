@@ -134,6 +134,12 @@ abstract class AppLocalizations {
   /// **'Log out'**
   String get commonLogout;
 
+  /// No description provided for @commonLoggingOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Signing out…'**
+  String get commonLoggingOut;
+
   /// No description provided for @commonRequired.
   ///
   /// In en, this message translates to:

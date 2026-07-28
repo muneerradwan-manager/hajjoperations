@@ -46,7 +46,7 @@ class MyProfileScreen extends StatelessWidget {
                 ProfileHero(
                   name: profile.fullName,
                   photoUrl: profile.photoUrl,
-                  roleLabel: profile.jobTitleName,
+                  roleLabel: profile.jobTitleName?.of(context),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 _ActionsCard(profile: profile),

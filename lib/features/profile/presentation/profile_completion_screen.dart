@@ -16,6 +16,7 @@ import '../domain/city.dart';
 import '../domain/job_title.dart';
 import '../domain/profile.dart';
 import '../domain/profile_enums.dart';
+import '../../../core/widgets/blocking_progress.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/states.dart';
 
@@ -143,7 +144,11 @@ class _ProfileCompletionViewState extends State<_ProfileCompletionView> {
           if (!_isEdit)
             IconButton(
               tooltip: l.commonLogout,
-              onPressed: () => context.read<AuthRepository>().signOut(),
+              onPressed: () => runBlocking(
+                context,
+                context.read<AuthRepository>().signOut,
+                message: l.commonLoggingOut,
+              ),
               icon: const Icon(AppIcons.logout),
             ),
         ],
@@ -333,6 +338,11 @@ class _ProfileCompletionViewState extends State<_ProfileCompletionView> {
   }
 
   Widget _jobTitleDropdown(dynamic l, List<JobTitle> titles) {
+    // Sorted by the name being READ. The query orders by the Arabic column,
+    // which in an English list is no order at all.
+    final sorted = [...titles]
+      ..sort((a, b) => a.name.of(context).compareTo(b.name.of(context)));
+
     return DropdownButtonFormField<String>(
       initialValue: _jobTitleId,
       isExpanded: true,
@@ -341,8 +351,8 @@ class _ProfileCompletionViewState extends State<_ProfileCompletionView> {
         prefixIcon: const Icon(AppIcons.jobTitle),
       ),
       items: [
-        for (final t in titles)
-          DropdownMenuItem(value: t.id, child: Text(t.name)),
+        for (final t in sorted)
+          DropdownMenuItem(value: t.id, child: Text(t.name.of(context))),
       ],
       validator: (v) => v == null ? l.commonRequired : null,
       onChanged: (v) => setState(() => _jobTitleId = v),

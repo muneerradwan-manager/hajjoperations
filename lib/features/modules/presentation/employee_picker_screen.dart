@@ -8,6 +8,7 @@ import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/profile_avatar.dart';
 import '../../../core/widgets/responsive_center.dart';
+import '../../../core/widgets/selection_indicator.dart';
 import '../../../core/widgets/states.dart';
 import '../application/employee_picker_cubit.dart';
 import '../data/modules_repository.dart';
@@ -344,7 +345,6 @@ class _CandidateTile extends StatelessWidget {
     final profile = person.profile;
 
     return GlassCard(
-      blur: false,
       emphasised: isSelected,
       padding: const EdgeInsets.all(AppSpacing.md),
       onTap: onTap,
@@ -384,10 +384,10 @@ class _CandidateTile extends StatelessWidget {
                         ],
                       ],
                     ),
-                    if ((profile.jobTitleName ?? '').isNotEmpty) ...[
+                    if ((profile.jobTitleName?.of(context) ?? '').isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
-                        profile.jobTitleName!,
+                        profile.jobTitleName!.of(context),
                         style: text.bodySmall?.copyWith(
                           color: scheme.onSurfaceVariant,
                         ),
@@ -413,9 +413,12 @@ class _CandidateTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              Icon(
-                isSelected ? AppIcons.selected : AppIcons.unselected,
-                color: scheme.primary,
+              // Several people go into a file, so this is a checkbox and an
+              // empty one has to look empty — it used to be a filled disc in
+              // the accent colour, which is what CHOSEN looks like.
+              SelectionIndicator(
+                selected: isSelected,
+                shape: SelectionShape.many,
               ),
             ],
           ),

@@ -211,7 +211,6 @@ class _SeasonTile extends StatelessWidget {
     return GlassCard(
       onTap: onTap,
       // Repeated list item: skip the backdrop blur to keep scrolling smooth.
-      blur: false,
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
         children: [

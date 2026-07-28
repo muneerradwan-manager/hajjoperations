@@ -178,7 +178,7 @@ class ModulesRepository {
         .from('module_reports')
         .select(
           '*, module_report_attachments(*), '
-          'profiles:author_id(*, job_titles(name))',
+          'profiles:author_id(*, job_titles(name, name_en))',
         )
         .eq('module_id', moduleId)
         .order('created_at', ascending: false);
@@ -274,7 +274,7 @@ class ModulesRepository {
         // profiles via `assigned_by`, and a bare `profiles(...)` is ambiguous.
         .select(
           '*, module_node_members(*, module_assigned_tasks(task_id), '
-          'profiles:profile_id(*, job_titles(name)))',
+          'profiles:profile_id(*, job_titles(name, name_en)))',
         )
         .eq('module_id', moduleId)
         .order('sort_order');
@@ -335,7 +335,7 @@ class ModulesRepository {
         .from('module_members')
         .select(
           '*, module_assigned_tasks(task_id), '
-          'profiles:profile_id(*, job_titles(name))',
+          'profiles:profile_id(*, job_titles(name, name_en))',
         )
         .eq('module_id', moduleId);
     final members = (rows as List)
@@ -700,7 +700,7 @@ class ModulesRepository {
   Future<List<Profile>> fetchAssignableEmployees(String seasonId) async {
     final rows = await supabase
         .from('season_participants')
-        .select('profiles!inner(*, job_titles(name))')
+        .select('profiles!inner(*, job_titles(name, name_en))')
         .eq('season_id', seasonId)
         .eq('status', 'active');
     final people = (rows as List)

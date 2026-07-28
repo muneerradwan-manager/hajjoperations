@@ -57,12 +57,18 @@ class _ViewState extends State<_View> {
   }
 
   /// Case-insensitive match across the fields a user would actually search by.
+  ///
+  /// A job title is matched in BOTH languages, whichever the app is set to:
+  /// someone reading an English list may still search "طبيب", and the two names
+  /// are the same title.
   List<Profile> _filter(List<Profile> source) {
     if (_query.isEmpty) return source;
     final q = _query.toLowerCase();
     return source.where((e) {
+      final title = e.jobTitleName;
       return e.fullName.toLowerCase().contains(q) ||
-          (e.jobTitleName ?? '').toLowerCase().contains(q) ||
+          (title?.ar ?? '').toLowerCase().contains(q) ||
+          (title?.en ?? '').toLowerCase().contains(q) ||
           (e.externalOrganization ?? '').toLowerCase().contains(q);
     }).toList();
   }
@@ -259,7 +265,7 @@ class _EmployeeList extends StatelessWidget {
                 photoUrl: e.photoUrl,
                 subtitle: e.isExternal
                     ? e.externalOrganization
-                    : e.jobTitleName,
+                    : e.jobTitleName?.of(context),
                 isExternal: e.isExternal,
                 onTap: () => Navigator.of(context).push(
                   fadeThroughRoute((_) => EmployeeDetailScreen(profile: e)),

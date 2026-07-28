@@ -49,9 +49,13 @@ class AppIcons {
   static const password = Iconsax.lock;
   static const settings = Iconsax.setting_2;
 
-  // Selection
+  // A tick, for stating that something is done or present — a file has been
+  // chosen, an inbox has been read. NOT for the selected half of a pair of
+  // states: that is `SelectionIndicator`, which draws both halves so the empty
+  // one is visibly empty. There is no `unselected` glyph here on purpose; it
+  // used to be `Iconsax.record`, a filled disc, which is what SELECTED looks
+  // like everywhere else in the world.
   static const selected = Iconsax.tick_circle;
-  static const unselected = Iconsax.record;
 
   // Media
   static const camera = Iconsax.camera;

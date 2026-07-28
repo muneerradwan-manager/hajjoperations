@@ -49,7 +49,7 @@ class SeasonsRepository {
   Future<List<Profile>> fetchParticipants(String seasonId) async {
     final rows = await supabase
         .from('season_participants')
-        .select('profiles!inner(*, job_titles(name))')
+        .select('profiles!inner(*, job_titles(name, name_en))')
         .eq('season_id', seasonId)
         .eq('status', 'active');
     return (rows as List)
@@ -94,7 +94,7 @@ class SeasonsRepository {
   Future<List<Profile>> fetchAssignableEmployees() async {
     final rows = await supabase
         .from('profiles')
-        .select('*, job_titles(name)')
+        .select('*, job_titles(name, name_en)')
         .eq('account_status', 'approved')
         .order('first_name');
     return (rows as List)

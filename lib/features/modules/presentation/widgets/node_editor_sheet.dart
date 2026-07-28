@@ -278,7 +278,6 @@ class _RolePicker extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return GlassCard(
-      blur: false,
       padding: const EdgeInsets.all(AppSpacing.lg),
       onTap: onTap,
       child: Column(

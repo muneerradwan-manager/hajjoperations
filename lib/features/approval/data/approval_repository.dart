@@ -7,7 +7,7 @@ class ApprovalRepository {
   Future<List<Profile>> fetchPending() async {
     final rows = await supabase
         .from('profiles')
-        .select('*, job_titles(name), reference_items(name_ar, name_en)')
+        .select('*, job_titles(name, name_en), reference_items(name_ar, name_en)')
         .eq('account_status', AccountStatus.pending.db)
         .order('updated_at', ascending: false);
     return (rows as List)

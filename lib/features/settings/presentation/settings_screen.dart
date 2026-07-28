@@ -6,9 +6,11 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/settings/settings_cubit.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
+import '../../../core/widgets/blocking_progress.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/info_section.dart';
 import '../../../core/widgets/responsive_center.dart';
+import '../../../core/widgets/selection_indicator.dart';
 import '../../auth/data/auth_repository.dart';
 
 /// Everything about this device rather than about the mission: which language
@@ -40,7 +42,8 @@ class SettingsScreen extends StatelessWidget {
         ],
       ),
     );
-    if (confirmed == true) await auth.signOut();
+    if (confirmed != true || !context.mounted) return;
+    await runBlocking(context, auth.signOut, message: l.commonLoggingOut);
   }
 
   @override
@@ -134,7 +137,8 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
-/// One option in a group, with a tick on the one in force.
+/// One option in a group. Language and theme each take a single answer, so the
+/// indicator is round and only one of them is ever filled.
 class _Choice extends StatelessWidget {
   const _Choice({
     required this.label,
@@ -148,33 +152,6 @@ class _Choice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(AppRadius.sm),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-        child: Row(
-          children: [
-            Icon(
-              selected ? AppIcons.selected : AppIcons.unselected,
-              size: 20,
-              color: selected ? scheme.primary : scheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Text(
-                label,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: selected ? scheme.primary : null,
-                  fontWeight: selected ? FontWeight.w600 : null,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return SelectionRow(label: label, selected: selected, onTap: onTap);
   }
 }

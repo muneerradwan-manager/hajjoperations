@@ -15,7 +15,7 @@ class ProfileRepository {
     if (uid == null) return null;
     final row = await supabase
         .from('profiles')
-        .select('*, job_titles(name), reference_items(name_ar, name_en)')
+        .select('*, job_titles(name, name_en), reference_items(name_ar, name_en)')
         .eq('id', uid)
         .maybeSingle();
     return row == null ? null : Profile.fromMap(row);

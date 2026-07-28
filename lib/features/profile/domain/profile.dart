@@ -1,4 +1,5 @@
 import '../../../core/l10n/localized_name.dart';
+import 'job_title.dart';
 import 'profile_enums.dart';
 
 /// A single employee profile row (public.profiles).
@@ -53,8 +54,10 @@ class Profile {
   final String? externalOrganization;
   final String? externalTitle;
 
-  /// Joined from job_titles(name) when the query embeds it.
-  final String? jobTitleName;
+  /// Joined from `job_titles(name, name_en)` when the query embeds it, in both
+  /// languages — a job title is content, and reads in whichever one the app is
+  /// set to.
+  final LocalizedName? jobTitleName;
 
   /// The Syrian city this employee is from — an entry of the admin-managed
   /// `syrian_cities` list. Null for the accounts that registered before the
@@ -134,9 +137,7 @@ class Profile {
       isExternal: (map['is_external'] as bool?) ?? false,
       externalOrganization: map['external_organization'] as String?,
       externalTitle: map['external_title'] as String?,
-      jobTitleName: map['job_titles'] is Map
-          ? (map['job_titles'] as Map)['name'] as String?
-          : map['job_title_name'] as String?,
+      jobTitleName: jobTitleNameOrNull(map),
       cityId: map['city_id'] as String?,
       cityName: map['reference_items'] is Map
           ? LocalizedName.fromMap(

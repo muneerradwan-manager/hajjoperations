@@ -244,15 +244,50 @@ class AppTheme {
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
       ),
+      // A chip that is on must not look like a chip that is off. Left to the
+      // defaults the two differed by a tint barely visible over the glass, so
+      // the selected state is stated three times over — filled, outlined in the
+      // accent, and its label in that accent at a heavier weight — and the
+      // unselected one keeps the plain hairline it always had.
       chipTheme: ChipThemeData(
         backgroundColor: isDark
             ? AppColors.white.withValues(alpha: 0.06)
             : AppColors.white.withValues(alpha: 0.5),
-        side: BorderSide(color: glass.stroke),
+        selectedColor: scheme.primary.withValues(alpha: isDark ? 0.32 : 0.20),
+        secondarySelectedColor: scheme.primary.withValues(
+          alpha: isDark ? 0.32 : 0.20,
+        ),
+        checkmarkColor: scheme.primary,
+        side: WidgetStateBorderSide.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? BorderSide(color: scheme.primary, width: 1.4)
+              : BorderSide(color: glass.stroke),
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.pill),
         ),
         labelStyle: textTheme.labelMedium,
+        secondaryLabelStyle: textTheme.labelMedium?.copyWith(
+          color: scheme.primary,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      // The same promise the drawn indicator makes, kept by the Material
+      // checkbox where one is used: empty is hollow, chosen is filled.
+      checkboxTheme: CheckboxThemeData(
+        fillColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? scheme.primary
+              : Colors.transparent,
+        ),
+        checkColor: WidgetStateProperty.all(scheme.onPrimary),
+        side: BorderSide(
+          color: scheme.onSurfaceVariant.withValues(alpha: 0.55),
+          width: 1.6,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(6),
+        ),
       ),
       tabBarTheme: TabBarThemeData(
         labelColor: scheme.primary,

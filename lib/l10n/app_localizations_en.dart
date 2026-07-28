@@ -27,6 +27,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonLogout => 'Log out';
 
   @override
+  String get commonLoggingOut => 'Signing out…';
+
+  @override
   String get commonRequired => 'Required';
 
   @override

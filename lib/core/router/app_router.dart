@@ -81,6 +81,14 @@ GoRouter buildRouter(SessionCubit session) {
               loc == Routes.completeProfile) {
             return Routes.home;
           }
+          // Seasons belong to whoever runs them. The dashboard already hides
+          // the card, and this is what makes that a rule rather than a
+          // decoration: the route refuses too, so the section cannot be reached
+          // by a link, a restored location, or a card added somewhere later by
+          // someone who did not know to ask.
+          if (loc == Routes.seasons && !session.state.canSeeSeasons) {
+            return Routes.home;
+          }
           return null;
         case SessionStatus.unknown:
           return null;

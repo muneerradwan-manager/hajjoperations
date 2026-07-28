@@ -134,8 +134,29 @@ class AuthRepository {
   /// Signs out, dropping this device's push subscriptions first: FCM topics
   /// outlive a session, and the next person to use the phone must not receive
   /// the last one's files.
+  ///
+  /// Neither step is allowed to hold the door shut. Unsubscribing talks to
+  /// Firebase one topic at a time and on a bad connection simply does not come
+  /// back; the sign-out itself talks to Supabase. A person who has decided to
+  /// leave must leave, so each half is bounded, and if the server cannot be
+  /// reached the session is cleared on the device anyway — a token that outlives
+  /// its use is the lesser problem, and it expires on its own.
   Future<void> signOut() async {
-    await PushService.instance.forgetTopics();
-    await supabase.auth.signOut();
+    await PushService.instance.forgetTopics().timeout(
+      const Duration(seconds: 4),
+      onTimeout: () {},
+    );
+
+    try {
+      await supabase.auth.signOut().timeout(const Duration(seconds: 8));
+    } catch (_) {
+      try {
+        await supabase.auth.signOut(scope: SignOutScope.local);
+      } catch (_) {
+        // Out of options worth taking: the session listener is what moves the
+        // app to the login screen, and a local clear is the last thing that
+        // triggers it.
+      }
+    }
   }
 }

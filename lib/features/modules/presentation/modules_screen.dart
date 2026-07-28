@@ -182,7 +182,6 @@ class _ModuleCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: GlassCard(
-        blur: false,
         padding: const EdgeInsets.all(AppSpacing.lg),
         onTap: () async {
           final changed = await Navigator.of(context).push<bool>(
@@ -305,7 +304,6 @@ class _TypePickerSheet extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                         child: GlassCard(
-                          blur: false,
                           padding: const EdgeInsets.all(AppSpacing.lg),
                           onTap: () => Navigator.of(context).pop(type),
                           child: Row(

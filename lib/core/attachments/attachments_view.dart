@@ -206,7 +206,6 @@ class _AttachmentRow extends StatelessWidget {
     final size = attachment.readableSize;
 
     return GlassCard(
-      blur: false,
       padding: const EdgeInsets.all(AppSpacing.md),
       onTap: () => _openExternally(context, signer, attachment),
       child: Row(
