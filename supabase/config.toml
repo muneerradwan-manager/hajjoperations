@@ -64,11 +64,14 @@ enabled = true
 schema_paths = []
 
 [db.seed]
-# If enabled, seeds the database after migrations during a db reset.
-enabled = true
-# Specifies an ordered list of seed files to load during db reset.
-# Supports glob patterns relative to supabase directory: "./seeds/*.sql"
-sql_paths = ["./seed.sql"]
+# Off, and the path left empty, on purpose. What is under ./seeds writes PEOPLE
+# — it names real accounts and promotes one of them to administrator — and each
+# file says at the top of itself that it is run by hand, once, knowingly. A
+# `db reset` that quietly replayed them would be the accident those warnings
+# exist to prevent. The seeds are ordered by their numbers for whoever runs
+# them, not for a tool.
+enabled = false
+sql_paths = []
 
 [db.network_restrictions]
 # Enable management of network restrictions.

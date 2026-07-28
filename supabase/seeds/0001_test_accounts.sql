@@ -70,17 +70,28 @@ begin
   ] loop
     if not exists (select 1 from auth.users where email = v_email) then
       v_id := gen_random_uuid();
+      -- The eight token columns are set to '' and MUST be. They are nullable,
+      -- so an insert that omits them succeeds and looks right — and then GoTrue
+      -- reads them as plain text and cannot: every attempt to load that user
+      -- answers "Database error querying schema", which is a 500 on sign-in, by
+      -- password and by Google alike, and takes the whole admin user LISTING
+      -- down with it, because one unreadable row breaks the scan for everyone.
+      -- An earlier version of this script left them out and did exactly that.
       insert into auth.users (
         instance_id, id, aud, role, email, encrypted_password,
         email_confirmed_at, created_at, updated_at,
-        raw_app_meta_data, raw_user_meta_data
+        raw_app_meta_data, raw_user_meta_data,
+        confirmation_token, recovery_token, email_change,
+        email_change_token_new, email_change_token_current,
+        phone_change, phone_change_token, reauthentication_token
       ) values (
         '00000000-0000-0000-0000-000000000000',
         v_id, 'authenticated', 'authenticated', v_email,
         extensions.crypt('Password!123', extensions.gen_salt('bf')),
         now(), now(), now(),
         '{"provider":"email","providers":["email"]}'::jsonb,
-        '{}'::jsonb
+        '{}'::jsonb,
+        '', '', '', '', '', '', '', ''
       );
       -- The account needs an identity row or password sign-in refuses it.
       insert into auth.identities (
@@ -96,6 +107,24 @@ begin
   end loop;
 end
 $$;
+
+-- Repairs an account an earlier version of this script created before it knew
+-- about the columns above. Harmless on a healthy row — coalesce leaves a value
+-- that is already there — and it is the difference between an account that can
+-- sign in and one that answers 500 to every attempt.
+update auth.users set
+  confirmation_token         = coalesce(confirmation_token, ''),
+  recovery_token             = coalesce(recovery_token, ''),
+  email_change               = coalesce(email_change, ''),
+  email_change_token_new     = coalesce(email_change_token_new, ''),
+  email_change_token_current = coalesce(email_change_token_current, ''),
+  phone_change               = coalesce(phone_change, ''),
+  phone_change_token         = coalesce(phone_change_token, ''),
+  reauthentication_token     = coalesce(reauthentication_token, '')
+where email in (
+  'firebase.projects.1997@gmail.com',
+  'muneer.radwan.manager@gmail.com'
+);
 
 -- ------------------------------------------------------------------ profiles
 --
