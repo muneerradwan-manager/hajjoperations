@@ -91,6 +91,28 @@ void main() {
     expect(state.currentStep, EditorStep.info);
   });
 
+  test('a tree of two rungs AND a team takes all four steps', () {
+    // مخيمات منى: مراكز, the مخيمات inside them, and فريق الكوسترات, which
+    // belongs to no مركز because the buses move between all of them.
+    final state = stateOf(
+      typeOf(
+        roles: [role('coasters_supervisor'), role('coasters_member')],
+        levels: [
+          level('center', 1, roles: [role('center_supervisor', levelId: 'level-center')]),
+          level('camp', 2, roles: [role('camp_member', levelId: 'level-camp')]),
+        ],
+      ),
+    );
+
+    expect(state.stepKinds, [
+      EditorStep.info,
+      EditorStep.sectors,
+      EditorStep.towers,
+      EditorStep.teams,
+    ]);
+    expect(state.lastStep, 3);
+  });
+
   test('the step in force follows the index, and never runs off the end', () {
     final type = typeOf(
       roles: [role('coasters_manager')],

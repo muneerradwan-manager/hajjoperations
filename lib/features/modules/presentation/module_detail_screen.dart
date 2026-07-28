@@ -22,6 +22,7 @@ import '../domain/module_type.dart';
 import '../domain/operational_module.dart';
 import 'module_editor_screen.dart';
 import 'widgets/cadence_label.dart';
+import 'widgets/location_button.dart';
 
 /// Everything an operational file holds, for whoever is allowed to see it: when
 /// it starts and what ends it, its attachment, the duties that come with a
@@ -300,11 +301,27 @@ class _Body extends StatelessWidget {
                 ),
                 for (final field in fields)
                   if (field.kind != ModuleFieldKind.pdf)
-                    InfoRow(
-                      icon: AppIcons.document,
-                      label: field.label.of(context),
-                      value: _display(context, field),
-                    ),
+                    // A place is somewhere to go, never a line of URL to read.
+                    if (field.kind == ModuleFieldKind.location &&
+                        isOpenableLocation(module.data[field.key]))
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.sm,
+                        ),
+                        child: Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: LocationButton(
+                            url: module.data[field.key] as String,
+                            label: field.label.of(context),
+                          ),
+                        ),
+                      )
+                    else
+                      InfoRow(
+                        icon: AppIcons.document,
+                        label: field.label.of(context),
+                        value: _display(context, field),
+                      ),
               ],
             ),
             for (final field in pdfFields) ...[
@@ -541,6 +558,7 @@ class _TowerCard extends StatelessWidget {
       tower.secondaryReferenceItemId,
     );
     final tiedSet = state.referenceSetById(level.secondaryReferenceSetId);
+    final entrySet = state.referenceSetById(level.referenceSetId);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -582,7 +600,24 @@ class _TowerCard extends StatelessWidget {
             // and where it is. Empty for a level that asks for nothing further,
             // which is every level but one.
             for (final field in level.fields)
-              if (displayFieldValue(context, state, field, tower.data[field.key])
+              if (field.kind == ModuleFieldKind.location)
+                if (isOpenableLocation(tower.data[field.key]))
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: LocationButton(
+                      url: tower.data[field.key] as String,
+                      label: field.label.of(context),
+                      dense: true,
+                    ),
+                  )
+                else
+                  const SizedBox.shrink()
+              else if (displayFieldValue(
+                    context,
+                    state,
+                    field,
+                    tower.data[field.key],
+                  )
                   case final text when text.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: AppSpacing.xs),
@@ -601,6 +636,19 @@ class _TowerCard extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                ),
+            // And the place of the ENTRY this node stands for — the فندق behind
+            // a برج keeps its address in the hotels list, not on the node.
+            for (final field in entrySet?.fields ?? const <ModuleField>[])
+              if (field.kind == ModuleFieldKind.location &&
+                  isOpenableLocation(entry?.data[field.key]))
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: LocationButton(
+                    url: entry!.data[field.key] as String,
+                    label: field.label.of(context),
+                    dense: true,
                   ),
                 ),
             if (tower.members.isEmpty)
