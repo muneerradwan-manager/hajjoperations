@@ -1616,6 +1616,36 @@ abstract class AppLocalizations {
   /// **'Sector {number}'**
   String moduleSectorSuggestedName(int number);
 
+  /// No description provided for @moduleSectorsImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import sectors'**
+  String get moduleSectorsImport;
+
+  /// No description provided for @moduleSectorsImportPick.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the sectors from another file in this season — the name, the supervisor and his deputy. The copies are independent: deleting a sector here does not touch the other file.'**
+  String get moduleSectorsImportPick;
+
+  /// No description provided for @moduleSectorsImported.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No new sectors} =1{Imported 1 sector} other{Imported {count} sectors}}'**
+  String moduleSectorsImported(int count);
+
+  /// No description provided for @moduleSectorsImportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not import the sectors'**
+  String get moduleSectorsImportFailed;
+
+  /// No description provided for @moduleSectorsImportNoSources.
+  ///
+  /// In en, this message translates to:
+  /// **'No other file in this season has sectors'**
+  String get moduleSectorsImportNoSources;
+
   /// No description provided for @moduleSectorsCount.
   ///
   /// In en, this message translates to:

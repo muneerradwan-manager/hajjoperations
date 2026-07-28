@@ -814,6 +814,32 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get moduleSectorsImport => 'Import sectors';
+
+  @override
+  String get moduleSectorsImportPick =>
+      'Copy the sectors from another file in this season — the name, the supervisor and his deputy. The copies are independent: deleting a sector here does not touch the other file.';
+
+  @override
+  String moduleSectorsImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Imported $count sectors',
+      one: 'Imported 1 sector',
+      zero: 'No new sectors',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get moduleSectorsImportFailed => 'Could not import the sectors';
+
+  @override
+  String get moduleSectorsImportNoSources =>
+      'No other file in this season has sectors';
+
+  @override
   String moduleSectorsCount(int count) {
     return '$count sectors';
   }

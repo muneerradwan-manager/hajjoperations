@@ -177,6 +177,73 @@ class _ViewState extends State<_View> {
     _dirty = true;
   }
 
+  /// Takes the sectors of another file of this season into this one.
+  ///
+  /// The same قطاع appears in more than one file — the towers of a sector and
+  /// the teams that go out to the المشاعر from it are the same division of the
+  /// same people — and entering it twice is how the two files start disagreeing
+  /// about who runs it. What arrives is a copy: from here on the two files know
+  /// nothing about each other.
+  Future<void> _importSectors() async {
+    final l = context.l10n;
+    final cubit = context.read<ModuleEditorCubit>();
+    final messenger = ScaffoldMessenger.of(context);
+
+    final sources = await cubit.sectorSources();
+    if (!mounted) return;
+    if (sources.isEmpty) {
+      _say(l.moduleSectorsImportNoSources);
+      return;
+    }
+
+    final from = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                0,
+                AppSpacing.lg,
+                AppSpacing.md,
+              ),
+              child: Text(
+                l.moduleSectorsImportPick,
+                style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(sheetContext).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            for (final source in sources)
+              ListTile(
+                leading: const Icon(AppIcons.modules),
+                title: Text(source.moduleTypeName?.of(sheetContext) ?? '—'),
+                onTap: () => Navigator.of(sheetContext).pop(source.id),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (from == null || !mounted) return;
+
+    final copied = await cubit.importSectorsFrom(from);
+    if (copied != null && copied > 0) _dirty = true;
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            copied == null
+                ? l.moduleSectorsImportFailed
+                : l.moduleSectorsImported(copied),
+          ),
+        ),
+      );
+  }
+
   /// Adds or edits a sector (no [parent]) or a hotel inside one.
   Future<void> _editNode(
     ModuleLevel level, {
@@ -266,11 +333,18 @@ class _ViewState extends State<_View> {
     final state = cubit.state;
     final saving = state.status == EditorStatus.saving;
 
-    // A file with no tree has nothing to divide into sectors and towers: its
-    // people are the second and last step.
-    final steps = state.hasTree
-        ? [l.moduleStepInfo, l.moduleStepSectors, l.moduleStepTowers]
-        : [l.moduleStepInfo, l.moduleStepMembers];
+    // Named by the type rather than counted: a file with no tree has nothing to
+    // divide into sectors, one that stops at the sector has no towers step, and
+    // one whose roles are held on the file itself ends with its teams.
+    final steps = [
+      for (final kind in state.stepKinds)
+        switch (kind) {
+          EditorStep.info => l.moduleStepInfo,
+          EditorStep.sectors => l.moduleStepSectors,
+          EditorStep.towers => l.moduleStepTowers,
+          EditorStep.teams => l.moduleStepMembers,
+        },
+    ];
 
     return PopScope(
       canPop: false,
@@ -300,24 +374,25 @@ class _ViewState extends State<_View> {
             icon: AppIcons.modules,
             title: state.error ?? '',
           ),
-          _ => switch ((state.step, state.hasTree)) {
-            (0, _) => _InfoStep(state: state),
-            (_, false) => _TeamsStep(
-              state: state,
-              onPickTeam: _pickTeam,
-              onPickTasks: _pickTasks,
-            ),
-            (1, true) => _NodesStep(
+          _ => switch (state.currentStep) {
+            EditorStep.info => _InfoStep(state: state),
+            EditorStep.sectors => _NodesStep(
               state: state,
               onAdd: (level) => _editNode(level),
               onEdit: (level, node) => _editNode(level, node: node),
               onDelete: _deleteNode,
+              onImport: _importSectors,
             ),
-            _ => _TowersStep(
+            EditorStep.towers => _TowersStep(
               state: state,
               onAdd: (level, parent) => _editNode(level, parent: parent),
               onEdit: (level, node) => _editNode(level, node: node),
               onDelete: _deleteNode,
+            ),
+            EditorStep.teams => _TeamsStep(
+              state: state,
+              onPickTeam: _pickTeam,
+              onPickTasks: _pickTasks,
             ),
           },
         },
@@ -603,12 +678,14 @@ class _NodesStep extends StatelessWidget {
     required this.onAdd,
     required this.onEdit,
     required this.onDelete,
+    required this.onImport,
   });
 
   final ModuleEditorState state;
   final void Function(ModuleLevel level) onAdd;
   final void Function(ModuleLevel level, ModuleNode node) onEdit;
   final void Function(ModuleLevel level, ModuleNode node, String name) onDelete;
+  final VoidCallback onImport;
 
   @override
   Widget build(BuildContext context) {
@@ -647,6 +724,13 @@ class _NodesStep extends StatelessWidget {
             onPressed: () => onAdd(level),
             icon: const Icon(AppIcons.add),
             label: Text(l.moduleNodeAdd(level.name.of(context))),
+          ),
+          // The same قطاعات stand in more than one file. Typing them twice is
+          // how two files start disagreeing about who runs one.
+          TextButton.icon(
+            onPressed: state.isCreated ? onImport : null,
+            icon: const Icon(AppIcons.download, size: 18),
+            label: Text(l.moduleSectorsImport),
           ),
         ]),
       ),
@@ -835,7 +919,10 @@ class _TeamCard extends StatelessWidget {
                 child: _TeamMemberRow(
                   member: member,
                   menuSize: menuSize,
-                  onTap: () => onPickTasks(member),
+                  // Nothing to hand out, nothing to open: a type whose duties
+                  // the Administration has not written yet would otherwise
+                  // offer a row that leads to an empty list.
+                  onTap: menuSize == 0 ? null : () => onPickTasks(member),
                 ),
               ),
           const SizedBox(height: AppSpacing.md),
@@ -861,7 +948,10 @@ class _TeamMemberRow extends StatelessWidget {
 
   final ModuleMember member;
   final int menuSize;
-  final VoidCallback onTap;
+
+  /// Null when there is nothing to hand out — the row then states who is here
+  /// and stops, rather than offering a list that does not exist.
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -869,6 +959,7 @@ class _TeamMemberRow extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final profile = member.profile;
     final assigned = member.taskIds.length;
+    final hasMenu = menuSize > 0;
 
     return InkWell(
       borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -895,22 +986,25 @@ class _TeamMemberRow extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    assigned == 0
-                        ? l.moduleNoAssignedTasks
-                        : l.moduleAssignedTasksCount(assigned, menuSize),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: assigned == 0
-                          ? scheme.onSurfaceVariant
-                          : scheme.primary,
-                      fontStyle: assigned == 0 ? FontStyle.italic : null,
+                  if (hasMenu) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      assigned == 0
+                          ? l.moduleNoAssignedTasks
+                          : l.moduleAssignedTasksCount(assigned, menuSize),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: assigned == 0
+                            ? scheme.onSurfaceVariant
+                            : scheme.primary,
+                        fontStyle: assigned == 0 ? FontStyle.italic : null,
+                      ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
-            Icon(AppIcons.tasks, size: 18, color: scheme.primary),
+            if (hasMenu)
+              Icon(AppIcons.tasks, size: 18, color: scheme.primary),
           ],
         ),
       ),

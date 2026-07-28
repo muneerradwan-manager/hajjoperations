@@ -813,6 +813,34 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get moduleSectorsImport => 'استيراد القطاعات';
+
+  @override
+  String get moduleSectorsImportPick =>
+      'انسخ القطاعات من ملف آخر في هذا الموسم — الاسم والمشرف والمعاون. النسخ مستقلة: حذف قطاع هنا لا يمسّ الملف الآخر.';
+
+  @override
+  String moduleSectorsImported(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'تم استيراد $count قطاعاً',
+      few: 'تم استيراد $count قطاعات',
+      two: 'تم استيراد قطاعين',
+      one: 'تم استيراد قطاع واحد',
+      zero: 'لا قطاعات جديدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get moduleSectorsImportFailed => 'تعذّر استيراد القطاعات';
+
+  @override
+  String get moduleSectorsImportNoSources =>
+      'لا يوجد ملف آخر في هذا الموسم فيه قطاعات';
+
+  @override
   String moduleSectorsCount(int count) {
     return '$count قطاعاً';
   }

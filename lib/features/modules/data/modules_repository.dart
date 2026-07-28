@@ -575,6 +575,26 @@ class ModulesRepository {
     return (copied as num?)?.toInt() ?? 0;
   }
 
+  /// Takes the sectors of another file in the same season — the name, and
+  /// whoever holds each post that both files know by the same code — as COPIES.
+  ///
+  /// The two files know nothing about each other afterwards: renaming a sector
+  /// here leaves the other standing under its old name, and deleting it here
+  /// does not touch it there. Names already present are skipped, so running it
+  /// twice adds nothing the second time.
+  ///
+  /// Returns how many sectors were added — not how many people.
+  Future<int> copyModuleSectors({
+    required String fromModuleId,
+    required String toModuleId,
+  }) async {
+    final copied = await supabase.rpc(
+      'copy_module_sectors',
+      params: {'p_from_module': fromModuleId, 'p_to_module': toModuleId},
+    );
+    return (copied as num?)?.toInt() ?? 0;
+  }
+
   Future<void> addReferenceItem({
     required String setId,
     required String nameAr,

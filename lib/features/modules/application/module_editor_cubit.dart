@@ -12,6 +12,16 @@ import '../domain/reference_item.dart';
 
 enum EditorStatus { loading, ready, saving, error }
 
+/// What one step of the wizard is FOR.
+///
+/// The steps used to be counted rather than named — two for a roster, three for
+/// a tree — which held for as long as a file was one thing or the other. تشكيل
+/// فرق المشاعر is both: it is divided into قطاعات like the towers file, it stops
+/// there rather than going on to hotels, and it carries two teams on the file
+/// itself besides. Counting cannot express that; naming can, and each step now
+/// appears exactly when the type has something to put in it.
+enum EditorStep { info, sectors, towers, teams }
+
 /// Why a save attempt did not go through. Returned from the save methods rather
 /// than held in state: the same complaint repeated twice must still produce a
 /// second message.
@@ -108,12 +118,30 @@ class ModuleEditorState extends Equatable {
 
   bool get isCreated => moduleId != null;
 
-  /// Whether this file is built as sectors and towers, or is simply its roster.
+  /// Whether this file is divided into places at all.
   bool get hasTree => type?.hasTree ?? true;
 
-  /// The last step of the wizard — the towers of a tree, or the roster of a
-  /// file that has none.
-  int get lastStep => hasTree ? 2 : 1;
+  /// Whether it carries roles held once for the whole file, beside whatever
+  /// tree it may have.
+  bool get hasFileRoles => (type?.roles ?? const <ModuleRole>[]).isNotEmpty;
+
+  /// The steps this particular file takes, in order. Each one is here because
+  /// the type has something for it: sectors when there is an outermost level,
+  /// towers only when a level sits inside that one, teams when roles are held
+  /// on the file itself. A roster gets two steps and the towers file three,
+  /// exactly as before.
+  List<EditorStep> get stepKinds => [
+    EditorStep.info,
+    if (parentLevel != null) EditorStep.sectors,
+    if (childLevel != null) EditorStep.towers,
+    if (hasFileRoles) EditorStep.teams,
+  ];
+
+  int get lastStep => stepKinds.length - 1;
+
+  /// What the step in force is for. Clamped, because the type arrives after the
+  /// first frame and a step index outlives a reload.
+  EditorStep get currentStep => stepKinds[step.clamp(0, lastStep)];
 
   List<ModuleMember> membersOf(String roleId) =>
       members.where((m) => m.roleId == roleId).toList();
@@ -247,10 +275,13 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
       final employees = await _repo.fetchAssignableEmployees(seasonId);
       // Inactive entries stay loaded: a tower may already point at one.
       final sets = await _repo.fetchReferenceSets(activeOnly: false);
+      // Not either/or any more: تشكيل فرق المشاعر has both a tree and a roster,
+      // so each side is fetched when the TYPE has one rather than when it does
+      // not have the other.
       final nodes = existing == null || !type.hasTree
           ? const <ModuleNode>[]
           : await _repo.fetchNodes(existing!.id);
-      final members = existing == null || type.hasTree
+      final members = existing == null || type.roles.isEmpty
           ? const <ModuleMember>[]
           : await _repo.fetchMembers(existing!.id);
 
@@ -496,6 +527,50 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
       return null;
     } catch (e) {
       return e.toString();
+    }
+  }
+
+  /// The other files of this season that have sectors to be taken from.
+  ///
+  /// A file qualifies when its type is divided by a level that is named by hand
+  /// — a level drawn from a master list holds hotels, not sectors. The list is
+  /// worked out here rather than left to the database so that a file with
+  /// nothing to give is never offered in the first place.
+  Future<List<OperationalModule>> sectorSources() async {
+    try {
+      final types = await _repo.fetchModuleTypes(activeOnly: false);
+      final withSectors = {
+        for (final t in types)
+          if (t.outermostLevel?.isNamedByHand ?? false) t.id,
+      };
+      final modules = await _repo.fetchModules(seasonId: seasonId);
+      return modules
+          .where(
+            (m) => m.id != state.moduleId && withSectors.contains(m.moduleTypeId),
+          )
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// Takes the sectors of [fromModuleId] into this file, as copies. Returns how
+  /// many were added, or null if it could not be done at all.
+  Future<int?> importSectorsFrom(String fromModuleId) async {
+    final id = state.moduleId;
+    if (id == null) return null;
+    emit(state.copyWith(status: EditorStatus.saving));
+    try {
+      final copied = await _repo.copyModuleSectors(
+        fromModuleId: fromModuleId,
+        toModuleId: id,
+      );
+      await _reloadNodes();
+      emit(state.copyWith(status: EditorStatus.ready));
+      return copied;
+    } catch (_) {
+      emit(state.copyWith(status: EditorStatus.ready));
+      return null;
     }
   }
 }
