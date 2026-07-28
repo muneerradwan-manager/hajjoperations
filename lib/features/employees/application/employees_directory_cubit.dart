@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/bloc/safe_cubit.dart';
 import '../../profile/domain/profile.dart';
 import '../../seasons/data/seasons_repository.dart';
 import '../../seasons/domain/season.dart';
@@ -49,7 +49,7 @@ class EmployeesDirectoryState extends Equatable {
   List<Object?> get props => [status, permanent, external, season, error];
 }
 
-class EmployeesDirectoryCubit extends Cubit<EmployeesDirectoryState> {
+class EmployeesDirectoryCubit extends SafeCubit<EmployeesDirectoryState> {
   EmployeesDirectoryCubit(this._repo, this._seasons)
     : super(const EmployeesDirectoryState()) {
     load();

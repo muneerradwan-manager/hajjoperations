@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/bloc/safe_cubit.dart';
 import '../../profile/domain/profile.dart';
 import '../data/seasons_repository.dart';
 
@@ -60,7 +60,7 @@ class SeasonParticipantsState extends Equatable {
   ];
 }
 
-class SeasonParticipantsCubit extends Cubit<SeasonParticipantsState> {
+class SeasonParticipantsCubit extends SafeCubit<SeasonParticipantsState> {
   SeasonParticipantsCubit(this._repo, this.seasonId)
     : super(const SeasonParticipantsState()) {
     _load();

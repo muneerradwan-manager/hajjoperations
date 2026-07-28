@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/bloc/safe_cubit.dart';
 import '../data/profile_repository.dart';
 import '../domain/city.dart';
 import '../domain/job_title.dart';
@@ -46,7 +46,7 @@ class ProfileCompletionState extends Equatable {
   List<Object?> get props => [status, jobTitles, cities, error];
 }
 
-class ProfileCompletionCubit extends Cubit<ProfileCompletionState> {
+class ProfileCompletionCubit extends SafeCubit<ProfileCompletionState> {
   ProfileCompletionCubit(this._repo, {this.existing})
     : super(const ProfileCompletionState()) {
     _load();

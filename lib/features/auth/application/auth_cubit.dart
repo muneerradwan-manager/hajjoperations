@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/bloc/safe_cubit.dart';
 import '../data/auth_repository.dart';
 
 enum AuthStatus { idle, submitting, emailConfirmationSent, error }
@@ -19,7 +19,7 @@ class AuthUiState extends Equatable {
 
 /// Handles the sign-in / sign-up / Google actions on the auth screens.
 /// The [SessionCubit] reacts to the resulting auth state change separately.
-class AuthCubit extends Cubit<AuthUiState> {
+class AuthCubit extends SafeCubit<AuthUiState> {
   AuthCubit(this._repo) : super(const AuthUiState());
 
   final AuthRepository _repo;

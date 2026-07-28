@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/bloc/safe_cubit.dart';
 import '../../../core/l10n/localized_name.dart';
 import '../../profile/domain/profile.dart';
 import '../data/modules_repository.dart';
@@ -81,6 +81,8 @@ class ModuleEditorState extends Equatable {
     this.type,
     this.moduleId,
     this.startsOn,
+    this.endsOn,
+    this.decisionNumber,
     this.values = const {},
     this.pendingFiles = const {},
     this.reportCadence = ReportCadence.none,
@@ -106,6 +108,13 @@ class ModuleEditorState extends Equatable {
   final String? moduleId;
 
   final DateTime? startsOn;
+
+  /// When it stops being live, if an end was set. Optional — most files run
+  /// until their type's condition is met and nobody writes a date for it.
+  final DateTime? endsOn;
+
+  /// رقم القرار, if it has been issued yet.
+  final String? decisionNumber;
 
   /// Field values keyed by [ModuleField.key], as they will be persisted.
   final Map<String, dynamic> values;
@@ -220,6 +229,9 @@ class ModuleEditorState extends Equatable {
     ModuleType? type,
     String? moduleId,
     DateTime? startsOn,
+    DateTime? endsOn,
+    String? decisionNumber,
+    bool clearEndsOn = false,
     Map<String, dynamic>? values,
     Map<String, File>? pendingFiles,
     ReportCadence? reportCadence,
@@ -236,6 +248,10 @@ class ModuleEditorState extends Equatable {
       type: type ?? this.type,
       moduleId: moduleId ?? this.moduleId,
       startsOn: startsOn ?? this.startsOn,
+      // Explicitly, because null is a value here: taking an end date off is as
+      // real an edit as putting one on, and `??` cannot tell the two apart.
+      endsOn: clearEndsOn ? null : (endsOn ?? this.endsOn),
+      decisionNumber: decisionNumber ?? this.decisionNumber,
       values: values ?? this.values,
       pendingFiles: pendingFiles ?? this.pendingFiles,
       reportCadence: reportCadence ?? this.reportCadence,
@@ -255,6 +271,8 @@ class ModuleEditorState extends Equatable {
     type?.id,
     moduleId,
     startsOn,
+    endsOn,
+    decisionNumber,
     values,
     pendingFiles,
     reportCadence,
@@ -273,7 +291,7 @@ class ModuleEditorState extends Equatable {
 /// Each step is persisted as it is completed rather than held until the end. A
 /// file is assembled over days — towers are added as they are confirmed — so
 /// there is no moment at which "the whole thing" is ready to be saved at once.
-class ModuleEditorCubit extends Cubit<ModuleEditorState> {
+class ModuleEditorCubit extends SafeCubit<ModuleEditorState> {
   ModuleEditorCubit(
     this._repo, {
     required this.moduleTypeId,
@@ -333,6 +351,8 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
           type: type,
           moduleId: existing?.id,
           startsOn: existing?.startsOn,
+          endsOn: existing?.endsOn,
+          decisionNumber: existing?.decisionNumber,
           reportCadence: existing?.reportCadence ?? ReportCadence.none,
           values: Map<String, dynamic>.from(existing?.data ?? const {}),
           nodes: nodes,
@@ -366,6 +386,16 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
 
   void setStartsOn(DateTime value) => emit(state.copyWith(startsOn: value));
 
+  /// Null clears it — a file whose end was set and then thought better of.
+  void setEndsOn(DateTime? value) => emit(
+    value == null
+        ? state.copyWith(clearEndsOn: true)
+        : state.copyWith(endsOn: value),
+  );
+
+  void setDecisionNumber(String value) =>
+      emit(state.copyWith(decisionNumber: value.trim()));
+
   void setValue(String key, Object? value) {
     final values = Map<String, dynamic>.from(state.values);
     if (value == null || (value is String && value.isEmpty)) {
@@ -392,6 +422,10 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
 
     final startsOn = state.startsOn;
     if (startsOn == null) return const SaveResult(SaveOutcome.missingDate);
+    // An empty number is no number, not an empty string standing in for one.
+    final number = (state.decisionNumber ?? '').trim().isEmpty
+        ? null
+        : state.decisionNumber!.trim();
 
     for (final f in type.fields.where((f) => f.isRequired)) {
       final v = state.values[f.key];
@@ -415,6 +449,8 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
             moduleTypeId: type.id,
             seasonId: seasonId,
             startsOn: startsOn,
+            endsOn: state.endsOn,
+            decisionNumber: number,
             reportCadence: state.reportCadence,
             data: {
               for (final e in values.entries)
@@ -437,6 +473,8 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
       await _repo.updateModule(
         id,
         startsOn: startsOn,
+        endsOn: state.endsOn,
+        decisionNumber: number,
         data: values,
         reportCadence: state.reportCadence,
       );

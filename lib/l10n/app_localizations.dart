@@ -1436,6 +1436,60 @@ abstract class AppLocalizations {
   /// **'Season'**
   String get moduleSeasonLabel;
 
+  /// No description provided for @moduleDecisionBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Decision {number}'**
+  String moduleDecisionBadge(String number);
+
+  /// No description provided for @moduleDecisionNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Decision / file number'**
+  String get moduleDecisionNumber;
+
+  /// No description provided for @moduleDecisionNumberHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — added when the decision is issued'**
+  String get moduleDecisionNumberHint;
+
+  /// No description provided for @moduleEndDate.
+  ///
+  /// In en, this message translates to:
+  /// **'End date'**
+  String get moduleEndDate;
+
+  /// No description provided for @moduleEndDateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — the file ends at the close of this day'**
+  String get moduleEndDateHint;
+
+  /// No description provided for @moduleEndDateClear.
+  ///
+  /// In en, this message translates to:
+  /// **'No end date'**
+  String get moduleEndDateClear;
+
+  /// No description provided for @moduleEndBeforeStart.
+  ///
+  /// In en, this message translates to:
+  /// **'The end date is before the start date'**
+  String get moduleEndBeforeStart;
+
+  /// No description provided for @moduleBadgeEndsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends {date}'**
+  String moduleBadgeEndsOn(String date);
+
+  /// No description provided for @moduleBadgeEndedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended {date}'**
+  String moduleBadgeEndedOn(String date);
+
   /// No description provided for @moduleStartDate.
   ///
   /// In en, this message translates to:
@@ -1477,6 +1531,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Once'**
   String get cadenceOnce;
+
+  /// No description provided for @moduleRatingSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating'**
+  String get moduleRatingSection;
+
+  /// No description provided for @moduleRatingMine.
+  ///
+  /// In en, this message translates to:
+  /// **'My rating in this file'**
+  String get moduleRatingMine;
+
+  /// No description provided for @moduleRatingNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody has rated you in this file yet'**
+  String get moduleRatingNone;
+
+  /// No description provided for @moduleRatingValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{average} of 5 · {count, plural, =1{1 rating} other{{count} ratings}}'**
+  String moduleRatingValue(String average, int count);
+
+  /// No description provided for @moduleRatingRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate your colleagues in this file'**
+  String get moduleRatingRate;
+
+  /// No description provided for @moduleRatingAnonymous.
+  ///
+  /// In en, this message translates to:
+  /// **'Ratings are anonymous — a colleague sees his average and how many rated him, never who gave what'**
+  String get moduleRatingAnonymous;
+
+  /// No description provided for @moduleRatingSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating saved'**
+  String get moduleRatingSaved;
+
+  /// No description provided for @moduleRatingCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating withdrawn'**
+  String get moduleRatingCleared;
 
   /// No description provided for @moduleReports.
   ///

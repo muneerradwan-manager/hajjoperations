@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/bloc/safe_cubit.dart';
 import '../../seasons/data/seasons_repository.dart';
 import '../../seasons/domain/season.dart';
 import '../data/modules_repository.dart';
@@ -34,13 +34,19 @@ class ModulesState extends Equatable {
   final List<ModuleType> types;
   final String? error;
 
+  /// The files that are actually running: switched on, and not past their end
+  /// date. A file that has run out is no more a working file than one nobody
+  /// activated — which is the same answer the database gives its members.
   List<OperationalModule> get active =>
-      modules.where((m) => m.isActive).toList();
+      modules.where((m) => m.isRunning).toList();
 
+  /// Everything else — never activated, switched off, or finished. Each card
+  /// says WHICH of those it is; the section only says it is not running.
+  ///
   /// Only managers ever receive these rows; RLS filters them out for everyone
   /// else, so no extra permission check is needed to render the section.
   List<OperationalModule> get drafts =>
-      modules.where((m) => !m.isActive).toList();
+      modules.where((m) => !m.isRunning).toList();
 
   /// The types that could still be opened this season. A file exists at most
   /// once per season, so a type already used is not offered again. [modules] is
@@ -54,7 +60,7 @@ class ModulesState extends Equatable {
   List<Object?> get props => [status, modules, types, season, error];
 }
 
-class ModulesCubit extends Cubit<ModulesState> {
+class ModulesCubit extends SafeCubit<ModulesState> {
   ModulesCubit(this._repo, this._seasons) : super(const ModulesState()) {
     load();
   }

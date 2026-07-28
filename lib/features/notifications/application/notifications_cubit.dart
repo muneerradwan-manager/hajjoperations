@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/bloc/safe_cubit.dart';
 import '../data/notifications_repository.dart';
 import '../domain/app_notification.dart';
 
@@ -25,7 +25,7 @@ class NotificationsState extends Equatable {
   List<Object?> get props => [items, loading];
 }
 
-class NotificationsCubit extends Cubit<NotificationsState> {
+class NotificationsCubit extends SafeCubit<NotificationsState> {
   NotificationsCubit(this._repo) : super(const NotificationsState()) {
     _sub = _repo.streamMine().listen(
       _onNotifications,

@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/bloc/safe_cubit.dart';
 import '../../../core/constants/permission_codes.dart';
 import '../../notifications/data/push_service.dart';
 import '../../profile/data/profile_repository.dart';
@@ -70,7 +70,7 @@ class SessionState extends Equatable {
 
 /// Owns the app's authenticated session: reacts to Supabase auth events,
 /// loads the profile, and derives the routing status.
-class SessionCubit extends Cubit<SessionState> {
+class SessionCubit extends SafeCubit<SessionState> {
   SessionCubit(this._auth, this._profiles) : super(const SessionState()) {
     _sub = _auth.authStateChanges.listen(_onAuthChanged);
     // Handle a session that already exists at startup.

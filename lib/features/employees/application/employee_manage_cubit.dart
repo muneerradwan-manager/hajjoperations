@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/bloc/safe_cubit.dart';
 import '../../profile/domain/profile.dart';
 import '../../seasons/data/seasons_repository.dart';
 import '../../seasons/domain/season.dart';
@@ -61,7 +61,7 @@ class EmployeeManageState extends Equatable {
 
 /// Backs the admin employee-detail hub: view + suspend/reactivate, external
 /// designation, and current-season participation toggling.
-class EmployeeManageCubit extends Cubit<EmployeeManageState> {
+class EmployeeManageCubit extends SafeCubit<EmployeeManageState> {
   EmployeeManageCubit(this._employees, this._seasons, Profile profile)
     : super(EmployeeManageState(profile: profile)) {
     _loadSeason();

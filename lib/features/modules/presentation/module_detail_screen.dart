@@ -6,6 +6,7 @@ import '../../../core/animations/animations.dart';
 import '../../../core/attachments/attachment_picker.dart';
 import '../../../core/attachments/attachments_view.dart';
 import '../../../core/constants/permission_codes.dart';
+import '../../../core/supabase/supabase_client.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_icons.dart';
@@ -23,6 +24,7 @@ import '../domain/operational_module.dart';
 import 'module_editor_screen.dart';
 import 'widgets/cadence_label.dart';
 import 'widgets/location_button.dart';
+import 'widgets/star_rating.dart';
 
 /// Everything an operational file holds, for whoever is allowed to see it: when
 /// it starts and what ends it, its attachment, the duties that come with a
@@ -299,6 +301,21 @@ class _Body extends StatelessWidget {
                   value:
                       (type?.endCondition ?? module.endCondition)?.of(context),
                 ),
+                // The condition above says what event ends files of this kind.
+                // This says the day THIS one is done — shown only when somebody
+                // set it, since most files run on the condition alone.
+                if (module.endsOn != null)
+                  InfoRow(
+                    icon: AppIcons.pending,
+                    label: l.moduleEndDate,
+                    value: formatDate(module.endsOn),
+                  ),
+                if ((module.decisionNumber ?? '').isNotEmpty)
+                  InfoRow(
+                    icon: AppIcons.file,
+                    label: l.moduleDecisionNumber,
+                    value: module.decisionNumber,
+                  ),
                 for (final field in fields)
                   if (field.kind != ModuleFieldKind.pdf)
                     // A place is somewhere to go, never a line of URL to read.
@@ -350,6 +367,13 @@ class _Body extends StatelessWidget {
               const SizedBox(height: AppSpacing.lg),
               SectionHeader(l.moduleReports, icon: AppIcons.tasks),
               _ReportsCard(module: module, reports: state.reports),
+            ],
+            // What a finished file is for. Only its own people, only once it is
+            // over, and only ever their own result back.
+            if (state.canRate) ...[
+              const SizedBox(height: AppSpacing.lg),
+              SectionHeader(l.moduleRatingSection, icon: AppIcons.approvals),
+              _RatingCard(state: state),
             ],
 
             const SizedBox(height: AppSpacing.lg),
@@ -1076,6 +1100,124 @@ String displayFieldValue(
   ModuleFieldKind.pdf => ModuleFile.fromJson(value)?.name ?? '',
   _ => value?.toString() ?? '',
 };
+
+/// The rating of a finished file: what the viewer received, and a star row per
+/// colleague for what he thinks of them.
+///
+/// Everyone in the file appears once, wherever they sit in it — a tower member
+/// may rate the supervisor of his sector, because they carried the same file.
+/// The viewer is not in his own list.
+class _RatingCard extends StatelessWidget {
+  const _RatingCard({required this.state});
+
+  final ModuleDetailState state;
+
+  /// Everyone in the file but the viewer, each appearing once however many
+  /// roles they hold in it.
+  List<ModuleMember> _colleagues(String me) {
+    final seen = <String>{me};
+    final out = <ModuleMember>[];
+    for (final m in [
+      ...state.members,
+      for (final n in state.nodes) ...n.members,
+    ]) {
+      if (seen.add(m.profileId)) out.add(m);
+    }
+    return out;
+  }
+
+  Future<void> _rate(BuildContext context, String rateeId, int? stars) async {
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final error = await context.read<ModuleDetailCubit>().rate(rateeId, stars);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            error ??
+                (stars == null ? l.moduleRatingCleared : l.moduleRatingSaved),
+          ),
+        ),
+      );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    final me = supabase.auth.currentUser?.id;
+    if (me == null) return const SizedBox.shrink();
+    final summary = state.myRatingSummary;
+
+    return GlassCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l.moduleRatingMine, style: text.titleSmall),
+          const SizedBox(height: AppSpacing.sm),
+          if (summary.isRated)
+            RatingSummaryLine(
+              average: summary.average,
+              ratings: summary.ratings,
+              label: l.moduleRatingValue(
+                summary.average.toStringAsFixed(1),
+                summary.ratings,
+              ),
+            )
+          else
+            Text(
+              l.moduleRatingNone,
+              style: text.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          const SizedBox(height: AppSpacing.lg),
+          Text(l.moduleRatingRate, style: text.titleSmall),
+          const SizedBox(height: 2),
+          // Said out loud, and said BEFORE the stars: somebody about to rate a
+          // colleague is entitled to know who will see it.
+          Text(
+            l.moduleRatingAnonymous,
+            style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+          for (final colleague in _colleagues(me))
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.md),
+              child: Row(
+                children: [
+                  ProfileAvatar(
+                    photoUrl: colleague.profile?.photoUrl,
+                    name: colleague.profile?.fullName ?? '',
+                    radius: 16,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      colleague.profile?.fullName ?? '—',
+                      style: text.bodyMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  StarRating(
+                    value: (state.myRatings[colleague.profileId] ?? 0)
+                        .toDouble(),
+                    size: 20,
+                    onRated: (stars) =>
+                        _rate(context, colleague.profileId, stars),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
 
 /// The reports of one file: a way in for whoever is in it, and the ones already
 /// filed underneath.

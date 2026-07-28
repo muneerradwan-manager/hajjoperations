@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/bloc/safe_cubit.dart';
 import '../data/modules_repository.dart';
 import '../domain/assignable_employee.dart';
 
@@ -92,7 +92,7 @@ class EmployeePickerState extends Equatable {
 /// the database rather than a pass over a list held here. At five hundred
 /// participants that is the difference between a page that opens and one that
 /// waits for the whole roster first.
-class EmployeePickerCubit extends Cubit<EmployeePickerState> {
+class EmployeePickerCubit extends SafeCubit<EmployeePickerState> {
   EmployeePickerCubit(
     this._repo, {
     required this.seasonId,

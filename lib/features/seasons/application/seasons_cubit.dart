@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/bloc/safe_cubit.dart';
 import '../../../core/utils/hijri_utils.dart';
 import '../data/seasons_repository.dart';
 import '../domain/season.dart';
@@ -52,7 +52,7 @@ class SeasonsState extends Equatable {
   List<Object?> get props => [status, seasons, error];
 }
 
-class SeasonsCubit extends Cubit<SeasonsState> {
+class SeasonsCubit extends SafeCubit<SeasonsState> {
   SeasonsCubit(this._repo, {required this.isAdmin})
     : super(const SeasonsState()) {
     load();

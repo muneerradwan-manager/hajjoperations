@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/bloc/safe_cubit.dart';
 import '../../profile/domain/profile.dart';
 import '../data/permissions_repository.dart';
 
@@ -45,7 +45,7 @@ class EmployeesState extends Equatable {
   List<Object?> get props => [status, employees, query, error];
 }
 
-class EmployeesCubit extends Cubit<EmployeesState> {
+class EmployeesCubit extends SafeCubit<EmployeesState> {
   EmployeesCubit(this._repo) : super(const EmployeesState()) {
     load();
   }

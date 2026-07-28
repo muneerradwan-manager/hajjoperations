@@ -116,6 +116,8 @@ class ModulesRepository {
     required String seasonId,
     required DateTime startsOn,
     required Map<String, dynamic> data,
+    DateTime? endsOn,
+    String? decisionNumber,
     ReportCadence? reportCadence,
   }) async {
     final row = await supabase
@@ -124,6 +126,8 @@ class ModulesRepository {
           'module_type_id': moduleTypeId,
           'season_id': seasonId,
           'starts_on': _asDate(startsOn),
+          'ends_on': endsOn == null ? null : _asDate(endsOn),
+          'decision_number': decisionNumber,
           'data': data,
           'report_cadence': (reportCadence ?? ReportCadence.none).name,
           'created_by': supabase.auth.currentUser?.id,
@@ -137,12 +141,18 @@ class ModulesRepository {
     String id, {
     required DateTime startsOn,
     required Map<String, dynamic> data,
+    DateTime? endsOn,
+    String? decisionNumber,
     ReportCadence? reportCadence,
   }) async {
     await supabase
         .from('modules')
         .update({
           'starts_on': _asDate(startsOn),
+          // Written even when null: clearing an end date is a thing somebody
+          // does, and a null that is skipped is a null that never lands.
+          'ends_on': endsOn == null ? null : _asDate(endsOn),
+          'decision_number': decisionNumber,
           'data': data,
           if (reportCadence != null) 'report_cadence': reportCadence.name,
           'updated_at': DateTime.now().toUtc().toIso8601String(),
@@ -260,6 +270,72 @@ class ModulesRepository {
       });
     }
     await supabase.from('module_report_attachments').insert(rows);
+  }
+
+  // --------------------------------------------------------------- ratings
+
+  /// What this person has already said about his colleagues in [moduleId].
+  ///
+  /// Only his own rows come back — RLS sees to that, and it is the whole of the
+  /// anonymity — so this is what draws the stars he has given, not what anyone
+  /// received.
+  Future<Map<String, int>> fetchMyRatings(String moduleId) async {
+    final me = supabase.auth.currentUser?.id;
+    if (me == null) return const {};
+    final rows = await supabase
+        .from('module_ratings')
+        .select('ratee_id, stars')
+        .eq('module_id', moduleId)
+        .eq('rater_id', me);
+    return {
+      for (final r in (rows as List).cast<Map<String, dynamic>>())
+        r['ratee_id'] as String: (r['stars'] as num).toInt(),
+    };
+  }
+
+  /// Rates a colleague, or changes what was said before — one verdict per
+  /// person per colleague per file, so this upserts rather than piling up.
+  Future<void> rate({
+    required String moduleId,
+    required String rateeId,
+    required int stars,
+  }) async {
+    final me = supabase.auth.currentUser?.id;
+    if (me == null) return;
+    await supabase.from('module_ratings').upsert({
+      'module_id': moduleId,
+      'rater_id': me,
+      'ratee_id': rateeId,
+      'stars': stars,
+    }, onConflict: 'module_id,rater_id,ratee_id');
+  }
+
+  /// Takes it back entirely, which is different from giving one star.
+  Future<void> clearRating({
+    required String moduleId,
+    required String rateeId,
+  }) async {
+    final me = supabase.auth.currentUser?.id;
+    if (me == null) return;
+    await supabase
+        .from('module_ratings')
+        .delete()
+        .eq('module_id', moduleId)
+        .eq('rater_id', me)
+        .eq('ratee_id', rateeId);
+  }
+
+  /// The caller's OWN result in this file. Through a function because the rows
+  /// behind it are nobody's to read: it answers with an average and a count.
+  Future<RatingSummary> fetchMyRatingSummary(String moduleId) async {
+    final rows = await supabase.rpc(
+      'my_module_rating',
+      params: {'p_module_id': moduleId},
+    );
+    final first = ((rows as List?) ?? const []).cast<Map<String, dynamic>>();
+    return first.isEmpty
+        ? RatingSummary.none
+        : RatingSummary.fromMap(first.first);
   }
 
   // ----------------------------------------------------------------- nodes

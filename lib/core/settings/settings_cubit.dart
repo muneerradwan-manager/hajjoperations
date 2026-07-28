@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/bloc/safe_cubit.dart';
 import '../../features/notifications/data/push_service.dart';
 
 class SettingsState extends Equatable {
@@ -39,7 +39,7 @@ class SettingsState extends Equatable {
 }
 
 /// Persists appearance + language choices.
-class SettingsCubit extends Cubit<SettingsState> {
+class SettingsCubit extends SafeCubit<SettingsState> {
   SettingsCubit(this._prefs)
     : super(
         SettingsState(

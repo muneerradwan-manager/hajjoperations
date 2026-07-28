@@ -476,7 +476,7 @@ class _ModuleAssignmentsSectionState extends State<_ModuleAssignmentsSection> {
                                       icon: AppIcons.seasons,
                                       dense: true,
                                     ),
-                                  if (!assignment.module.isActive)
+                                  if (!assignment.module.isRunning)
                                     GlassBadge(
                                       label: l.moduleBadgeDraft,
                                       color: scheme.tertiary,

@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/bloc/safe_cubit.dart';
 import '../../profile/domain/profile.dart';
 import '../data/approval_repository.dart';
 
@@ -39,7 +39,7 @@ class ApprovalState extends Equatable {
   List<Object?> get props => [status, pending, error, processingIds];
 }
 
-class ApprovalCubit extends Cubit<ApprovalState> {
+class ApprovalCubit extends SafeCubit<ApprovalState> {
   ApprovalCubit(this._repo) : super(const ApprovalState()) {
     load();
   }

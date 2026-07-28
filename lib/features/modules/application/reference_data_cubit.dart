@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/bloc/safe_cubit.dart';
 import '../../seasons/data/seasons_repository.dart';
 import '../../seasons/domain/season.dart';
 import '../data/modules_repository.dart';
@@ -59,7 +59,7 @@ class ReferenceDataState extends Equatable {
 
 /// Master data the admin owns: the lists that back every dropdown, kept out of
 /// free text so the same hotel is one hotel everywhere.
-class ReferenceDataCubit extends Cubit<ReferenceDataState> {
+class ReferenceDataCubit extends SafeCubit<ReferenceDataState> {
   ReferenceDataCubit(this._repo, this._seasons)
     : super(const ReferenceDataState()) {
     load();

@@ -226,6 +226,23 @@ class _ModuleCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
+                  // Directly under the day it began, because the two dates are
+                  // one fact read together. Coloured only once it has passed —
+                  // a date still ahead is information, not a warning.
+                  if (module.endsOn != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      '${l.moduleEndDate}: ${formatDate(module.endsOn)}',
+                      style: text.bodySmall?.copyWith(
+                        color: module.hasEnded
+                            ? AppColors.mediumRed
+                            : scheme.onSurfaceVariant,
+                        fontWeight: module.hasEnded ? FontWeight.w600 : null,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                   const SizedBox(height: AppSpacing.sm),
                   Wrap(
                     spacing: AppSpacing.sm,
@@ -237,6 +254,17 @@ class _ModuleCard extends StatelessWidget {
                           icon: AppIcons.seasons,
                           dense: true,
                         ),
+                      // Beside the year, and worded: "1448 هـ" says what it is
+                      // on its own, a bare number does not.
+                      if ((module.decisionNumber ?? '').isNotEmpty)
+                        GlassBadge(
+                          label: l.moduleDecisionBadge(module.decisionNumber!),
+                          icon: AppIcons.file,
+                          dense: true,
+                        ),
+                      // Two different silences, and they can both be true: a
+                      // file may be waiting to be switched on AND carry the day
+                      // it is due to finish.
                       if (!module.isActive)
                         GlassBadge(
                           label: l.moduleBadgeDraft,

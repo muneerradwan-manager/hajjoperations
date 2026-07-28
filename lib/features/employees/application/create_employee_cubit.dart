@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/bloc/safe_cubit.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../profile/domain/job_title.dart';
 import '../../profile/domain/profile_enums.dart';
@@ -35,7 +35,7 @@ class CreateEmployeeState extends Equatable {
   List<Object?> get props => [status, jobTitles, error];
 }
 
-class CreateEmployeeCubit extends Cubit<CreateEmployeeState> {
+class CreateEmployeeCubit extends SafeCubit<CreateEmployeeState> {
   CreateEmployeeCubit(this._employees, this._profiles)
     : super(const CreateEmployeeState()) {
     _load();

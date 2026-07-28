@@ -707,6 +707,39 @@ class AppLocalizationsAr extends AppLocalizations {
   String get moduleSeasonLabel => 'الموسم';
 
   @override
+  String moduleDecisionBadge(String number) {
+    return 'قرار $number';
+  }
+
+  @override
+  String get moduleDecisionNumber => 'رقم القرار / الملف';
+
+  @override
+  String get moduleDecisionNumberHint => 'اختياري — يُضاف عند صدور القرار';
+
+  @override
+  String get moduleEndDate => 'تاريخ الانتهاء';
+
+  @override
+  String get moduleEndDateHint => 'اختياري — ينتهي الملف بنهاية هذا اليوم';
+
+  @override
+  String get moduleEndDateClear => 'بلا تاريخ انتهاء';
+
+  @override
+  String get moduleEndBeforeStart => 'تاريخ الانتهاء قبل تاريخ البدء';
+
+  @override
+  String moduleBadgeEndsOn(String date) {
+    return 'ينتهي $date';
+  }
+
+  @override
+  String moduleBadgeEndedOn(String date) {
+    return 'انتهى $date';
+  }
+
+  @override
   String get moduleStartDate => 'تاريخ بدء العمل';
 
   @override
@@ -726,6 +759,41 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cadenceOnce => 'تقرير لمرة واحدة';
+
+  @override
+  String get moduleRatingSection => 'التقييم';
+
+  @override
+  String get moduleRatingMine => 'تقييمي في هذا الملف';
+
+  @override
+  String get moduleRatingNone => 'لم يقيّمك أحد في هذا الملف بعد';
+
+  @override
+  String moduleRatingValue(String average, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تقييماً',
+      few: '$count تقييمات',
+      two: 'تقييمان',
+      one: 'تقييم واحد',
+    );
+    return '$average من 5 · $_temp0';
+  }
+
+  @override
+  String get moduleRatingRate => 'قيّم زملاءك في هذا الملف';
+
+  @override
+  String get moduleRatingAnonymous =>
+      'التقييم مجهول — يرى الزميل متوسطه وعدد من قيّموه، ولا يعرف من أعطى ماذا';
+
+  @override
+  String get moduleRatingSaved => 'تم حفظ التقييم';
+
+  @override
+  String get moduleRatingCleared => 'تم سحب التقييم';
 
   @override
   String get moduleReports => 'التقارير';

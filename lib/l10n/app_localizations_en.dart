@@ -707,6 +707,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moduleSeasonLabel => 'Season';
 
   @override
+  String moduleDecisionBadge(String number) {
+    return 'Decision $number';
+  }
+
+  @override
+  String get moduleDecisionNumber => 'Decision / file number';
+
+  @override
+  String get moduleDecisionNumberHint =>
+      'Optional — added when the decision is issued';
+
+  @override
+  String get moduleEndDate => 'End date';
+
+  @override
+  String get moduleEndDateHint =>
+      'Optional — the file ends at the close of this day';
+
+  @override
+  String get moduleEndDateClear => 'No end date';
+
+  @override
+  String get moduleEndBeforeStart => 'The end date is before the start date';
+
+  @override
+  String moduleBadgeEndsOn(String date) {
+    return 'Ends $date';
+  }
+
+  @override
+  String moduleBadgeEndedOn(String date) {
+    return 'Ended $date';
+  }
+
+  @override
   String get moduleStartDate => 'Work starts on';
 
   @override
@@ -727,6 +762,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cadenceOnce => 'Once';
+
+  @override
+  String get moduleRatingSection => 'Rating';
+
+  @override
+  String get moduleRatingMine => 'My rating in this file';
+
+  @override
+  String get moduleRatingNone => 'Nobody has rated you in this file yet';
+
+  @override
+  String moduleRatingValue(String average, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ratings',
+      one: '1 rating',
+    );
+    return '$average of 5 · $_temp0';
+  }
+
+  @override
+  String get moduleRatingRate => 'Rate your colleagues in this file';
+
+  @override
+  String get moduleRatingAnonymous =>
+      'Ratings are anonymous — a colleague sees his average and how many rated him, never who gave what';
+
+  @override
+  String get moduleRatingSaved => 'Rating saved';
+
+  @override
+  String get moduleRatingCleared => 'Rating withdrawn';
 
   @override
   String get moduleReports => 'Reports';

@@ -227,6 +227,28 @@ enum ReportCadence {
   bool get asksForReports => this != ReportCadence.none;
 }
 
+/// What the people in a finished file said about one of them: the average, and
+/// how many said it.
+///
+/// Never who. A member reads only his own — the database returns two numbers
+/// and no names, and the rows themselves are readable by nobody but the person
+/// who wrote them.
+class RatingSummary {
+  const RatingSummary({required this.average, required this.ratings});
+
+  static const none = RatingSummary(average: 0, ratings: 0);
+
+  final double average;
+  final int ratings;
+
+  bool get isRated => ratings > 0;
+
+  factory RatingSummary.fromMap(Map<String, dynamic> map) => RatingSummary(
+    average: (map['average'] as num?)?.toDouble() ?? 0,
+    ratings: (map['ratings'] as num?)?.toInt() ?? 0,
+  );
+}
+
 /// One report filed against a file by one of its members.
 ///
 /// The report is what was attached — the signed sheet, the photo of the tower,
@@ -295,6 +317,8 @@ class OperationalModule {
     required this.moduleTypeId,
     required this.seasonId,
     this.startsOn,
+    this.endsOn,
+    this.decisionNumber,
     this.data = const {},
     this.isActive = false,
     this.reportCadence = ReportCadence.none,
@@ -311,10 +335,25 @@ class OperationalModule {
   /// When work at the towers begins.
   final DateTime? startsOn;
 
+  /// The day this file stops being live, inclusive — it is still running ON
+  /// that date. Null for a file with no end set.
+  ///
+  /// Not the same thing as the type's [endCondition]: that says what EVENT
+  /// closes a file of this kind, in prose, the same sentence every season. This
+  /// is a date on one file. The condition says what will end it; the date says
+  /// when it did.
+  final DateTime? endsOn;
+
+  /// رقم القرار. Optional: a file is often opened before the decision that
+  /// authorises it is issued, and the number arrives afterwards.
+  final String? decisionNumber;
+
   /// Field values keyed by [ModuleField.key].
   final Map<String, dynamic> data;
 
-  /// Files stay invisible to their members until an admin activates them.
+  /// The switch an administrator throws. Files stay invisible to their members
+  /// until it is on — but it is not the whole answer to "is this file live":
+  /// see [isRunning].
   final bool isActive;
 
   /// How often this file asks its members for a report. Chosen by whoever
@@ -328,6 +367,25 @@ class OperationalModule {
   final LocalizedName? endCondition;
   final DateTime? createdAt;
 
+  /// Whether the end date has gone by. Inclusive: a file ending today is still
+  /// running today.
+  bool get hasEnded {
+    final end = endsOn;
+    if (end == null) return false;
+    final today = DateTime.now();
+    return DateTime(end.year, end.month, end.day).isBefore(
+      DateTime(today.year, today.month, today.day),
+    );
+  }
+
+  /// Whether this is a working file: switched on, and not yet out of time.
+  ///
+  /// This is what the app should ask nearly everywhere. [isActive] alone is the
+  /// switch, and is what the button toggling it needs to read — the database
+  /// draws the same distinction, and hides a file that has run out from its
+  /// members exactly as it hides one that was switched off.
+  bool get isRunning => isActive && !hasEnded;
+
   ModuleFile? fileAt(String key) => ModuleFile.fromJson(data[key]);
 
   factory OperationalModule.fromMap(Map<String, dynamic> map) {
@@ -340,6 +398,10 @@ class OperationalModule {
       startsOn: map['starts_on'] == null
           ? null
           : DateTime.tryParse(map['starts_on'] as String),
+      endsOn: map['ends_on'] == null
+          ? null
+          : DateTime.tryParse(map['ends_on'] as String),
+      decisionNumber: map['decision_number'] as String?,
       data: Map<String, dynamic>.from(
         (map['data'] as Map?) ?? const <String, dynamic>{},
       ),

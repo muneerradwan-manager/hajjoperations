@@ -589,6 +589,61 @@ class _InfoStep extends StatelessWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: AppSpacing.md),
+                // Optional, and the file runs on without it. A date here is not
+                // the type's end CONDITION — that says what event closes such
+                // files; this says when this one is done.
+                InkWell(
+                  borderRadius: BorderRadius.circular(AppRadius.sm),
+                  onTap: () async {
+                    final now = DateTime.now();
+                    final start = state.startsOn ?? DateTime(now.year - 2);
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: state.endsOn ?? state.startsOn ?? now,
+                      // Never before the day the work began: the database
+                      // refuses that pair, and so the picker does not offer it.
+                      firstDate: start,
+                      lastDate: DateTime(now.year + 5),
+                    );
+                    if (picked != null) cubit.setEndsOn(picked);
+                  },
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: l.moduleEndDate,
+                      helperText: l.moduleEndDateHint,
+                      prefixIcon: const Icon(AppIcons.pending),
+                      suffixIcon: state.endsOn == null
+                          ? null
+                          : IconButton(
+                              tooltip: l.moduleEndDateClear,
+                              icon: const Icon(AppIcons.delete, size: 18),
+                              onPressed: () => cubit.setEndsOn(null),
+                            ),
+                    ),
+                    child: Text(
+                      state.endsOn == null
+                          ? l.moduleEndDateClear
+                          : formatDate(state.endsOn),
+                      style: state.endsOn == null
+                          ? TextStyle(
+                              color: scheme.onSurfaceVariant,
+                              fontStyle: FontStyle.italic,
+                            )
+                          : null,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  initialValue: state.decisionNumber ?? '',
+                  decoration: InputDecoration(
+                    labelText: l.moduleDecisionNumber,
+                    helperText: l.moduleDecisionNumberHint,
+                    prefixIcon: const Icon(AppIcons.file),
+                  ),
+                  onChanged: cubit.setDecisionNumber,
+                ),
                 // What the date above is the date OF. Sits under the picker
                 // rather than replacing it: somebody still has to say when the
                 // work actually began.

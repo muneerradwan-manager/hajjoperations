@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/bloc/safe_cubit.dart';
 import '../../../core/l10n/localized_name.dart';
 import '../../../core/supabase/supabase_client.dart';
 import '../data/modules_repository.dart';
@@ -42,6 +42,8 @@ class ModuleDetailState extends Equatable {
     this.members = const [],
     this.referenceSets = const [],
     this.reports = const [],
+    this.myRatings = const {},
+    this.myRatingSummary = RatingSummary.none,
     this.viewAsProfileId,
     this.error,
   });
@@ -61,6 +63,19 @@ class ModuleDetailState extends Equatable {
   /// The reports filed against this file, newest first. RLS already narrowed
   /// them: a member gets their own, a manager gets everyone's.
   final List<ModuleReport> reports;
+
+  /// The stars the VIEWER has given, by colleague. Only ever his own: nobody
+  /// may read what anyone else gave, which is what makes rating anonymous.
+  final Map<String, int> myRatings;
+
+  /// And what the viewer received here — an average and a count, never names.
+  final RatingSummary myRatingSummary;
+
+  /// Whether this file is finished and open for its people to rate each other.
+  /// A file with no end date is never open, even switched off: nobody has
+  /// declared it over.
+  bool get canRate =>
+      (module?.hasEnded ?? false) && isMember && _viewerId != null;
 
   /// The signed-in person, always — reports are filed by whoever is looking,
   /// never by the employee whose page this was opened from.
@@ -210,12 +225,14 @@ class ModuleDetailState extends Equatable {
     members,
     referenceSets,
     reports,
+    myRatings,
+    myRatingSummary,
     viewAsProfileId,
     error,
   ];
 }
 
-class ModuleDetailCubit extends Cubit<ModuleDetailState> {
+class ModuleDetailCubit extends SafeCubit<ModuleDetailState> {
   ModuleDetailCubit(this._repo, this.moduleId, {this.viewAsProfileId})
     : super(ModuleDetailState(viewAsProfileId: viewAsProfileId)) {
     load();
@@ -271,6 +288,15 @@ class ModuleDetailCubit extends Cubit<ModuleDetailState> {
       final reports = module.reportCadence.asksForReports
           ? await _repo.fetchReports(moduleId)
           : const <ModuleReport>[];
+      // Only a finished file has any of this: nothing to draw, nothing to ask
+      // for, and two calls saved on every other file in the app.
+      final ratings = module.hasEnded
+          ? await _repo.fetchMyRatings(moduleId)
+          : const <String, int>{};
+      final summary = module.hasEnded
+          ? await _repo.fetchMyRatingSummary(moduleId)
+          : RatingSummary.none;
+
       emit(
         ModuleDetailState(
           status: ModuleDetailStatus.ready,
@@ -280,6 +306,8 @@ class ModuleDetailCubit extends Cubit<ModuleDetailState> {
           members: members,
           referenceSets: sets,
           reports: reports,
+          myRatings: ratings,
+          myRatingSummary: summary,
           viewAsProfileId: viewAsProfileId,
         ),
       );
@@ -291,6 +319,48 @@ class ModuleDetailCubit extends Cubit<ModuleDetailState> {
           viewAsProfileId: viewAsProfileId,
         ),
       );
+    }
+  }
+
+  /// Rates a colleague of this file, or changes what was said before. [stars]
+  /// of null takes it back entirely, which is not the same as giving one.
+  ///
+  /// Returns null on success, else the failure. The database refuses this
+  /// unless the file has ended and both people were in it — the button is only
+  /// ever the polite half of that.
+  Future<String?> rate(String rateeId, int? stars) async {
+    final module = state.module;
+    if (module == null) return null;
+    try {
+      if (stars == null) {
+        await _repo.clearRating(moduleId: module.id, rateeId: rateeId);
+      } else {
+        await _repo.rate(
+          moduleId: module.id,
+          rateeId: rateeId,
+          stars: stars,
+        );
+      }
+      // Only what the viewer gave is re-read. His own result cannot have
+      // changed — nobody rates himself — and re-reading it would suggest the
+      // two are connected.
+      emit(
+        ModuleDetailState(
+          status: state.status,
+          module: state.module,
+          type: state.type,
+          nodes: state.nodes,
+          members: state.members,
+          referenceSets: state.referenceSets,
+          reports: state.reports,
+          myRatings: await _repo.fetchMyRatings(module.id),
+          myRatingSummary: state.myRatingSummary,
+          viewAsProfileId: state.viewAsProfileId,
+        ),
+      );
+      return null;
+    } catch (e) {
+      return e.toString();
     }
   }
 

@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/bloc/safe_cubit.dart';
 import '../data/permissions_repository.dart';
 import '../domain/permission.dart';
 
@@ -43,7 +43,7 @@ class PermissionEditorState extends Equatable {
 
 /// Loads the catalog + the employee's granted set and toggles each permission,
 /// writing through to the DB immediately.
-class PermissionEditorCubit extends Cubit<PermissionEditorState> {
+class PermissionEditorCubit extends SafeCubit<PermissionEditorState> {
   PermissionEditorCubit(this._repo, this.userId)
     : super(const PermissionEditorState()) {
     _load();
