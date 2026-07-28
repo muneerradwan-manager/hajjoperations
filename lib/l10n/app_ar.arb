@@ -230,10 +230,14 @@
   "permModulesTypes": "إدارة أنواع الملفات والبيانات المرجعية",
 
   "navModules": "الملفات التشغيلية",
-  "navModulesSubtitle": "ملفات الموسم والأدوار والمهام",
+  "navModulesSubtitle": "الملفات المسندة إليك، وأدوارك ومهامك فيها",
   "navReferenceData": "البيانات المرجعية",
   "navReferenceDataSubtitle": "الفنادق والتكتلات والقوائم الأخرى",
 
+  "modulesManageTitle": "إدارة الملفات التشغيلية",
+  "modulesEmptyMine": "لم تُسند إليك ملفات في هذا الموسم",
+  "navModulesManage": "إدارة الملفات التشغيلية",
+  "navModulesManageSubtitle": "كل ملفات الموسم، وإنشاء ملف جديد",
   "modulesTitle": "الملفات التشغيلية",
   "modulesEmpty": "لم يتم إسناد أي ملف إليك بعد",
   "modulesEmptyManager": "لم يتم إنشاء أي ملف بعد",

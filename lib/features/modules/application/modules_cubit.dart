@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../core/bloc/safe_cubit.dart';
+import '../../../core/supabase/supabase_client.dart';
 import '../../seasons/data/seasons_repository.dart';
 import '../../seasons/domain/season.dart';
 import '../data/modules_repository.dart';
@@ -8,6 +9,20 @@ import '../domain/module_type.dart';
 import '../domain/operational_module.dart';
 
 enum ModulesStatus { loading, ready, error }
+
+/// Which question this screen is answering.
+///
+/// A person is two things at once here: somebody with permissions, and
+/// somebody with work. The same man may hold `modules.manage` — every file of
+/// the season is his to open, edit and release — and ALSO be one of the people
+/// assigned to a tower in one of them. Those are different questions and they
+/// deserve different screens, even though both list files.
+///
+/// [mine] is the work: the files this person was put into, and nothing else,
+/// no matter what he is allowed to see.
+/// [manage] is the office: every file of the season, drafts included, and the
+/// button that opens a new one.
+enum ModulesView { mine, manage }
 
 class ModulesState extends Equatable {
   const ModulesState({
@@ -61,12 +76,19 @@ class ModulesState extends Equatable {
 }
 
 class ModulesCubit extends SafeCubit<ModulesState> {
-  ModulesCubit(this._repo, this._seasons) : super(const ModulesState()) {
+  ModulesCubit(
+    this._repo,
+    this._seasons, {
+    this.view = ModulesView.mine,
+  }) : super(const ModulesState()) {
     load();
   }
 
   final ModulesRepository _repo;
   final SeasonsRepository _seasons;
+
+  /// Whether this list is somebody's work or somebody's office.
+  final ModulesView view;
 
   Future<void> load() async {
     emit(const ModulesState(status: ModulesStatus.loading));
@@ -76,8 +98,20 @@ class ModulesCubit extends SafeCubit<ModulesState> {
       final season = await _seasons.fetchCurrentSeason();
       final modules = season == null
           ? const <OperationalModule>[]
-          : await _repo.fetchModules(seasonId: season.id);
-      final types = await _repo.fetchModuleTypes();
+          : switch (view) {
+              // Everything the caller is allowed to see — which for a manager
+              // is the whole season, drafts and all.
+              ModulesView.manage => await _repo.fetchModules(
+                seasonId: season.id,
+              ),
+              // Only the files he was actually put into. A manager sees his own
+              // handful here, not the season: being allowed to open every file
+              // does not make every file his work.
+              ModulesView.mine => await _myModules(season.id),
+            };
+      final types = view == ModulesView.manage
+          ? await _repo.fetchModuleTypes()
+          : const <ModuleType>[];
       emit(
         ModulesState(
           status: ModulesStatus.ready,
@@ -89,5 +123,20 @@ class ModulesCubit extends SafeCubit<ModulesState> {
     } catch (e) {
       emit(ModulesState(status: ModulesStatus.error, error: e.toString()));
     }
+  }
+
+  /// The files this person holds a role in, this season, each once.
+  ///
+  /// A man may hold two roles in one file — a sector supervisor who also runs
+  /// one of its towers — and the file is still one file.
+  Future<List<OperationalModule>> _myModules(String seasonId) async {
+    final me = supabase.auth.currentUser?.id;
+    if (me == null) return const [];
+    final assignments = await _repo.fetchAssignmentsForProfile(me);
+    final seen = <String>{};
+    return [
+      for (final a in assignments)
+        if (a.module.seasonId == seasonId && seen.add(a.module.id)) a.module,
+    ];
   }
 }

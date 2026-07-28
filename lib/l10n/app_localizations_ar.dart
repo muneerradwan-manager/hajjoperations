@@ -661,13 +661,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navModules => 'الملفات التشغيلية';
 
   @override
-  String get navModulesSubtitle => 'ملفات الموسم والأدوار والمهام';
+  String get navModulesSubtitle => 'الملفات المسندة إليك، وأدوارك ومهامك فيها';
 
   @override
   String get navReferenceData => 'البيانات المرجعية';
 
   @override
   String get navReferenceDataSubtitle => 'الفنادق والتكتلات والقوائم الأخرى';
+
+  @override
+  String get modulesManageTitle => 'إدارة الملفات التشغيلية';
+
+  @override
+  String get modulesEmptyMine => 'لم تُسند إليك ملفات في هذا الموسم';
+
+  @override
+  String get navModulesManage => 'إدارة الملفات التشغيلية';
+
+  @override
+  String get navModulesManageSubtitle => 'كل ملفات الموسم، وإنشاء ملف جديد';
 
   @override
   String get modulesTitle => 'الملفات التشغيلية';
@@ -728,16 +740,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get moduleEndBeforeStart => 'تاريخ الانتهاء قبل تاريخ البدء';
-
-  @override
-  String moduleBadgeEndsOn(String date) {
-    return 'ينتهي $date';
-  }
-
-  @override
-  String moduleBadgeEndedOn(String date) {
-    return 'انتهى $date';
-  }
 
   @override
   String get moduleStartDate => 'تاريخ بدء العمل';

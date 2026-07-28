@@ -660,13 +660,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navModules => 'Operational modules';
 
   @override
-  String get navModulesSubtitle => 'Season files, roles and tasks';
+  String get navModulesSubtitle =>
+      'The files you were assigned to, and your roles in them';
 
   @override
   String get navReferenceData => 'Master data';
 
   @override
   String get navReferenceDataSubtitle => 'Hotels, clusters and other lists';
+
+  @override
+  String get modulesManageTitle => 'Manage operational files';
+
+  @override
+  String get modulesEmptyMine => 'No files were assigned to you this season';
+
+  @override
+  String get navModulesManage => 'Manage operational files';
+
+  @override
+  String get navModulesManageSubtitle =>
+      'Every file of the season, and opening a new one';
 
   @override
   String get modulesTitle => 'Operational files';
@@ -730,16 +744,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moduleEndBeforeStart => 'The end date is before the start date';
-
-  @override
-  String moduleBadgeEndsOn(String date) {
-    return 'Ends $date';
-  }
-
-  @override
-  String moduleBadgeEndedOn(String date) {
-    return 'Ended $date';
-  }
 
   @override
   String get moduleStartDate => 'Work starts on';

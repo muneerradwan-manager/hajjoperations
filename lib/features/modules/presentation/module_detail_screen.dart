@@ -8,7 +8,7 @@ import '../../../core/attachments/attachments_view.dart';
 import '../../../core/constants/permission_codes.dart';
 import '../../../core/supabase/supabase_client.dart';
 import '../../../core/l10n/l10n_extension.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_accents.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
@@ -797,7 +797,7 @@ class _TaskCard extends StatelessWidget {
               GlassBadge(
                 label: role.name.of(context),
                 icon: AppIcons.roles,
-                color: AppColors.darkGold,
+                color: Accent.gold.of(context),
               ),
               for (final place in held.places)
                 GlassBadge(

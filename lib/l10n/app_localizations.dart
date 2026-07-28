@@ -1349,7 +1349,7 @@ abstract class AppLocalizations {
   /// No description provided for @navModulesSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Season files, roles and tasks'**
+  /// **'The files you were assigned to, and your roles in them'**
   String get navModulesSubtitle;
 
   /// No description provided for @navReferenceData.
@@ -1363,6 +1363,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hotels, clusters and other lists'**
   String get navReferenceDataSubtitle;
+
+  /// No description provided for @modulesManageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage operational files'**
+  String get modulesManageTitle;
+
+  /// No description provided for @modulesEmptyMine.
+  ///
+  /// In en, this message translates to:
+  /// **'No files were assigned to you this season'**
+  String get modulesEmptyMine;
+
+  /// No description provided for @navModulesManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage operational files'**
+  String get navModulesManage;
+
+  /// No description provided for @navModulesManageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Every file of the season, and opening a new one'**
+  String get navModulesManageSubtitle;
 
   /// No description provided for @modulesTitle.
   ///
@@ -1477,18 +1501,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The end date is before the start date'**
   String get moduleEndBeforeStart;
-
-  /// No description provided for @moduleBadgeEndsOn.
-  ///
-  /// In en, this message translates to:
-  /// **'Ends {date}'**
-  String moduleBadgeEndsOn(String date);
-
-  /// No description provided for @moduleBadgeEndedOn.
-  ///
-  /// In en, this message translates to:
-  /// **'Ended {date}'**
-  String moduleBadgeEndedOn(String date);
 
   /// No description provided for @moduleStartDate.
   ///

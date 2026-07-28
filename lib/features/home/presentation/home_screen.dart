@@ -6,7 +6,7 @@ import '../../../core/animations/animations.dart';
 import '../../../core/constants/permission_codes.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_accents.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/utils/hijri_utils.dart';
@@ -20,14 +20,30 @@ import '../../seasons/data/seasons_repository.dart';
 import 'widgets/dashboard_card.dart';
 
 /// Accent per destination, so a returning user recognises a tile by its colour
-/// before they finish reading the label. All four are brand colours — the
-/// green family carries the everyday destinations, gold marks the season and
-/// red the one screen that changes what other people can do.
-const _accentGreen = AppColors.lightGreen;
-const _accentGreenDeep = AppColors.mediumGreen;
-const _accentGold = AppColors.darkGold;
-const _accentRed = AppColors.mediumRed;
-const _accentGreenDark = AppColors.darkGreen;
+/// before they finish reading the label — which only works if no two tiles
+/// share one. Three of them did: the files, their office and the employees were
+/// all the same green, and the colour told you nothing.
+///
+/// Seven destinations, seven of the nine brand colours, and the families carry
+/// the meaning:
+///
+///   * GREEN — the mission's own work and its people. It stays the app's
+///     primary; it is the backdrop, the theme and three of these seven.
+///   * GOLD — the calendar and the reference material: the season, and the
+///     lists everything else is built from.
+///   * RED — the two screens that decide about people.
+///
+/// Each is an [Accent] rather than a raw brand colour, because a print palette
+/// does not divide evenly across a night mode and a paper one: every red is
+/// unreadable on the dark backdrop and every gold on the light. See
+/// app_accents.dart for the measurements.
+const _work = Accent.green;
+const _office = Accent.greenDeep;
+const _people = Accent.greenDark;
+const _season = Accent.gold;
+const _reference = Accent.goldSoft;
+const _approvals = Accent.red;
+const _permissions = Accent.redDeep;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -86,14 +102,36 @@ class _HomeScreenState extends State<HomeScreen> {
     final canManageReferenceData = session.can(PermissionCodes.modulesTypes);
 
     final canSeeSeasons = session.canSeeSeasons;
+    final canManageModules = session.can(PermissionCodes.modulesManage);
 
+    // Everything held by a PERMISSION. A person is two things at once here —
+    // somebody with authority and somebody with work — and the two were mixed
+    // in one list: "الملفات التشغيلية" meant his own postings to one man and
+    // the season's whole paperwork to another, depending on what he held.
+    // Authority lives here; the work lives below.
     final adminCards = <Widget>[
+      if (canManageModules)
+        DashboardCard(
+          icon: AppIcons.modules,
+          title: l.navModulesManage,
+          subtitle: l.navModulesManageSubtitle,
+          color: _office.of(context),
+          onTap: () => context.push(Routes.modulesManage),
+        ),
+      if (canSeeSeasons)
+        DashboardCard(
+          icon: AppIcons.seasons,
+          title: l.navSeasons,
+          subtitle: l.navSeasonsSubtitle,
+          color: _season.of(context),
+          onTap: _openSeasons,
+        ),
       if (canManageReferenceData)
         DashboardCard(
           icon: AppIcons.referenceData,
           title: l.navReferenceData,
           subtitle: l.navReferenceDataSubtitle,
-          color: _accentGreenDark,
+          color: _reference.of(context),
           onTap: () => context.push(Routes.referenceData),
         ),
       if (canViewEmployees)
@@ -101,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
           icon: AppIcons.employees,
           title: l.navEmployees,
           subtitle: l.navEmployeesSubtitle,
-          color: _accentGreenDeep,
+          color: _people.of(context),
           onTap: () => context.push(Routes.employees),
         ),
       if (canApprove)
@@ -109,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
           icon: AppIcons.approvals,
           title: l.navApprovals,
           subtitle: l.navApprovalsSubtitle,
-          color: _accentGreen,
+          color: _approvals.of(context),
           onTap: () => context.push(Routes.approvals),
         ),
       if (canManagePermissions)
@@ -117,32 +155,23 @@ class _HomeScreenState extends State<HomeScreen> {
           icon: AppIcons.permissions,
           title: l.navPermissions,
           subtitle: l.navPermissionsSubtitle,
-          color: _accentRed,
+          color: _permissions.of(context),
           onTap: () => context.push(Routes.permissions),
         ),
     ];
 
-    // The files are available to every approved user — a file reaches its
-    // members through assignment, not through a permission. Seasons are not:
-    // which season the Administration is working through, and who takes part in
-    // it, is the Administration's to set. An ordinary member has nothing to do
-    // in there, and a door that opens on nothing is worse than no door.
+    // The work, and it is everybody's: a file reaches its members through
+    // assignment, not through a permission. This card lists what THIS person
+    // was put into — the same handful for a manager as for anyone else, because
+    // being allowed to open every file does not make every file his work.
     final generalCards = <Widget>[
       DashboardCard(
         icon: AppIcons.modules,
         title: l.navModules,
         subtitle: l.navModulesSubtitle,
-        color: _accentGreenDeep,
+        color: _work.of(context),
         onTap: () => context.push(Routes.modules),
       ),
-      if (canSeeSeasons)
-        DashboardCard(
-          icon: AppIcons.seasons,
-          title: l.navSeasons,
-          subtitle: l.navSeasonsSubtitle,
-          color: _accentGold,
-          onTap: _openSeasons,
-        ),
       // No tile for the profile: the greeting panel above already carries the
       // user's face and name, and tapping a card with your own name on it is
       // where anyone looks for it first.

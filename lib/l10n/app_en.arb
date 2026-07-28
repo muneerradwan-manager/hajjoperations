@@ -237,10 +237,14 @@
   "permModulesTypes": "Manage module types & master data",
 
   "navModules": "Operational modules",
-  "navModulesSubtitle": "Season files, roles and tasks",
+  "navModulesSubtitle": "The files you were assigned to, and your roles in them",
   "navReferenceData": "Master data",
   "navReferenceDataSubtitle": "Hotels, clusters and other lists",
 
+  "modulesManageTitle": "Manage operational files",
+  "modulesEmptyMine": "No files were assigned to you this season",
+  "navModulesManage": "Manage operational files",
+  "navModulesManageSubtitle": "Every file of the season, and opening a new one",
   "modulesTitle": "Operational files",
   "modulesEmpty": "No files have been assigned to you yet",
   "modulesEmptyManager": "No files created yet",

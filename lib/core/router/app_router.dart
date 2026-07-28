@@ -6,6 +6,7 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/employees/presentation/employees_directory_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/modules/application/modules_cubit.dart';
 import '../../features/modules/presentation/modules_screen.dart';
 import '../../features/modules/presentation/reference_data_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
@@ -19,6 +20,7 @@ import '../../features/status/presentation/rejected_screen.dart';
 import '../../features/status/presentation/splash_screen.dart';
 import '../../features/status/presentation/suspended_screen.dart';
 import '../animations/animations.dart';
+import '../constants/permission_codes.dart';
 import 'go_router_refresh_stream.dart';
 
 /// Route paths.
@@ -38,6 +40,7 @@ abstract class Routes {
   static const myProfile = '/my-profile';
   static const notifications = '/notifications';
   static const modules = '/modules';
+  static const modulesManage = '/modules/manage';
   static const referenceData = '/reference-data';
   static const settings = '/settings';
 }
@@ -87,6 +90,13 @@ GoRouter buildRouter(SessionCubit session) {
           // by a link, a restored location, or a card added somewhere later by
           // someone who did not know to ask.
           if (loc == Routes.seasons && !session.state.canSeeSeasons) {
+            return Routes.home;
+          }
+          // Same reasoning for the office: `/modules` is everyone's own work,
+          // `/modules/manage` is the season's paperwork and belongs to whoever
+          // was given it.
+          if (loc == Routes.modulesManage &&
+              !session.state.can(PermissionCodes.modulesManage)) {
             return Routes.home;
           }
           return null;
@@ -175,6 +185,16 @@ GoRouter buildRouter(SessionCubit session) {
         path: Routes.modules,
         pageBuilder: (c, s) =>
             fadeThroughPage(key: s.pageKey, child: const ModulesScreen()),
+      ),
+      // The same screen asked the other question. A separate route rather than
+      // a flag on the first, so the office and the work each have a place of
+      // their own to return to.
+      GoRoute(
+        path: Routes.modulesManage,
+        pageBuilder: (c, s) => fadeThroughPage(
+          key: s.pageKey,
+          child: const ModulesScreen(view: ModulesView.manage),
+        ),
       ),
       GoRoute(
         path: Routes.referenceData,

@@ -440,6 +440,12 @@ class ModulesRepository {
   ///
   /// `!inner` keeps the joins honest: a file the caller may not see is dropped
   /// rather than surfacing as a membership with nothing behind it.
+  ///
+  /// The entry is embedded through `reference_item_id` by name, for the same
+  /// reason the profile is embedded through `profile_id`: since 0051 a node
+  /// points at that table TWICE — what it is, and what it is tied to — and a
+  /// bare `reference_items(...)` is a question with two answers, which PostgREST
+  /// refuses outright rather than guessing at.
   Future<List<ModuleAssignment>> fetchAssignmentsForProfile(
     String profileId,
   ) async {
@@ -450,7 +456,7 @@ class ModulesRepository {
           module_nodes!inner(
             label,
             module_type_levels!inner(name_ar, name_en),
-            reference_items(name_ar, name_en),
+            reference_items:reference_item_id(name_ar, name_en),
             modules!inner($_moduleColumns)
           )
         ''')

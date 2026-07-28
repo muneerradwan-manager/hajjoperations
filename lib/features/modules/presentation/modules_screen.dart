@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/animations/animations.dart';
 import '../../../core/constants/permission_codes.dart';
 import '../../../core/l10n/l10n_extension.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_accents.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
@@ -20,22 +20,40 @@ import '../domain/operational_module.dart';
 import 'module_detail_screen.dart';
 import 'module_editor_screen.dart';
 
-/// The operational modules the signed-in user can reach: the ones they were
-/// assigned to, plus — for managers — everything including unreleased drafts.
+/// One screen, two questions — see [ModulesView].
+///
+/// [ModulesView.mine] is the work: the files this person was put into. The
+/// dashboard offers it under عام, to everybody, because everybody has work.
+///
+/// [ModulesView.manage] is the office: the season's files, drafts included,
+/// with the button that opens a new one. It sits under إدارة behind
+/// `modules.manage`.
+///
+/// A man may be both — holding the permission to run every file of the season
+/// AND assigned to a tower in one of them — and reading one list for both means
+/// sorting his own postings out of the season's paperwork every time he looks.
 class ModulesScreen extends StatelessWidget {
-  const ModulesScreen({super.key});
+  const ModulesScreen({super.key, this.view = ModulesView.mine});
+
+  final ModulesView view;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ModulesCubit(ModulesRepository(), SeasonsRepository()),
-      child: const _View(),
+      create: (_) => ModulesCubit(
+        ModulesRepository(),
+        SeasonsRepository(),
+        view: view,
+      ),
+      child: _View(view: view),
     );
   }
 }
 
 class _View extends StatelessWidget {
-  const _View();
+  const _View({required this.view});
+
+  final ModulesView view;
 
   Future<void> _create(BuildContext context, ModulesState state) async {
     final l = context.l10n;
@@ -86,7 +104,11 @@ class _View extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final session = context.watch<SessionCubit>().state;
-    final canManage = session.can(PermissionCodes.modulesManage);
+    // Only in the office. Holding the permission does not put a create button
+    // on the list of a man's own postings.
+    final canManage =
+        view == ModulesView.manage &&
+        session.can(PermissionCodes.modulesManage);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -97,9 +119,11 @@ class _View extends StatelessWidget {
         title: BlocBuilder<ModulesCubit, ModulesState>(
           buildWhen: (p, c) => p.season != c.season,
           builder: (context, state) => Text(
-            state.season == null
-                ? l.modulesTitle
-                : '${l.modulesTitle} — ${l.seasonHijriYear(state.season!.hijriYear)}',
+            [
+              view == ModulesView.manage ? l.modulesManageTitle : l.modulesTitle,
+              if (state.season != null)
+                l.seasonHijriYear(state.season!.hijriYear),
+            ].join(' — '),
           ),
         ),
       ),
@@ -133,7 +157,11 @@ class _View extends StatelessWidget {
           if (state.modules.isEmpty) {
             return EmptyState(
               icon: AppIcons.modules,
-              title: canManage ? l.modulesEmptyManager : l.modulesEmpty,
+              title: canManage
+                  ? l.modulesEmptyManager
+                  : (view == ModulesView.mine
+                        ? l.modulesEmptyMine
+                        : l.modulesEmpty),
               message: canManage && state.types.isEmpty
                   ? l.moduleNoTypes
                   : null,
@@ -235,7 +263,7 @@ class _ModuleCard extends StatelessWidget {
                       '${l.moduleEndDate}: ${formatDate(module.endsOn)}',
                       style: text.bodySmall?.copyWith(
                         color: module.hasEnded
-                            ? AppColors.mediumRed
+                            ? Accent.redDeep.of(context)
                             : scheme.onSurfaceVariant,
                         fontWeight: module.hasEnded ? FontWeight.w600 : null,
                       ),
@@ -269,7 +297,7 @@ class _ModuleCard extends StatelessWidget {
                         GlassBadge(
                           label: l.moduleBadgeDraft,
                           icon: AppIcons.edit,
-                          color: AppColors.darkGold,
+                          color: Accent.gold.of(context),
                           dense: true,
                         ),
                     ],
