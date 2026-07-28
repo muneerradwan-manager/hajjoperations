@@ -809,8 +809,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String moduleSectorSuggestedName(int number) {
-    return 'Sector $number';
+  String moduleNodeSuggestedName(String level, int number) {
+    return '$level $number';
   }
 
   @override
@@ -840,12 +840,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'No other file in this season has sectors';
 
   @override
-  String moduleSectorsCount(int count) {
-    return '$count sectors';
-  }
-
-  @override
-  String get moduleNoSectors => 'No sectors have been added yet';
+  String get moduleNoNodes => 'Nothing has been added yet';
 
   @override
   String get moduleSectorsFirst =>

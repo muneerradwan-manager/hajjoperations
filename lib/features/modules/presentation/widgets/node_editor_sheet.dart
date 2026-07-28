@@ -10,6 +10,7 @@ import '../../application/module_editor_cubit.dart';
 import '../../domain/module_type.dart';
 import '../../domain/reference_item.dart';
 import '../employee_picker_screen.dart';
+import 'module_field_input.dart';
 import 'picker_sheet.dart';
 
 /// Adds or edits one place in a file — a sector, or a hotel inside one — with
@@ -25,7 +26,10 @@ Future<NodeDraft?> showNodeEditorSheet(
   required String seasonId,
   required List<Profile> employees,
   ReferenceSet? referenceSet,
+  ReferenceSet? secondarySet,
+  List<ReferenceSet> referenceSets = const [],
   Set<String> takenEntries = const {},
+  Set<String> takenSecondaryEntries = const {},
   NodeDraft? existing,
   String? suggestedLabel,
 }) {
@@ -38,7 +42,10 @@ Future<NodeDraft?> showNodeEditorSheet(
       seasonId: seasonId,
       employees: employees,
       referenceSet: referenceSet,
+      secondarySet: secondarySet,
+      referenceSets: referenceSets,
       takenEntries: takenEntries,
+      takenSecondaryEntries: takenSecondaryEntries,
       existing: existing,
       suggestedLabel: suggestedLabel,
     ),
@@ -51,7 +58,10 @@ class _NodeEditorSheet extends StatefulWidget {
     required this.seasonId,
     required this.employees,
     required this.referenceSet,
+    required this.secondarySet,
+    required this.referenceSets,
     required this.takenEntries,
+    required this.takenSecondaryEntries,
     required this.existing,
     required this.suggestedLabel,
   });
@@ -63,7 +73,17 @@ class _NodeEditorSheet extends StatefulWidget {
   /// Choosing someone new goes to the picker page, which asks the database.
   final List<Profile> employees;
   final ReferenceSet? referenceSet;
+
+  /// The list the level ties a node to, as opposed to the one it is drawn from
+  /// — the التكتلات behind a برج. Null for a level that ties to nothing.
+  final ReferenceSet? secondarySet;
+
+  /// Every list loaded, for a level field of the `reference` kind to resolve
+  /// its own against.
+  final List<ReferenceSet> referenceSets;
+
   final Set<String> takenEntries;
+  final Set<String> takenSecondaryEntries;
   final NodeDraft? existing;
   final String? suggestedLabel;
 
@@ -76,6 +96,10 @@ class _NodeEditorSheetState extends State<_NodeEditorSheet> {
     text: widget.existing?.label ?? widget.suggestedLabel ?? '',
   );
   late String? _entry = widget.existing?.referenceItemId;
+  late String? _secondary = widget.existing?.secondaryReferenceItemId;
+  late final Map<String, dynamic> _data = {
+    ...(widget.existing?.data ?? const <String, dynamic>{}),
+  };
   late final Map<String, Set<String>> _members = {
     for (final role in widget.level.roles)
       role.id: {...(widget.existing?.membersOf(role.id) ?? const <String>{})},
@@ -111,6 +135,27 @@ class _NodeEditorSheetState extends State<_NodeEditorSheet> {
     if (result != null) setState(() => _entry = result.firstOrNull);
   }
 
+  /// The second list — what this node is tied to. Same rules as the first: this
+  /// season's entries, and never one already taken elsewhere in the file, which
+  /// is the point of recording it at all.
+  Future<void> _pickSecondary() async {
+    final l = context.l10n;
+    final set = widget.secondarySet;
+    final items = set?.itemsForSeason(widget.seasonId) ?? const <ReferenceItem>[];
+    final result = await showPickerSheet(
+      context,
+      title: set?.name.of(context) ?? '',
+      options: [
+        for (final i in items)
+          if (i.id == _secondary || !widget.takenSecondaryEntries.contains(i.id))
+            PickerOption(id: i.id, label: i.name.of(context)),
+      ],
+      selected: {?_secondary},
+      emptyMessage: l.referenceEmpty,
+    );
+    if (result != null) setState(() => _secondary = result.firstOrNull);
+  }
+
   Future<void> _pickRole(ModuleRole role) async {
     final result = await showEmployeePicker(
       context,
@@ -129,7 +174,9 @@ class _NodeEditorSheetState extends State<_NodeEditorSheet> {
       NodeDraft(
         id: widget.existing?.id,
         referenceItemId: widget.level.isNamedByHand ? null : _entry,
+        secondaryReferenceItemId: widget.secondarySet == null ? null : _secondary,
         label: widget.level.isNamedByHand ? _label.text.trim() : null,
+        data: _data,
         roleMembers: _members,
       ),
     );
@@ -141,6 +188,11 @@ class _NodeEditorSheetState extends State<_NodeEditorSheet> {
     final level = widget.level;
     final entry = widget.referenceSet?.items
         .where((i) => i.id == _entry)
+        .firstOrNull;
+    // Resolved against every season's entries, never this season's: a تكتل
+    // chosen last year still has to render its name this year.
+    final secondary = widget.secondarySet?.items
+        .where((i) => i.id == _secondary)
         .firstOrNull;
 
     return Padding(
@@ -224,6 +276,49 @@ class _NodeEditorSheetState extends State<_NodeEditorSheet> {
                             ),
                           ),
                         ),
+                      // Directly beneath what the node IS: the برج is chosen,
+                      // and then the تكتل it falls under. Required, and never
+                      // one already tied to another برج in this file.
+                      if (widget.secondarySet case final set?) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                          onTap: _pickSecondary,
+                          child: InputDecorator(
+                            decoration: InputDecoration(
+                              labelText: '${set.name.of(context)} *',
+                              prefixIcon: const Icon(AppIcons.participants),
+                              suffixIcon: const Icon(Icons.arrow_drop_down),
+                            ),
+                            child: Text(
+                              secondary?.name.of(context) ??
+                                  l.moduleRoleUnassigned,
+                              style: secondary == null
+                                  ? TextStyle(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                      fontStyle: FontStyle.italic,
+                                    )
+                                  : null,
+                            ),
+                          ),
+                        ),
+                      ],
+                      // What this node carries besides its name: the الطاقة
+                      // الاستيعابية of a مخيم, and where it is. Same widget the
+                      // file's own fields use — a field is a field.
+                      for (final field in level.fields) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        ModuleFieldInput(
+                          field: field,
+                          value: _data[field.key],
+                          referenceSet: widget.referenceSets
+                              .where((s) => s.id == field.referenceSetId)
+                              .firstOrNull,
+                          onChanged: (v) => setState(() => _data[field.key] = v),
+                        ),
+                      ],
                       for (final role in level.roles) ...[
                         const SizedBox(height: AppSpacing.md),
                         _RolePicker(

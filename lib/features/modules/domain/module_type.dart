@@ -47,6 +47,7 @@ class ModuleField {
     required this.key,
     required this.label,
     required this.kind,
+    this.levelId,
     this.referenceSetId,
     this.isRequired = false,
   });
@@ -55,6 +56,11 @@ class ModuleField {
   final String key;
   final LocalizedName label;
   final ModuleFieldKind kind;
+
+  /// The tree level whose nodes carry this field — the الطاقة الاستيعابية of a
+  /// مخيم. Null for a field of the file itself, which is what every field was
+  /// until 0052.
+  final String? levelId;
 
   /// Which master-data list backs the dropdown, for [ModuleFieldKind.reference].
   final String? referenceSetId;
@@ -65,6 +71,7 @@ class ModuleField {
     key: map['key'] as String,
     label: LocalizedName.fromMap(map, prefix: 'label'),
     kind: ModuleFieldKind.fromDb(map['kind'] as String?),
+    levelId: map['level_id'] as String?,
     referenceSetId: map['reference_set_id'] as String?,
     isRequired: (map['is_required'] as bool?) ?? false,
   );
@@ -192,6 +199,8 @@ class ModuleLevel {
     required this.name,
     required this.depth,
     this.referenceSetId,
+    this.secondaryReferenceSetId,
+    this.fields = const [],
     this.roles = const [],
   });
 
@@ -203,6 +212,16 @@ class ModuleLevel {
   final int depth;
   final String? referenceSetId;
 
+  /// A second list a node here is TIED to, as opposed to what it is: a برج is a
+  /// فندق, and it belongs to a تكتل. Null for a level that ties to nothing,
+  /// which is every level but the tower.
+  final String? secondaryReferenceSetId;
+
+  /// What every node at this level carries besides its name — the الطاقة
+  /// الاستيعابية and the موقع of a مخيم. Empty for a level that asks for
+  /// nothing further.
+  final List<ModuleField> fields;
+
   /// The roles held at this level, in the order they are filled.
   final List<ModuleRole> roles;
 
@@ -210,12 +229,17 @@ class ModuleLevel {
   /// (a sector).
   bool get isNamedByHand => referenceSetId == null;
 
-  ModuleLevel withRoles(List<ModuleRole> roles) => ModuleLevel(
+  ModuleLevel withRolesAndFields(
+    List<ModuleRole> roles,
+    List<ModuleField> fields,
+  ) => ModuleLevel(
     id: id,
     code: code,
     name: name,
     depth: depth,
     referenceSetId: referenceSetId,
+    secondaryReferenceSetId: secondaryReferenceSetId,
+    fields: fields,
     roles: roles,
   );
 
@@ -225,6 +249,7 @@ class ModuleLevel {
     name: LocalizedName.fromMap(map),
     depth: (map['depth'] as int?) ?? 1,
     referenceSetId: map['reference_set_id'] as String?,
+    secondaryReferenceSetId: map['secondary_reference_set_id'] as String?,
   );
 }
 
@@ -339,6 +364,11 @@ class ModuleType {
     final roles = _bySortOrder(
       map['module_type_roles'],
     ).map(ModuleRole.fromMap).toList();
+    // Fields are sorted the same way: whatever names a level is carried by
+    // every node at it, and whatever names none belongs to the file.
+    final fields = _bySortOrder(
+      map['module_type_fields'],
+    ).map(ModuleField.fromMap).toList();
     final levels = (((map['module_type_levels'] as List?) ?? const [])
             .cast<Map<String, dynamic>>())
         .map(ModuleLevel.fromMap)
@@ -358,9 +388,7 @@ class ModuleType {
       endCondition: map['end_condition_ar'] == null
           ? null
           : LocalizedName.fromMap(map, prefix: 'end_condition'),
-      fields: _bySortOrder(map['module_type_fields'])
-          .map(ModuleField.fromMap)
-          .toList(),
+      fields: fields.where((f) => f.levelId == null).toList(),
       tasks: _bySortOrder(map['module_type_tasks'])
           .map(RoleTask.fromMap)
           .toList(),
@@ -370,7 +398,10 @@ class ModuleType {
       roles: roles.where((r) => r.levelId == null).toList(),
       levels: [
         for (final level in levels)
-          level.withRoles(roles.where((r) => r.levelId == level.id).toList()),
+          level.withRolesAndFields(
+            roles.where((r) => r.levelId == level.id).toList(),
+            fields.where((f) => f.levelId == level.id).toList(),
+          ),
       ],
     );
   }

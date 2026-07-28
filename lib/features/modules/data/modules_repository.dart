@@ -291,7 +291,9 @@ class ModulesRepository {
     required String levelId,
     String? parentId,
     String? referenceItemId,
+    String? secondaryReferenceItemId,
     String? label,
+    Map<String, dynamic> data = const {},
     int sortOrder = 0,
   }) async {
     final row = await supabase
@@ -301,7 +303,9 @@ class ModulesRepository {
           'level_id': levelId,
           'parent_id': parentId,
           'reference_item_id': referenceItemId,
+          'secondary_reference_item_id': secondaryReferenceItemId,
           'label': label,
+          'data': data,
           'sort_order': sortOrder,
         })
         .select('id')
@@ -312,11 +316,18 @@ class ModulesRepository {
   Future<void> updateNode(
     String id, {
     String? referenceItemId,
+    String? secondaryReferenceItemId,
     String? label,
+    Map<String, dynamic> data = const {},
   }) async {
     await supabase
         .from('module_nodes')
-        .update({'reference_item_id': referenceItemId, 'label': label})
+        .update({
+          'reference_item_id': referenceItemId,
+          'secondary_reference_item_id': secondaryReferenceItemId,
+          'label': label,
+          'data': data,
+        })
         .eq('id', id);
   }
 

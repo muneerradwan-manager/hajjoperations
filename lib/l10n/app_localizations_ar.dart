@@ -808,8 +808,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String moduleSectorSuggestedName(int number) {
-    return 'القطاع $number';
+  String moduleNodeSuggestedName(String level, int number) {
+    return '$level $number';
   }
 
   @override
@@ -841,12 +841,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا يوجد ملف آخر في هذا الموسم فيه قطاعات';
 
   @override
-  String moduleSectorsCount(int count) {
-    return '$count قطاعاً';
-  }
-
-  @override
-  String get moduleNoSectors => 'لم تُضف أي قطاعات بعد';
+  String get moduleNoNodes => 'لم يُضف شيء بعد';
 
   @override
   String get moduleSectorsFirst => 'أضف القطاعات أولاً، ثم وزّع الفنادق عليها';

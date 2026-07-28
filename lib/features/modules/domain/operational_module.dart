@@ -83,7 +83,9 @@ class ModuleNode {
     required this.levelId,
     this.parentId,
     this.referenceItemId,
+    this.secondaryReferenceItemId,
     this.label,
+    this.data = const {},
     this.sortOrder = 0,
     this.members = const [],
   });
@@ -96,7 +98,18 @@ class ModuleNode {
   final String? parentId;
 
   final String? referenceItemId;
+
+  /// The entry chosen from the level's SECOND list — what this node is tied to
+  /// rather than what it is: the تكتل a برج falls under. Null for a level that
+  /// names no such list.
+  final String? secondaryReferenceItemId;
+
   final String? label;
+
+  /// The values of this node's level fields, keyed by field key — the same
+  /// shape `modules.data` has for the file's own fields.
+  final Map<String, dynamic> data;
+
   final int sortOrder;
   final List<ModuleMember> members;
 
@@ -112,7 +125,9 @@ class ModuleNode {
     levelId: levelId,
     parentId: parentId,
     referenceItemId: referenceItemId,
+    secondaryReferenceItemId: secondaryReferenceItemId,
     label: label,
+    data: data,
     sortOrder: sortOrder,
     members: members,
   );
@@ -128,7 +143,9 @@ class ModuleNode {
       levelId: map['level_id'] as String,
       parentId: map['parent_id'] as String?,
       referenceItemId: map['reference_item_id'] as String?,
+      secondaryReferenceItemId: map['secondary_reference_item_id'] as String?,
       label: map['label'] as String?,
+      data: Map<String, dynamic>.from((map['data'] as Map?) ?? const {}),
       sortOrder: (map['sort_order'] as int?) ?? 0,
       members: members,
     );

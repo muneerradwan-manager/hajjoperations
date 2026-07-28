@@ -244,19 +244,8 @@ class _Body extends StatelessWidget {
   final void Function(ModuleFile file) onOpenPdf;
   final VoidCallback onBuildTree;
 
-  /// Renders a stored value the way its field kind means it to be read.
-  String _display(BuildContext context, ModuleField field) {
-    final value = module.data[field.key];
-    return switch (field.kind) {
-      ModuleFieldKind.reference =>
-        state.referenceItem(field.referenceSetId, value)?.name.of(context) ?? '',
-      ModuleFieldKind.date => formatDate(
-        value is String ? DateTime.tryParse(value) : null,
-      ),
-      ModuleFieldKind.pdf => ModuleFile.fromJson(value)?.name ?? '',
-      _ => value?.toString() ?? '',
-    };
-  }
+  String _display(BuildContext context, ModuleField field) =>
+      displayFieldValue(context, state, field, module.data[field.key]);
 
   @override
   Widget build(BuildContext context) {
@@ -364,13 +353,20 @@ class _Body extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(l.moduleNoSectors),
+                      Text(l.moduleNoNodes),
                       if (canManage) ...[
                         const SizedBox(height: AppSpacing.md),
                         OutlinedButton.icon(
                           onPressed: onBuildTree,
                           icon: const Icon(AppIcons.add),
-                          label: Text(l.moduleBuildTree),
+                          // Named by the level, so the same button offers
+                          // "إضافة القطاع" on one file and "إضافة المركز" on
+                          // another.
+                          label: Text(
+                            sectorLevel == null
+                                ? l.moduleBuildTree
+                                : l.moduleNodeAdd(sectorLevel.name.of(context)),
+                          ),
                         ),
                       ],
                     ],
@@ -538,6 +534,13 @@ class _TowerCard extends StatelessWidget {
       level.referenceSetId,
       tower.referenceItemId,
     );
+    // What the tower is tied to — its تكتل. Resolved against every season's
+    // entries, never just this one: last season's file must still read.
+    final tied = state.referenceItem(
+      level.secondaryReferenceSetId,
+      tower.secondaryReferenceItemId,
+    );
+    final tiedSet = state.referenceSetById(level.secondaryReferenceSetId);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -556,8 +559,50 @@ class _TowerCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
+                if (tied != null)
+                  GlassBadge(
+                    label: tied.name.of(context),
+                    icon: AppIcons.participants,
+                    dense: true,
+                  ),
               ],
             ),
+            if (tiedSet != null && tied == null)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.xs),
+                child: Text(
+                  '${tiedSet.name.of(context)}: ${l.moduleRoleUnassigned}',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            // What the node itself carries — the الطاقة الاستيعابية of a مخيم,
+            // and where it is. Empty for a level that asks for nothing further,
+            // which is every level but one.
+            for (final field in level.fields)
+              if (displayFieldValue(context, state, field, tower.data[field.key])
+                  case final text when text.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.xs),
+                  child: Row(
+                    children: [
+                      Text(
+                        '${field.label.of(context)}: ',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          text,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
             if (tower.members.isEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: AppSpacing.sm),
@@ -963,6 +1008,26 @@ class _MemberTile extends StatelessWidget {
   }
 }
 
+
+/// Renders a stored value the way its field kind means it to be read.
+///
+/// Takes the value rather than reading it off the file, because a node carries
+/// its own now: the الطاقة الاستيعابية of a مخيم is the same kind of fact as a
+/// field of the file, and is read the same way.
+String displayFieldValue(
+  BuildContext context,
+  ModuleDetailState state,
+  ModuleField field,
+  Object? value,
+) => switch (field.kind) {
+  ModuleFieldKind.reference =>
+    state.referenceItem(field.referenceSetId, value)?.name.of(context) ?? '',
+  ModuleFieldKind.date => formatDate(
+    value is String ? DateTime.tryParse(value) : null,
+  ),
+  ModuleFieldKind.pdf => ModuleFile.fromJson(value)?.name ?? '',
+  _ => value?.toString() ?? '',
+};
 
 /// The reports of one file: a way in for whoever is in it, and the ones already
 /// filed underneath.

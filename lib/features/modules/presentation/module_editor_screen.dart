@@ -20,16 +20,18 @@ import 'widgets/module_field_input.dart';
 import 'widgets/node_editor_sheet.dart';
 import 'widgets/picker_sheet.dart';
 
-/// Builds one operational file, in the order it is really built. A file with a
-/// tree takes three steps:
+/// Builds one operational file, in the order it is really built. How many steps
+/// it takes is the TYPE's answer, not a constant — see [EditorStep]:
 ///
-///   1. the file itself — when work at the towers starts, and its attachments;
-///   2. its sectors — each named, with a supervisor and his deputies;
-///   3. the hotels inside each sector, and who runs each tower.
+///   * the file itself — when the work starts, and its attachments — always;
+///   * the outermost division, when the type has one: قطاعات, or مراكز;
+///   * what sits inside that, when a level does: the hotels of a sector, the
+///     camps of a center;
+///   * the teams held once for the whole file, when the type has any.
 ///
-/// A file that is only a roster — الطوافة والنقل — takes two: the file, then
-/// its people, a مشرف and as many أعضاء as the work needs, each handed the
-/// duties that are his.
+/// So قطاعات وأبراج takes three, الطوافة والنقل takes two, and تشكيل فرق المشاعر
+/// takes three of a different shape — sectors, then its two file-wide teams,
+/// and no towers step at all.
 ///
 /// Each step is saved as it is finished, because a file is assembled over days:
 /// the sectors are known long before the last hotel is confirmed. Pops `true`
@@ -259,18 +261,30 @@ class _ViewState extends State<_View> {
       seasonId: cubit.seasonId,
       employees: state.employees,
       referenceSet: state.referenceSetById(level.referenceSetId),
+      secondarySet: state.referenceSetById(level.secondaryReferenceSetId),
+      referenceSets: state.referenceSets,
       takenEntries: state.takenEntries(level.id, except: node?.id),
+      takenSecondaryEntries: state.takenSecondaryEntries(
+        level.id,
+        except: node?.id,
+      ),
       suggestedLabel: node != null || !level.isNamedByHand
           ? null
-          : context.l10n.moduleSectorSuggestedName(
-              state.parentNodes.length + 1,
+          : context.l10n.moduleNodeSuggestedName(
+              level.name.of(context),
+              (parent == null
+                      ? state.parentNodes.length
+                      : state.childrenOf(parent.id).length) +
+                  1,
             ),
       existing: node == null
           ? null
           : NodeDraft(
               id: node.id,
               referenceItemId: node.referenceItemId,
+              secondaryReferenceItemId: node.secondaryReferenceItemId,
               label: node.label,
+              data: node.data,
               roleMembers: {
                 for (final role in level.roles)
                   role.id: node.profileIdsOf(role.id),
@@ -336,12 +350,17 @@ class _ViewState extends State<_View> {
     // Named by the type rather than counted: a file with no tree has nothing to
     // divide into sectors, one that stops at the sector has no towers step, and
     // one whose roles are held on the file itself ends with its teams.
+    // The two tree steps are named by the LEVEL, not by the word "sector": the
+    // same two steps divide a file into قطاعات وأبراج, and another into مراكز
+    // ومخيمات. A hard-coded label would be wrong on every file but the first.
     final steps = [
       for (final kind in state.stepKinds)
         switch (kind) {
           EditorStep.info => l.moduleStepInfo,
-          EditorStep.sectors => l.moduleStepSectors,
-          EditorStep.towers => l.moduleStepTowers,
+          EditorStep.sectors =>
+            state.parentLevel?.name.of(context) ?? l.moduleStepSectors,
+          EditorStep.towers =>
+            state.childLevel?.name.of(context) ?? l.moduleStepTowers,
           EditorStep.teams => l.moduleStepMembers,
         },
     ];
@@ -700,14 +719,22 @@ class _NodesStep extends StatelessWidget {
       child: ListView(
         padding: context.scrollPadding(),
         children: staggered([
+          // Named by the level and counted beside it, so the same header serves
+          // "القطاع 3" and "المركز 3" without a string per file.
           SectionHeader(
-            l.moduleSectorsCount(sectors.length),
+            level.name.of(context),
             icon: AppIcons.roles,
+            trailing: Text(
+              '${sectors.length}',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
           ),
           if (sectors.isEmpty)
             GlassCard(
               padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Text(l.moduleNoSectors),
+              child: Text(l.moduleNoNodes),
             ),
           for (final sector in sectors) ...[
             _NodeCard(
@@ -725,13 +752,17 @@ class _NodesStep extends StatelessWidget {
             icon: const Icon(AppIcons.add),
             label: Text(l.moduleNodeAdd(level.name.of(context))),
           ),
-          // The same قطاعات stand in more than one file. Typing them twice is
-          // how two files start disagreeing about who runs one.
-          TextButton.icon(
-            onPressed: state.isCreated ? onImport : null,
-            icon: const Icon(AppIcons.download, size: 18),
-            label: Text(l.moduleSectorsImport),
-          ),
+          // Offered only where it means something: another file of this season
+          // divided by the SAME level. The same قطاعات stand in two files and
+          // typing them twice is how those files start disagreeing about who
+          // runs one — but a مركز at عرفات is not a قطاع in Makkah, and there
+          // the offer would be nonsense.
+          if (state.sectorSourceTypeIds.isNotEmpty)
+            TextButton.icon(
+              onPressed: state.isCreated ? onImport : null,
+              icon: const Icon(AppIcons.download, size: 18),
+              label: Text(l.moduleSectorsImport),
+            ),
         ]),
       ),
     );
@@ -765,7 +796,7 @@ class _TowersStep extends StatelessWidget {
     if (sectors.isEmpty) {
       return EmptyState(
         icon: AppIcons.roles,
-        title: l.moduleNoSectors,
+        title: l.moduleNoNodes,
         message: l.moduleSectorsFirst,
       );
     }
@@ -1037,6 +1068,12 @@ class _NodeCard extends StatelessWidget {
       node.referenceItemId,
     );
     final name = entry?.name.of(context) ?? node.label ?? '—';
+    // What it is tied to — the تكتل of a برج — shown beside the name, because a
+    // tree half-entered is the thing this step exists to make visible.
+    final tied = state.referenceItem(
+      level.secondaryReferenceSetId,
+      node.secondaryReferenceItemId,
+    );
 
     return GlassCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -1062,6 +1099,14 @@ class _NodeCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              if (tied != null) ...[
+                GlassBadge(
+                  label: tied.name.of(context),
+                  icon: AppIcons.participants,
+                  dense: true,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+              ],
               IconButton(
                 tooltip: context.l10n.commonEdit,
                 visualDensity: VisualDensity.compact,

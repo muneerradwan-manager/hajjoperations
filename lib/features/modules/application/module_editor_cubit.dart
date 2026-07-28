@@ -45,7 +45,9 @@ class NodeDraft {
   const NodeDraft({
     this.id,
     this.referenceItemId,
+    this.secondaryReferenceItemId,
     this.label,
+    this.data = const {},
     this.roleMembers = const {},
   });
 
@@ -56,8 +58,16 @@ class NodeDraft {
   /// a list.
   final String? referenceItemId;
 
+  /// The entry from the level's second list — the تكتل a برج belongs to. Null
+  /// for a level that names no such list.
+  final String? secondaryReferenceItemId;
+
   /// Its name, for levels that have none (a sector).
   final String? label;
+
+  /// The values of the level's own fields — a مخيم's الطاقة الاستيعابية and its
+  /// موقع.
+  final Map<String, dynamic> data;
 
   final Map<String, Set<String>> roleMembers;
 
@@ -78,6 +88,7 @@ class ModuleEditorState extends Equatable {
     this.members = const [],
     this.employees = const [],
     this.referenceSets = const [],
+    this.sectorSourceTypeIds = const {},
     this.error,
   });
 
@@ -114,6 +125,12 @@ class ModuleEditorState extends Equatable {
 
   final List<Profile> employees;
   final List<ReferenceSet> referenceSets;
+
+  /// The types whose outermost level means the SAME THING as this file's — the
+  /// only files worth importing from. Empty when nothing else divides the way
+  /// this file does, and then the offer is not made at all.
+  final Set<String> sectorSourceTypeIds;
+
   final String? error;
 
   bool get isCreated => moduleId != null;
@@ -187,6 +204,16 @@ class ModuleEditorState extends Equatable {
         n.referenceItemId!,
   };
 
+  /// The same for the level's second list: a تكتل is tied to one برج, and the
+  /// database has its own unique index saying so.
+  Set<String> takenSecondaryEntries(String levelId, {String? except}) => {
+    for (final n in nodes)
+      if (n.levelId == levelId &&
+          n.id != except &&
+          n.secondaryReferenceItemId != null)
+        n.secondaryReferenceItemId!,
+  };
+
   ModuleEditorState copyWith({
     EditorStatus? status,
     int? step,
@@ -200,6 +227,7 @@ class ModuleEditorState extends Equatable {
     List<ModuleMember>? members,
     List<Profile>? employees,
     List<ReferenceSet>? referenceSets,
+    Set<String>? sectorSourceTypeIds,
     String? error,
   }) {
     return ModuleEditorState(
@@ -215,6 +243,7 @@ class ModuleEditorState extends Equatable {
       members: members ?? this.members,
       employees: employees ?? this.employees,
       referenceSets: referenceSets ?? this.referenceSets,
+      sectorSourceTypeIds: sectorSourceTypeIds ?? this.sectorSourceTypeIds,
       error: error,
     );
   }
@@ -233,6 +262,7 @@ class ModuleEditorState extends Equatable {
     members,
     employees,
     referenceSets,
+    sectorSourceTypeIds,
     error,
   ];
 }
@@ -285,6 +315,18 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
           ? const <ModuleMember>[]
           : await _repo.fetchMembers(existing!.id);
 
+      // Which other types divide the way this one does. Worked out once, here,
+      // so the sectors step knows whether to offer the import at all rather
+      // than offering it and then admitting there is nothing to take.
+      final myLevel = type.outermostLevel;
+      final sourceTypeIds = myLevel == null
+          ? const <String>{}
+          : {
+              for (final t in await _repo.fetchModuleTypes(activeOnly: false))
+                if (t.id != type.id && t.outermostLevel?.code == myLevel.code)
+                  t.id,
+            };
+
       emit(
         state.copyWith(
           status: EditorStatus.ready,
@@ -297,6 +339,7 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
           members: members,
           employees: employees,
           referenceSets: sets,
+          sectorSourceTypeIds: sourceTypeIds,
         ),
       );
     } catch (e) {
@@ -431,6 +474,19 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
     } else if (draft.referenceItemId == null) {
       return SaveResult(SaveOutcome.missingEntry, name: level.name);
     }
+    // A level that names a second list asks for it too: the تكتل is half of
+    // what entering a برج means, and a tower without one is the gap this was
+    // added to close.
+    if (level.secondaryReferenceSetId != null &&
+        draft.secondaryReferenceItemId == null) {
+      return SaveResult(SaveOutcome.missingEntry, name: level.name);
+    }
+    for (final f in level.fields.where((f) => f.isRequired)) {
+      final v = draft.data[f.key];
+      if (v == null || (v is String && v.trim().isEmpty)) {
+        return SaveResult(SaveOutcome.missingField, name: f.label);
+      }
+    }
     for (final r in level.roles.where((r) => r.isRequired)) {
       if (draft.membersOf(r.id).isEmpty) {
         return SaveResult(SaveOutcome.missingRole, name: r.name);
@@ -449,14 +505,18 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
           levelId: level.id,
           parentId: parentId,
           referenceItemId: draft.referenceItemId,
+          secondaryReferenceItemId: draft.secondaryReferenceItemId,
           label: draft.label?.trim(),
+          data: draft.data,
           sortOrder: siblings.length + 1,
         );
       } else {
         await _repo.updateNode(
           id,
           referenceItemId: draft.referenceItemId,
+          secondaryReferenceItemId: draft.secondaryReferenceItemId,
           label: draft.label?.trim(),
+          data: draft.data,
         );
       }
 
@@ -530,24 +590,19 @@ class ModuleEditorCubit extends Cubit<ModuleEditorState> {
     }
   }
 
-  /// The other files of this season that have sectors to be taken from.
+  /// The other files of this season worth importing from.
   ///
-  /// A file qualifies when its type is divided by a level that is named by hand
-  /// — a level drawn from a master list holds hotels, not sectors. The list is
-  /// worked out here rather than left to the database so that a file with
-  /// nothing to give is never offered in the first place.
+  /// Only files whose outermost level is the SAME level, by code. A قطاع and a
+  /// مركز are both a division of a file, and there the likeness ends: one is a
+  /// stretch of towers in Makkah, the other a station at عرفات, and offering to
+  /// copy between them would be offering nonsense.
   Future<List<OperationalModule>> sectorSources() async {
+    final allowed = state.sectorSourceTypeIds;
+    if (allowed.isEmpty) return const [];
     try {
-      final types = await _repo.fetchModuleTypes(activeOnly: false);
-      final withSectors = {
-        for (final t in types)
-          if (t.outermostLevel?.isNamedByHand ?? false) t.id,
-      };
       final modules = await _repo.fetchModules(seasonId: seasonId);
       return modules
-          .where(
-            (m) => m.id != state.moduleId && withSectors.contains(m.moduleTypeId),
-          )
+          .where((m) => m.id != state.moduleId && allowed.contains(m.moduleTypeId))
           .toList();
     } catch (_) {
       return const [];

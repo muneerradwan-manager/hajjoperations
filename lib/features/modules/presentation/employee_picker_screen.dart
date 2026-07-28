@@ -165,8 +165,9 @@ class _ViewState extends State<_View> {
                   ),
                   PickerStatus.ready when state.people.isEmpty => EmptyState(
                     icon: AppIcons.search,
-                    title: state.query.isEmpty && state.filter ==
-                            ParticipantFilter.all
+                    title:
+                        state.query.isEmpty &&
+                            state.filter == ParticipantFilter.all
                         ? l.moduleNoParticipants
                         : l.modulePickerNoMatches,
                   ),
@@ -273,7 +274,7 @@ class _SearchBarState extends State<_SearchBar> {
       child: Padding(
         padding: EdgeInsets.fromLTRB(
           AppSpacing.lg,
-          MediaQuery.paddingOf(context).top + kToolbarHeight + AppSpacing.sm,
+          MediaQuery.paddingOf(context).top + AppSpacing.sm,
           AppSpacing.lg,
           AppSpacing.sm,
         ),
@@ -384,7 +385,8 @@ class _CandidateTile extends StatelessWidget {
                         ],
                       ],
                     ),
-                    if ((profile.jobTitleName?.of(context) ?? '').isNotEmpty) ...[
+                    if ((profile.jobTitleName?.of(context) ?? '')
+                        .isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
                         profile.jobTitleName!.of(context),
@@ -402,9 +404,7 @@ class _CandidateTile extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         profile.externalOrganization!,
-                        style: text.bodySmall?.copyWith(
-                          color: scheme.tertiary,
-                        ),
+                        style: text.bodySmall?.copyWith(color: scheme.tertiary),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -444,12 +444,12 @@ class _CandidateTile extends StatelessWidget {
               spacing: AppSpacing.sm,
               runSpacing: AppSpacing.xs,
               children: [
+                // No year: these are this season's files and nothing else, so
+                // stamping every badge with the same number said nothing and
+                // took the room the file's own name needed.
                 for (final file in person.files)
                   GlassBadge(
-                    label: file.seasonHijriYear == null
-                        ? file.name.of(context)
-                        : '${file.name.of(context)} · '
-                              '${file.seasonHijriYear}',
+                    label: file.name.of(context),
                     icon: AppIcons.modules,
                     dense: true,
                   ),
@@ -485,9 +485,9 @@ class _Footer extends StatelessWidget {
               )
             : Text(
                 context.l10n.moduleMembersCount(count),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
               ),
       ),
     );

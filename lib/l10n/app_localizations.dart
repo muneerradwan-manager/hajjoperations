@@ -1610,11 +1610,11 @@ abstract class AppLocalizations {
   /// **'Delete “{name}”? Everything inside it goes with it.'**
   String moduleNodeDeleteConfirm(String name);
 
-  /// No description provided for @moduleSectorSuggestedName.
+  /// No description provided for @moduleNodeSuggestedName.
   ///
   /// In en, this message translates to:
-  /// **'Sector {number}'**
-  String moduleSectorSuggestedName(int number);
+  /// **'{level} {number}'**
+  String moduleNodeSuggestedName(String level, int number);
 
   /// No description provided for @moduleSectorsImport.
   ///
@@ -1646,17 +1646,11 @@ abstract class AppLocalizations {
   /// **'No other file in this season has sectors'**
   String get moduleSectorsImportNoSources;
 
-  /// No description provided for @moduleSectorsCount.
+  /// No description provided for @moduleNoNodes.
   ///
   /// In en, this message translates to:
-  /// **'{count} sectors'**
-  String moduleSectorsCount(int count);
-
-  /// No description provided for @moduleNoSectors.
-  ///
-  /// In en, this message translates to:
-  /// **'No sectors have been added yet'**
-  String get moduleNoSectors;
+  /// **'Nothing has been added yet'**
+  String get moduleNoNodes;
 
   /// No description provided for @moduleSectorsFirst.
   ///

@@ -186,6 +186,11 @@ class ModuleDetailState extends Equatable {
     ];
   }
 
+  /// One master-data list by id — used to NAME the list itself, where the
+  /// reader needs to be told what is missing rather than shown a blank.
+  ReferenceSet? referenceSetById(String? id) =>
+      id == null ? null : referenceSets.where((s) => s.id == id).firstOrNull;
+
   /// Resolves a stored reference id to its display name.
   ReferenceItem? referenceItem(String? setId, Object? value) {
     if (setId == null || value is! String) return null;

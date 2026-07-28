@@ -313,6 +313,12 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
 }
 
 /// Small translucent label — status chips, role badges, counters.
+///
+/// It gives way rather than overflowing. A badge carries whatever name the
+/// database holds, and some of those are sentences: "تشكيل فرق المشاعر (منى يوم
+/// التروية، عرفات، منى أيام التشريق)" is the name of a file, and it appeared in
+/// a badge beside a season year. A pill is the smallest thing on the screen and
+/// must never be what breaks the layout around it.
 class GlassBadge extends StatelessWidget {
   const GlassBadge({
     super.key,
@@ -349,13 +355,19 @@ class GlassBadge extends StatelessWidget {
             Icon(icon, size: dense ? 11 : 13, color: tone),
             const SizedBox(width: 5),
           ],
-          Text(
-            label,
-            style: TextStyle(
-              color: tone,
-              fontWeight: FontWeight.w700,
-              fontSize: dense ? 10.5 : 12,
-              height: 1.2,
+          // Loose, so the pill still hugs a short label and only gives way when
+          // there is not room for a long one.
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: tone,
+                fontWeight: FontWeight.w700,
+                fontSize: dense ? 10.5 : 12,
+                height: 1.2,
+              ),
             ),
           ),
         ],
