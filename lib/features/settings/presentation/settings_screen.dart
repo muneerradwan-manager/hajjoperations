@@ -9,7 +9,7 @@ import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/blocking_progress.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/info_section.dart';
-import '../../../core/widgets/responsive_center.dart';
+import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/selection_indicator.dart';
 import '../../auth/data/auth_repository.dart';
 
@@ -56,67 +56,77 @@ class SettingsScreen extends StatelessWidget {
       extendBodyBehindAppBar: true,
       appBar: GlassAppBar(title: Text(l.commonSettings)),
       body: Builder(
-        builder: (context) => ResponsiveCenter(
-          child: ListView(
-            padding: context.scrollPadding(),
+        builder: (context) => ResponsivePage(
+          builder: (context, size) => SinglePaneLayout(
+            gutter: size.gutter,
             children: staggered([
-              InfoSection(
-                title: l.settingsLanguage,
-                icon: AppIcons.language,
+              // Three independent settings, none of which needs to be read
+              // before another — so on a wide window they stand side by side
+              // rather than in a queue the length of the screen.
+              AdaptiveGrid(
+                minTileWidth: 320,
+                maxColumns: 3,
                 children: [
-                  _Choice(
-                    label: l.languageArabic,
-                    selected: state.locale?.languageCode == 'ar',
-                    onTap: () => settings.setLocale(const Locale('ar')),
-                  ),
-                  _Choice(
-                    label: l.languageEnglish,
-                    selected: state.locale?.languageCode == 'en',
-                    onTap: () => settings.setLocale(const Locale('en')),
-                  ),
-                  _Choice(
-                    label: l.settingsLanguageSystem,
-                    selected: state.locale == null,
-                    onTap: () => settings.setLocale(null),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              InfoSection(
-                title: l.settingsTheme,
-                icon: AppIcons.theme,
-                children: [
-                  for (final (mode, label) in <(ThemeMode, String)>[
-                    (ThemeMode.system, l.themeSystem),
-                    (ThemeMode.light, l.themeLight),
-                    (ThemeMode.dark, l.themeDark),
-                  ])
-                    _Choice(
-                      label: label,
-                      selected: state.themeMode == mode,
-                      onTap: () => settings.setThemeMode(mode),
-                    ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              InfoSection(
-                title: l.navNotifications,
-                icon: AppIcons.notifications,
-                children: [
-                  SwitchListTile(
-                    value: state.notificationsEnabled,
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l.settingsNotifications),
-                    // Said plainly, because the switch does less than it looks
-                    // like it does: the message still arrives, the phone just
-                    // stays quiet about it.
-                    subtitle: Text(
-                      l.settingsNotificationsHint,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  InfoSection(
+                    title: l.settingsLanguage,
+                    icon: AppIcons.language,
+                    children: [
+                      _Choice(
+                        label: l.languageArabic,
+                        selected: state.locale?.languageCode == 'ar',
+                        onTap: () => settings.setLocale(const Locale('ar')),
                       ),
-                    ),
-                    onChanged: settings.setNotificationsEnabled,
+                      _Choice(
+                        label: l.languageEnglish,
+                        selected: state.locale?.languageCode == 'en',
+                        onTap: () => settings.setLocale(const Locale('en')),
+                      ),
+                      _Choice(
+                        label: l.settingsLanguageSystem,
+                        selected: state.locale == null,
+                        onTap: () => settings.setLocale(null),
+                      ),
+                    ],
+                  ),
+                  InfoSection(
+                    title: l.settingsTheme,
+                    icon: AppIcons.theme,
+                    children: [
+                      for (final (mode, label) in <(ThemeMode, String)>[
+                        (ThemeMode.system, l.themeSystem),
+                        (ThemeMode.light, l.themeLight),
+                        (ThemeMode.dark, l.themeDark),
+                      ])
+                        _Choice(
+                          label: label,
+                          selected: state.themeMode == mode,
+                          onTap: () => settings.setThemeMode(mode),
+                        ),
+                    ],
+                  ),
+                  InfoSection(
+                    title: l.navNotifications,
+                    icon: AppIcons.notifications,
+                    children: [
+                      SwitchListTile(
+                        value: state.notificationsEnabled,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(l.settingsNotifications),
+                        // Said plainly, because the switch does less than it
+                        // looks like it does: the message still arrives, the
+                        // phone just stays quiet about it.
+                        subtitle: Text(
+                          l.settingsNotificationsHint,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                        onChanged: settings.setNotificationsEnabled,
+                      ),
+                    ],
                   ),
                 ],
               ),

@@ -6,7 +6,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
-import '../../../core/widgets/responsive_center.dart';
+import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../application/reference_data_cubit.dart';
 import '../../seasons/data/seasons_repository.dart';
@@ -43,7 +43,7 @@ class _View extends StatelessWidget {
       body: BlocBuilder<ReferenceDataCubit, ReferenceDataState>(
         builder: (context, state) {
           if (state.status == ReferenceDataStatus.loading) {
-            return const SkeletonList();
+            return const SkeletonList(minTileWidth: 300);
           }
           if (state.status == ReferenceDataStatus.error) {
             return EmptyState(
@@ -62,18 +62,18 @@ class _View extends StatelessWidget {
             );
           }
 
-          return ResponsiveCenter(
-            child: RefreshIndicator(
+          return ResponsivePage(
+            builder: (context, size) => SinglePaneLayout(
+              gutter: size.gutter,
               onRefresh: () => context.read<ReferenceDataCubit>().load(),
-              child: ListView(
-                padding: context.scrollPadding(),
-                children: staggered([
-                  for (final set in state.sets) ...[
-                    _SetCard(set: set),
-                    const SizedBox(height: AppSpacing.md),
-                  ],
-                ]),
-              ),
+              children: [
+                AdaptiveGrid(
+                  minTileWidth: 300,
+                  children: staggered([
+                    for (final set in state.sets) _SetCard(set: set),
+                  ]),
+                ),
+              ],
             ),
           );
         },

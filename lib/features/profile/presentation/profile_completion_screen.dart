@@ -18,7 +18,19 @@ import '../domain/profile.dart';
 import '../domain/profile_enums.dart';
 import '../../../core/widgets/blocking_progress.dart';
 import '../../../core/widgets/glass.dart';
+import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
+
+/// Where this form stops widening, which is well short of where a page would.
+///
+/// A form is the one thing on a monitor that must NOT take the room it is
+/// offered. A text field five hundred pixels wide is harder to use than one at
+/// three hundred, not easier: the eye has to travel back across it to check
+/// what was typed, and the pointer has to cross it to reach the next one. So
+/// the width here buys a second COLUMN of ordinary fields beside the portrait,
+/// and then stops — the space left over is not waste, it is the reason the form
+/// is still readable.
+const _formMaxWidth = 1100.0;
 
 class ProfileCompletionScreen extends StatelessWidget {
   const ProfileCompletionScreen({super.key, this.existing});
@@ -188,110 +200,147 @@ class _ProfileCompletionViewState extends State<_ProfileCompletionView> {
   ) {
     final submitting = state.status == ProfileFormStatus.submitting;
 
+    final portrait = Center(
+      child: ImagePickerField(
+        label: l.profilePhoto,
+        file: _photo,
+        circular: true,
+        existingUrl: widget.existing?.photoUrl,
+        errorText: _photoError ? l.commonRequired : null,
+        onPicked: (f) => setState(() {
+          _photo = f;
+          _photoError = false;
+        }),
+      ),
+    );
+
+    // The ordinary fields, in the order they are asked in. Handing them to the
+    // grid as one list rather than as pre-built rows is what lets the same list
+    // be one column on a phone and two on a monitor without being written
+    // twice — and it keeps the reading order the tab key follows.
+    final fields = <Widget>[
+      _text(_firstName, l.profileFirstName, AppIcons.firstName),
+      _text(_fatherName, l.profileFatherName, AppIcons.fatherName),
+      _text(_surname, l.profileSurname, AppIcons.surname),
+      _cityDropdown(l, state.cities),
+      _jobTitleDropdown(l, state.jobTitles),
+      _genderDropdown(l),
+      _missionDropdown(l),
+      _dobField(l),
+      _text(
+        _phoneSy,
+        l.profilePhoneSy,
+        AppIcons.phoneSy,
+        keyboard: TextInputType.phone,
+      ),
+      _text(
+        _phoneSa,
+        '${l.profilePhoneSa} (${l.commonOptional})',
+        AppIcons.phoneSa,
+        keyboard: TextInputType.phone,
+        required: false,
+      ),
+    ];
+
+    final body = <Widget>[
+      if (!_isEdit) ...[
+        Text(
+          l.profileCompleteSubtitle,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.xl),
+      ],
+      // Two columns at most, however wide the window. A form read in more than
+      // two columns stops being a sequence of questions and becomes a page to
+      // search, and the answer to "which field comes next" stops being obvious.
+      AdaptiveGrid(
+        minTileWidth: 300,
+        maxColumns: 2,
+        spacing: AppSpacing.lg,
+        equalHeights: false,
+        children: fields,
+      ),
+      const SizedBox(height: 28),
+      _DocumentsSection(
+        title: l.profileDocumentsSection,
+        passportLabel: l.profilePassportPhoto,
+        visaLabel: l.profileVisaPhoto,
+        nusukLabel: l.profileNusukPhoto,
+        passport: _passport,
+        visa: _visa,
+        nusuk: _nusuk,
+        onPassport: (f) => setState(() => _passport = f),
+        onVisa: (f) => setState(() => _visa = f),
+        onNusuk: (f) => setState(() => _nusuk = f),
+      ),
+      const SizedBox(height: 32),
+    ];
+
+    final submit = FilledButton(
+      onPressed: submitting ? null : _submit,
+      child: submitting
+          ? const SizedBox(
+              height: 22,
+              width: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.4,
+                color: Colors.white,
+              ),
+            )
+          : Text(_isEdit ? l.commonSave : l.profileSubmitForApproval),
+    );
+
     return AbsorbPointer(
       absorbing: submitting,
-      child: SingleChildScrollView(
-        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.xl,
-          AppSpacing.md,
-          AppSpacing.xl,
-          AppSpacing.xxl + MediaQuery.viewPaddingOf(context).bottom,
-        ),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: staggered([
-                  if (!_isEdit)
-                    Text(
-                      l.profileCompleteSubtitle,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      textAlign: TextAlign.center,
+      child: Form(
+        key: _formKey,
+        // The Form wraps both panes: the portrait is not a field, but the scope
+        // has to cover everything the submit button validates.
+        child: ResponsivePage(
+          maxWidth: _formMaxWidth,
+          builder: (context, size) {
+            final wide = size.isAtLeast(WindowSize.expanded);
+
+            // Full width on a phone, where a button IS the bottom of the
+            // screen and the thumb goes wherever it likes. Not on a monitor: a
+            // seven-hundred-pixel button reads as a banner, and the pointer has
+            // one place to be anyway.
+            final action = wide
+                ? Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minWidth: 220),
+                      child: submit,
                     ),
-                  const SizedBox(height: 24),
-                  Center(
-                    child: ImagePickerField(
-                      label: l.profilePhoto,
-                      file: _photo,
-                      circular: true,
-                      existingUrl: widget.existing?.photoUrl,
-                      errorText: _photoError ? l.commonRequired : null,
-                      onPicked: (f) => setState(() {
-                        _photo = f;
-                        _photoError = false;
-                      }),
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  _text(_firstName, l.profileFirstName, AppIcons.firstName),
-                  const SizedBox(height: 16),
-                  _text(_fatherName, l.profileFatherName, AppIcons.fatherName),
-                  const SizedBox(height: 16),
-                  _text(_surname, l.profileSurname, AppIcons.surname),
-                  const SizedBox(height: 16),
-                  _cityDropdown(l, state.cities),
-                  const SizedBox(height: 16),
-                  _jobTitleDropdown(l, state.jobTitles),
-                  const SizedBox(height: 16),
-                  _genderDropdown(l),
-                  const SizedBox(height: 16),
-                  _missionDropdown(l),
-                  const SizedBox(height: 16),
-                  _dobField(l),
-                  const SizedBox(height: 16),
-                  _text(
-                    _phoneSy,
-                    l.profilePhoneSy,
-                    AppIcons.phoneSy,
-                    keyboard: TextInputType.phone,
-                  ),
-                  const SizedBox(height: 16),
-                  _text(
-                    _phoneSa,
-                    '${l.profilePhoneSa} (${l.commonOptional})',
-                    AppIcons.phoneSa,
-                    keyboard: TextInputType.phone,
-                    required: false,
-                  ),
-                  const SizedBox(height: 28),
-                  _DocumentsSection(
-                    title: l.profileDocumentsSection,
-                    passportLabel: l.profilePassportPhoto,
-                    visaLabel: l.profileVisaPhoto,
-                    nusukLabel: l.profileNusukPhoto,
-                    passport: _passport,
-                    visa: _visa,
-                    nusuk: _nusuk,
-                    onPassport: (f) => setState(() => _passport = f),
-                    onVisa: (f) => setState(() => _visa = f),
-                    onNusuk: (f) => setState(() => _nusuk = f),
-                  ),
-                  const SizedBox(height: 32),
-                  FilledButton(
-                    onPressed: submitting ? null : _submit,
-                    child: submitting
-                        ? const SizedBox(
-                            height: 22,
-                            width: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.4,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            _isEdit ? l.commonSave : l.profileSubmitForApproval,
-                          ),
-                  ),
-                ]),
-              ),
-            ),
-          ),
+                  )
+                : submit;
+
+            // The portrait takes the standing panel here for the same reason it
+            // does on the profile itself — this screen is the same person, in
+            // the same place, with the fields open.
+            return wide
+                ? TwoPaneLayout(
+                    gutter: size.gutter,
+                    bottom: AppSpacing.xxl,
+                    keyboardDismiss: ScrollViewKeyboardDismissBehavior.onDrag,
+                    panel: FadeSlideIn(child: portrait),
+                    children: staggered([...body, action]),
+                  )
+                : SinglePaneLayout(
+                    gutter: size.gutter,
+                    bottom: AppSpacing.xxl,
+                    keyboardDismiss: ScrollViewKeyboardDismissBehavior.onDrag,
+                    children: staggered([
+                      portrait,
+                      const SizedBox(height: 28),
+                      ...body,
+                      action,
+                    ]),
+                  );
+          },
         ),
       ),
     );
@@ -454,15 +503,24 @@ class _DocumentsSection extends StatelessWidget {
       children: [
         Text(title, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 12),
-        ImagePickerField(
-          label: passportLabel,
-          file: passport,
-          onPicked: onPassport,
+        // Three of the same thing, and nothing to read in any of them — the
+        // one place on this form where a row of three is easier to take in
+        // than a column of three.
+        AdaptiveGrid(
+          minTileWidth: 200,
+          maxColumns: 3,
+          spacing: AppSpacing.md,
+          equalHeights: false,
+          children: [
+            ImagePickerField(
+              label: passportLabel,
+              file: passport,
+              onPicked: onPassport,
+            ),
+            ImagePickerField(label: visaLabel, file: visa, onPicked: onVisa),
+            ImagePickerField(label: nusukLabel, file: nusuk, onPicked: onNusuk),
+          ],
         ),
-        const SizedBox(height: 10),
-        ImagePickerField(label: visaLabel, file: visa, onPicked: onVisa),
-        const SizedBox(height: 10),
-        ImagePickerField(label: nusukLabel, file: nusuk, onPicked: onNusuk),
       ],
     );
   }

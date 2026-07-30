@@ -12,7 +12,7 @@ import '../../../core/theme/glass_tokens.dart';
 import '../../../core/utils/hijri_utils.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/profile_avatar.dart';
-import '../../../core/widgets/responsive_center.dart';
+import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
 import '../../notifications/presentation/widgets/notification_bell.dart';
@@ -24,14 +24,16 @@ import 'widgets/dashboard_card.dart';
 /// share one. Three of them did: the files, their office and the employees were
 /// all the same green, and the colour told you nothing.
 ///
-/// Seven destinations, seven of the nine brand colours, and the families carry
+/// Eight destinations, eight of the nine brand colours, and the families carry
 /// the meaning:
 ///
 ///   * GREEN — the mission's own work and its people. It stays the app's
 ///     primary; it is the backdrop, the theme and three of these seven.
 ///   * GOLD — the calendar and the reference material: the season, and the
 ///     lists everything else is built from.
-///   * RED — the two screens that decide about people.
+///   * RED — the two screens that decide about people, and — in the deepest of
+///     the reds, the one colour that had never been given a legible pair — the
+///     dashboard, which decides nothing and is about all of it.
 ///
 /// Each is an [Accent] rather than a raw brand colour, because a print palette
 /// does not divide evenly across a night mode and a paper one: every red is
@@ -44,6 +46,10 @@ const _season = Accent.gold;
 const _reference = Accent.goldSoft;
 const _approvals = Accent.red;
 const _permissions = Accent.redDeep;
+const _dashboard = Accent.plum;
+
+/// One beat of the entry cascade.
+const _step = Duration(milliseconds: 70);
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -104,6 +110,16 @@ class _HomeScreenState extends State<HomeScreen> {
     final canSeeSeasons = session.canSeeSeasons;
     final canManageModules = session.can(PermissionCodes.modulesManage);
 
+    // The dashboard has a section per permission and drops the rest, so the
+    // door opens for anyone holding any one of them. Listed here rather than
+    // asked of the page, because a tile that leads to an empty page is worse
+    // than no tile.
+    final canSeeDashboard =
+        canViewEmployees ||
+        canApprove ||
+        canManageModules ||
+        session.can(PermissionCodes.modulesMembers);
+
     // Everything held by a PERMISSION. A person is two things at once here —
     // somebody with authority and somebody with work — and the two were mixed
     // in one list: "الملفات التشغيلية" meant his own postings to one man and
@@ -118,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
           color: _office.of(context),
           onTap: () => context.push(Routes.modulesManage),
         ),
-        if (canViewEmployees)
+      if (canViewEmployees)
         DashboardCard(
           icon: AppIcons.employees,
           title: l.navEmployees,
@@ -142,7 +158,6 @@ class _HomeScreenState extends State<HomeScreen> {
           color: _reference.of(context),
           onTap: () => context.push(Routes.referenceData),
         ),
-      
       if (canApprove)
         DashboardCard(
           icon: AppIcons.approvals,
@@ -198,39 +213,127 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Builder(
         // Inside the Scaffold body, so `scrollPadding` sees the inset the
         // Scaffold reserves for the app bar it is extending behind.
-        builder: (context) => ResponsiveCenter(
-          child: RefreshIndicator(
-            onRefresh: _refresh,
-            child: ListView(
-              padding: context.scrollPadding(),
-              children: staggered([
-                _GreetingPanel(
-                  name: profile?.firstName ?? '',
-                  subtitle: profile?.jobTitleName?.of(context),
-                  photoUrl: profile?.photoUrl,
-                  isAdmin: session.isAdmin,
-                  seasonYear: _seasonYear,
-                  onTap: () => context.push(Routes.myProfile),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                SectionHeader(l.homeGeneralSection),
-                ...generalCards.expand(
-                  (c) => [c, const SizedBox(height: AppSpacing.md)],
-                ),
-                if (adminCards.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  SectionHeader(l.homeAdminSection, icon: AppIcons.shield),
-                  ...adminCards.expand(
-                    (c) => [c, const SizedBox(height: AppSpacing.md)],
+        builder: (context) => ResponsivePage(
+          builder: (context, size) {
+            // The admin header's beat, which depends on how many tiles the
+            // cascade has already spent above it — the dashboard band included,
+            // since it arrives before the first heading does.
+            final adminBeat = _step * (3 + generalCards.length);
+
+            // Not a tile among the tiles. Every other card on this screen is a
+            // place to go and do something; this one is about all of them at
+            // once, and standing it in a row of three as the leftmost of equals
+            // said the opposite. So it gets a row of its own, above the first
+            // heading — and where there is a panel, it goes in the panel under
+            // the greeting, which is the other thing on this screen that is
+            // about the season rather than about a task.
+            //
+            // Shown to anyone holding a permission the dashboard has a section
+            // for; the page then draws only that section, so a man with the
+            // approvals queue and nothing else opens it and sees the queue.
+            final dashboard = canSeeDashboard
+                ? DashboardCard(
+                    icon: AppIcons.dashboard,
+                    title: l.navDashboard,
+                    subtitle: l.navDashboardSubtitle,
+                    color: _dashboard.of(context),
+                    onTap: () => context.push(Routes.dashboard),
+                  )
+                : null;
+
+            final sections = <Widget>[
+              FadeSlideIn(
+                delay: _step * 2,
+                child: SectionHeader(l.homeGeneralSection),
+              ),
+              AdaptiveGrid(children: staggered(generalCards, start: _step * 3)),
+              if (adminCards.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.lg),
+                FadeSlideIn(
+                  delay: adminBeat,
+                  child: SectionHeader(
+                    l.homeAdminSection,
+                    icon: AppIcons.shield,
                   ),
-                ],
-              ]),
-            ),
-          ),
+                ),
+                AdaptiveGrid(
+                  children: staggered(adminCards, start: adminBeat + _step),
+                ),
+              ],
+            ];
+
+            final greeting = _GreetingPanel(
+              name: profile?.firstName ?? '',
+              subtitle: profile?.jobTitleName?.of(context),
+              photoUrl: profile?.photoUrl,
+              isAdmin: session.isAdmin,
+              seasonYear: _seasonYear,
+              onTap: () => context.push(Routes.myProfile),
+              layout: switch (size) {
+                // Beside the tiles it is a tall, narrow card, so the face goes
+                // on top of the name rather than beside it.
+                _ when size.hasSidePanel => _GreetingLayout.column,
+                // One column, but a thousand pixels of it: the badges come up
+                // onto the name's line instead of leaving that line half empty
+                // and sitting under a divider of their own.
+                _ when size.isAtLeast(WindowSize.expanded) =>
+                  _GreetingLayout.wide,
+                _ => _GreetingLayout.stacked,
+              },
+            );
+
+            return size.hasSidePanel
+                ? TwoPaneLayout(
+                    gutter: size.gutter,
+                    panel: FadeSlideIn(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          greeting,
+                          if (dashboard != null) ...[
+                            const SizedBox(height: AppSpacing.md),
+                            dashboard,
+                          ],
+                        ],
+                      ),
+                    ),
+                    onRefresh: _refresh,
+                    children: sections,
+                  )
+                : SinglePaneLayout(
+                    gutter: size.gutter,
+                    onRefresh: _refresh,
+                    children: [
+                      FadeSlideIn(child: greeting),
+                      if (dashboard != null) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        FadeSlideIn(delay: _step, child: dashboard),
+                      ],
+                      const SizedBox(height: AppSpacing.xl),
+                      ...sections,
+                    ],
+                  );
+          },
         ),
       ),
     );
   }
+}
+
+/// How much room the greeting has, which decides whether the face sits beside
+/// the name or above it, and where the badges go.
+enum _GreetingLayout {
+  /// A phone's width: face beside name, badges on their own line below.
+  stacked,
+
+  /// A wide single column: badges move up onto the name's line, because a
+  /// thousand-pixel row with a name at one end and nothing at the other is the
+  /// emptiness this whole layout exists to remove.
+  wide,
+
+  /// A tall, narrow panel beside the tiles: face above name, everything
+  /// centred.
+  column,
 }
 
 /// The screen's anchor: who you are, what you do, and which season the
@@ -247,6 +350,7 @@ class _GreetingPanel extends StatelessWidget {
     required this.isAdmin,
     required this.seasonYear,
     required this.onTap,
+    required this.layout,
   });
 
   final String name;
@@ -259,98 +363,219 @@ class _GreetingPanel extends StatelessWidget {
 
   final VoidCallback onTap;
 
+  final _GreetingLayout layout;
+
   @override
   Widget build(BuildContext context) {
-    final l = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-
     return GlassCard(
       radius: AppRadius.xl,
       padding: const EdgeInsets.all(AppSpacing.xl),
       onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              // Ringed avatar — the brand gradient reads as a status halo.
-              Container(
-                padding: const EdgeInsets.all(2.5),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [scheme.primary, scheme.secondary],
-                  ),
-                ),
-                child: ProfileAvatar(
-                  photoUrl: photoUrl,
-                  name: name,
-                  radius: 28,
-                ),
-              ),
+      child: switch (layout) {
+        _GreetingLayout.column => _column(context),
+        _ => _row(context),
+      },
+    );
+  }
+
+  Widget _row(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final inlineBadges = layout == _GreetingLayout.wide;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            _Ring(photoUrl: photoUrl, name: name, radius: 28),
+            const SizedBox(width: AppSpacing.lg),
+            Expanded(
+              child: _Identity(name: name, subtitle: subtitle),
+            ),
+            if (inlineBadges) ...[
               const SizedBox(width: AppSpacing.lg),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l.homeWelcome(name),
-                      style: text.titleLarge,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (subtitle != null && subtitle!.isNotEmpty) ...[
-                      const SizedBox(height: 3),
-                      Text(
-                        subtitle!,
-                        style: text.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                    const SizedBox(height: 4),
-                    // Says where the tap goes, now that the tile that used to
-                    // say it is gone.
-                    Text(
-                      l.navMyProfile,
-                      style: text.labelSmall?.copyWith(color: scheme.primary),
-                    ),
-                  ],
-                ),
-              ),
-              const NavChevron(),
-            ],
-          ),
+              _Badges(isAdmin: isAdmin, seasonYear: seasonYear),
+              const SizedBox(width: AppSpacing.lg),
+            ] else
+              const SizedBox(width: AppSpacing.sm),
+            const NavChevron(),
+          ],
+        ),
+        if (!inlineBadges) ...[
           const SizedBox(height: AppSpacing.lg),
           Divider(
             height: 1,
             color: scheme.outlineVariant.withValues(alpha: 0.4),
           ),
           const SizedBox(height: AppSpacing.md),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: [
-              GlassBadge(
-                label: l.seasonHijriYear(seasonYear),
-                color: scheme.secondary,
-                icon: AppIcons.seasons,
-              ),
-              if (isAdmin)
-                GlassBadge(
-                  label: l.profileBadgeAdmin,
-                  color: scheme.primary,
-                  icon: AppIcons.shield,
-                ),
-            ],
+          _Badges(isAdmin: isAdmin, seasonYear: seasonYear),
+        ],
+      ],
+    );
+  }
+
+  Widget _column(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Center(
+          child: _Ring(photoUrl: photoUrl, name: name, radius: 40),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        _Identity(
+          name: name,
+          subtitle: subtitle,
+          align: CrossAxisAlignment.center,
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Divider(height: 1, color: scheme.outlineVariant.withValues(alpha: 0.4)),
+        const SizedBox(height: AppSpacing.md),
+        _Badges(
+          isAdmin: isAdmin,
+          seasonYear: seasonYear,
+          alignment: WrapAlignment.center,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        // The chevron cannot sit at the end of a row that no longer exists, so
+        // the way in is spelled out along the card's bottom edge instead.
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              l.navMyProfile,
+              style: text.labelSmall?.copyWith(color: scheme.primary),
+            ),
+            NavChevron(color: scheme.primary),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// The avatar in its brand-gradient ring, which reads as a status halo.
+class _Ring extends StatelessWidget {
+  const _Ring({
+    required this.photoUrl,
+    required this.name,
+    required this.radius,
+  });
+
+  final String? photoUrl;
+  final String name;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(2.5),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [scheme.primary, scheme.secondary],
+        ),
+      ),
+      child: ProfileAvatar(photoUrl: photoUrl, name: name, radius: radius),
+    );
+  }
+}
+
+/// The name, the job title, and — in the row forms — the line that says where
+/// tapping the card goes, now that the tile which used to say it is gone.
+class _Identity extends StatelessWidget {
+  const _Identity({
+    required this.name,
+    required this.subtitle,
+    this.align = CrossAxisAlignment.start,
+  });
+
+  final String name;
+  final String? subtitle;
+  final CrossAxisAlignment align;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    final centred = align == CrossAxisAlignment.center;
+    final textAlign = centred ? TextAlign.center : TextAlign.start;
+
+    return Column(
+      crossAxisAlignment: align,
+      children: [
+        Text(
+          l.homeWelcome(name),
+          style: text.titleLarge,
+          textAlign: textAlign,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        if (subtitle != null && subtitle!.isNotEmpty) ...[
+          const SizedBox(height: 3),
+          Text(
+            subtitle!,
+            style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            textAlign: textAlign,
+            maxLines: centred ? 2 : 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
-      ),
+        if (!centred) ...[
+          const SizedBox(height: 4),
+          Text(
+            l.navMyProfile,
+            style: text.labelSmall?.copyWith(color: scheme.primary),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// The season the Administration is working through, and whether this person
+/// runs it.
+class _Badges extends StatelessWidget {
+  const _Badges({
+    required this.isAdmin,
+    required this.seasonYear,
+    this.alignment = WrapAlignment.start,
+  });
+
+  final bool isAdmin;
+  final int seasonYear;
+  final WrapAlignment alignment;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+
+    return Wrap(
+      alignment: alignment,
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: [
+        GlassBadge(
+          label: l.seasonHijriYear(seasonYear),
+          color: scheme.secondary,
+          icon: AppIcons.seasons,
+        ),
+        if (isAdmin)
+          GlassBadge(
+            label: l.profileBadgeAdmin,
+            color: scheme.primary,
+            icon: AppIcons.shield,
+          ),
+      ],
     );
   }
 }

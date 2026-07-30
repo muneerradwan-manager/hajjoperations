@@ -1,0 +1,515 @@
+import 'package:flutter/material.dart';
+
+import '../theme/glass_tokens.dart';
+
+/// The standing panel's width wherever a page has one.
+///
+/// Wide enough for a face, a name and a job title on two lines; narrow enough
+/// that the content beside it still gets three columns on a 1600 monitor. It is
+/// one number for the whole app on purpose — a user who drags a window learns
+/// where this app keeps that column, and learns it once.
+const kSidePanelWidth = 320.0;
+
+/// How much room a layout has, in five steps.
+///
+/// Named for the room and not for the device, because the device stopped being
+/// the question the moment this app ran on Windows and the web. A phone is
+/// always [compact] and a monitor rarely is, but that is a coincidence: the
+/// width there is something the user drags around all afternoon, not a property
+/// of the hardware. A screen that only knows "phone or desktop" spends that
+/// afternoon snapping between two wrong answers.
+///
+/// The cuts are Material 3's window size classes, and they are not arbitrary
+/// round numbers — each one is the width at which one more column of readable
+/// content fits beside the last.
+enum WindowSize {
+  compact(0),
+  medium(600),
+  expanded(840),
+  large(1200),
+  extraLarge(1600);
+
+  const WindowSize(this.minWidth);
+
+  /// The narrowest width that still belongs to this class.
+  final double minWidth;
+
+  static WindowSize fromWidth(double width) {
+    for (final size in values.reversed) {
+      if (width >= size.minWidth) return size;
+    }
+    return compact;
+  }
+
+  /// The window's own class.
+  ///
+  /// For the chrome that spans the whole window — an app bar, a rail. Anything
+  /// laying out *inside* the page should measure its own box instead; see
+  /// [WindowSizeBuilder].
+  static WindowSize of(BuildContext context) =>
+      fromWidth(MediaQuery.sizeOf(context).width);
+
+  bool isAtLeast(WindowSize other) => index >= other.index;
+
+  /// Where the content stops growing.
+  ///
+  /// A column of text does not get more readable past roughly seventy
+  /// characters — on the way back the eye loses which line comes next, and it
+  /// loses it more often the further it has to travel. So the answer to a wider
+  /// window is never a wider column. It is a second column, then a third, and
+  /// then it is nothing at all: this cap is what stops a 34" monitor from
+  /// printing one paragraph across a metre of glass.
+  double get contentMaxWidth => switch (this) {
+    WindowSize.compact => double.infinity,
+    WindowSize.medium => 720,
+    WindowSize.expanded => 1100,
+    WindowSize.large => 1400,
+    WindowSize.extraLarge => 1680,
+  };
+
+  /// Breathing room at the page edges, which has to grow with the window: the
+  /// 16px margin that reads as generous beside a phone's screen edge reads as a
+  /// cropping accident at 1600.
+  double get gutter => switch (this) {
+    WindowSize.compact => AppSpacing.lg,
+    WindowSize.medium => AppSpacing.xl,
+    WindowSize.expanded => AppSpacing.xl,
+    WindowSize.large => AppSpacing.xxl,
+    WindowSize.extraLarge => AppSpacing.xxl,
+  };
+
+  /// Whether there is room to stand a panel beside the content instead of
+  /// stacking it on top.
+  ///
+  /// Below this the split costs more than it pays: two columns of 400 are worse
+  /// than one column of 800, because neither is wide enough to hold anything
+  /// and the page has twice as many edges.
+  bool get hasSidePanel => isAtLeast(WindowSize.large);
+}
+
+extension WindowSizeX on BuildContext {
+  /// The window's size class. See [WindowSize.of] for when *not* to use it.
+  WindowSize get windowSize => WindowSize.of(this);
+}
+
+/// A [LayoutBuilder] that reports a [WindowSize] measured from the space this
+/// widget was actually handed.
+///
+/// Prefer it over reading [MediaQuery]: the two disagree the moment the widget
+/// sits inside anything narrower than the window — a pane, a sheet, a side
+/// panel — and it is the pane's width that decides what fits inside the pane.
+class WindowSizeBuilder extends StatelessWidget {
+  const WindowSizeBuilder({super.key, required this.builder});
+
+  final Widget Function(BuildContext context, WindowSize size) builder;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) =>
+          builder(context, WindowSize.fromWidth(constraints.maxWidth)),
+    );
+  }
+}
+
+/// Centres content under a cap that grows with the window, with page gutters to
+/// match.
+///
+/// The one-size version of this idea — cap everything at 600 forever — is what
+/// makes a desktop build look like a phone screenshot pasted into the middle of
+/// a monitor. The cap is still there, because the reason for it is real, but it
+/// is a different number at every size and the space it leaves over goes to the
+/// content rather than to the wallpaper.
+class ResponsivePage extends StatelessWidget {
+  const ResponsivePage({super.key, required this.builder, this.maxWidth});
+
+  final Widget Function(BuildContext context, WindowSize size) builder;
+
+  /// Overrides [WindowSize.contentMaxWidth] — for a page whose content has its
+  /// own reason to stop earlier, such as a form.
+  final double? maxWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return WindowSizeBuilder(
+      builder: (context, size) => Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: maxWidth ?? size.contentMaxWidth,
+          ),
+          child: builder(context, size),
+        ),
+      ),
+    );
+  }
+}
+
+/// The narrow arrangement, and the one every phone gets: a single scrolling
+/// column carrying the page's gutters.
+class SinglePaneLayout extends StatelessWidget {
+  const SinglePaneLayout({
+    super.key,
+    required this.gutter,
+    required this.children,
+    this.onRefresh,
+    this.bottom = AppSpacing.xl,
+    this.keyboardDismiss = ScrollViewKeyboardDismissBehavior.manual,
+  });
+
+  final double gutter;
+  final List<Widget> children;
+  final Future<void> Function()? onRefresh;
+  final double bottom;
+  final ScrollViewKeyboardDismissBehavior keyboardDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final list = ListView(
+      padding: context.scrollPadding(horizontal: gutter, bottom: bottom),
+      keyboardDismissBehavior: keyboardDismiss,
+      children: children,
+    );
+    if (onRefresh == null) return list;
+    return RefreshIndicator(onRefresh: onRefresh!, child: list);
+  }
+}
+
+/// The wide arrangement: a panel that stands still on the leading side while
+/// the content scrolls past it.
+///
+/// The panel is first in the [Row] and therefore on the *start* side — the
+/// right in Arabic, the left in English — without anyone naming a side.
+///
+/// It is deliberately outside the scrollable. What goes in it is the handful of
+/// facts that frame everything else on the page — who this is, which season is
+/// being worked through — and on a monitor there is room to leave them on the
+/// glass instead of making the user scroll back up to check.
+class TwoPaneLayout extends StatelessWidget {
+  const TwoPaneLayout({
+    super.key,
+    required this.gutter,
+    required this.panel,
+    required this.children,
+    this.onRefresh,
+    this.panelWidth = kSidePanelWidth,
+    this.bottom = AppSpacing.xl,
+    this.keyboardDismiss = ScrollViewKeyboardDismissBehavior.manual,
+  });
+
+  final double gutter;
+  final Widget panel;
+  final List<Widget> children;
+  final Future<void> Function()? onRefresh;
+  final double panelWidth;
+  final double bottom;
+  final ScrollViewKeyboardDismissBehavior keyboardDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    // The page's own gutter is applied once, around both panes; each pane then
+    // carries only the vertical inset, so the two start on the same line.
+    final page = context.scrollPadding(horizontal: gutter, bottom: bottom);
+    final vertical = EdgeInsets.only(top: page.top, bottom: page.bottom);
+
+    Widget content = ListView(
+      padding: vertical,
+      keyboardDismissBehavior: keyboardDismiss,
+      children: children,
+    );
+    if (onRefresh != null) {
+      content = RefreshIndicator(onRefresh: onRefresh!, child: content);
+    }
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: gutter),
+      child: Row(
+        // The panel hugs its content and stays at the top rather than
+        // stretching to the full height of a monitor.
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: panelWidth,
+            // Its own scrollable, for the short window: a laptop in a video
+            // call is 1440 wide and 500 tall, and the panel has to give way
+            // there rather than overflow.
+            child: SingleChildScrollView(padding: vertical, child: panel),
+          ),
+          SizedBox(width: gutter),
+          Expanded(child: content),
+        ],
+      ),
+    );
+  }
+}
+
+/// Lays [children] out in as many equal columns as fit, and never fewer than
+/// one.
+///
+/// The column count comes from [minTileWidth] rather than from a [WindowSize]
+/// step, because this is the widget under the user's hand while they drag the
+/// window edge. Re-columning on the page's five thresholds would move the grid
+/// in visible jumps at moments that have nothing to do with the grid; measuring
+/// the tiles means they widen smoothly until there is room for one more, and
+/// only then do they all snap back together. That is what every desktop grid
+/// does, and it is why it feels like the window is being resized rather than
+/// the app being switched.
+///
+/// Rows are [IntrinsicHeight] so neighbours end at the same line — see
+/// [equalHeights] for when they should not be.
+class AdaptiveGrid extends StatelessWidget {
+  const AdaptiveGrid({
+    super.key,
+    required this.children,
+    this.minTileWidth = 340,
+    this.maxColumns = 4,
+    this.spacing = AppSpacing.md,
+    this.equalHeights = true,
+  });
+
+  final List<Widget> children;
+
+  /// The narrowest a tile may get before the grid drops a column.
+  final double minTileWidth;
+
+  /// A ceiling on the count regardless of room. Past four across, a dashboard
+  /// stops being a set of places you can point at and becomes a wall to read.
+  final int maxColumns;
+
+  final double spacing;
+
+  /// Whether tiles sharing a row are forced to the same height.
+  ///
+  /// True for panes — a row of glass cards with three different bottom edges
+  /// reads as broken rather than as varied. False for form fields, where a
+  /// validation message appearing under one field would otherwise stretch its
+  /// neighbour's box to match and make the untouched field look wrong too.
+  final bool equalHeights;
+
+  @override
+  Widget build(BuildContext context) {
+    if (children.isEmpty) return const SizedBox.shrink();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = columnsFor(
+          constraints.maxWidth,
+          minTileWidth: minTileWidth,
+          maxColumns: maxColumns,
+          spacing: spacing,
+        );
+
+        final cellWidth = cellWidthFor(constraints.maxWidth, columns, spacing);
+
+        final rows = <Widget>[];
+        for (var start = 0; start < children.length; start += columns) {
+          rows.add(
+            columns == 1
+                ? children[start]
+                : gridRow(
+                    start: start,
+                    columns: columns,
+                    itemCount: children.length,
+                    spacing: spacing,
+                    equalHeights: equalHeights,
+                    cellWidth: cellWidth,
+                    itemBuilder: (_, i) => children[i],
+                  ),
+          );
+        }
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < rows.length; i++) ...[
+              if (i > 0) SizedBox(height: spacing),
+              rows[i],
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// The lazy form of [AdaptiveGrid]: a scrollable whose rows are built as they
+/// are reached.
+///
+/// [AdaptiveGrid] builds every child at once, which is right for a dashboard of
+/// seven tiles and wrong for a directory of four hundred employees — there, it
+/// is the difference between a screen that opens and one that thinks about it
+/// first. This is the same arithmetic with a [ListView.builder] under it: the
+/// grid is a list of ROWS, so a row of three cards is one lazily-built item and
+/// nothing below the fold is laid out until it is scrolled to.
+///
+/// [GridView] would also be lazy, but it insists on being told a tile's aspect
+/// ratio in advance. Nothing in this app has one — a card is as tall as its
+/// name, its dates and however many badges it turned out to carry.
+class AdaptiveGridView extends StatelessWidget {
+  const AdaptiveGridView({
+    super.key,
+    required this.itemCount,
+    required this.itemBuilder,
+    this.minTileWidth = 340,
+    this.maxColumns = 4,
+    this.spacing = AppSpacing.md,
+    this.equalHeights = true,
+    this.padding,
+    this.header,
+    this.footer,
+    this.controller,
+    this.onRefresh,
+  });
+
+  final int itemCount;
+  final Widget Function(BuildContext context, int index) itemBuilder;
+  final double minTileWidth;
+  final int maxColumns;
+  final double spacing;
+  final bool equalHeights;
+  final EdgeInsets? padding;
+
+  /// Anything that belongs above the grid and spans its full width — a search
+  /// field, a count, a heading. It scrolls away with the rows rather than
+  /// sitting on top of them, because on a long list the first thing wanted is
+  /// the list.
+  final Widget? header;
+
+  /// The full-width row under the last one — a "loading more" spinner, a total.
+  final Widget? footer;
+
+  /// For a list that pages in more as it is scrolled: the same controller the
+  /// caller watches.
+  final ScrollController? controller;
+
+  final Future<void> Function()? onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = columnsFor(
+          constraints.maxWidth - (padding?.horizontal ?? 0),
+          minTileWidth: minTileWidth,
+          maxColumns: maxColumns,
+          spacing: spacing,
+        );
+        final rows = (itemCount + columns - 1) ~/ columns;
+        final lead = header == null ? 0 : 1;
+        final tail = footer == null ? 0 : 1;
+        final cellWidth = cellWidthFor(
+          constraints.maxWidth - (padding?.horizontal ?? 0),
+          columns,
+          spacing,
+        );
+
+        Widget list = ListView.separated(
+          controller: controller,
+          padding: padding,
+          itemCount: rows + lead + tail,
+          separatorBuilder: (_, _) => SizedBox(height: spacing),
+          itemBuilder: (context, i) {
+            if (i < lead) return header!;
+            if (i >= rows + lead) return footer!;
+            final start = (i - lead) * columns;
+            return columns == 1
+                ? itemBuilder(context, start)
+                : gridRow(
+                    start: start,
+                    columns: columns,
+                    itemCount: itemCount,
+                    spacing: spacing,
+                    equalHeights: equalHeights,
+                    cellWidth: cellWidth,
+                    itemBuilder: itemBuilder,
+                  );
+          },
+        );
+
+        if (onRefresh != null) {
+          list = RefreshIndicator(onRefresh: onRefresh!, child: list);
+        }
+        return list;
+      },
+    );
+  }
+}
+
+/// The width [AdaptiveGrid] gave the cell this widget is sitting in.
+///
+/// A cell that needs to know its own width would reach for a [LayoutBuilder] —
+/// and that is exactly what it must not do here. A LayoutBuilder refuses to
+/// report intrinsic dimensions (it would have to run its callback
+/// speculatively, mid-layout, against a live tree), and an equal-height row is
+/// built by asking every cell for precisely that. One [InfoSection] in a row of
+/// three took the settings page down with it.
+///
+/// The grid already worked this number out. Handing it down is what lets a cell
+/// re-flow to its own width AND be measured by the row around it.
+class GridCellWidth extends InheritedWidget {
+  const GridCellWidth({super.key, required this.width, required super.child});
+
+  final double width;
+
+  /// Null outside a grid — where a [LayoutBuilder] is safe, and correct.
+  static double? maybeOf(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<GridCellWidth>()?.width;
+
+  @override
+  bool updateShouldNotify(GridCellWidth oldWidget) => oldWidget.width != width;
+}
+
+/// How many columns of at least [minTileWidth] fit in [width], counting the
+/// [spacing] between them. Never fewer than one, never more than [maxColumns].
+int columnsFor(
+  double width, {
+  required double minTileWidth,
+  required int maxColumns,
+  double spacing = AppSpacing.md,
+}) {
+  if (!width.isFinite || width <= 0) return 1;
+  return ((width + spacing) ~/ (minTileWidth + spacing)).clamp(1, maxColumns);
+}
+
+/// One row of a grid: [columns] equal cells, of which the ones past [itemCount]
+/// are empty.
+///
+/// The empty cells of a short final row still claim a column's width, so the
+/// tiles above them stay in their columns instead of spreading out to fill the
+/// gap and leaving the grid ragged.
+Widget gridRow({
+  required int start,
+  required int columns,
+  required int itemCount,
+  required double spacing,
+  required bool equalHeights,
+  required double cellWidth,
+  required Widget Function(BuildContext context, int index) itemBuilder,
+}) {
+  final row = Builder(
+    builder: (context) => Row(
+      crossAxisAlignment: equalHeights
+          ? CrossAxisAlignment.stretch
+          : CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < columns; i++) ...[
+          if (i > 0) SizedBox(width: spacing),
+          Expanded(
+            child: GridCellWidth(
+              width: cellWidth,
+              child: start + i < itemCount
+                  ? itemBuilder(context, start + i)
+                  : const SizedBox.shrink(),
+            ),
+          ),
+        ],
+      ],
+    ),
+  );
+  return equalHeights ? IntrinsicHeight(child: row) : row;
+}
+
+/// The width one cell gets when [columns] of them share [width] with [spacing]
+/// between.
+double cellWidthFor(double width, int columns, double spacing) =>
+    (width - spacing * (columns - 1)) / columns;

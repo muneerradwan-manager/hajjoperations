@@ -5,7 +5,7 @@ import '../../../core/animations/animations.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/profile_avatar.dart';
-import '../../../core/widgets/responsive_center.dart';
+import '../../../core/widgets/responsive.dart';
 import '../application/season_participants_cubit.dart';
 import '../data/seasons_repository.dart';
 import '../domain/season.dart';
@@ -34,18 +34,24 @@ class _View extends StatelessWidget {
     return Scaffold(
       appBar: GlassAppBar(title: Text(l.seasonSelectParticipants)),
       body: SafeArea(
-        child: ResponsiveCenter(
-          child: Column(
+        child: ResponsivePage(
+          builder: (context, size) => Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: l.commonSearch,
-                    prefixIcon: const Icon(AppIcons.search),
+                padding: EdgeInsets.fromLTRB(size.gutter, 8, size.gutter, 4),
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 460),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: l.commonSearch,
+                        prefixIcon: const Icon(AppIcons.search),
+                      ),
+                      onChanged: (v) =>
+                          context.read<SeasonParticipantsCubit>().search(v),
+                    ),
                   ),
-                  onChanged: (v) =>
-                      context.read<SeasonParticipantsCubit>().search(v),
                 ),
               ),
               BlocBuilder<SeasonParticipantsCubit, SeasonParticipantsState>(
@@ -81,19 +87,19 @@ class _View extends StatelessWidget {
                       },
                       builder: (context, state) {
                         if (state.status == ParticipantsStatus.loading) {
-                          return const SkeletonList();
+                          return const SkeletonList(minTileWidth: 320);
                         }
                         final items = state.filtered;
-                        return ListView.separated(
+                        return AdaptiveGridView(
                           padding: EdgeInsets.fromLTRB(
-                            16,
+                            size.gutter,
                             8,
-                            16,
+                            size.gutter,
                             16 + MediaQuery.viewPaddingOf(context).bottom,
                           ),
+                          minTileWidth: 320,
+                          spacing: 10,
                           itemCount: items.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(height: 10),
                           itemBuilder: (context, i) {
                             final e = items[i];
                             final selected = state.participantIds.contains(

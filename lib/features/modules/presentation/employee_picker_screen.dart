@@ -7,7 +7,7 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/profile_avatar.dart';
-import '../../../core/widgets/responsive_center.dart';
+import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/selection_indicator.dart';
 import '../../../core/widgets/states.dart';
 import '../application/employee_picker_cubit.dart';
@@ -154,7 +154,7 @@ class _ViewState extends State<_View> {
               ),
               Expanded(
                 child: switch (state.status) {
-                  PickerStatus.loading => const SkeletonList(),
+                  PickerStatus.loading => const SkeletonList(minTileWidth: 320),
                   PickerStatus.error => EmptyState(
                     icon: AppIcons.participants,
                     title: state.error ?? '',
@@ -171,40 +171,36 @@ class _ViewState extends State<_View> {
                         ? l.moduleNoParticipants
                         : l.modulePickerNoMatches,
                   ),
-                  PickerStatus.ready => ResponsiveCenter(
-                    child: RefreshIndicator(
+                  PickerStatus.ready => ResponsivePage(
+                    builder: (context, size) => AdaptiveGridView(
+                      controller: _scroll,
                       onRefresh: cubit.refresh,
-                      child: ListView.separated(
-                        controller: _scroll,
-                        // No top inset: the search bar above already cleared
-                        // the app bar this list scrolls under.
-                        padding: EdgeInsets.fromLTRB(
-                          AppSpacing.lg,
-                          0,
-                          AppSpacing.lg,
-                          MediaQuery.viewPaddingOf(context).bottom +
-                              AppSpacing.xl,
-                        ),
-                        itemCount: state.people.length + 1,
-                        separatorBuilder: (_, _) =>
-                            const SizedBox(height: AppSpacing.sm),
-                        itemBuilder: (context, i) {
-                          if (i == state.people.length) {
-                            return _Footer(
-                              loading: state.loadingMore,
-                              count: state.people.length,
-                            );
-                          }
-                          final person = state.people[i];
-                          return _CandidateTile(
-                            person: person,
-                            isSelected: state.selected.contains(
-                              person.profile.id,
-                            ),
-                            onTap: () => _tap(person.profile.id),
-                          );
-                        },
+                      // No top inset: the search bar above already cleared
+                      // the app bar this list scrolls under.
+                      padding: EdgeInsets.fromLTRB(
+                        size.gutter,
+                        0,
+                        size.gutter,
+                        MediaQuery.viewPaddingOf(context).bottom +
+                            AppSpacing.xl,
                       ),
+                      minTileWidth: 320,
+                      spacing: AppSpacing.sm,
+                      itemCount: state.people.length,
+                      footer: _Footer(
+                        loading: state.loadingMore,
+                        count: state.people.length,
+                      ),
+                      itemBuilder: (context, i) {
+                        final person = state.people[i];
+                        return _CandidateTile(
+                          person: person,
+                          isSelected: state.selected.contains(
+                            person.profile.id,
+                          ),
+                          onTap: () => _tap(person.profile.id),
+                        );
+                      },
                     ),
                   ),
                 },
@@ -270,33 +266,40 @@ class _SearchBarState extends State<_SearchBar> {
   Widget build(BuildContext context) {
     final l = context.l10n;
 
-    return ResponsiveCenter(
-      child: Padding(
+    return ResponsivePage(
+      builder: (context, size) => Padding(
         padding: EdgeInsets.fromLTRB(
-          AppSpacing.lg,
+          size.gutter,
           MediaQuery.paddingOf(context).top + AppSpacing.sm,
-          AppSpacing.lg,
+          size.gutter,
           AppSpacing.sm,
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: _controller,
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                hintText: l.modulePickerSearchHint,
-                prefixIcon: const Icon(AppIcons.search),
-                suffixIcon: widget.query.isEmpty
-                    ? null
-                    : IconButton(
-                        icon: const Icon(AppIcons.reject, size: 18),
-                        onPressed: () {
-                          _controller.clear();
-                          widget.onChanged('');
-                        },
-                      ),
+            // See the directory: a search box is the width of what gets typed
+            // into it, and the filter chips sit under it rather than beside a
+            // field that ran off to the far edge of the window.
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 460),
+              child: TextField(
+                controller: _controller,
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  hintText: l.modulePickerSearchHint,
+                  prefixIcon: const Icon(AppIcons.search),
+                  suffixIcon: widget.query.isEmpty
+                      ? null
+                      : IconButton(
+                          icon: const Icon(AppIcons.reject, size: 18),
+                          onPressed: () {
+                            _controller.clear();
+                            widget.onChanged('');
+                          },
+                        ),
+                ),
+                onChanged: widget.onChanged,
               ),
-              onChanged: widget.onChanged,
             ),
             const SizedBox(height: AppSpacing.sm),
             Row(

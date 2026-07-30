@@ -14,7 +14,7 @@ import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/info_section.dart';
 import '../../../core/widgets/profile_avatar.dart';
-import '../../../core/widgets/responsive_center.dart';
+import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
 import '../application/module_detail_cubit.dart';
@@ -35,6 +35,7 @@ class ModuleDetailScreen extends StatelessWidget {
     super.key,
     required this.moduleId,
     this.viewAsProfileId,
+    this.fromOffice = false,
   });
 
   final String moduleId;
@@ -44,6 +45,23 @@ class ModuleDetailScreen extends StatelessWidget {
   /// instead would answer a question nobody asked. Null means the reader.
   final String? viewAsProfileId;
 
+  /// Whether this file was opened from the office — إدارة الملفات — rather than
+  /// from a man's own work, or from somebody's employee page.
+  ///
+  /// The permission is not the whole answer to "may this be edited here". A
+  /// manager assigned to a tower reaches the same file down two different
+  /// corridors, and under عام he is reading his own posting: the file he is
+  /// serving in, the same one every other member of it sees. Putting Edit,
+  /// Delete and Deactivate on that page hands him three ways to alter the
+  /// season's paperwork from a list that never claimed to be about managing it
+  /// — and one of them is one tap from destroying it.
+  ///
+  /// So the buttons wait behind BOTH: the permission, and having come in
+  /// through the door that is for using it. Defaulting to false means any new
+  /// way of reaching this screen is read-only until somebody says otherwise,
+  /// which is the right way round for a delete button.
+  final bool fromOffice;
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -52,13 +70,15 @@ class ModuleDetailScreen extends StatelessWidget {
         moduleId,
         viewAsProfileId: viewAsProfileId,
       ),
-      child: const _View(),
+      child: _View(fromOffice: fromOffice),
     );
   }
 }
 
 class _View extends StatefulWidget {
-  const _View();
+  const _View({required this.fromOffice});
+
+  final bool fromOffice;
 
   @override
   State<_View> createState() => _ViewState();
@@ -152,7 +172,11 @@ class _ViewState extends State<_View> {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final session = context.watch<SessionCubit>().state;
-    final canManage = session.can(PermissionCodes.modulesManage);
+    // Both, and in that order: holding the permission is what makes editing
+    // possible at all, and coming in through إدارة الملفات is what makes this
+    // page the place to do it. See [ModuleDetailScreen.fromOffice].
+    final canManage =
+        widget.fromOffice && session.can(PermissionCodes.modulesManage);
 
     return BlocBuilder<ModuleDetailCubit, ModuleDetailState>(
       builder: (context, state) {
@@ -212,7 +236,12 @@ class _ViewState extends State<_View> {
                   )
                 : null,
             body: switch (state.status) {
-              ModuleDetailStatus.loading => const SkeletonList(),
+              ModuleDetailStatus.loading => const SkeletonList(
+                maxColumns: 1,
+                panel: true,
+                height: 120,
+                count: 4,
+              ),
               ModuleDetailStatus.error => EmptyState(
                 icon: AppIcons.modules,
                 title: state.error ?? '',
@@ -261,185 +290,217 @@ class _Body extends StatelessWidget {
     final sectorLevel = state.parentLevel;
     final sectors = state.parentNodes;
 
-    return ResponsiveCenter(
-      child: RefreshIndicator(
-        onRefresh: () => context.read<ModuleDetailCubit>().load(),
-        child: ListView(
-          padding: context.scrollPadding(),
-          children: staggered([
-            InfoSection(
-              title: l.moduleSectionInfo,
-              icon: AppIcons.modules,
-              children: [
-                if (module.seasonHijriYear != null)
-                  InfoRow(
-                    icon: AppIcons.seasons,
-                    label: l.moduleSeasonLabel,
-                    value: l.seasonHijriYear(module.seasonHijriYear!),
-                  ),
-                InfoRow(
-                  icon: AppIcons.activate,
-                  label: l.moduleStartDate,
-                  value: formatDate(module.startsOn),
-                ),
-                // What that date is the date of, when the type states it.
-                if (type?.startCondition != null)
-                  InfoRow(
-                    icon: AppIcons.seasons,
-                    label: l.moduleStartCondition,
-                    value: type!.startCondition!.of(context),
-                  ),
-                if (module.reportCadence.asksForReports)
-                  InfoRow(
-                    icon: AppIcons.tasks,
-                    label: l.moduleReportCadence,
-                    value: cadenceLabel(context, module.reportCadence),
-                  ),
-                InfoRow(
-                  icon: AppIcons.pending,
-                  label: l.moduleEndCondition,
-                  value:
-                      (type?.endCondition ?? module.endCondition)?.of(context),
-                ),
-                // The condition above says what event ends files of this kind.
-                // This says the day THIS one is done — shown only when somebody
-                // set it, since most files run on the condition alone.
-                if (module.endsOn != null)
-                  InfoRow(
-                    icon: AppIcons.pending,
-                    label: l.moduleEndDate,
-                    value: formatDate(module.endsOn),
-                  ),
-                if ((module.decisionNumber ?? '').isNotEmpty)
-                  InfoRow(
-                    icon: AppIcons.file,
-                    label: l.moduleDecisionNumber,
-                    value: module.decisionNumber,
-                  ),
-                for (final field in fields)
-                  if (field.kind != ModuleFieldKind.pdf)
-                    // A place is somewhere to go, never a line of URL to read.
-                    if (field.kind == ModuleFieldKind.location &&
-                        isOpenableLocation(module.data[field.key]))
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.sm,
-                        ),
-                        child: Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: LocationButton(
-                            url: module.data[field.key] as String,
-                            label: field.label.of(context),
-                          ),
-                        ),
-                      )
-                    else
-                      InfoRow(
-                        icon: AppIcons.document,
-                        label: field.label.of(context),
-                        value: _display(context, field),
-                      ),
-              ],
+    // What the file IS: its season, the days it runs between, what ends it,
+    // and whatever paperwork was attached to it. None of it changes while the
+    // page is open and all of it is what the rest of the page is read against
+    // — which is exactly what belongs in a panel that does not scroll away.
+    final facts = <Widget>[
+      InfoSection(
+        title: l.moduleSectionInfo,
+        icon: AppIcons.modules,
+        children: [
+          if (module.seasonHijriYear != null)
+            InfoRow(
+              icon: AppIcons.seasons,
+              label: l.moduleSeasonLabel,
+              value: l.seasonHijriYear(module.seasonHijriYear!),
             ),
-            for (final field in pdfFields) ...[
-              const SizedBox(height: AppSpacing.md),
-              _PdfCard(
-                label: field.label.of(context),
-                file: module.fileAt(field.key),
-                onOpen: onOpenPdf,
-              ),
-            ],
-            if (roles.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.lg),
-              SectionHeader(
-                focusName == null
-                    ? l.moduleSectionTasks
-                    : l.moduleSectionTasksOf(focusName),
-                icon: AppIcons.tasks,
-              ),
-              for (final held in roles) ...[
-                _TaskCard(type: type!, held: held),
-                const SizedBox(height: AppSpacing.md),
-              ],
-            ],
-
-            if (module.reportCadence.asksForReports) ...[
-              const SizedBox(height: AppSpacing.lg),
-              SectionHeader(l.moduleReports, icon: AppIcons.tasks),
-              _ReportsCard(module: module, reports: state.reports),
-            ],
-            // What a finished file is for. Only its own people, only once it is
-            // over, and only ever their own result back.
-            if (state.canRate) ...[
-              const SizedBox(height: AppSpacing.lg),
-              SectionHeader(l.moduleRatingSection, icon: AppIcons.approvals),
-              _RatingCard(state: state),
-            ],
-
-            const SizedBox(height: AppSpacing.lg),
-            SectionHeader(
-              l.moduleMembersCount(state.peopleCount),
-              icon: AppIcons.participants,
+          InfoRow(
+            icon: AppIcons.activate,
+            label: l.moduleStartDate,
+            value: formatDate(module.startsOn),
+          ),
+          // What that date is the date of, when the type states it.
+          if (type?.startCondition != null)
+            InfoRow(
+              icon: AppIcons.seasons,
+              label: l.moduleStartCondition,
+              value: type!.startCondition!.of(context),
             ),
-
-            // Roles held on the file itself — the entire roster of a file with
-            // no tree, and each member's share of his team's duties.
-            for (final role in type?.roles ?? const <ModuleRole>[])
-              _RoleRosterCard(state: state, role: role),
-
-            if (type?.hasTree ?? true)
-              if (sectorLevel == null || sectors.isEmpty)
-                GlassCard(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(l.moduleNoNodes),
-                      if (canManage) ...[
-                        const SizedBox(height: AppSpacing.md),
-                        OutlinedButton.icon(
-                          onPressed: onBuildTree,
-                          icon: const Icon(AppIcons.add),
-                          // Named by the level, so the same button offers
-                          // "إضافة القطاع" on one file and "إضافة المركز" on
-                          // another.
-                          label: Text(
-                            sectorLevel == null
-                                ? l.moduleBuildTree
-                                : l.moduleNodeAdd(sectorLevel.name.of(context)),
-                          ),
-                        ),
-                      ],
-                    ],
+          if (module.reportCadence.asksForReports)
+            InfoRow(
+              icon: AppIcons.tasks,
+              label: l.moduleReportCadence,
+              value: cadenceLabel(context, module.reportCadence),
+            ),
+          InfoRow(
+            icon: AppIcons.pending,
+            label: l.moduleEndCondition,
+            value: (type?.endCondition ?? module.endCondition)?.of(context),
+          ),
+          // The condition above says what event ends files of this kind.
+          // This says the day THIS one is done — shown only when somebody
+          // set it, since most files run on the condition alone.
+          if (module.endsOn != null)
+            InfoRow(
+              icon: AppIcons.pending,
+              label: l.moduleEndDate,
+              value: formatDate(module.endsOn),
+            ),
+          if ((module.decisionNumber ?? '').isNotEmpty)
+            InfoRow(
+              icon: AppIcons.file,
+              label: l.moduleDecisionNumber,
+              value: module.decisionNumber,
+            ),
+          for (final field in fields)
+            if (field.kind != ModuleFieldKind.pdf)
+              // A place is somewhere to go, never a line of URL to read.
+              if (field.kind == ModuleFieldKind.location &&
+                  isOpenableLocation(module.data[field.key]))
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: LocationButton(
+                      url: module.data[field.key] as String,
+                      label: field.label.of(context),
+                    ),
                   ),
                 )
               else
-                for (final sector in sectors)
-                  _SectorCard(state: state, level: sectorLevel, sector: sector)
-            else if (state.members.isEmpty)
-              GlassCard(
-                padding: const EdgeInsets.all(AppSpacing.lg),
+                InfoRow(
+                  icon: AppIcons.document,
+                  label: field.label.of(context),
+                  value: _display(context, field),
+                ),
+        ],
+      ),
+      for (final field in pdfFields) ...[
+        const SizedBox(height: AppSpacing.md),
+        _PdfCard(
+          label: field.label.of(context),
+          file: module.fileAt(field.key),
+          onOpen: onOpenPdf,
+        ),
+      ],
+    ];
+
+    // The work: who is on the file, what each of them owes, and how the ground
+    // is divided. All of it changes, all of it is read against the facts above,
+    // and it is the part with a scrollbar.
+    final work = <Widget>[
+      if (roles.isNotEmpty) ...[
+        const SizedBox(height: AppSpacing.lg),
+        SectionHeader(
+          focusName == null
+              ? l.moduleSectionTasks
+              : l.moduleSectionTasksOf(focusName),
+          icon: AppIcons.tasks,
+        ),
+        for (final held in roles) ...[
+          _TaskCard(type: type!, held: held),
+          const SizedBox(height: AppSpacing.md),
+        ],
+      ],
+
+      if (module.reportCadence.asksForReports) ...[
+        const SizedBox(height: AppSpacing.lg),
+        SectionHeader(l.moduleReports, icon: AppIcons.tasks),
+        _ReportsCard(module: module, reports: state.reports),
+      ],
+      // What a finished file is for. Only its own people, only once it is
+      // over, and only ever their own result back.
+      if (state.canRate) ...[
+        const SizedBox(height: AppSpacing.lg),
+        SectionHeader(l.moduleRatingSection, icon: AppIcons.approvals),
+        _RatingCard(state: state),
+      ],
+
+      const SizedBox(height: AppSpacing.lg),
+      SectionHeader(
+        l.moduleMembersCount(state.peopleCount),
+        icon: AppIcons.participants,
+      ),
+
+      // Roles held on the file itself — the entire roster of a file with
+      // no tree, and each member's share of his team's duties.
+      for (final role in type?.roles ?? const <ModuleRole>[])
+        _RoleRosterCard(state: state, role: role),
+
+      if (type?.hasTree ?? true)
+        if (sectorLevel == null || sectors.isEmpty)
+          GlassCard(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(l.moduleNoNodes),
+                if (canManage) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  OutlinedButton.icon(
+                    onPressed: onBuildTree,
+                    icon: const Icon(AppIcons.add),
+                    // Named by the level, so the same button offers
+                    // "إضافة القطاع" on one file and "إضافة المركز" on
+                    // another.
+                    label: Text(
+                      sectorLevel == null
+                          ? l.moduleBuildTree
+                          : l.moduleNodeAdd(sectorLevel.name.of(context)),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          )
+        else
+          for (final sector in sectors)
+            _SectorCard(state: state, level: sectorLevel, sector: sector)
+      else if (state.members.isEmpty)
+        GlassCard(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(l.moduleNoMembers),
+              if (canManage) ...[
+                const SizedBox(height: AppSpacing.md),
+                OutlinedButton.icon(
+                  onPressed: onBuildTree,
+                  icon: const Icon(AppIcons.add),
+                  label: Text(l.moduleTeamPick),
+                ),
+              ],
+            ],
+          ),
+        ),
+    ];
+
+    Future<void> reload() => context.read<ModuleDetailCubit>().load();
+
+    return ResponsivePage(
+      builder: (context, size) => size.hasSidePanel
+          ? TwoPaneLayout(
+              gutter: size.gutter,
+              // Wider than the app's usual panel: this one holds labelled rows
+              // rather than a name under a face, and "شرط انتهاء الملف" beside
+              // its value does not fit in three hundred pixels.
+              panelWidth: 380,
+              panel: FadeSlideIn(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(l.moduleNoMembers),
-                    if (canManage) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      OutlinedButton.icon(
-                        onPressed: onBuildTree,
-                        icon: const Icon(AppIcons.add),
-                        label: Text(l.moduleTeamPick),
-                      ),
-                    ],
-                  ],
+                  children: facts,
                 ),
               ),
-          ]),
-        ),
-      ),
+              onRefresh: reload,
+              children: staggered(work),
+            )
+          : SinglePaneLayout(
+              gutter: size.gutter,
+              onRefresh: reload,
+              children: staggered([...facts, ...work]),
+            ),
     );
   }
 }
+
+/// The narrowest a member may get before a roster drops a column.
+///
+/// A member is a face, a name under it and up to three dialable numbers in a
+/// row. Below this the numbers start wrapping one to a line, and the card grows
+/// taller than the column it just saved — which is the opposite of the point.
+const _kMemberWidth = 340.0;
 
 /// One team of a file with no tree: everyone on it, and under each of them the
 /// duties he was actually handed.
@@ -463,20 +524,25 @@ class _RoleRosterCard extends StatelessWidget {
       children: [
         const SizedBox(height: AppSpacing.sm),
         SectionHeader(role.name.of(context), icon: AppIcons.roles),
-        for (final member in members)
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.md),
-            child: GlassCard(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _MemberTile(member: member, dense: true),
-                  ..._duties(context, member.taskIds),
-                ],
+        // Wider than a bare member: this card also carries the duties he was
+        // handed, and a task's name has to fit on its line.
+        AdaptiveGrid(
+          minTileWidth: 400,
+          children: [
+            for (final member in members)
+              GlassCard(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _MemberTile(member: member, dense: true),
+                    ..._duties(context, member.taskIds),
+                  ],
+                ),
               ),
-            ),
-          ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
       ],
     );
   }
@@ -532,6 +598,13 @@ class _SectorCard extends StatelessWidget {
     final towerLevel = state.childLevel;
     final towers = state.childrenOf(sector.id);
 
+    // Whoever runs the sector itself, in the order the level lists the roles.
+    final supervisors = <Widget>[
+      for (final role in level.roles)
+        for (final member in sector.membersOf(role.id))
+          _MemberTile(member: member, roleName: role.name.of(context)),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -540,12 +613,10 @@ class _SectorCard extends StatelessWidget {
           sector.label ?? level.name.of(context),
           icon: AppIcons.roles,
         ),
-        for (final role in level.roles)
-          for (final member in sector.membersOf(role.id))
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.md),
-              child: _MemberTile(member: member, roleName: role.name.of(context)),
-            ),
+        if (supervisors.isNotEmpty) ...[
+          AdaptiveGrid(minTileWidth: _kMemberWidth, children: supervisors),
+          const SizedBox(height: AppSpacing.md),
+        ],
         if (towerLevel != null)
           for (final tower in towers)
             _TowerCard(state: state, level: towerLevel, tower: tower),
@@ -583,6 +654,18 @@ class _TowerCard extends StatelessWidget {
     );
     final tiedSet = state.referenceSetById(level.secondaryReferenceSetId);
     final entrySet = state.referenceSetById(level.referenceSetId);
+
+    // Everyone serving in this tower — the supervisor, his deputies and the
+    // mission members — each carrying the role he is here under.
+    final serving = <Widget>[
+      for (final role in level.roles)
+        for (final member in tower.membersOf(role.id))
+          _MemberTile(
+            member: member,
+            roleName: role.name.of(context),
+            dense: true,
+          ),
+    ];
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -686,16 +769,20 @@ class _TowerCard extends StatelessWidget {
                   ),
                 ),
               ),
-            for (final role in level.roles)
-              for (final member in tower.membersOf(role.id))
-                Padding(
-                  padding: const EdgeInsets.only(top: AppSpacing.md),
-                  child: _MemberTile(
-                    member: member,
-                    roleName: role.name.of(context),
-                    dense: true,
-                  ),
+            if (serving.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.md),
+                // No card of their own inside this one, so the gutter between
+                // two of them has to be wide enough to read as a gutter — and
+                // no forced equal heights, because there is no bottom edge to
+                // line up.
+                child: AdaptiveGrid(
+                  minTileWidth: _kMemberWidth,
+                  spacing: AppSpacing.lg,
+                  equalHeights: false,
+                  children: serving,
                 ),
+              ),
           ],
         ),
       ),
@@ -811,16 +898,16 @@ class _TaskCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Text(
               l.moduleJobDescription,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
             ),
             const SizedBox(height: 2),
             Text(
               role.description!.of(context),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                height: 1.6,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(height: 1.6),
             ),
           ],
           const SizedBox(height: AppSpacing.md),
@@ -851,9 +938,9 @@ class _TaskCard extends StatelessWidget {
             if (role.tasksAreAssigned) ...[
               Text(
                 l.moduleAssignedTasks,
-                style: Theme.of(
-                  context,
-                ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: AppSpacing.sm),
             ],
@@ -942,11 +1029,7 @@ class _TaskLine extends StatelessWidget {
 /// tap: coordinating between a tower and its sector is the everyday use of
 /// this screen, and it is why members can see each other at all.
 class _MemberTile extends StatelessWidget {
-  const _MemberTile({
-    required this.member,
-    this.roleName,
-    this.dense = false,
-  });
+  const _MemberTile({required this.member, this.roleName, this.dense = false});
 
   final ModuleMember member;
 
@@ -1073,13 +1156,9 @@ class _MemberTile extends StatelessWidget {
     );
 
     if (dense) return body;
-    return GlassCard(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: body,
-    );
+    return GlassCard(padding: const EdgeInsets.all(AppSpacing.md), child: body);
   }
 }
-
 
 /// Renders a stored value the way its field kind means it to be read.
 ///
@@ -1150,6 +1229,7 @@ class _RatingCard extends StatelessWidget {
     final me = supabase.auth.currentUser?.id;
     if (me == null) return const SizedBox.shrink();
     final summary = state.myRatingSummary;
+    final colleagues = _colleagues(me);
 
     return GlassCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -1184,32 +1264,43 @@ class _RatingCard extends StatelessWidget {
             l.moduleRatingAnonymous,
             style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
-          for (final colleague in _colleagues(me))
+          if (colleagues.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: AppSpacing.md),
-              child: Row(
+              // A name and five stars need less room than a member card does, so
+              // this one columns earlier — a file of thirty people is otherwise
+              // thirty rows of stars against a mostly empty card.
+              child: AdaptiveGrid(
+                minTileWidth: 300,
+                spacing: AppSpacing.lg,
+                equalHeights: false,
                 children: [
-                  ProfileAvatar(
-                    photoUrl: colleague.profile?.photoUrl,
-                    name: colleague.profile?.fullName ?? '',
-                    radius: 16,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      colleague.profile?.fullName ?? '—',
-                      style: text.bodyMedium,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  for (final colleague in colleagues)
+                    Row(
+                      children: [
+                        ProfileAvatar(
+                          photoUrl: colleague.profile?.photoUrl,
+                          name: colleague.profile?.fullName ?? '',
+                          radius: 16,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Text(
+                            colleague.profile?.fullName ?? '—',
+                            style: text.bodyMedium,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        StarRating(
+                          value: (state.myRatings[colleague.profileId] ?? 0)
+                              .toDouble(),
+                          size: 20,
+                          onRated: (stars) =>
+                              _rate(context, colleague.profileId, stars),
+                        ),
+                      ],
                     ),
-                  ),
-                  StarRating(
-                    value: (state.myRatings[colleague.profileId] ?? 0)
-                        .toDouble(),
-                    size: 20,
-                    onRated: (stars) =>
-                        _rate(context, colleague.profileId, stars),
-                  ),
                 ],
               ),
             ),
@@ -1354,10 +1445,7 @@ class _ReportTile extends StatelessWidget {
         if (notes.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: AppSpacing.sm),
-            child: Text(
-              notes,
-              style: text.bodyMedium?.copyWith(height: 1.5),
-            ),
+            child: Text(notes, style: text.bodyMedium?.copyWith(height: 1.5)),
           ),
       ],
     );
@@ -1439,7 +1527,9 @@ class _ReportSheetState extends State<_ReportSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              widget.existing == null ? l.moduleReportWrite : l.moduleReportEdit,
+              widget.existing == null
+                  ? l.moduleReportWrite
+                  : l.moduleReportEdit,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: AppSpacing.xs),
@@ -1463,7 +1553,9 @@ class _ReportSheetState extends State<_ReportSheet> {
             for (var i = 0; i < _added.length; i++)
               PendingAttachmentRow(
                 attachment: _added[i],
-                onRemove: _busy ? null : () => setState(() => _added.removeAt(i)),
+                onRemove: _busy
+                    ? null
+                    : () => setState(() => _added.removeAt(i)),
               ),
             Align(
               alignment: AlignmentDirectional.centerStart,
@@ -1518,7 +1610,11 @@ class _KeptAttachmentRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpacing.xs),
       child: Row(
         children: [
-          Icon(attachmentIcon(attachment.kind), size: 18, color: scheme.primary),
+          Icon(
+            attachmentIcon(attachment.kind),
+            size: 18,
+            color: scheme.primary,
+          ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(

@@ -2209,6 +2209,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Details'**
   String get referenceDetailsTitle;
+
+  /// No description provided for @profileSectionPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions'**
+  String get profileSectionPermissions;
+
+  /// No description provided for @profilePermissionsAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Administrator — every permission'**
+  String get profilePermissionsAdmin;
+
+  /// No description provided for @profilePermissionsNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No administrative permissions'**
+  String get profilePermissionsNone;
+
+  /// No description provided for @profilePermissionsNoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Which is the ordinary case: an operational file reaches you by assignment, not by permission.'**
+  String get profilePermissionsNoneHint;
+
+  /// No description provided for @profilePermissionsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{one permission} other{{count} permissions}}'**
+  String profilePermissionsCount(int count);
+
+  /// No description provided for @navDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get navDashboard;
+
+  /// No description provided for @navDashboardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The season from above'**
+  String get navDashboardSubtitle;
+
+  /// No description provided for @dashboardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get dashboardTitle;
+
+  /// No description provided for @dashboardSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'Season'**
+  String get dashboardSeason;
+
+  /// No description provided for @dashboardNoSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'No season yet'**
+  String get dashboardNoSeason;
+
+  /// No description provided for @dashboardNothingToShow.
+  ///
+  /// In en, this message translates to:
+  /// **'You hold no permission that shows figures here'**
+  String get dashboardNothingToShow;
+
+  /// No description provided for @dashboardSectionPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get dashboardSectionPeople;
+
+  /// No description provided for @dashboardSectionModules.
+  ///
+  /// In en, this message translates to:
+  /// **'Operational files'**
+  String get dashboardSectionModules;
+
+  /// No description provided for @dashboardSectionWork.
+  ///
+  /// In en, this message translates to:
+  /// **'The work'**
+  String get dashboardSectionWork;
+
+  /// No description provided for @dashboardSectionQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Approvals'**
+  String get dashboardSectionQueue;
+
+  /// No description provided for @dashboardParticipants.
+  ///
+  /// In en, this message translates to:
+  /// **'On this season'**
+  String get dashboardParticipants;
+
+  /// No description provided for @dashboardWithdrawn.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdrawn'**
+  String get dashboardWithdrawn;
+
+  /// No description provided for @dashboardWithdrawnCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{nobody withdrew} =1{and one withdrew} other{and {count} withdrew}}'**
+  String dashboardWithdrawnCaption(int count);
+
+  /// No description provided for @dashboardInternal.
+  ///
+  /// In en, this message translates to:
+  /// **'Of the mission'**
+  String get dashboardInternal;
+
+  /// No description provided for @dashboardExternal.
+  ///
+  /// In en, this message translates to:
+  /// **'From outside'**
+  String get dashboardExternal;
+
+  /// No description provided for @dashboardUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Not stated'**
+  String get dashboardUnknown;
+
+  /// No description provided for @dashboardByMission.
+  ///
+  /// In en, this message translates to:
+  /// **'By mission type'**
+  String get dashboardByMission;
+
+  /// No description provided for @dashboardByGender.
+  ///
+  /// In en, this message translates to:
+  /// **'By gender'**
+  String get dashboardByGender;
+
+  /// No description provided for @dashboardByJobTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Largest trades'**
+  String get dashboardByJobTitle;
+
+  /// No description provided for @dashboardFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get dashboardFiles;
+
+  /// No description provided for @dashboardFilesCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'{active} active, {draft} draft'**
+  String dashboardFilesCaption(int active, int draft);
+
+  /// No description provided for @dashboardRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get dashboardRunning;
+
+  /// No description provided for @dashboardEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended'**
+  String get dashboardEnded;
+
+  /// No description provided for @dashboardNodes.
+  ///
+  /// In en, this message translates to:
+  /// **'Sectors and towers'**
+  String get dashboardNodes;
+
+  /// No description provided for @dashboardMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold a posting'**
+  String get dashboardMembers;
+
+  /// No description provided for @dashboardUnstaffed.
+  ///
+  /// In en, this message translates to:
+  /// **'Files with nobody in them'**
+  String get dashboardUnstaffed;
+
+  /// No description provided for @dashboardUnstaffedCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody assigned yet'**
+  String get dashboardUnstaffedCaption;
+
+  /// No description provided for @dashboardByType.
+  ///
+  /// In en, this message translates to:
+  /// **'By file type'**
+  String get dashboardByType;
+
+  /// No description provided for @dashboardActiveDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Active against draft'**
+  String get dashboardActiveDraft;
+
+  /// No description provided for @dashboardReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get dashboardReports;
+
+  /// No description provided for @dashboardReportsCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'{authors, plural, =0{from nobody} =1{from one author} other{from {authors} authors}}'**
+  String dashboardReportsCaption(int authors);
+
+  /// No description provided for @dashboardReportsTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports over 30 days'**
+  String get dashboardReportsTrend;
+
+  /// No description provided for @dashboardReportsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No reports filed in this stretch'**
+  String get dashboardReportsEmpty;
+
+  /// No description provided for @dashboardRatings.
+  ///
+  /// In en, this message translates to:
+  /// **'Ratings'**
+  String get dashboardRatings;
+
+  /// No description provided for @dashboardAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Average'**
+  String get dashboardAverage;
+
+  /// No description provided for @dashboardRatedPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{nobody rated} =1{about one person} other{about {count} people}}'**
+  String dashboardRatedPeople(int count);
+
+  /// No description provided for @dashboardRatingDistribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Star distribution'**
+  String get dashboardRatingDistribution;
+
+  /// No description provided for @dashboardPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting approval'**
+  String get dashboardPending;
+
+  /// No description provided for @dashboardApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get dashboardApproved;
+
+  /// No description provided for @dashboardRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get dashboardRejected;
+
+  /// No description provided for @dashboardIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile incomplete'**
+  String get dashboardIncomplete;
 }
 
 class _AppLocalizationsDelegate

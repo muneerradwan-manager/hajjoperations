@@ -7,7 +7,7 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/profile_avatar.dart';
-import '../../../core/widgets/responsive_center.dart';
+import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../profile/domain/profile.dart';
 import '../application/approval_cubit.dart';
@@ -64,7 +64,7 @@ class _ApprovalQueueView extends StatelessWidget {
         },
         builder: (context, state) {
           if (state.status == ApprovalStatus.loading) {
-            return const SkeletonList(count: 5, height: 84);
+            return const SkeletonList(count: 5, height: 84, minTileWidth: 320);
           }
           if (state.pending.isEmpty) {
             return EmptyState(
@@ -72,26 +72,26 @@ class _ApprovalQueueView extends StatelessWidget {
               title: l.approvalEmpty,
             );
           }
-          return RefreshIndicator(
-            onRefresh: () => context.read<ApprovalCubit>().load(),
-            child: ResponsiveCenter(
-              child: ListView.separated(
-                padding: context.scrollPadding(),
-                itemCount: state.pending.length,
-                separatorBuilder: (_, _) =>
-                    const SizedBox(height: AppSpacing.md),
-                itemBuilder: (context, i) {
-                  final p = state.pending[i];
-                  return FadeSlideIn(
-                    delay: Duration(milliseconds: 40 * (i < 8 ? i : 8)),
-                    child: _PendingCard(
-                      profile: p,
-                      processing: state.processingIds.contains(p.id),
-                      onTap: () => _openDetail(context, p),
-                    ),
-                  );
-                },
-              ),
+          // The queue is everybody who registered and is still waiting, which
+          // after a recruitment drive is hundreds — so the rows are built as
+          // they are reached rather than all at once.
+          return ResponsivePage(
+            builder: (context, size) => AdaptiveGridView(
+              padding: context.scrollPadding(horizontal: size.gutter),
+              onRefresh: () => context.read<ApprovalCubit>().load(),
+              minTileWidth: 320,
+              itemCount: state.pending.length,
+              itemBuilder: (context, i) {
+                final p = state.pending[i];
+                return FadeSlideIn(
+                  delay: Duration(milliseconds: 40 * (i < 8 ? i : 8)),
+                  child: _PendingCard(
+                    profile: p,
+                    processing: state.processingIds.contains(p.id),
+                    onTap: () => _openDetail(context, p),
+                  ),
+                );
+              },
             ),
           );
         },

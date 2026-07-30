@@ -6,7 +6,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/employee_tile.dart';
-import '../../../core/widgets/responsive_center.dart';
+import '../../../core/widgets/responsive.dart';
 import '../../profile/domain/profile.dart';
 import '../application/employees_cubit.dart';
 import '../data/permissions_repository.dart';
@@ -35,22 +35,31 @@ class _View extends StatelessWidget {
     return Scaffold(
       appBar: GlassAppBar(title: Text(l.navPermissions)),
       body: SafeArea(
-        child: ResponsiveCenter(
-          child: Column(
+        child: ResponsivePage(
+          builder: (context, size) => Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
+                padding: EdgeInsets.fromLTRB(
+                  size.gutter,
                   AppSpacing.md,
-                  AppSpacing.lg,
+                  size.gutter,
                   AppSpacing.xs,
                 ),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: l.commonSearch,
-                    prefixIcon: const Icon(AppIcons.search),
+                // See the directory: a search box is the width of what gets
+                // typed into it, not the width of the window.
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 460),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: l.commonSearch,
+                        prefixIcon: const Icon(AppIcons.search),
+                      ),
+                      onChanged: (v) =>
+                          context.read<EmployeesCubit>().search(v),
+                    ),
                   ),
-                  onChanged: (v) => context.read<EmployeesCubit>().search(v),
                 ),
               ),
               Expanded(
@@ -65,6 +74,7 @@ class _View extends StatelessWidget {
                     if (state.status == EmployeesStatus.loading) {
                       return const SkeletonList(
                         padding: EdgeInsets.all(AppSpacing.lg),
+                        minTileWidth: 300,
                       );
                     }
                     final items = state.filtered;
@@ -74,34 +84,31 @@ class _View extends StatelessWidget {
                         title: l.employeesEmpty,
                       );
                     }
-                    return RefreshIndicator(
-                      onRefresh: () => context.read<EmployeesCubit>().load(),
-                      child: ListView.separated(
-                        padding: EdgeInsets.fromLTRB(
-                          AppSpacing.lg,
-                          AppSpacing.sm,
-                          AppSpacing.lg,
-                          AppSpacing.lg +
-                              MediaQuery.viewPaddingOf(context).bottom,
-                        ),
-                        itemCount: items.length,
-                        separatorBuilder: (_, _) =>
-                            const SizedBox(height: AppSpacing.md),
-                        itemBuilder: (context, i) {
-                          final e = items[i];
-                          return FadeSlideIn(
-                            delay: Duration(milliseconds: 30 * (i < 8 ? i : 8)),
-                            child: EmployeeTile(
-                              name: e.fullName,
-                              photoUrl: e.photoUrl,
-                              subtitle: e.jobTitleName?.of(context),
-                              isExternal: e.isExternal,
-                              trailing: const NavChevron(),
-                              onTap: () => _openEditor(context, e),
-                            ),
-                          );
-                        },
+                    return AdaptiveGridView(
+                      padding: EdgeInsets.fromLTRB(
+                        size.gutter,
+                        AppSpacing.sm,
+                        size.gutter,
+                        AppSpacing.lg +
+                            MediaQuery.viewPaddingOf(context).bottom,
                       ),
+                      onRefresh: () => context.read<EmployeesCubit>().load(),
+                      minTileWidth: 300,
+                      itemCount: items.length,
+                      itemBuilder: (context, i) {
+                        final e = items[i];
+                        return FadeSlideIn(
+                          delay: Duration(milliseconds: 30 * (i < 8 ? i : 8)),
+                          child: EmployeeTile(
+                            name: e.fullName,
+                            photoUrl: e.photoUrl,
+                            subtitle: e.jobTitleName?.of(context),
+                            isExternal: e.isExternal,
+                            trailing: const NavChevron(),
+                            onTap: () => _openEditor(context, e),
+                          ),
+                        );
+                      },
                     );
                   },
                 ),

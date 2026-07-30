@@ -1170,4 +1170,182 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get referenceDetailsTitle => 'التفاصيل';
+
+  @override
+  String get profileSectionPermissions => 'الصلاحيات';
+
+  @override
+  String get profilePermissionsAdmin => 'مدير النظام — كل الصلاحيات';
+
+  @override
+  String get profilePermissionsNone => 'لا صلاحيات إدارية';
+
+  @override
+  String get profilePermissionsNoneHint =>
+      'وهذا هو الحال المعتاد: الملفات التشغيلية تصلك بالإسناد لا بالصلاحية.';
+
+  @override
+  String profilePermissionsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count صلاحية',
+      few: '$count صلاحيات',
+      two: 'صلاحيتان',
+      one: 'صلاحية واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get navDashboard => 'لوحة المؤشرات';
+
+  @override
+  String get navDashboardSubtitle => 'الموسم كما يبدو من فوق';
+
+  @override
+  String get dashboardTitle => 'لوحة المؤشرات';
+
+  @override
+  String get dashboardSeason => 'الموسم';
+
+  @override
+  String get dashboardNoSeason => 'لا يوجد موسم بعد';
+
+  @override
+  String get dashboardNothingToShow => 'لا توجد لديك صلاحية تُظهر أرقاماً هنا';
+
+  @override
+  String get dashboardSectionPeople => 'الأشخاص';
+
+  @override
+  String get dashboardSectionModules => 'الملفات التشغيلية';
+
+  @override
+  String get dashboardSectionWork => 'العمل';
+
+  @override
+  String get dashboardSectionQueue => 'طلبات الاعتماد';
+
+  @override
+  String get dashboardParticipants => 'مشاركو الموسم';
+
+  @override
+  String get dashboardWithdrawn => 'منسحب';
+
+  @override
+  String dashboardWithdrawnCaption(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'وانسحب $count',
+      one: 'وانسحب واحد',
+      zero: 'لا أحد انسحب',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardInternal => 'من البعثة';
+
+  @override
+  String get dashboardExternal => 'من خارجها';
+
+  @override
+  String get dashboardUnknown => 'غير محدّد';
+
+  @override
+  String get dashboardByMission => 'حسب نوع البعثة';
+
+  @override
+  String get dashboardByGender => 'حسب الجنس';
+
+  @override
+  String get dashboardByJobTitle => 'أكثر المسمّيات الوظيفية';
+
+  @override
+  String get dashboardFiles => 'الملفات';
+
+  @override
+  String dashboardFilesCaption(int active, int draft) {
+    return '$active مفعّل و$draft مسوّدة';
+  }
+
+  @override
+  String get dashboardRunning => 'قيد التنفيذ';
+
+  @override
+  String get dashboardEnded => 'منتهية';
+
+  @override
+  String get dashboardNodes => 'القطاعات والأبراج';
+
+  @override
+  String get dashboardMembers => 'مسنَد إليهم ملف';
+
+  @override
+  String get dashboardUnstaffed => 'ملفات بلا أشخاص';
+
+  @override
+  String get dashboardUnstaffedCaption => 'لم يُسنَد إليها أحد بعد';
+
+  @override
+  String get dashboardByType => 'حسب نوع الملف';
+
+  @override
+  String get dashboardActiveDraft => 'المفعّل مقابل المسوّدة';
+
+  @override
+  String get dashboardReports => 'التقارير';
+
+  @override
+  String dashboardReportsCaption(int authors) {
+    String _temp0 = intl.Intl.pluralLogic(
+      authors,
+      locale: localeName,
+      other: 'من $authors كتّاب',
+      one: 'من كاتب واحد',
+      zero: 'لم يكتبها أحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardReportsTrend => 'التقارير خلال ٣٠ يوماً';
+
+  @override
+  String get dashboardReportsEmpty => 'لم تُرفَع تقارير في هذه المدّة';
+
+  @override
+  String get dashboardRatings => 'التقييمات';
+
+  @override
+  String get dashboardAverage => 'المتوسّط';
+
+  @override
+  String dashboardRatedPeople(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'عن $count أشخاص',
+      one: 'عن شخص واحد',
+      zero: 'لم يُقيَّم أحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardRatingDistribution => 'توزيع النجوم';
+
+  @override
+  String get dashboardPending => 'بانتظار الاعتماد';
+
+  @override
+  String get dashboardApproved => 'معتمد';
+
+  @override
+  String get dashboardRejected => 'مرفوض';
+
+  @override
+  String get dashboardIncomplete => 'لم يُكمل ملفه';
 }

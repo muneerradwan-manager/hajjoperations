@@ -9,7 +9,7 @@ import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/info_section.dart';
 import '../../../core/widgets/profile_hero.dart';
-import '../../../core/widgets/responsive_center.dart';
+import '../../../core/widgets/responsive.dart';
 import '../../profile/domain/profile.dart';
 import '../application/approval_cubit.dart';
 import '../data/approval_repository.dart';
@@ -31,25 +31,23 @@ class ApprovalDetailScreen extends StatelessWidget {
       appBar: GlassAppBar(title: Text(l.approvalDetailTitle)),
       body: Builder(
         // See HomeScreen: the padding must come from a context inside the body.
-        builder: (context) => ResponsiveCenter(
-          child: ListView(
-            // Extra bottom room so the action bar never covers the last row.
-            padding: context.scrollPadding(bottom: AppSpacing.xxl),
-            children: staggered([
-              ProfileHero(
-                name: profile.fullName,
-                photoUrl: profile.photoUrl,
-                roleLabel: profile.jobTitleName?.of(context),
-                badges: [
-                  if (profile.isExternal)
-                    GlassBadge(
-                      label: l.profileBadgeExternal,
-                      color: scheme.tertiary,
-                      icon: AppIcons.external,
-                    ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
+        builder: (context) => ResponsivePage(
+          builder: (context, size) {
+            final hero = ProfileHero(
+              name: profile.fullName,
+              photoUrl: profile.photoUrl,
+              roleLabel: profile.jobTitleName?.of(context),
+              badges: [
+                if (profile.isExternal)
+                  GlassBadge(
+                    label: l.profileBadgeExternal,
+                    color: scheme.tertiary,
+                    icon: AppIcons.external,
+                  ),
+              ],
+            );
+
+            final details = <Widget>[
               InfoSection(
                 title: l.profileSectionPersonal,
                 icon: AppIcons.firstName,
@@ -140,8 +138,31 @@ class ApprovalDetailScreen extends StatelessWidget {
                   ),
                 ],
               ),
-            ]),
-          ),
+            ];
+
+            // Deciding about a person means reading their file against their
+            // face; on a window with the room, the face stays on the glass
+            // while the file scrolls rather than leaving the moment it is
+            // scrolled past.
+            return size.isAtLeast(WindowSize.expanded)
+                ? TwoPaneLayout(
+                    gutter: size.gutter,
+                    // Extra bottom room so the action bar never covers the
+                    // last row.
+                    bottom: AppSpacing.xxl,
+                    panel: FadeSlideIn(child: hero),
+                    children: staggered(details),
+                  )
+                : SinglePaneLayout(
+                    gutter: size.gutter,
+                    bottom: AppSpacing.xxl,
+                    children: staggered([
+                      hero,
+                      const SizedBox(height: AppSpacing.lg),
+                      ...details,
+                    ]),
+                  );
+          },
         ),
       ),
       bottomNavigationBar: _ActionBar(profile: profile),

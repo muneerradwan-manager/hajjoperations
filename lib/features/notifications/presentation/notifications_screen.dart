@@ -5,7 +5,7 @@ import '../../../core/animations/animations.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/glass.dart';
-import '../../../core/widgets/responsive_center.dart';
+import '../../../core/widgets/responsive.dart';
 import '../../../core/constants/permission_codes.dart';
 import '../../auth/application/session_cubit.dart';
 import '../application/notifications_cubit.dart';
@@ -73,45 +73,52 @@ class _View extends StatelessWidget {
         ],
       ),
       body: SafeArea(
-        child: ResponsiveCenter(
-          child: BlocBuilder<NotificationsCubit, NotificationsState>(
-            builder: (context, state) {
-              if (state.loading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (state.items.isEmpty) {
-                return _Empty(message: l.notificationsEmpty);
-              }
-              return RefreshIndicator(
-                onRefresh: () => context.read<NotificationsCubit>().refresh(),
-                child: ListView.separated(
-                  padding: EdgeInsets.fromLTRB(
-                    16,
-                    12,
-                    16,
-                    24 + MediaQuery.viewPaddingOf(context).bottom,
-                  ),
-                  itemCount: state.items.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 10),
-                  itemBuilder: (context, i) {
-                    final n = state.items[i];
-                    return FadeSlideIn(
-                      delay: Duration(milliseconds: 25 * i),
-                      child: _NotificationCard(
-                        notification: n,
-                        repo: repo,
-                        onTap: n.isRead
-                            ? null
-                            : () => context.read<NotificationsCubit>().markRead(
-                                n.id,
-                              ),
-                      ),
-                    );
-                  },
+        child: BlocBuilder<NotificationsCubit, NotificationsState>(
+          builder: (context, state) {
+            if (state.loading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (state.items.isEmpty) {
+              return _Empty(message: l.notificationsEmpty);
+            }
+            // Two columns at most, and the page stops at 1200 — narrower than
+            // any other list here. These cards hold sentences somebody wrote,
+            // not fields; a notification stretched across a monitor is a line
+            // of prose two feet long, and the eye loses the next one on the way
+            // back. Twice as many messages on the screen is the whole gain
+            // available, and it is worth having.
+            return ResponsivePage(
+              maxWidth: 1200,
+              builder: (context, size) => AdaptiveGridView(
+                padding: EdgeInsets.fromLTRB(
+                  size.gutter,
+                  12,
+                  size.gutter,
+                  24 + MediaQuery.viewPaddingOf(context).bottom,
                 ),
-              );
-            },
-          ),
+                onRefresh: () => context.read<NotificationsCubit>().refresh(),
+                minTileWidth: 380,
+                maxColumns: 2,
+                spacing: 10,
+                itemCount: state.items.length,
+                itemBuilder: (context, i) {
+                  final n = state.items[i];
+                  return FadeSlideIn(
+                    delay: Duration(milliseconds: 25 * i),
+                    child: _NotificationCard(
+                      notification: n,
+                      repo: repo,
+                      onTap: n.isRead
+                          ? null
+                          : () => context.read<NotificationsCubit>().markRead(
+                              n.id,
+                            ),
+                    ),
+                  );
+                },
+              ),
+            );
+          },
         ),
       ),
     );

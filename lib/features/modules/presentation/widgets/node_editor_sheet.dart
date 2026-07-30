@@ -141,13 +141,15 @@ class _NodeEditorSheetState extends State<_NodeEditorSheet> {
   Future<void> _pickSecondary() async {
     final l = context.l10n;
     final set = widget.secondarySet;
-    final items = set?.itemsForSeason(widget.seasonId) ?? const <ReferenceItem>[];
+    final items =
+        set?.itemsForSeason(widget.seasonId) ?? const <ReferenceItem>[];
     final result = await showPickerSheet(
       context,
       title: set?.name.of(context) ?? '',
       options: [
         for (final i in items)
-          if (i.id == _secondary || !widget.takenSecondaryEntries.contains(i.id))
+          if (i.id == _secondary ||
+              !widget.takenSecondaryEntries.contains(i.id))
             PickerOption(id: i.id, label: i.name.of(context)),
       ],
       selected: {?_secondary},
@@ -174,7 +176,9 @@ class _NodeEditorSheetState extends State<_NodeEditorSheet> {
       NodeDraft(
         id: widget.existing?.id,
         referenceItemId: widget.level.isNamedByHand ? null : _entry,
-        secondaryReferenceItemId: widget.secondarySet == null ? null : _secondary,
+        secondaryReferenceItemId: widget.secondarySet == null
+            ? null
+            : _secondary,
         label: widget.level.isNamedByHand ? _label.text.trim() : null,
         data: _data,
         roleMembers: _members,
@@ -201,7 +205,7 @@ class _NodeEditorSheetState extends State<_NodeEditorSheet> {
         constraints: BoxConstraints(
           maxHeight: MediaQuery.sizeOf(context).height * 0.85,
         ),
-        // Not ResponsiveCenter: its `Center` expands to whatever height it is
+        // Not ResponsivePage: its `Center` expands to whatever height it is
         // allowed, which here is the 0.85 cap — so a sheet with four rows in it
         // stood nearly full-height with its content marooned in the middle.
         // `heightFactor: 1` sizes this to the content instead, and the cap goes
@@ -316,7 +320,8 @@ class _NodeEditorSheetState extends State<_NodeEditorSheet> {
                           referenceSet: widget.referenceSets
                               .where((s) => s.id == field.referenceSetId)
                               .firstOrNull,
-                          onChanged: (v) => setState(() => _data[field.key] = v),
+                          onChanged: (v) =>
+                              setState(() => _data[field.key] = v),
                         ),
                       ],
                       for (final role in level.roles) ...[

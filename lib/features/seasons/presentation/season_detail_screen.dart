@@ -7,7 +7,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/employee_tile.dart';
-import '../../../core/widgets/responsive_center.dart';
+import '../../../core/widgets/responsive.dart';
 import '../../auth/application/session_cubit.dart';
 import '../../profile/domain/profile.dart';
 import '../application/seasons_cubit.dart';
@@ -81,38 +81,45 @@ class _SeasonDetailScreenState extends State<SeasonDetailScreen> {
         ],
       ),
       body: SafeArea(
-        child: ResponsiveCenter(
-          child: Column(
+        child: ResponsivePage(
+          builder: (context, size) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (widget.season.gregorianLabel != null)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
+                  padding: EdgeInsets.fromLTRB(
+                    size.gutter,
                     AppSpacing.md,
-                    AppSpacing.lg,
+                    size.gutter,
                     0,
                   ),
-                  child: GlassCard(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.lg,
-                      vertical: AppSpacing.md,
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          AppIcons.seasons,
-                          size: 18,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Text(widget.season.gregorianLabel!),
-                        const Spacer(),
-                        if (widget.season.isCurrent)
-                          GlassBadge(
-                            label: l.seasonBadgeCurrent,
-                            icon: AppIcons.current,
+                  // A date and a badge, held to the width of the two of them.
+                  // Left to fill a monitor, the Spacer between them becomes a
+                  // metre of nothing with a word at either end.
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 460),
+                    child: GlassCard(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.lg,
+                        vertical: AppSpacing.md,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            AppIcons.seasons,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
-                      ],
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(widget.season.gregorianLabel!),
+                          const Spacer(),
+                          if (widget.season.isCurrent)
+                            GlassBadge(
+                              label: l.seasonBadgeCurrent,
+                              icon: AppIcons.current,
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -121,7 +128,7 @@ class _SeasonDetailScreenState extends State<SeasonDetailScreen> {
                   future: _participants,
                   builder: (context, snap) {
                     if (snap.connectionState == ConnectionState.waiting) {
-                      return const SkeletonList();
+                      return const SkeletonList(minTileWidth: 300);
                     }
                     if (snap.hasError) {
                       return Center(child: Text('${snap.error}'));
@@ -131,10 +138,10 @@ class _SeasonDetailScreenState extends State<SeasonDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(
+                          padding: EdgeInsets.fromLTRB(
+                            size.gutter,
                             AppSpacing.lg,
-                            AppSpacing.lg,
-                            AppSpacing.lg,
+                            size.gutter,
                             AppSpacing.sm,
                           ),
                           child: SectionHeader(
@@ -148,19 +155,18 @@ class _SeasonDetailScreenState extends State<SeasonDetailScreen> {
                                   icon: AppIcons.participants,
                                   title: l.seasonNoParticipants,
                                 )
-                              : ListView.separated(
+                              : AdaptiveGridView(
                                   padding: EdgeInsets.fromLTRB(
-                                    AppSpacing.lg,
+                                    size.gutter,
                                     0,
-                                    AppSpacing.lg,
+                                    size.gutter,
                                     AppSpacing.lg +
                                         MediaQuery.viewPaddingOf(
                                           context,
                                         ).bottom,
                                   ),
+                                  minTileWidth: 300,
                                   itemCount: people.length,
-                                  separatorBuilder: (_, _) =>
-                                      const SizedBox(height: AppSpacing.md),
                                   itemBuilder: (context, i) {
                                     final p = people[i];
                                     return FadeSlideIn(

@@ -9,7 +9,7 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/info_section.dart';
-import '../../../core/widgets/responsive_center.dart';
+import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
 import '../../seasons/data/seasons_repository.dart';
@@ -19,6 +19,9 @@ import '../domain/module_type.dart';
 import '../domain/operational_module.dart';
 import 'module_detail_screen.dart';
 import 'module_editor_screen.dart';
+
+/// One beat of the entry cascade.
+const _step = Duration(milliseconds: 70);
 
 /// One screen, two questions — see [ModulesView].
 ///
@@ -40,11 +43,8 @@ class ModulesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ModulesCubit(
-        ModulesRepository(),
-        SeasonsRepository(),
-        view: view,
-      ),
+      create: (_) =>
+          ModulesCubit(ModulesRepository(), SeasonsRepository(), view: view),
       child: _View(view: view),
     );
   }
@@ -104,11 +104,12 @@ class _View extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final session = context.watch<SessionCubit>().state;
-    // Only in the office. Holding the permission does not put a create button
-    // on the list of a man's own postings.
-    final canManage =
-        view == ModulesView.manage &&
-        session.can(PermissionCodes.modulesManage);
+    // Which door this is. Everything that WRITES on this screen and on the
+    // pages it opens waits on it — holding the permission does not put a create
+    // button on the list of a man's own postings, and it does not put Edit,
+    // Delete and Deactivate on a file he opened from that list either.
+    final fromOffice = view == ModulesView.manage;
+    final canManage = fromOffice && session.can(PermissionCodes.modulesManage);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -120,7 +121,9 @@ class _View extends StatelessWidget {
           buildWhen: (p, c) => p.season != c.season,
           builder: (context, state) => Text(
             [
-              view == ModulesView.manage ? l.modulesManageTitle : l.modulesTitle,
+              view == ModulesView.manage
+                  ? l.modulesManageTitle
+                  : l.modulesTitle,
               if (state.season != null)
                 l.seasonHijriYear(state.season!.hijriYear),
             ].join(' — '),
@@ -168,26 +171,50 @@ class _View extends StatelessWidget {
             );
           }
 
-          return ResponsiveCenter(
-            child: RefreshIndicator(
+          // The drafts wait for the files above them, but only up to where
+          // staggered() itself stops adding delay — a season with thirty files
+          // would otherwise leave the second heading off the screen for
+          // seconds, which reads as the list being broken rather than arriving.
+          final draftBeat = state.active.isEmpty
+              ? Duration.zero
+              : _step * (state.active.length.clamp(0, 8) + 2);
+
+          return ResponsivePage(
+            builder: (context, size) => SinglePaneLayout(
+              gutter: size.gutter,
               onRefresh: () => context.read<ModulesCubit>().load(),
-              child: ListView(
-                padding: context.scrollPadding(),
-                children: staggered([
-                  if (state.active.isNotEmpty) ...[
-                    SectionHeader(
+              children: [
+                if (state.active.isNotEmpty) ...[
+                  FadeSlideIn(
+                    child: SectionHeader(
                       l.moduleActiveSection,
                       icon: AppIcons.modules,
                     ),
-                    ...state.active.map((m) => _ModuleCard(module: m)),
-                  ],
-                  if (state.drafts.isNotEmpty) ...[
-                    const SizedBox(height: AppSpacing.md),
-                    SectionHeader(l.moduleDraftSection, icon: AppIcons.edit),
-                    ...state.drafts.map((m) => _ModuleCard(module: m)),
-                  ],
-                ]),
-              ),
+                  ),
+                  AdaptiveGrid(
+                    children: staggered([
+                      for (final m in state.active)
+                        _ModuleCard(module: m, fromOffice: fromOffice),
+                    ], start: _step),
+                  ),
+                ],
+                if (state.drafts.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  FadeSlideIn(
+                    delay: draftBeat,
+                    child: SectionHeader(
+                      l.moduleDraftSection,
+                      icon: AppIcons.edit,
+                    ),
+                  ),
+                  AdaptiveGrid(
+                    children: staggered([
+                      for (final m in state.drafts)
+                        _ModuleCard(module: m, fromOffice: fromOffice),
+                    ], start: draftBeat + _step),
+                  ),
+                ],
+              ],
             ),
           );
         },
@@ -197,9 +224,15 @@ class _View extends StatelessWidget {
 }
 
 class _ModuleCard extends StatelessWidget {
-  const _ModuleCard({required this.module});
+  const _ModuleCard({required this.module, required this.fromOffice});
 
   final OperationalModule module;
+
+  /// Which of this screen's two lists the card is in — see
+  /// [ModuleDetailScreen.fromOffice]. Under عام a file opens read-only even for
+  /// somebody holding `modules.manage`: there he is a member of it like anyone
+  /// else, and that list has never been about running the season's paperwork.
+  final bool fromOffice;
 
   @override
   Widget build(BuildContext context) {
@@ -207,107 +240,111 @@ class _ModuleCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: GlassCard(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        onTap: () async {
-          final changed = await Navigator.of(context).push<bool>(
-            fadeThroughRoute((_) => ModuleDetailScreen(moduleId: module.id)),
-          );
-          if (changed == true && context.mounted) {
-            await context.read<ModulesCubit>().load();
-          }
-        },
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: scheme.primary.withValues(alpha: 0.10),
-                borderRadius: BorderRadius.circular(AppRadius.sm),
-              ),
-              child: Icon(AppIcons.modules, size: 20, color: scheme.primary),
+    // No margin of its own: the gap between one card and the next belongs to
+    // whatever is arranging them. Carrying it here put it below the card only,
+    // which is the one direction a grid does not need it — and made every card
+    // in a row taller than it looks by the size of that gap.
+    return GlassCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      onTap: () async {
+        final changed = await Navigator.of(context).push<bool>(
+          fadeThroughRoute(
+            (_) =>
+                ModuleDetailScreen(moduleId: module.id, fromOffice: fromOffice),
+          ),
+        );
+        if (changed == true && context.mounted) {
+          await context.read<ModulesCubit>().load();
+        }
+      },
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: scheme.primary.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(AppRadius.sm),
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // The type is the name: a file is created once per season,
-                  // so there is nothing to tell two of them apart by.
+            child: Icon(AppIcons.modules, size: 20, color: scheme.primary),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // The type is the name: a file is created once per season,
+                // so there is nothing to tell two of them apart by.
+                Text(
+                  module.moduleTypeName?.of(context) ?? '—',
+                  style: text.titleMedium,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (module.startsOn != null) ...[
+                  const SizedBox(height: 2),
                   Text(
-                    module.moduleTypeName?.of(context) ?? '—',
-                    style: text.titleMedium,
-                    maxLines: 2,
+                    '${l.moduleStartDate}: ${formatDate(module.startsOn)}',
+                    style: text.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (module.startsOn != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      '${l.moduleStartDate}: ${formatDate(module.startsOn)}',
-                      style: text.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                ],
+                // Directly under the day it began, because the two dates are
+                // one fact read together. Coloured only once it has passed —
+                // a date still ahead is information, not a warning.
+                if (module.endsOn != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    '${l.moduleEndDate}: ${formatDate(module.endsOn)}',
+                    style: text.bodySmall?.copyWith(
+                      color: module.hasEnded
+                          ? Accent.redDeep.of(context)
+                          : scheme.onSurfaceVariant,
+                      fontWeight: module.hasEnded ? FontWeight.w600 : null,
                     ),
-                  ],
-                  // Directly under the day it began, because the two dates are
-                  // one fact read together. Coloured only once it has passed —
-                  // a date still ahead is information, not a warning.
-                  if (module.endsOn != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      '${l.moduleEndDate}: ${formatDate(module.endsOn)}',
-                      style: text.bodySmall?.copyWith(
-                        color: module.hasEnded
-                            ? Accent.redDeep.of(context)
-                            : scheme.onSurfaceVariant,
-                        fontWeight: module.hasEnded ? FontWeight.w600 : null,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.sm),
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    runSpacing: AppSpacing.xs,
-                    children: [
-                      if (module.seasonHijriYear != null)
-                        GlassBadge(
-                          label: l.seasonHijriYear(module.seasonHijriYear!),
-                          icon: AppIcons.seasons,
-                          dense: true,
-                        ),
-                      // Beside the year, and worded: "1448 هـ" says what it is
-                      // on its own, a bare number does not.
-                      if ((module.decisionNumber ?? '').isNotEmpty)
-                        GlassBadge(
-                          label: l.moduleDecisionBadge(module.decisionNumber!),
-                          icon: AppIcons.file,
-                          dense: true,
-                        ),
-                      // Two different silences, and they can both be true: a
-                      // file may be waiting to be switched on AND carry the day
-                      // it is due to finish.
-                      if (!module.isActive)
-                        GlassBadge(
-                          label: l.moduleBadgeDraft,
-                          icon: AppIcons.edit,
-                          color: Accent.gold.of(context),
-                          dense: true,
-                        ),
-                    ],
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
-              ),
+                const SizedBox(height: AppSpacing.sm),
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.xs,
+                  children: [
+                    if (module.seasonHijriYear != null)
+                      GlassBadge(
+                        label: l.seasonHijriYear(module.seasonHijriYear!),
+                        icon: AppIcons.seasons,
+                        dense: true,
+                      ),
+                    // Beside the year, and worded: "1448 هـ" says what it is
+                    // on its own, a bare number does not.
+                    if ((module.decisionNumber ?? '').isNotEmpty)
+                      GlassBadge(
+                        label: l.moduleDecisionBadge(module.decisionNumber!),
+                        icon: AppIcons.file,
+                        dense: true,
+                      ),
+                    // Two different silences, and they can both be true: a
+                    // file may be waiting to be switched on AND carry the day
+                    // it is due to finish.
+                    if (!module.isActive)
+                      GlassBadge(
+                        label: l.moduleBadgeDraft,
+                        icon: AppIcons.edit,
+                        color: Accent.gold.of(context),
+                        dense: true,
+                      ),
+                  ],
+                ),
+              ],
             ),
-            const NavChevron(),
-          ],
-        ),
+          ),
+          const NavChevron(),
+        ],
       ),
     );
   }
@@ -342,68 +379,75 @@ class _TypePickerSheet extends StatelessWidget {
             AppSpacing.lg,
             AppSpacing.xl + MediaQuery.viewPaddingOf(context).bottom,
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                l.moduleChooseType,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Flexible(
-                child: ListView(
-                  shrinkWrap: true,
-                  padding: EdgeInsets.zero,
-                  children: [
-                    for (final type in types)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                        child: GlassCard(
-                          padding: const EdgeInsets.all(AppSpacing.lg),
-                          onTap: () => Navigator.of(context).pop(type),
-                          child: Row(
-                            children: [
-                              Icon(
-                                AppIcons.moduleType,
-                                size: 20,
-                                color: scheme.primary,
-                              ),
-                              const SizedBox(width: AppSpacing.md),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      type.name.of(context),
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.titleMedium,
-                                    ),
-                                    if (type.description != null) ...[
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        type.description!.of(context),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                              color: scheme.onSurfaceVariant,
-                                            ),
-                                      ),
-                                    ],
-                                  ],
+          // A sheet takes the window's full width, and on a monitor that is a
+          // metre of glass holding a list of ten short names. It is a question,
+          // and a question should be the size of its answer.
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l.moduleChooseType,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Flexible(
+                  child: ListView(
+                    shrinkWrap: true,
+                    padding: EdgeInsets.zero,
+                    children: [
+                      for (final type in types)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                          child: GlassCard(
+                            padding: const EdgeInsets.all(AppSpacing.lg),
+                            onTap: () => Navigator.of(context).pop(type),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  AppIcons.moduleType,
+                                  size: 20,
+                                  color: scheme.primary,
                                 ),
-                              ),
-                              const NavChevron(),
-                            ],
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        type.name.of(context),
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleMedium,
+                                      ),
+                                      if (type.description != null) ...[
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          type.description!.of(context),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall
+                                              ?.copyWith(
+                                                color: scheme.onSurfaceVariant,
+                                              ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                const NavChevron(),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

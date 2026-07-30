@@ -4,6 +4,7 @@ import '../../features/auth/application/session_cubit.dart';
 import '../../features/approval/presentation/approval_queue_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
+import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../features/employees/presentation/employees_directory_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/modules/application/modules_cubit.dart';
@@ -43,6 +44,7 @@ abstract class Routes {
   static const modulesManage = '/modules/manage';
   static const referenceData = '/reference-data';
   static const settings = '/settings';
+  static const dashboard = '/dashboard';
 }
 
 GoRouter buildRouter(SessionCubit session) {
@@ -158,6 +160,11 @@ GoRouter buildRouter(SessionCubit session) {
             fadeThroughPage(key: s.pageKey, child: const SettingsScreen()),
       ),
       GoRoute(
+        path: Routes.dashboard,
+        pageBuilder: (c, s) =>
+            fadeThroughPage(key: s.pageKey, child: const DashboardScreen()),
+      ),
+      GoRoute(
         path: Routes.approvals,
         pageBuilder: (c, s) =>
             fadeThroughPage(key: s.pageKey, child: const ApprovalQueueScreen()),
@@ -198,10 +205,8 @@ GoRouter buildRouter(SessionCubit session) {
       ),
       GoRoute(
         path: Routes.referenceData,
-        pageBuilder: (c, s) => fadeThroughPage(
-          key: s.pageKey,
-          child: const ReferenceDataScreen(),
-        ),
+        pageBuilder: (c, s) =>
+            fadeThroughPage(key: s.pageKey, child: const ReferenceDataScreen()),
       ),
       GoRoute(
         path: Routes.myProfile,

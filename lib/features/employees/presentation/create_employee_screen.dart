@@ -7,7 +7,7 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/utils/validators.dart';
 import '../../../core/widgets/password_field.dart';
-import '../../../core/widgets/responsive_center.dart';
+import '../../../core/widgets/responsive.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../profile/domain/job_title.dart';
 import '../../profile/domain/profile_enums.dart';
@@ -141,127 +141,114 @@ class _ViewState extends State<_View> {
               return const AppLoader();
             }
             final submitting = state.status == CreateEmployeeStatus.submitting;
+            // Two columns of fields at most, and the page stops well short of
+            // the window — see profile_completion_screen.dart for why a form is
+            // the one thing on a monitor that must not take the room it is
+            // offered.
+            final account = <Widget>[
+              TextFormField(
+                controller: _email,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: l.authEmail,
+                  prefixIcon: const Icon(AppIcons.email),
+                ),
+                validator: (v) =>
+                    Validators.isEmail(v ?? '') ? null : l.authInvalidEmail,
+              ),
+              PasswordField(
+                controller: _password,
+                label: l.authPassword,
+                validator: (v) =>
+                    (v ?? '').length < 8 ? l.authPasswordTooShort : null,
+              ),
+            ];
+
+            final personal = <Widget>[
+              _text(_firstName, l.profileFirstName, AppIcons.firstName),
+              _text(_fatherName, l.profileFatherName, AppIcons.fatherName),
+              _text(_surname, l.profileSurname, AppIcons.surname),
+              _jobTitleDropdown(l, state.jobTitles),
+              _genderDropdown(l),
+              _missionDropdown(l),
+              _dobField(l),
+              _text(
+                _phoneSy,
+                l.profilePhoneSy,
+                AppIcons.phoneSy,
+                keyboard: TextInputType.phone,
+              ),
+              _text(
+                _phoneSa,
+                '${l.profilePhoneSa} (${l.commonOptional})',
+                AppIcons.phoneSa,
+                keyboard: TextInputType.phone,
+                required: false,
+              ),
+            ];
+
+            Widget fields(List<Widget> children) => AdaptiveGrid(
+              minTileWidth: 300,
+              maxColumns: 2,
+              spacing: AppSpacing.md,
+              equalHeights: false,
+              children: children,
+            );
+
             return AbsorbPointer(
               absorbing: submitting,
-              child: ResponsiveCenter(
-                child: SingleChildScrollView(
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
-                  padding: EdgeInsets.fromLTRB(
-                    AppSpacing.xl,
-                    AppSpacing.md,
-                    AppSpacing.xl,
-                    AppSpacing.xxl + MediaQuery.viewPaddingOf(context).bottom,
-                  ),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: staggered([
-                        _label(context, l.createEmployeeAccountSection),
+              child: Form(
+                key: _formKey,
+                child: ResponsivePage(
+                  maxWidth: 900,
+                  builder: (context, size) => SinglePaneLayout(
+                    gutter: size.gutter,
+                    bottom: AppSpacing.xxl,
+                    keyboardDismiss: ScrollViewKeyboardDismissBehavior.onDrag,
+                    children: staggered([
+                      _label(context, l.createEmployeeAccountSection),
+                      const SizedBox(height: 8),
+                      fields(account),
+                      const SizedBox(height: 24),
+                      _label(context, l.profileSectionPersonal),
+                      const SizedBox(height: 8),
+                      fields(personal),
+                      const SizedBox(height: 8),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        secondary: const Icon(AppIcons.external),
+                        title: Text(l.employeeIsExternal),
+                        subtitle: Text(l.employeeIsExternalHint),
+                        value: _isExternal,
+                        onChanged: (v) => setState(() => _isExternal = v),
+                      ),
+                      if (_isExternal) ...[
                         const SizedBox(height: 8),
-                        TextFormField(
-                          controller: _email,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            labelText: l.authEmail,
-                            prefixIcon: const Icon(AppIcons.email),
-                          ),
-                          validator: (v) => Validators.isEmail(v ?? '')
-                              ? null
-                              : l.authInvalidEmail,
-                        ),
-                        const SizedBox(height: 12),
-                        PasswordField(
-                          controller: _password,
-                          label: l.authPassword,
-                          validator: (v) => (v ?? '').length < 8
-                              ? l.authPasswordTooShort
-                              : null,
-                        ),
-                        const SizedBox(height: 24),
-                        _label(context, l.profileSectionPersonal),
-                        const SizedBox(height: 8),
-                        _text(
-                          _firstName,
-                          l.profileFirstName,
-                          AppIcons.firstName,
-                        ),
-                        const SizedBox(height: 12),
-                        _text(
-                          _fatherName,
-                          l.profileFatherName,
-                          AppIcons.fatherName,
-                        ),
-                        const SizedBox(height: 12),
-                        _text(_surname, l.profileSurname, AppIcons.surname),
-                        const SizedBox(height: 12),
-                        _jobTitleDropdown(l, state.jobTitles),
-                        const SizedBox(height: 12),
-                        _genderDropdown(l),
-                        const SizedBox(height: 12),
-                        _missionDropdown(l),
-                        const SizedBox(height: 12),
-                        _dobField(l),
-                        const SizedBox(height: 12),
-                        _text(
-                          _phoneSy,
-                          l.profilePhoneSy,
-                          AppIcons.phoneSy,
-                          keyboard: TextInputType.phone,
-                        ),
-                        const SizedBox(height: 12),
-                        _text(
-                          _phoneSa,
-                          '${l.profilePhoneSa} (${l.commonOptional})',
-                          AppIcons.phoneSa,
-                          keyboard: TextInputType.phone,
-                          required: false,
-                        ),
-                        const SizedBox(height: 8),
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          secondary: const Icon(AppIcons.external),
-                          title: Text(l.employeeIsExternal),
-                          subtitle: Text(l.employeeIsExternalHint),
-                          value: _isExternal,
-                          onChanged: (v) => setState(() => _isExternal = v),
-                        ),
-                        if (_isExternal) ...[
-                          const SizedBox(height: 8),
+                        fields([
                           _text(
                             _org,
                             l.employeeOrganization,
                             AppIcons.organization,
                             required: false,
                           ),
-                          const SizedBox(height: 12),
                           _text(
                             _externalRole,
                             l.employeeExternalRole,
                             AppIcons.jobTitle,
                             required: false,
                           ),
-                        ],
-                        const SizedBox(height: 28),
-                        FilledButton(
-                          onPressed: submitting ? null : _submit,
-                          child: submitting
-                              ? SizedBox(
-                                  height: 22,
-                                  width: 22,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.4,
-                                    strokeCap: StrokeCap.round,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onPrimary,
-                                  ),
-                                )
-                              : Text(l.createEmployeeSubmit),
-                        ),
-                      ]),
-                    ),
+                        ]),
+                      ],
+                      const SizedBox(height: 28),
+                      // Full width on a phone, where a button is the bottom of
+                      // the screen; a button's width on a monitor.
+                      _submitButton(
+                        context,
+                        label: l.createEmployeeSubmit,
+                        submitting: submitting,
+                        wide: size.isAtLeast(WindowSize.expanded),
+                      ),
+                    ]),
                   ),
                 ),
               ),
@@ -273,6 +260,40 @@ class _ViewState extends State<_View> {
   }
 
   Widget _label(BuildContext context, String text) => SectionHeader(text);
+
+  /// Full width on a phone, where the button IS the bottom of the screen and
+  /// the thumb goes wherever it likes; a button's width on a monitor, where a
+  /// nine-hundred-pixel one reads as a banner.
+  Widget _submitButton(
+    BuildContext context, {
+    required String label,
+    required bool submitting,
+    required bool wide,
+  }) {
+    final button = FilledButton(
+      onPressed: submitting ? null : _submit,
+      child: submitting
+          ? SizedBox(
+              height: 22,
+              width: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.4,
+                strokeCap: StrokeCap.round,
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
+            )
+          : Text(label),
+    );
+
+    if (!wide) return button;
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 220),
+        child: button,
+      ),
+    );
+  }
 
   Widget _text(
     TextEditingController c,

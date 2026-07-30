@@ -6,7 +6,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
-import '../../../core/widgets/responsive_center.dart';
+import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../application/reference_data_cubit.dart';
 import '../domain/module_type.dart';
@@ -110,7 +110,7 @@ class _ReferenceSetScreenState extends State<ReferenceSetScreen> {
         if (set == null) {
           return Scaffold(
             appBar: GlassAppBar(title: Text(l.referenceDataTitle)),
-            body: const SkeletonList(),
+            body: const SkeletonList(minTileWidth: 320),
           );
         }
 
@@ -141,22 +141,26 @@ class _ReferenceSetScreenState extends State<ReferenceSetScreen> {
             icon: const Icon(AppIcons.add),
             label: Text(l.referenceAddItem),
           ),
-          body: ResponsiveCenter(
-            child: Column(
+          body: ResponsivePage(
+            builder: (context, size) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
                   padding: EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
+                    size.gutter,
                     MediaQuery.paddingOf(context).top + kToolbarHeight,
-                    AppSpacing.lg,
+                    size.gutter,
                     AppSpacing.sm,
                   ),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: l.commonSearch,
-                      prefixIcon: const Icon(AppIcons.search),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 460),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: l.commonSearch,
+                        prefixIcon: const Icon(AppIcons.search),
+                      ),
+                      onChanged: (v) => setState(() => _query = v),
                     ),
-                    onChanged: (v) => setState(() => _query = v),
                   ),
                 ),
                 Expanded(
@@ -165,26 +169,23 @@ class _ReferenceSetScreenState extends State<ReferenceSetScreen> {
                           icon: AppIcons.referenceData,
                           title: l.referenceEmpty,
                         )
-                      : RefreshIndicator(
+                      // A set is every hotel, every cluster — long enough to
+                      // page in as it is reached.
+                      : AdaptiveGridView(
                           onRefresh: () =>
                               context.read<ReferenceDataCubit>().load(),
-                          child: ListView.separated(
-                            padding: EdgeInsets.fromLTRB(
-                              AppSpacing.lg,
-                              0,
-                              AppSpacing.lg,
-                              AppSpacing.xxl * 2 +
-                                  MediaQuery.viewPaddingOf(context).bottom,
-                            ),
-                            itemCount: items.length,
-                            separatorBuilder: (_, _) =>
-                                const SizedBox(height: AppSpacing.md),
-                            itemBuilder: (context, i) => FadeSlideIn(
-                              delay: Duration(
-                                milliseconds: 30 * (i < 8 ? i : 8),
-                              ),
-                              child: _ItemCard(set: set, item: items[i]),
-                            ),
+                          padding: EdgeInsets.fromLTRB(
+                            size.gutter,
+                            0,
+                            size.gutter,
+                            AppSpacing.xxl * 2 +
+                                MediaQuery.viewPaddingOf(context).bottom,
+                          ),
+                          minTileWidth: 320,
+                          itemCount: items.length,
+                          itemBuilder: (context, i) => FadeSlideIn(
+                            delay: Duration(milliseconds: 30 * (i < 8 ? i : 8)),
+                            child: _ItemCard(set: set, item: items[i]),
                           ),
                         ),
                 ),

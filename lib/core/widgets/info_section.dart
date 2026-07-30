@@ -6,24 +6,60 @@ import '../l10n/l10n_extension.dart';
 import '../theme/app_icons.dart';
 import '../theme/glass_tokens.dart';
 import 'glass.dart';
+import 'responsive.dart';
 
 /// A titled glass pane grouping a set of [InfoRow]s, with hairline separators
 /// between rows so long detail screens stay scannable.
+///
+/// The fields fill the pane's width in as many columns as fit. A value here is
+/// a name, a city or a date — a dozen characters, most of them — so one field
+/// per line spends a monitor's width on the space *after* the value: seven
+/// fields become seven near-empty lines and a page that has to be scrolled to
+/// be read. Wide enough, and the same seven fit in three lines you can take in
+/// at once.
+///
+/// The separators stay horizontal, between rows of fields rather than between
+/// fields. That is what says which things are on the same line — a grid ruled
+/// in both directions reads as a spreadsheet, and none of this is tabular.
 class InfoSection extends StatelessWidget {
   const InfoSection({
     super.key,
     required this.title,
     required this.children,
     this.icon,
+    this.minFieldWidth = 280,
+    this.maxColumns = 3,
   });
 
   final String title;
   final List<Widget> children;
   final IconData? icon;
 
+  /// The narrowest a field may get before the pane drops a column. Its default
+  /// is set so that a pane inside the old 600-wide cap stays in one column —
+  /// this widget is shared, and no page changes shape until it is given the
+  /// room to.
+  final double minFieldWidth;
+
+  /// Past three across, the eye stops reading a row of fields and starts
+  /// searching one.
+  final int maxColumns;
+
+  static const _gap = AppSpacing.lg;
+
+  /// The pane's own left and right padding, which the rows sit inside.
+  static const _inset = AppSpacing.lg * 2;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+
+    // Inside a grid cell the width is already known, and must NOT be measured
+    // again: a [LayoutBuilder] cannot report intrinsic dimensions, and an
+    // equal-height row of panes is built by asking each pane for exactly that.
+    // Three of these side by side on the settings page brought it down until
+    // the grid started handing the number over instead. See [GridCellWidth].
+    final cell = GridCellWidth.maybeOf(context);
 
     return GlassCard(
       padding: const EdgeInsets.fromLTRB(
@@ -50,13 +86,57 @@ class InfoSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
-          for (var i = 0; i < children.length; i++) ...[
-            if (i > 0)
-              Divider(
-                height: 1,
-                color: scheme.outlineVariant.withValues(alpha: 0.4),
-              ),
-            children[i],
+          if (cell != null)
+            _rows(scheme, cell - _inset)
+          else
+            LayoutBuilder(
+              builder: (context, constraints) =>
+                  _rows(scheme, constraints.maxWidth),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _rows(ColorScheme scheme, double width) {
+    final columns = width.isFinite && width > 0
+        ? ((width + _gap) ~/ (minFieldWidth + _gap)).clamp(1, maxColumns)
+        : 1;
+
+    final rows = <Widget>[];
+    for (var i = 0; i < children.length; i += columns) {
+      rows.add(columns == 1 ? children[i] : _row(i, columns));
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < rows.length; i++) ...[
+          if (i > 0)
+            Divider(
+              height: 1,
+              color: scheme.outlineVariant.withValues(alpha: 0.4),
+            ),
+          rows[i],
+        ],
+      ],
+    );
+  }
+
+  Widget _row(int start, int columns) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < columns; i++) ...[
+            if (i > 0) const SizedBox(width: _gap),
+            // A short final row keeps its fields in their columns rather than
+            // letting them spread out and break the alignment down the pane.
+            Expanded(
+              child: start + i < children.length
+                  ? children[start + i]
+                  : const SizedBox.shrink(),
+            ),
           ],
         ],
       ),

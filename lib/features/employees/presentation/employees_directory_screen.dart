@@ -8,7 +8,7 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/employee_tile.dart';
 import '../../../core/widgets/glass.dart';
-import '../../../core/widgets/responsive_center.dart';
+import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
 import '../../profile/domain/profile.dart';
@@ -114,46 +114,58 @@ class _ViewState extends State<_View> {
             },
             builder: (context, state) {
               if (state.status == DirectoryStatus.loading) {
-                return const SkeletonList(count: 7, height: 70);
+                return const SkeletonList(count: 7, height: 70, minTileWidth: 300);
               }
-              return Column(
-                children: [
-                  ResponsiveCenter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg,
+              return ResponsivePage(
+                builder: (context, size) => Column(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        size.gutter,
                         AppSpacing.md,
-                        AppSpacing.lg,
+                        size.gutter,
                         AppSpacing.xs,
                       ),
-                      child: _SearchField(
-                        controller: _search,
-                        hint: l.commonSearch,
-                        onChanged: (v) => setState(() => _query = v.trim()),
+                      // Held to a width a name fits in, at the start edge. A
+                      // search box the width of a monitor asks for something
+                      // much longer than anything anyone types into it, and
+                      // pushes its own clear button a foot away from the text.
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 460),
+                          child: _SearchField(
+                            controller: _search,
+                            hint: l.commonSearch,
+                            onChanged: (v) => setState(() => _query = v.trim()),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                  Expanded(
-                    child: TabBarView(
-                      children: [
-                        _EmployeeList(
-                          employees: _filter(state.permanent),
-                          emptyTitle: l.employeesEmpty,
-                          searching: _query.isNotEmpty,
-                          onRefresh: () =>
-                              context.read<EmployeesDirectoryCubit>().load(),
-                        ),
-                        _EmployeeList(
-                          employees: _filter(state.external),
-                          emptyTitle: l.employeesExternalEmpty,
-                          searching: _query.isNotEmpty,
-                          onRefresh: () =>
-                              context.read<EmployeesDirectoryCubit>().load(),
-                        ),
-                      ],
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          _EmployeeList(
+                            employees: _filter(state.permanent),
+                            emptyTitle: l.employeesEmpty,
+                            searching: _query.isNotEmpty,
+                            gutter: size.gutter,
+                            onRefresh: () =>
+                                context.read<EmployeesDirectoryCubit>().load(),
+                          ),
+                          _EmployeeList(
+                            employees: _filter(state.external),
+                            emptyTitle: l.employeesExternalEmpty,
+                            searching: _query.isNotEmpty,
+                            gutter: size.gutter,
+                            onRefresh: () =>
+                                context.read<EmployeesDirectoryCubit>().load(),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               );
             },
           ),
@@ -226,12 +238,14 @@ class _EmployeeList extends StatelessWidget {
     required this.employees,
     required this.emptyTitle,
     required this.searching,
+    required this.gutter,
     required this.onRefresh,
   });
 
   final List<Profile> employees;
   final String emptyTitle;
   final bool searching;
+  final double gutter;
   final Future<void> Function() onRefresh;
 
   @override
@@ -243,38 +257,38 @@ class _EmployeeList extends StatelessWidget {
         message: searching ? emptyTitle : null,
       );
     }
-    return RefreshIndicator(
-      onRefresh: onRefresh,
-      child: ResponsiveCenter(
-        child: ListView.separated(
-          padding: EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            AppSpacing.md,
-            AppSpacing.lg,
-            AppSpacing.lg + MediaQuery.viewPaddingOf(context).bottom,
-          ),
-          itemCount: employees.length,
-          separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
-          itemBuilder: (context, i) {
-            final e = employees[i];
-            return FadeSlideIn(
-              // Cap the cascade so row 40 doesn't wait a second to appear.
-              delay: Duration(milliseconds: 30 * (i < 8 ? i : 8)),
-              child: EmployeeTile(
-                name: e.fullName,
-                photoUrl: e.photoUrl,
-                subtitle: e.isExternal
-                    ? e.externalOrganization
-                    : e.jobTitleName?.of(context),
-                isExternal: e.isExternal,
-                onTap: () => Navigator.of(context).push(
-                  fadeThroughRoute((_) => EmployeeDetailScreen(profile: e)),
-                ),
-              ),
-            );
-          },
-        ),
+    // A directory is the longest list in the app — every employee of the
+    // mission — so the rows are built as they are scrolled to. A name and a
+    // face need about three hundred pixels and no more, which on a monitor is
+    // four of them across instead of one and four fifths of a blank screen.
+    return AdaptiveGridView(
+      padding: EdgeInsets.fromLTRB(
+        gutter,
+        AppSpacing.md,
+        gutter,
+        AppSpacing.lg + MediaQuery.viewPaddingOf(context).bottom,
       ),
+      onRefresh: onRefresh,
+      minTileWidth: 300,
+      itemCount: employees.length,
+      itemBuilder: (context, i) {
+        final e = employees[i];
+        return FadeSlideIn(
+          // Cap the cascade so row 40 doesn't wait a second to appear.
+          delay: Duration(milliseconds: 30 * (i < 8 ? i : 8)),
+          child: EmployeeTile(
+            name: e.fullName,
+            photoUrl: e.photoUrl,
+            subtitle: e.isExternal
+                ? e.externalOrganization
+                : e.jobTitleName?.of(context),
+            isExternal: e.isExternal,
+            onTap: () => Navigator.of(
+              context,
+            ).push(fadeThroughRoute((_) => EmployeeDetailScreen(profile: e))),
+          ),
+        );
+      },
     );
   }
 }

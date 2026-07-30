@@ -6,7 +6,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/l10n/permission_labels.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
-import '../../../core/widgets/responsive_center.dart';
+import '../../../core/widgets/responsive.dart';
 import '../application/permission_editor_cubit.dart';
 import '../data/permissions_repository.dart';
 import '../domain/permission.dart';
@@ -46,53 +46,74 @@ class _View extends StatelessWidget {
         ),
       ),
       body: SafeArea(
-        child: ResponsiveCenter(
-          child: BlocConsumer<PermissionEditorCubit, PermissionEditorState>(
-            listenWhen: (p, c) => c.error != null && p.error != c.error,
-            listener: (context, state) {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(SnackBar(content: Text(state.error!)));
-            },
-            builder: (context, state) {
-              if (state.status == PermissionEditorStatus.loading) {
-                return const SkeletonList();
-              }
-              final parents = state.catalog.where((p) => p.isParent).toList();
-              final grantedActions = state.granted
-                  .where(
-                    (id) => state.catalog.any((p) => p.id == id && !p.isParent),
-                  )
-                  .length;
-              final totalActions = state.catalog
-                  .where((p) => !p.isParent)
-                  .length;
-              final cubit = context.read<PermissionEditorCubit>();
+        child: ResponsivePage(
+          builder: (context, size) =>
+              BlocConsumer<PermissionEditorCubit, PermissionEditorState>(
+                listenWhen: (p, c) => c.error != null && p.error != c.error,
+                listener: (context, state) {
+                  ScaffoldMessenger.of(context)
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(SnackBar(content: Text(state.error!)));
+                },
+                builder: (context, state) {
+                  if (state.status == PermissionEditorStatus.loading) {
+                    return const SkeletonList(minTileWidth: 360, maxColumns: 3);
+                  }
+                  final parents = state.catalog
+                      .where((p) => p.isParent)
+                      .toList();
+                  final grantedActions = state.granted
+                      .where(
+                        (id) =>
+                            state.catalog.any((p) => p.id == id && !p.isParent),
+                      )
+                      .length;
+                  final totalActions = state.catalog
+                      .where((p) => !p.isParent)
+                      .length;
+                  final cubit = context.read<PermissionEditorCubit>();
 
-              return ListView(
-                padding: EdgeInsets.fromLTRB(
-                  16,
-                  12,
-                  16,
-                  24 + MediaQuery.viewPaddingOf(context).bottom,
-                ),
-                children: [
-                  _CountHeader(granted: grantedActions, total: totalActions),
-                  const SizedBox(height: 12),
-                  ...staggered([
-                    for (final parent in parents)
-                      _PermissionSection(
-                        parent: parent,
-                        children: cubit.childrenOf(parent.id),
-                        granted: state.granted,
-                        busy: state.busy,
-                        onToggle: cubit.toggle,
+                  return ListView(
+                    padding: EdgeInsets.fromLTRB(
+                      size.gutter,
+                      12,
+                      size.gutter,
+                      24 + MediaQuery.viewPaddingOf(context).bottom,
+                    ),
+                    children: [
+                      // The tally is one sentence and a bar; it does not get wider
+                      // just because the window did.
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 460),
+                        child: _CountHeader(
+                          granted: grantedActions,
+                          total: totalActions,
+                        ),
                       ),
-                  ], step: const Duration(milliseconds: 40)),
-                ],
-              );
-            },
-          ),
+                      const SizedBox(height: 12),
+                      // Each group is an independent decision — nobody reads
+                      // "الملفات" before "المواسم" — so on a wide window they stand
+                      // beside each other instead of forming a column half a screen
+                      // wide and several screens long.
+                      AdaptiveGrid(
+                        minTileWidth: 360,
+                        maxColumns: 3,
+                        equalHeights: false,
+                        children: staggered([
+                          for (final parent in parents)
+                            _PermissionSection(
+                              parent: parent,
+                              children: cubit.childrenOf(parent.id),
+                              granted: state.granted,
+                              busy: state.busy,
+                              onToggle: cubit.toggle,
+                            ),
+                        ], step: const Duration(milliseconds: 40)),
+                      ),
+                    ],
+                  );
+                },
+              ),
         ),
       ),
     );

@@ -8,7 +8,7 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/info_section.dart';
-import '../../../core/widgets/responsive_center.dart';
+import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../application/reference_data_cubit.dart';
 import '../domain/map_location.dart';
@@ -78,7 +78,7 @@ class ReferenceItemDetailScreen extends StatelessWidget {
         if (set == null || item == null) {
           return Scaffold(
             appBar: GlassAppBar(title: Text(l.referenceDataTitle)),
-            body: const SkeletonList(),
+            body: const SkeletonList(maxColumns: 1, height: 220, count: 2),
           );
         }
 
@@ -107,9 +107,9 @@ class ReferenceItemDetailScreen extends StatelessWidget {
           // scroll_padding_test.dart was written to guard and this screen
           // slipped past by reading the wrong context.
           body: Builder(
-            builder: (context) => ResponsiveCenter(
-              child: ListView(
-                padding: context.scrollPadding(),
+            builder: (context) => ResponsivePage(
+              builder: (context, size) => SinglePaneLayout(
+                gutter: size.gutter,
                 children: staggered([
                   InfoSection(
                     title: l.referenceDetailsTitle,

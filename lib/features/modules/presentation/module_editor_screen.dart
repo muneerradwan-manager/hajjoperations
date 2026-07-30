@@ -8,7 +8,7 @@ import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/info_section.dart';
 import '../../../core/widgets/profile_avatar.dart';
-import '../../../core/widgets/responsive_center.dart';
+import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../application/module_editor_cubit.dart';
 import '../data/modules_repository.dart';
@@ -19,6 +19,16 @@ import 'widgets/cadence_label.dart';
 import 'widgets/module_field_input.dart';
 import 'widgets/node_editor_sheet.dart';
 import 'widgets/picker_sheet.dart';
+
+/// Where every step of the editor stops widening.
+///
+/// This screen is a form the whole way through — dates and dropdowns on the
+/// first step, then a card per sector, per tower, per team, each of which is a
+/// name and a couple of buttons. None of that reads better at seventeen hundred
+/// pixels than at eleven, and a date field the width of a monitor is harder to
+/// use than one a third of that. The gain here is the gutters and the cap
+/// moving with the window, not the content stretching to meet it.
+const _editorMaxWidth = 1100.0;
 
 /// Builds one operational file, in the order it is really built. How many steps
 /// it takes is the TYPE's answer, not a constant — see [EditorStep]:
@@ -550,9 +560,10 @@ class _InfoStep extends StatelessWidget {
     final type = state.type!;
     final cubit = context.read<ModuleEditorCubit>();
 
-    return ResponsiveCenter(
-      child: ListView(
-        padding: context.scrollPadding(),
+    return ResponsivePage(
+      maxWidth: _editorMaxWidth,
+      builder: (context, size) => SinglePaneLayout(
+        gutter: size.gutter,
         children: staggered([
           GlassCard(
             padding: const EdgeInsets.all(AppSpacing.lg),
@@ -770,9 +781,10 @@ class _NodesStep extends StatelessWidget {
     }
     final sectors = state.parentNodes;
 
-    return ResponsiveCenter(
-      child: ListView(
-        padding: context.scrollPadding(),
+    return ResponsivePage(
+      maxWidth: _editorMaxWidth,
+      builder: (context, size) => SinglePaneLayout(
+        gutter: size.gutter,
         children: staggered([
           // Named by the level and counted beside it, so the same header serves
           // "القطاع 3" and "المركز 3" without a string per file.
@@ -856,9 +868,10 @@ class _TowersStep extends StatelessWidget {
       );
     }
 
-    return ResponsiveCenter(
-      child: ListView(
-        padding: context.scrollPadding(),
+    return ResponsivePage(
+      maxWidth: _editorMaxWidth,
+      builder: (context, size) => SinglePaneLayout(
+        gutter: size.gutter,
         children: staggered([
           for (final sector in sectors) ...[
             SectionHeader(
@@ -914,9 +927,10 @@ class _TeamsStep extends StatelessWidget {
       return EmptyState(icon: AppIcons.roles, title: l.moduleNoRoles);
     }
 
-    return ResponsiveCenter(
-      child: ListView(
-        padding: context.scrollPadding(),
+    return ResponsivePage(
+      maxWidth: _editorMaxWidth,
+      builder: (context, size) => SinglePaneLayout(
+        gutter: size.gutter,
         children: staggered([
           SectionHeader(
             l.moduleMembersCount(state.members.length),
@@ -1089,8 +1103,7 @@ class _TeamMemberRow extends StatelessWidget {
                 ],
               ),
             ),
-            if (hasMenu)
-              Icon(AppIcons.tasks, size: 18, color: scheme.primary),
+            if (hasMenu) Icon(AppIcons.tasks, size: 18, color: scheme.primary),
           ],
         ),
       ),

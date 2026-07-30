@@ -139,6 +139,11 @@ class AppIcons {
 
   // Brand
   static const brand = Iconsax.moon;
+
+  // ── The season from above ───────────────────────────────────────────────
+  static const dashboard = Iconsax.chart_2;
+  static const trend = Iconsax.chart_success;
+  static const rating = Iconsax.star_1;
 }
 
 /// A trailing chevron that points toward the navigation direction, mirrored

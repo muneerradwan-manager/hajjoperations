@@ -99,4 +99,19 @@ class Accent {
     Color(0xFF9E7189),
     brand: AppColors.mediumRed,
   );
+
+  /// The last brand colour to be given a pair: [AppColors.darkRed], which at
+  /// 1.12 on night and 15.13 on paper is the most lopsided of the nine and was
+  /// left alone until something needed it.
+  ///
+  /// Both steps are the ones the chart palette was measured at — see
+  /// [ChartPalette], where this same hue had to clear the six checks against
+  /// both backdrops. Reusing them here means the dashboard's tile and the
+  /// dashboard's own marks are the same colour, which is the sort of thing
+  /// somebody notices without being able to say why.
+  static const plum = Accent._(
+    Color(0xFF8C2A55),
+    Color(0xFFB85C86),
+    brand: AppColors.darkRed,
+  );
 }

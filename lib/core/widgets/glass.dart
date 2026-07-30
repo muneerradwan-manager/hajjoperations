@@ -213,8 +213,18 @@ class _GlassCardState extends State<GlassCard> {
 
   @override
   Widget build(BuildContext context) {
+    final padded = widget.padding == null
+        ? widget.child
+        : Padding(padding: widget.padding!, child: widget.child);
+
     final surface = GlassSurface(
-      padding: widget.padding,
+      // The pane's padding is handed to the [InkWell] instead when the card is
+      // tappable, so that the whole pane answers a tap. Left on the outside it
+      // is the InkWell that shrinks to the content, and a card's padding is
+      // 16–24 logical pixels on every side: a frame of dead glass around a row
+      // that looks tappable everywhere and is not. The ripple has the same
+      // problem — it stops short of the edge instead of filling the pane.
+      padding: _interactive ? null : widget.padding,
       margin: widget.margin,
       radius: widget.radius,
       blur: widget.blur,
@@ -235,9 +245,9 @@ class _GlassCardState extends State<GlassCard> {
               onTapUp: (_) => _setPressed(false),
               onTapCancel: () => _setPressed(false),
               borderRadius: BorderRadius.circular(widget.radius),
-              child: widget.child,
+              child: padded,
             )
-          : widget.child,
+          : padded,
     );
 
     if (!_interactive) return surface;

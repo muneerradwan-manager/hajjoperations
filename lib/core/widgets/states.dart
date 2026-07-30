@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/glass_tokens.dart';
 import 'glass.dart';
+import 'responsive.dart';
 
 /// Illustrated empty state: an orbiting glass medallion, a headline that says
 /// what happened, and an optional next step. Replaces bare centred text so a
@@ -123,40 +124,132 @@ class _HaloIconState extends State<_HaloIcon>
   }
 }
 
-/// Shimmering placeholder rows shown while a list loads. Communicates the shape
-/// of what is coming, which reads far faster than a lone spinner.
+/// Shimmering placeholders shown while a screen loads, in the shape the screen
+/// is about to take.
+///
+/// The shape is the whole point — it is what reads faster than a spinner. Which
+/// means it has to be the RIGHT shape: a single column of full-width bars,
+/// shown on a window that is about to fill with a four-column grid, promises
+/// one thing and delivers another, and the swap at the end reads as the page
+/// jumping rather than arriving. On a monitor it also promised a list four
+/// times longer than the one that came.
+///
+/// So it measures the same width the content will, counts columns by the same
+/// arithmetic ([columnsFor]), and takes the same [WindowSize.gutter] and cap. A
+/// caller whose real list is a grid of narrower cards passes the same
+/// [minTileWidth] it gives [AdaptiveGrid]; a caller whose page stands a panel
+/// beside the content passes [panel], and gets a panel-shaped placeholder on
+/// the same side, at the same width, on windows wide enough to have one.
 class SkeletonList extends StatelessWidget {
   const SkeletonList({
     super.key,
     this.count = 5,
     this.height = 76,
     this.padding,
+    this.minTileWidth = 340,
+    this.maxColumns = 4,
+    this.panel = false,
+    this.panelHeight = 280,
   });
 
+  /// How many ROWS to draw, not how many cards: on a window three columns wide
+  /// this draws three times as many, because that is what will be there.
   final int count;
+
   final double height;
 
   /// Defaults to [GlassThemeX.scrollPadding] so the skeleton clears a glass
   /// app bar exactly the way the real list will.
-  final EdgeInsetsGeometry? padding;
+  final EdgeInsets? padding;
+
+  /// Match whatever the real [AdaptiveGrid] on this screen is given, so the
+  /// columns break at the same widths.
+  final double minTileWidth;
+  final int maxColumns;
+
+  /// Whether the loaded screen stands a panel beside its content — see
+  /// [TwoPaneLayout]. Ignored on windows too narrow for one, exactly as the
+  /// real layout ignores it.
+  final bool panel;
+
+  final double panelHeight;
+
+  Widget _bar({required double height, int step = 0}) => Shimmer(
+    delay: Duration(milliseconds: 90 * step),
+    child: GlassSurface(
+      height: height,
+      blur: false,
+      shadow: false,
+      subtle: true,
+      child: const SizedBox.shrink(),
+    ),
+  );
+
+  /// The rows themselves, in as many columns as the width allows.
+  ///
+  /// The cascade runs down the ROWS rather than through the cards: staggering
+  /// card by card across a four-wide grid puts a second and a half between the
+  /// first placeholder and the last, which stops reading as a sweep and starts
+  /// reading as the screen struggling.
+  Widget _grid() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = columnsFor(
+          constraints.maxWidth,
+          minTileWidth: minTileWidth,
+          maxColumns: maxColumns,
+        );
+        return AdaptiveGrid(
+          minTileWidth: minTileWidth,
+          maxColumns: maxColumns,
+          children: [
+            for (var i = 0; i < count * columns; i++)
+              _bar(height: height, step: (i ~/ columns).clamp(0, 5)),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: padding ?? context.scrollPadding(),
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: count,
-      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
-      itemBuilder: (context, i) => Shimmer(
-        delay: Duration(milliseconds: i * 90),
-        child: GlassSurface(
-          height: height,
-          blur: false,
-          shadow: false,
-          subtle: true,
-          child: const SizedBox.shrink(),
-        ),
-      ),
+    return ResponsivePage(
+      builder: (context, size) {
+        final page = padding ?? context.scrollPadding(horizontal: size.gutter);
+
+        if (!panel || !size.hasSidePanel) {
+          return ListView(
+            padding: page,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [_grid()],
+          );
+        }
+
+        final vertical = EdgeInsets.only(top: page.top, bottom: page.bottom);
+        return Padding(
+          padding: EdgeInsets.symmetric(horizontal: size.gutter),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: kSidePanelWidth,
+                child: Padding(
+                  padding: vertical,
+                  child: _bar(height: panelHeight),
+                ),
+              ),
+              SizedBox(width: size.gutter),
+              Expanded(
+                child: ListView(
+                  padding: vertical,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [_grid()],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

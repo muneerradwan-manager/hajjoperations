@@ -1172,4 +1172,181 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get referenceDetailsTitle => 'Details';
+
+  @override
+  String get profileSectionPermissions => 'Permissions';
+
+  @override
+  String get profilePermissionsAdmin => 'Administrator — every permission';
+
+  @override
+  String get profilePermissionsNone => 'No administrative permissions';
+
+  @override
+  String get profilePermissionsNoneHint =>
+      'Which is the ordinary case: an operational file reaches you by assignment, not by permission.';
+
+  @override
+  String profilePermissionsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count permissions',
+      one: 'one permission',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get navDashboard => 'Dashboard';
+
+  @override
+  String get navDashboardSubtitle => 'The season from above';
+
+  @override
+  String get dashboardTitle => 'Dashboard';
+
+  @override
+  String get dashboardSeason => 'Season';
+
+  @override
+  String get dashboardNoSeason => 'No season yet';
+
+  @override
+  String get dashboardNothingToShow =>
+      'You hold no permission that shows figures here';
+
+  @override
+  String get dashboardSectionPeople => 'People';
+
+  @override
+  String get dashboardSectionModules => 'Operational files';
+
+  @override
+  String get dashboardSectionWork => 'The work';
+
+  @override
+  String get dashboardSectionQueue => 'Approvals';
+
+  @override
+  String get dashboardParticipants => 'On this season';
+
+  @override
+  String get dashboardWithdrawn => 'Withdrawn';
+
+  @override
+  String dashboardWithdrawnCaption(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'and $count withdrew',
+      one: 'and one withdrew',
+      zero: 'nobody withdrew',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardInternal => 'Of the mission';
+
+  @override
+  String get dashboardExternal => 'From outside';
+
+  @override
+  String get dashboardUnknown => 'Not stated';
+
+  @override
+  String get dashboardByMission => 'By mission type';
+
+  @override
+  String get dashboardByGender => 'By gender';
+
+  @override
+  String get dashboardByJobTitle => 'Largest trades';
+
+  @override
+  String get dashboardFiles => 'Files';
+
+  @override
+  String dashboardFilesCaption(int active, int draft) {
+    return '$active active, $draft draft';
+  }
+
+  @override
+  String get dashboardRunning => 'Running';
+
+  @override
+  String get dashboardEnded => 'Ended';
+
+  @override
+  String get dashboardNodes => 'Sectors and towers';
+
+  @override
+  String get dashboardMembers => 'Hold a posting';
+
+  @override
+  String get dashboardUnstaffed => 'Files with nobody in them';
+
+  @override
+  String get dashboardUnstaffedCaption => 'Nobody assigned yet';
+
+  @override
+  String get dashboardByType => 'By file type';
+
+  @override
+  String get dashboardActiveDraft => 'Active against draft';
+
+  @override
+  String get dashboardReports => 'Reports';
+
+  @override
+  String dashboardReportsCaption(int authors) {
+    String _temp0 = intl.Intl.pluralLogic(
+      authors,
+      locale: localeName,
+      other: 'from $authors authors',
+      one: 'from one author',
+      zero: 'from nobody',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardReportsTrend => 'Reports over 30 days';
+
+  @override
+  String get dashboardReportsEmpty => 'No reports filed in this stretch';
+
+  @override
+  String get dashboardRatings => 'Ratings';
+
+  @override
+  String get dashboardAverage => 'Average';
+
+  @override
+  String dashboardRatedPeople(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'about $count people',
+      one: 'about one person',
+      zero: 'nobody rated',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardRatingDistribution => 'Star distribution';
+
+  @override
+  String get dashboardPending => 'Awaiting approval';
+
+  @override
+  String get dashboardApproved => 'Approved';
+
+  @override
+  String get dashboardRejected => 'Rejected';
+
+  @override
+  String get dashboardIncomplete => 'Profile incomplete';
 }
