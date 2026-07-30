@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../../core/bloc/safe_cubit.dart';
 import '../../profile/domain/profile.dart';
+import '../../profile/domain/profile_enums.dart';
 import '../../seasons/data/seasons_repository.dart';
 import '../../seasons/domain/season.dart';
 import '../data/employees_repository.dart';
@@ -104,6 +105,58 @@ class EmployeeManageCubit extends SafeCubit<EmployeeManageState> {
       );
     } catch (e) {
       emit(state.copyWith(busy: false, error: e.toString()));
+    }
+  }
+
+  /// Correct the record, then read it back.
+  ///
+  /// Reading back rather than patching in place: an edit may clear a field, and
+  /// it resolves the job title and city names that only exist as ids here.
+  Future<void> saveDetails({
+    required String firstName,
+    required String fatherName,
+    required String surname,
+    String? jobTitleId,
+    Gender? gender,
+    MissionType? missionType,
+    DateTime? dateOfBirth,
+    String? cityId,
+    String? phoneSy,
+    String? phoneSa,
+  }) async {
+    emit(state.copyWith(busy: true));
+    try {
+      await _employees.updateEmployee(
+        profileId: state.profile.id,
+        firstName: firstName,
+        fatherName: fatherName,
+        surname: surname,
+        jobTitleId: jobTitleId,
+        gender: gender,
+        missionType: missionType,
+        dateOfBirth: dateOfBirth,
+        cityId: cityId,
+        phoneSy: phoneSy,
+        phoneSa: phoneSa,
+      );
+      final fresh = await _employees.fetchOne(state.profile.id);
+      emit(state.copyWith(profile: fresh, busy: false));
+    } catch (e) {
+      emit(state.copyWith(busy: false, error: e.toString()));
+    }
+  }
+
+  /// Remove the account. Returns true when it is gone, so the screen knows to
+  /// leave — there is nothing left to show.
+  Future<bool> deleteEmployee() async {
+    emit(state.copyWith(busy: true));
+    try {
+      await _employees.deleteEmployee(state.profile.id);
+      emit(state.copyWith(busy: false));
+      return true;
+    } catch (e) {
+      emit(state.copyWith(busy: false, error: e.toString()));
+      return false;
     }
   }
 

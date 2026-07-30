@@ -824,6 +824,18 @@ abstract class AppLocalizations {
   /// **'Add employees'**
   String get permEmployeesCreate;
 
+  /// No description provided for @permEmployeesEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit employee records'**
+  String get permEmployeesEdit;
+
+  /// No description provided for @permEmployeesDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete employee records'**
+  String get permEmployeesDelete;
+
   /// No description provided for @permEmployeesSuspend.
   ///
   /// In en, this message translates to:
@@ -1165,6 +1177,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Employee'**
   String get employeeDetailTitle;
+
+  /// No description provided for @employeePermissionsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Granted permissions'**
+  String get employeePermissionsSection;
+
+  /// No description provided for @employeePermissionsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No permissions granted'**
+  String get employeePermissionsEmpty;
+
+  /// No description provided for @employeePermissionsAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator — holds every permission, without needing to be granted them.'**
+  String get employeePermissionsAdmin;
+
+  /// No description provided for @employeeEditDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit employee details'**
+  String get employeeEditDetailsTitle;
+
+  /// No description provided for @employeeEditSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Employee details updated'**
+  String get employeeEditSaved;
+
+  /// No description provided for @employeeEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit details'**
+  String get employeeEdit;
+
+  /// No description provided for @employeeDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete employee'**
+  String get employeeDelete;
+
+  /// No description provided for @employeeDeleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this employee?'**
+  String get employeeDeleteConfirmTitle;
+
+  /// No description provided for @employeeDeleteConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} will be removed permanently, along with their account and every assignment they hold. This cannot be undone.'**
+  String employeeDeleteConfirmBody(String name);
+
+  /// No description provided for @employeeDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Employee deleted'**
+  String get employeeDeleted;
+
+  /// No description provided for @employeeDeleteAdminBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'An administrator cannot be deleted. Remove their admin role first.'**
+  String get employeeDeleteAdminBlocked;
 
   /// No description provided for @employeeEditExternalTitle.
   ///

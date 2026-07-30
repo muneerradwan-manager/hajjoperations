@@ -9,6 +9,12 @@
 # Secrets / service-account keys — never commit
 firebase/*-adminsdk-*.json
 **/*serviceAccount*.json
+# Local tool state. `.claude/settings.json` records an allowlist built from the
+# commands actually run, so a seeding command carrying a service key ends up
+# written into it verbatim. Local by nature, and a place a secret can arrive
+# without anyone deciding to put one there.
+.claude/
+.VSCodeCounter/
 # Admin/service keys for local seeding. Deliberately NOT `.env`: that file is
 # bundled as a Flutter asset, so anything in it ships inside the APK.
 .env.seed

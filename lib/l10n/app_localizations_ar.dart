@@ -384,6 +384,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get permEmployeesCreate => 'إضافة موظف';
 
   @override
+  String get permEmployeesEdit => 'تعديل بيانات الموظفين';
+
+  @override
+  String get permEmployeesDelete => 'حذف الموظفين';
+
+  @override
   String get permEmployeesSuspend => 'إيقاف/تفعيل الحسابات';
 
   @override
@@ -568,6 +574,43 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get employeeDetailTitle => 'الموظف';
+
+  @override
+  String get employeePermissionsSection => 'الصلاحيات الممنوحة';
+
+  @override
+  String get employeePermissionsEmpty => 'لا توجد صلاحيات ممنوحة';
+
+  @override
+  String get employeePermissionsAdmin =>
+      'مدير — يملك جميع الصلاحيات دون الحاجة إلى منحها.';
+
+  @override
+  String get employeeEditDetailsTitle => 'تعديل بيانات الموظف';
+
+  @override
+  String get employeeEditSaved => 'تم تحديث بيانات الموظف';
+
+  @override
+  String get employeeEdit => 'تعديل البيانات';
+
+  @override
+  String get employeeDelete => 'حذف الموظف';
+
+  @override
+  String get employeeDeleteConfirmTitle => 'حذف هذا الموظف؟';
+
+  @override
+  String employeeDeleteConfirmBody(String name) {
+    return 'سيُحذف $name نهائياً مع حسابه وكل إسناداته. لا يمكن التراجع عن هذا الإجراء.';
+  }
+
+  @override
+  String get employeeDeleted => 'تم حذف الموظف';
+
+  @override
+  String get employeeDeleteAdminBlocked =>
+      'لا يمكن حذف مدير. أزل صفة الإدارة عنه أولاً.';
 
   @override
   String get employeeEditExternalTitle => 'الصفة الخارجية';

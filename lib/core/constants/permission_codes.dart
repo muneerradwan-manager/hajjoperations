@@ -17,6 +17,8 @@ class PermissionCodes {
   // Children (actions)
   static const employeesView = 'employees.view';
   static const employeesCreate = 'employees.create';
+  static const employeesEdit = 'employees.edit';
+  static const employeesDelete = 'employees.delete';
   static const employeesSuspend = 'employees.suspend';
   static const employeesExternal = 'employees.external';
   static const employeesDocuments = 'employees.documents';

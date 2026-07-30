@@ -5,6 +5,7 @@ import '../../../core/animations/animations.dart';
 import '../../../core/constants/permission_codes.dart';
 import '../../../core/l10n/enum_labels.dart';
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../core/l10n/permission_labels.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
@@ -13,6 +14,8 @@ import '../../../core/widgets/profile_hero.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../auth/application/session_cubit.dart';
 import '../../modules/data/modules_repository.dart';
+import '../../permissions/data/permissions_repository.dart';
+import '../../permissions/domain/permission.dart';
 import '../../modules/domain/operational_module.dart';
 import '../../modules/presentation/module_detail_screen.dart';
 import '../../profile/domain/profile.dart';
@@ -20,6 +23,7 @@ import '../../seasons/data/seasons_repository.dart';
 import '../../notifications/presentation/send_notification_sheet.dart';
 import '../application/employee_manage_cubit.dart';
 import '../data/employees_repository.dart';
+import 'widgets/employee_edit_sheet.dart';
 import 'widgets/external_edit_sheet.dart';
 
 class EmployeeDetailScreen extends StatelessWidget {
@@ -42,12 +46,66 @@ class EmployeeDetailScreen extends StatelessWidget {
 class _View extends StatelessWidget {
   const _View();
 
+  /// Ask before removing someone, and say plainly what goes with them.
+  ///
+  /// The confirmation names the person: a delete button on a screen you reached
+  /// by tapping a row is exactly where the wrong row gets deleted.
+  Future<void> _confirmDelete(BuildContext context) async {
+    final l = context.l10n;
+    final cubit = context.read<EmployeeManageCubit>();
+    final profile = cubit.state.profile;
+
+    // An admin is refused by the function too; saying so here saves a round
+    // trip and explains what to do instead.
+    if (profile.isAdmin) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l.employeeDeleteAdminBlocked)));
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l.employeeDeleteConfirmTitle),
+        content: Text(l.employeeDeleteConfirmBody(profile.fullName)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l.commonCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
+            ),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l.employeeDelete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    final gone = await cubit.deleteEmployee();
+    if (!gone) return;                 // the cubit already surfaced the error
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(l.employeeDeleted)));
+    // Nothing is left to show on this screen.
+    if (navigator.canPop()) navigator.pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
     final session = context.watch<SessionCubit>().state;
     final canSuspend = session.can(PermissionCodes.employeesSuspend);
     final canExternal = session.can(PermissionCodes.employeesExternal);
+    final canEdit = session.can(PermissionCodes.employeesEdit);
+    final canDelete = session.can(PermissionCodes.employeesDelete);
+    final canManagePermissions = session.can(PermissionCodes.permissionsManage);
     final canManageParticipants = session.can(
       PermissionCodes.seasonsParticipants,
     );
@@ -68,6 +126,21 @@ class _View extends StatelessWidget {
               icon: const Icon(AppIcons.send),
               onPressed: () =>
                   showSendNotificationSheet(context, recipientId: employeeId),
+            ),
+          if (canEdit)
+            IconButton(
+              tooltip: l.employeeEdit,
+              icon: const Icon(AppIcons.edit),
+              onPressed: () {
+                final cubit = context.read<EmployeeManageCubit>();
+                showEmployeeEditSheet(context, cubit, cubit.state.profile);
+              },
+            ),
+          if (canDelete)
+            IconButton(
+              tooltip: l.employeeDelete,
+              icon: const Icon(AppIcons.delete),
+              onPressed: () => _confirmDelete(context),
             ),
         ],
       ),
@@ -207,6 +280,14 @@ class _View extends StatelessWidget {
                 profileId: p.id,
                 showWhenEmpty: canSeeModules,
               ),
+              // What this person is ALLOWED to do, for whoever decides it.
+              // Gated on the permission that grants and revokes: reading
+              // someone's permissions is the first half of changing them, and
+              // it is not everyone's business.
+              if (canManagePermissions) ...[
+                const SizedBox(height: AppSpacing.lg),
+                _GrantedPermissionsSection(profile: p),
+              ],
               if (p.isExternal) ...[
                 const SizedBox(height: AppSpacing.lg),
                 InfoSection(
@@ -349,6 +430,137 @@ class _SeasonHistorySection extends StatelessWidget {
                 ],
               ),
             ),
+      ],
+    );
+  }
+}
+
+/// The permissions this employee has been granted, grouped by the section they
+/// belong to.
+///
+/// Only what was actually granted. The full catalog with everything unticked is
+/// the permission EDITOR's job; here the question is "what may this person do",
+/// and a list of ninety greyed-out rows is a worse answer than seven.
+///
+/// An administrator is a special case worth stating outright rather than
+/// listing: `is_admin` outranks the whole table, so printing his handful of
+/// explicit grants would understate what he can do.
+class _GrantedPermissionsSection extends StatefulWidget {
+  const _GrantedPermissionsSection({required this.profile});
+
+  final Profile profile;
+
+  @override
+  State<_GrantedPermissionsSection> createState() =>
+      _GrantedPermissionsSectionState();
+}
+
+class _GrantedPermissionsSectionState
+    extends State<_GrantedPermissionsSection> {
+  late final Future<(List<Permission>, Set<String>)> _data = _load();
+
+  Future<(List<Permission>, Set<String>)> _load() async {
+    final repo = PermissionsRepository();
+    final catalog = await repo.fetchCatalog();
+    final granted = await repo.fetchGranted(widget.profile.id);
+    return (catalog, granted);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+
+    Widget note(String message) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+      child: Text(
+        message,
+        style: text.bodyMedium?.copyWith(
+          color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+          fontStyle: FontStyle.italic,
+        ),
+      ),
+    );
+
+    return InfoSection(
+      title: l.employeePermissionsSection,
+      icon: AppIcons.shield,
+      children: [
+        if (widget.profile.isAdmin)
+          note(l.employeePermissionsAdmin)
+        else
+          FutureBuilder<(List<Permission>, Set<String>)>(
+            future: _data,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                  child: Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                );
+              }
+              if (snapshot.hasError) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                  child: Text('${snapshot.error}', style: text.bodySmall),
+                );
+              }
+              final (catalog, granted) = snapshot.data!;
+              final byId = {for (final p in catalog) p.id: p};
+              final held = catalog
+                  .where((p) => granted.contains(p.id) && !p.isParent)
+                  .toList()
+                ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+              if (held.isEmpty) return note(l.employeePermissionsEmpty);
+
+              // Group the actions under their section, in catalog order, so
+              // the card reads the way the permission editor is laid out.
+              final sections = <String, List<Permission>>{};
+              for (final p in held) {
+                final parent = byId[p.parentId]?.code ?? '';
+                sections.putIfAbsent(parent, () => []).add(p);
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final entry in sections.entries) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        top: AppSpacing.md,
+                        bottom: AppSpacing.sm,
+                      ),
+                      child: Text(
+                        permissionLabel(l, entry.key),
+                        style: text.labelLarge?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    Wrap(
+                      spacing: AppSpacing.sm,
+                      runSpacing: AppSpacing.sm,
+                      children: [
+                        for (final p in entry.value)
+                          GlassBadge(
+                            label: permissionLabel(l, p.code),
+                            color: scheme.secondary,
+                            icon: AppIcons.selected,
+                          ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: AppSpacing.sm),
+                ],
+              );
+            },
+          ),
       ],
     );
   }

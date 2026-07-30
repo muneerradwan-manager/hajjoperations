@@ -385,6 +385,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permEmployeesCreate => 'Add employees';
 
   @override
+  String get permEmployeesEdit => 'Edit employee records';
+
+  @override
+  String get permEmployeesDelete => 'Delete employee records';
+
+  @override
   String get permEmployeesSuspend => 'Suspend / reactivate accounts';
 
   @override
@@ -567,6 +573,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get employeeDetailTitle => 'Employee';
+
+  @override
+  String get employeePermissionsSection => 'Granted permissions';
+
+  @override
+  String get employeePermissionsEmpty => 'No permissions granted';
+
+  @override
+  String get employeePermissionsAdmin =>
+      'An administrator — holds every permission, without needing to be granted them.';
+
+  @override
+  String get employeeEditDetailsTitle => 'Edit employee details';
+
+  @override
+  String get employeeEditSaved => 'Employee details updated';
+
+  @override
+  String get employeeEdit => 'Edit details';
+
+  @override
+  String get employeeDelete => 'Delete employee';
+
+  @override
+  String get employeeDeleteConfirmTitle => 'Delete this employee?';
+
+  @override
+  String employeeDeleteConfirmBody(String name) {
+    return '$name will be removed permanently, along with their account and every assignment they hold. This cannot be undone.';
+  }
+
+  @override
+  String get employeeDeleted => 'Employee deleted';
+
+  @override
+  String get employeeDeleteAdminBlocked =>
+      'An administrator cannot be deleted. Remove their admin role first.';
 
   @override
   String get employeeEditExternalTitle => 'External status';

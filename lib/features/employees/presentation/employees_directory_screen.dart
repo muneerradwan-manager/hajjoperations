@@ -6,6 +6,7 @@ import '../../../core/constants/permission_codes.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
+import '../../../core/utils/arabic_search.dart';
 import '../../../core/widgets/employee_tile.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
@@ -56,20 +57,33 @@ class _ViewState extends State<_View> {
     if (created == true) cubit.load();
   }
 
-  /// Case-insensitive match across the fields a user would actually search by.
+  /// Match across the fields a user would actually search by.
+  ///
+  /// The three parts of the name are offered separately as well as joined, so
+  /// the father's name is searchable on its own and a query may name any two of
+  /// the three in any order — "أحمد الحداد" finds "أحمد فتحي الحداد".
+  ///
+  /// Spelling is folded first (see [arabicMatchesAll]): أ إ آ and ا are one
+  /// letter, so are ة and ه, and harakat are ignored. The mission's decisions
+  /// spell the same man both ways in the same week, and a search that insists
+  /// on one of them hides a record that is sitting right there.
   ///
   /// A job title is matched in BOTH languages, whichever the app is set to:
   /// someone reading an English list may still search "طبيب", and the two names
   /// are the same title.
   List<Profile> _filter(List<Profile> source) {
     if (_query.isEmpty) return source;
-    final q = _query.toLowerCase();
     return source.where((e) {
       final title = e.jobTitleName;
-      return e.fullName.toLowerCase().contains(q) ||
-          (title?.ar ?? '').toLowerCase().contains(q) ||
-          (title?.en ?? '').toLowerCase().contains(q) ||
-          (e.externalOrganization ?? '').toLowerCase().contains(q);
+      return arabicMatchesAll([
+        e.firstName,
+        e.fatherName,
+        e.surname,
+        e.fullName,
+        title?.ar,
+        title?.en,
+        e.externalOrganization,
+      ], _query);
     }).toList();
   }
 

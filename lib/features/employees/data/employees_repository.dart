@@ -104,6 +104,81 @@ class EmployeesRepository {
     return people;
   }
 
+  /// One employee, with the job title and city resolved.
+  ///
+  /// Used to re-read a record after it has been corrected: an edit may CLEAR a
+  /// field, and patching the in-memory copy cannot express that without a
+  /// sentinel for every nullable column. Reading it back says what was actually
+  /// stored, which is the only version worth showing.
+  Future<Profile> fetchOne(String profileId) async {
+    final row = await supabase
+        .from('profiles')
+        .select('*, job_titles(name, name_en), reference_items(name_ar, name_en)')
+        .eq('id', profileId)
+        .single();
+    return Profile.fromMap(row);
+  }
+
+  /// Correct an employee's record.
+  ///
+  /// Only the columns that describe the person — not the ones that decide what
+  /// they are. is_admin, is_external and account_status are guarded in the
+  /// database (0011) and would be reverted for anyone but an admin anyway;
+  /// keeping them out of here means the caller is never misled into thinking
+  /// they were saved. External designation and suspension have their own
+  /// permissions and their own paths.
+  Future<void> updateEmployee({
+    required String profileId,
+    required String firstName,
+    required String fatherName,
+    required String surname,
+    String? jobTitleId,
+    Gender? gender,
+    MissionType? missionType,
+    DateTime? dateOfBirth,
+    String? cityId,
+    String? phoneSy,
+    String? phoneSa,
+  }) async {
+    String? trimmed(String? v) {
+      final t = v?.trim();
+      return (t == null || t.isEmpty) ? null : t;
+    }
+
+    await supabase
+        .from('profiles')
+        .update({
+          'first_name': firstName.trim(),
+          'father_name': fatherName.trim(),
+          'surname': surname.trim(),
+          'job_title_id': jobTitleId,
+          'gender': gender?.db,
+          'mission_type': missionType?.db,
+          'date_of_birth': dateOfBirth?.toIso8601String().split('T').first,
+          'city_id': cityId,
+          'phone_sy': trimmed(phoneSy),
+          'phone_sa': trimmed(phoneSa),
+        })
+        .eq('id', profileId);
+  }
+
+  /// Remove an account for good.
+  ///
+  /// Goes through the `admin-delete-user` Edge Function: the profile row is not
+  /// the account, and deleting it would leave a login behind with nothing
+  /// attached. The function holds the service role, checks `employees.delete`,
+  /// and removes the auth user so the profile cascades away with it.
+  Future<void> deleteEmployee(String profileId) async {
+    final res = await supabase.functions.invoke(
+      'admin-delete-user',
+      body: {'id': profileId},
+    );
+    final data = res.data;
+    if (data is Map && data['error'] != null) {
+      throw Exception(data['error'].toString());
+    }
+  }
+
   /// Admin-only: suspend or reactivate an account.
   Future<void> setSuspended(String profileId, bool suspended) async {
     await supabase
