@@ -118,6 +118,14 @@ class _HomeScreenState extends State<HomeScreen> {
           color: _office.of(context),
           onTap: () => context.push(Routes.modulesManage),
         ),
+        if (canViewEmployees)
+        DashboardCard(
+          icon: AppIcons.employees,
+          title: l.navEmployees,
+          subtitle: l.navEmployeesSubtitle,
+          color: _people.of(context),
+          onTap: () => context.push(Routes.employees),
+        ),
       if (canSeeSeasons)
         DashboardCard(
           icon: AppIcons.seasons,
@@ -134,14 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
           color: _reference.of(context),
           onTap: () => context.push(Routes.referenceData),
         ),
-      if (canViewEmployees)
-        DashboardCard(
-          icon: AppIcons.employees,
-          title: l.navEmployees,
-          subtitle: l.navEmployeesSubtitle,
-          color: _people.of(context),
-          onTap: () => context.push(Routes.employees),
-        ),
+      
       if (canApprove)
         DashboardCard(
           icon: AppIcons.approvals,
