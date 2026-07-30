@@ -196,6 +196,21 @@
   "employeesExternalSection": "الموظفون الخارجيون",
   "employeesExternalEmpty": "لا يوجد موظفون خارجيون",
   "employeeDetailTitle": "الموظف",
+  "referenceChildCount": "عدد {list} المسندة",
+  "@referenceChildCount": {
+    "placeholders": { "list": { "type": "String" } }
+  },
+  "referenceOfCapacity": "{total} من أصل {capacity}",
+  "@referenceOfCapacity": {
+    "placeholders": {
+      "total": { "type": "int" },
+      "capacity": { "type": "int" }
+    }
+  },
+  "referenceOverCapacity": "تجاوز الحد الأقصى بمقدار {excess}",
+  "@referenceOverCapacity": {
+    "placeholders": { "excess": { "type": "int" } }
+  },
   "employeePermissionsSection": "الصلاحيات الممنوحة",
   "employeePermissionsEmpty": "لا توجد صلاحيات ممنوحة",
   "employeePermissionsAdmin": "مدير — يملك جميع الصلاحيات دون الحاجة إلى منحها.",

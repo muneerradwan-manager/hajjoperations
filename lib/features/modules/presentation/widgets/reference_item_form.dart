@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/l10n/l10n_extension.dart';
 import '../../../../core/theme/glass_tokens.dart';
 import '../../application/reference_data_cubit.dart';
+import '../../domain/module_type.dart';
 import '../../domain/reference_item.dart';
 import 'module_field_input.dart';
 
@@ -126,7 +127,32 @@ class _ItemFormState extends State<_ItemForm> {
   Widget build(BuildContext context) {
     final l = context.l10n;
     // Reference fields resolve their options against the freshest sets.
-    final sets = context.watch<ReferenceDataCubit>().state.sets;
+    final state = context.watch<ReferenceDataCubit>().state;
+    final sets = state.sets;
+
+    /// The list a reference field may CHOOSE from.
+    ///
+    /// Season-scoped for a scoped set: a مجموعة entered this year belongs to a
+    /// تكتل contracted this year, and offering last year's would attach it to a
+    /// cluster that is not running. Cities are not scoped and are unaffected —
+    /// which is why nothing needed this until the groups arrived.
+    ///
+    /// Whatever is already chosen stays in the list even if it falls outside
+    /// the season: hiding it would render a saved value as unassigned and lose
+    /// it on the next save.
+    ReferenceSet? optionsFor(ModuleField field) {
+      final target = sets
+          .where((s) => s.id == field.referenceSetId)
+          .firstOrNull;
+      if (target == null || !target.isSeasonScoped) return target;
+      final visible = state.visibleItems(target.id);
+      final chosen = _data[field.key];
+      if (chosen != null && !visible.any((i) => i.id == chosen)) {
+        final kept = target.items.where((i) => i.id == chosen).firstOrNull;
+        if (kept != null) return target.copyWith(items: [kept, ...visible]);
+      }
+      return target.copyWith(items: visible);
+    }
 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
@@ -171,9 +197,7 @@ class _ItemFormState extends State<_ItemForm> {
                   ModuleFieldInput(
                     field: field,
                     value: _data[field.key],
-                    referenceSet: sets
-                        .where((s) => s.id == field.referenceSetId)
-                        .firstOrNull,
+                    referenceSet: optionsFor(field),
                     onChanged: (v) => _setValue(field.key, v),
                   ),
                 ],

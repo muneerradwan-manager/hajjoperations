@@ -575,6 +575,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get employeeDetailTitle => 'Employee';
 
   @override
+  String referenceChildCount(String list) {
+    return '$list assigned';
+  }
+
+  @override
+  String referenceOfCapacity(int total, int capacity) {
+    return '$total of $capacity';
+  }
+
+  @override
+  String referenceOverCapacity(int excess) {
+    return 'Over capacity by $excess';
+  }
+
+  @override
   String get employeePermissionsSection => 'Granted permissions';
 
   @override

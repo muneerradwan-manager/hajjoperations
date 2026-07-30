@@ -400,6 +400,46 @@ def madinah_office():
     return out
 
 
+# ------------------------------------------- 3190 Madinah departures follow-up
+
+def madinah_departures():
+    """فريق متابعة ترحيل وسفر الحجاج من المدينة المنورة — 3190.
+
+    A further team of the SAME office 3179 formed, signed by that office's own
+    director, so it lands in the Madinah file beside the others rather than
+    opening a second one. The decision also names the office's محاسب, in a
+    clause of its own.
+
+    Returns (supervisor, members, accountant).
+    """
+    g = dp.tables_of('3190')[0]
+    head, members = None, []
+    for row in g:
+        seen = set()
+        for c in row:
+            if not c.origin or c.text in seen:
+                continue
+            seen.add(c.text)
+            raw = c.text
+            if not is_person(raw):
+                continue
+            if re.search(r'[-–]\s*مشرفا', raw):
+                head = clean(re.split(r'\s*[-–]\s*', raw)[0])
+            else:
+                members.append(clean(raw))
+
+    # 'ثالثاً- يكلّف السيد محمد مصمص محاسباً للمكتب الإداري في المدينة المنورة.'
+    accountant = None
+    for kind, payload in dp.body('3190'):
+        if kind != 'p':
+            continue
+        m = re.search(r'السيد\s+(.+?)\s+محاسبا', clean(payload))
+        if m:
+            accountant = clean(m.group(1))
+            break
+    return head, members, accountant
+
+
 # ------------------------------------------------------- 3197 five-star panel
 
 # 3197 was converted with a broken glyph map, so its four names arrive mangled.

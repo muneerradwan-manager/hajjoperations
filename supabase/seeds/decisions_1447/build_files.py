@@ -348,6 +348,24 @@ def build_madinah(ctx):
                        'role_id': R('office_coordinator' if role == 'office'
                                     else 'travel_coordinator'),
                        'profile_id': p})
+    # 3190 forms one more team of this office, and names its محاسب.
+    dep_head, dep_members, accountant = ex.madinah_departures()
+    if dep_head:
+        p = ctx.pid(dep_head)
+        if p:
+            fm.append({'module_id': mid, 'role_id': R('departures_supervisor'),
+                       'profile_id': p})
+    for who in dep_members:
+        p = ctx.pid(who)
+        if p:
+            fm.append({'module_id': mid, 'role_id': R('departures_member'),
+                       'profile_id': p})
+    if accountant:
+        p = ctx.pid(accountant)
+        if p:
+            fm.append({'module_id': mid, 'role_id': R('accountant'),
+                       'profile_id': p})
+
     TEAM = {'housing': ('housing_supervisor', 'housing_member'),
             'airport': ('airport_supervisor', 'airport_member'),
             'aviation': ('aviation_supervisor', 'aviation_member'),

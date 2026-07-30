@@ -1178,6 +1178,24 @@ abstract class AppLocalizations {
   /// **'Employee'**
   String get employeeDetailTitle;
 
+  /// No description provided for @referenceChildCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{list} assigned'**
+  String referenceChildCount(String list);
+
+  /// No description provided for @referenceOfCapacity.
+  ///
+  /// In en, this message translates to:
+  /// **'{total} of {capacity}'**
+  String referenceOfCapacity(int total, int capacity);
+
+  /// No description provided for @referenceOverCapacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Over capacity by {excess}'**
+  String referenceOverCapacity(int excess);
+
   /// No description provided for @employeePermissionsSection.
   ///
   /// In en, this message translates to:

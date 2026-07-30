@@ -35,6 +35,24 @@ SURNAME_ALIASES = {
 # shorter form is pinned to a key of its own.
 FORCE_DISTINCT = {'حسين فلوط'}
 
+# Men written SHORT in one decision and in full in others, where the short form
+# drops a middle name and so keys differently — 'عامر مصمص' against 'محمد عامر
+# مصمص'. The (first, last) key cannot join those: it is the FIRST name that went
+# missing, not the surname.
+#
+# Each is listed only because the evidence is one-sided: the short form appears
+# in exactly one decision, the full form in several, and the two never appear in
+# the same list. زاهر حبوباتي is the clearest — 3142 has him running برج 17
+# under محمد ذكرى, and المشاعر has محمد زاهر عماد الدين حبوباتي in that same
+# man's قطاع.
+NAME_MERGES = {
+    'زاهر حبوباتي': 'محمد زاهر عماد الدين حبوباتي',
+    'طاهر عبد الحميد': 'طاهر عبد الحميد الشاوي',
+    'عامر مصمص': 'محمد عامر مصمص',
+    'كرم حاتم': 'كرم حاتم الحاجي مصطفى',
+    'مصطفى حاج قدور': 'مصطفى كمال حاج قدور كوسة',
+}
+
 
 def _alias(k):
     if k is None:
@@ -45,9 +63,10 @@ def _alias(k):
 
 def person_key(raw):
     """The key everything else must agree on: aliases folded, clashes pinned."""
-    if clean(raw) in FORCE_DISTINCT:
-        return ('=' + normalise(clean(raw)), '')
-    return _alias(key_of(raw))
+    name = clean(raw)
+    if name in FORCE_DISTINCT:
+        return ('=' + normalise(name), '')
+    return _alias(key_of(NAME_MERGES.get(name, name)))
 
 
 class Roster(Registry):
@@ -147,6 +166,15 @@ def build():
     for comp in m['companies']:
         for who in comp['guides']:
             add(who, '3179/دليل')
+
+    # 3190 — a further team of the same Madinah office, and its accountant
+    head, members, accountant = ex.madinah_departures()
+    if head:
+        add(head, '3190/مشرف الترحيل')
+    for who in members:
+        add(who, '3190/عضو الترحيل')
+    if accountant:
+        add(accountant, '3190/محاسب المكتب')
 
     # 3197 لجنة 5 نجوم
     chair, members = ex.five_star_panel()

@@ -203,6 +203,21 @@
   "employeesExternalSection": "External participants",
   "employeesExternalEmpty": "No external employees",
   "employeeDetailTitle": "Employee",
+  "referenceChildCount": "{list} assigned",
+  "@referenceChildCount": {
+    "placeholders": { "list": { "type": "String" } }
+  },
+  "referenceOfCapacity": "{total} of {capacity}",
+  "@referenceOfCapacity": {
+    "placeholders": {
+      "total": { "type": "int" },
+      "capacity": { "type": "int" }
+    }
+  },
+  "referenceOverCapacity": "Over capacity by {excess}",
+  "@referenceOverCapacity": {
+    "placeholders": { "excess": { "type": "int" } }
+  },
   "employeePermissionsSection": "Granted permissions",
   "employeePermissionsEmpty": "No permissions granted",
   "employeePermissionsAdmin": "An administrator — holds every permission, without needing to be granted them.",

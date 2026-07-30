@@ -135,6 +135,10 @@ class ReferenceItemDetailScreen extends StatelessWidget {
                           ),
                     ],
                   ),
+                  // What has been put INSIDE this entry, where something can be.
+                  // A تكتل holds مجموعات and they add up to a number of their
+                  // own; nothing else in the master data nests yet.
+                  ..._dependentCards(context, state, set, item),
                   // These get their own card rather than a row: a location is
                   // there to be opened and a number to be dialled, not read.
                   for (final field in set.fields)
@@ -154,6 +158,112 @@ class ReferenceItemDetailScreen extends StatelessWidget {
       },
     );
   }
+}
+
+/// What other master data points AT this entry, and what it adds up to.
+///
+/// A تكتل is the case this was written for. It carries العدد الكلي — the most it
+/// can take — and the مجموعات assigned to it carry numbers of their own. The
+/// second figure is deliberately NOT a column: it is the sum of its groups, and
+/// storing it would create a second place for it to be wrong the moment a group
+/// is edited.
+///
+/// Written against the schema rather than against the word "cluster": any set
+/// whose entries reference this one gets the same card. The convention it rests
+/// on is stated rather than clever — the FIRST number field of a set is the
+/// figure that set counts in, so a parent's is its ceiling and a child's is its
+/// share.
+List<Widget> _dependentCards(
+  BuildContext context,
+  ReferenceDataState state,
+  ReferenceSet set,
+  ReferenceItem item,
+) {
+  final l = context.l10n;
+  final cards = <Widget>[];
+
+  for (final child in state.sets) {
+    if (child.id == set.id) continue;
+    final link = child.fields
+        .where(
+          (f) =>
+              f.kind == ModuleFieldKind.reference &&
+              f.referenceSetId == set.id,
+        )
+        .firstOrNull;
+    if (link == null) continue;
+
+    final mine = state
+        .visibleItems(child.id)
+        .where((i) => i.data[link.key] == item.id)
+        .toList();
+    if (mine.isEmpty) continue;
+
+    final childNumber = child.fields
+        .where((f) => f.kind == ModuleFieldKind.number)
+        .firstOrNull;
+    final total = childNumber == null
+        ? null
+        : mine.fold<int>(
+            0,
+            (sum, i) =>
+                sum + (int.tryParse('${i.data[childNumber.key] ?? ''}') ?? 0),
+          );
+
+    final ownNumber = set.fields
+        .where((f) => f.kind == ModuleFieldKind.number)
+        .firstOrNull;
+    final capacity = ownNumber == null
+        ? null
+        : int.tryParse('${item.data[ownNumber.key] ?? ''}');
+
+    // A ceiling that has been passed is the whole reason the two numbers are
+    // shown together, so it is said rather than left to be worked out.
+    final over = capacity != null && total != null && total > capacity;
+
+    cards
+      ..add(const SizedBox(height: AppSpacing.md))
+      ..add(
+        InfoSection(
+          title: child.name.of(context),
+          icon: AppIcons.referenceData,
+          children: [
+            InfoRow(
+              icon: AppIcons.referenceData,
+              label: l.referenceChildCount(child.name.of(context)),
+              value: '${mine.length}',
+            ),
+            if (total != null)
+              InfoRow(
+                icon: AppIcons.document,
+                label: childNumber!.label.of(context),
+                value: capacity == null
+                    ? '$total'
+                    : l.referenceOfCapacity(total, capacity),
+              ),
+            if (over)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.sm),
+                child: Text(
+                  l.referenceOverCapacity(total - capacity),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+              ),
+            for (final i in mine)
+              InfoRow(
+                icon: AppIcons.selected,
+                label: i.name.of(context),
+                value: childNumber == null
+                    ? null
+                    : '${i.data[childNumber.key] ?? ''}',
+              ),
+          ],
+        ),
+      );
+  }
+  return cards;
 }
 
 /// Kinds whose value is something to act on rather than something to read.

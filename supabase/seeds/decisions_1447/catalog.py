@@ -87,6 +87,107 @@ def ensure_camp_fields():
             print(f'  + {code}: {", ".join(f["key"] for f in add)}')
 
 
+def ensure_madinah_departures():
+    """فريق متابعة ترحيل وسفر الحجاج، ومحاسب المكتب — 3190.
+
+    A further team of the office 3179 already formed, and its accountant. It is
+    signed by that office's own director and staffed from the same people, so it
+    belongs in the Madinah file rather than opening a second one for the same
+    office in the same season.
+
+    Unlike every other role in this type, these two carry duties: 3190 writes
+    them out (0057 seeded none because 3179 wrote none). So they take the menu
+    the rest of the catalog uses, and the other roles are left alone.
+    """
+    t = sbx.select('module_types', 'select=id&code=eq.madinah_admin_office')
+    if not t:
+        return
+    tid = t[0]['id']
+    have = {r['code'] for r in sbx.select(
+        'module_type_roles', f'select=code&module_type_id=eq.{tid}')}
+    add = [
+        ('departures_supervisor', 'مشرف فريق متابعة ترحيل وسفر الحجاج',
+         'Departures follow-up supervisor',
+         'يقود متابعة ترحيل الحجاج من المدينة المنورة وسفرهم، ويوزّع المهام على '
+         'الفريق ويرفع تقاريره إلى إدارة المكتب.',
+         'Leads the follow-up of pilgrim departures from Madinah, hands the '
+         'duties out and files the team\'s reports.', False, 11),
+        ('departures_member', 'عضو فريق متابعة ترحيل وسفر الحجاج',
+         'Departures follow-up member',
+         'يتولى ما يُسند إليه من متابعة الترحيل ميدانياً، في الفنادق ومقار '
+         'السكن وبالتنسيق مع فريق المطار.',
+         'Carries whatever departure duties are handed to him, on the ground '
+         'and with the airport team.', True, 12),
+        ('accountant', 'محاسب المكتب الإداري',
+         'Office accountant',
+         'يتولى محاسبة المكتب الإداري في المدينة المنورة.',
+         'Keeps the accounts of the Madinah administrative office.', False, 13),
+    ]
+    rows = [{'module_type_id': tid, 'code': c, 'name_ar': ar, 'name_en': en,
+             'description_ar': dar, 'description_en': den,
+             'allows_multiple': multi, 'is_required': False,
+             # The accountant has no duty list of his own in the decision.
+             'tasks_are_assigned': c != 'accountant', 'sort_order': so}
+            for c, ar, en, dar, den, multi, so in add if c not in have]
+    if rows:
+        sbx.insert('module_type_roles', rows)
+        print('  + madinah:', ', '.join(r['code'] for r in rows))
+
+    groups = {g['code']: g for g in sbx.select(
+        'module_type_task_groups', f'select=*&module_type_id=eq.{tid}')}
+    if 'departures' not in groups:
+        grp = sbx.insert('module_type_task_groups', [{
+            'module_type_id': tid, 'code': 'departures',
+            'name_ar': 'متابعة ترحيل وسفر الحجاج',
+            'name_en': 'Departures follow-up', 'sort_order': 1,
+        }])[0]
+        sbx.insert('module_type_tasks', [
+            {'module_type_id': tid, 'group_id': grp['id'], 'sort_order': i,
+             'title_ar': ar, 'title_en': en}
+            for i, (ar, en) in enumerate([
+                ('متابعة عملية ترحيل الحجاج من المدينة، والتنسيق المستمر مع '
+                 'فريق مكتب الخدمة الميدانية',
+                 'Follow the departure of the pilgrims from Madinah, in constant '
+                 'coordination with the field service office team'),
+                ('التواجد المباشر والإشراف الميداني على عمليات ترحيل الحجاج من '
+                 'الفنادق ومقار سكنهم في المدينة المنورة',
+                 'Be present for and supervise the departures from the hotels '
+                 'and residences in Madinah'),
+                ('رفع إشعار الترحيل الفوري إلى فريق المطار فور مغادرة الحجاج '
+                 'للفندق، مع استمرار التواصل والتنسيق معهم لضمان سلاسة الاستقبال',
+                 'Notify the airport team the moment a group leaves its hotel, '
+                 'and stay in contact so the reception runs smoothly'),
+                ('إعداد وإرسال تقارير يومية مفصلة ترفع للإدارة مباشرة توضّح مسار '
+                 'عمليات الترحيل وأي تحديات يتم رصدها',
+                 'File a detailed daily report to the administration on how the '
+                 'departures are going and anything that got in the way'),
+            ], start=1)
+        ])
+        print('  + madinah: 4 departure duties')
+
+    # The type's own description enumerates its teams, so it has to learn them.
+    row = sbx.select('module_types',
+                     'select=description_ar&code=eq.madinah_admin_office')[0]
+    if 'ترحيل' not in (row.get('description_ar') or ''):
+        sbx.update('module_types', 'code=eq.madinah_admin_office', {
+            'description_ar':
+                'تشكيل الفرق واللجان العاملة في بعثة الحج السورية ضمن المكتب '
+                'الإداري في المدينة المنورة: تسكين الحجاج، وشركات الخدمة '
+                'بأدلائها، والمطار، والطيران المركزي، وشحن الحقائب ومتابعتها، '
+                'ومتابعة ترحيل وسفر الحجاج، ومنسق عمل المكتب، ومنسق سفر '
+                'البعثات والإداريين والفرادى، ومحاسب المكتب.',
+            'description_en':
+                'The teams and committees of the Syrian Hajj Mission inside the '
+                'Madinah administrative office: housing the pilgrims, the '
+                'service companies and their guides, the airport, central '
+                'aviation, baggage forwarding, the follow-up of pilgrim '
+                'departures, the office coordinator, the coordinator for the '
+                'travel of missions, administrators and individuals, and the '
+                'office accountant.',
+        })
+        print('  ~ madinah: description now names the departures team')
+
+
 FIVE_STAR = 'five_star_services_review'
 
 
@@ -224,6 +325,7 @@ def main():
     ensure_cluster_level()
     ensure_camp_fields()
     ensure_mina_two_supervisors()
+    ensure_madinah_departures()
     ensure_five_star_type()
     ensure_employee_permissions()
     print('done.')
