@@ -10,21 +10,27 @@ import 'app_colors.dart';
 ///
 /// ```
 ///                 on night   on paper
-///   darkGreen        2.26      7.47
-///   mediumGreen      2.98      5.68
-///   lightGreen       5.69      2.97
-///   darkRed          1.12     15.13
-///   mediumRed        1.67     10.09
-///   lightRed         1.91      8.84
-///   darkGold         7.02      2.41
-///   mediumGold      11.30      1.50
-///   lightGold       13.86      1.22
+///   darkGreen        2.26      6.42
+///   mediumGreen      2.98      4.88
+///   lightGreen       5.69      2.55
+///   darkRed          1.12     13.00
+///   mediumRed        1.67      8.67
+///   lightRed         1.91      7.59
+///   darkGold         7.02      2.07
+///   mediumGold      11.30      1.29
+///   lightGold       13.86      1.05
 /// ```
 ///
 /// Every RED is unusable on the dark backdrop and every GOLD is unusable on the
 /// light one. Only the greens half-work on both — which is why the app drifted
 /// into using green for nearly everything, and why the two screens that were
 /// not green had a card nobody could read.
+///
+/// The paper column is measured at [AppColors.paperEnd], the darkest point the
+/// light field reaches, rather than at its middle: an accent has to hold at the
+/// bottom of a page as well as across it. The three that cleared the old,
+/// paler field by a tenth of a point — green, gold, goldSoft — are each a step
+/// deeper here for it.
 ///
 /// So an accent is a PAIR: the brand colour on the backdrop it already suits,
 /// and the same hue mixed toward white or black for the one it does not. Each
@@ -48,9 +54,9 @@ class Accent {
       Theme.of(context).brightness == Brightness.dark ? onDark : onLight;
 
   // ── The mission's own work and people: green ────────────────────────────
-  /// [AppColors.lightGreen], darkened 22% on paper.
+  /// [AppColors.lightGreen], darkened 28% on paper.
   static const green = Accent._(
-    Color(0xFF1F7B72),
+    Color(0xFF1C7068),
     AppColors.lightGreen,
     brand: AppColors.lightGreen,
   );
@@ -70,17 +76,17 @@ class Accent {
   );
 
   // ── The calendar and the reference material: gold ───────────────────────
-  /// [AppColors.darkGold], darkened 30% on paper.
+  /// [AppColors.darkGold], darkened 37% on paper.
   static const gold = Accent._(
-    Color(0xFF796F4D),
+    Color(0xFF6D6445),
     AppColors.darkGold,
     brand: AppColors.darkGold,
   );
 
-  /// [AppColors.mediumGold], darkened 45% on paper — the palest brand colour
+  /// [AppColors.mediumGold], darkened 50% on paper — the palest brand colour
   /// there is, and the one that needs the most help on a white page.
   static const goldSoft = Accent._(
-    Color(0xFF776E57),
+    Color(0xFF6C644F),
     AppColors.mediumGold,
     brand: AppColors.mediumGold,
   );

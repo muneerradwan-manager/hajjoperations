@@ -20,6 +20,11 @@ class PermissionCodes {
   static const employeesCreate = 'employees.create';
   static const employeesEdit = 'employees.edit';
   static const employeesDelete = 'employees.delete';
+
+  /// Resetting someone else's password. Deliberately not folded into
+  /// [employeesEdit]: correcting a record and taking over a login are not the
+  /// same trust (see migration 0072).
+  static const employeesPassword = 'employees.password';
   static const employeesSuspend = 'employees.suspend';
   static const employeesExternal = 'employees.external';
   static const employeesDocuments = 'employees.documents';

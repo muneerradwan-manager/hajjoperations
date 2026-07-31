@@ -45,7 +45,11 @@ class AppTheme {
           tertiary: isDark ? AppColors.darkGold : AppColors.mediumRed,
           error: error,
         ).copyWith(
-          surface: isDark ? AppColors.nightMid : AppColors.paperTop,
+          // The colour of a SURFACE, which on paper is the pane and not the
+          // desk it stands on. Anything reading this is filling something a
+          // pane already contains — the separator between two segments of a
+          // stacked bar, say — and wants to match the card under it.
+          surface: isDark ? AppColors.nightMid : AppColors.white,
           surfaceTint: Colors.transparent,
           // Text/icon tones are tuned by hand: auto-generated onSurface values
           // wash out over a translucent, colour-shifting backdrop.
@@ -62,18 +66,28 @@ class AppTheme {
           onPrimaryContainer: isDark ? AppColors.inkInverse : AppColors.ink,
           surfaceContainerHigh: isDark
               ? _mix(AppColors.nightMid, AppColors.white, 0.07)
-              : _mix(AppColors.paperMid, AppColors.darkGreen, 0.05),
+              : _mix(AppColors.paperMid, AppColors.black, 0.05),
           surfaceContainerHighest: isDark
               ? _mix(AppColors.nightMid, AppColors.white, 0.12)
-              : _mix(AppColors.paperMid, AppColors.darkGreen, 0.09),
+              : _mix(AppColors.paperMid, AppColors.black, 0.09),
           onSurface: isDark ? AppColors.inkInverse : AppColors.ink,
           onSurfaceVariant: isDark ? AppColors.hint : AppColors.hintStrong,
+          // Both are drawn on a pane, which on paper is white — so the light
+          // steps are measured from white and had to grow: at 0.14 a divider
+          // ruled across a card was a shade off the card itself, and callers
+          // that fade it further (see [InfoSection]) were ruling nothing.
+          //
+          // Neutral rather than green, for the reason [GlassTokens.light]
+          // gives at length: these rule across panes that may be washed red or
+          // gold, and a line with a hue of its own argues with the wash. The
+          // night steps keep their green because they are drawn on a backdrop
+          // that IS green, and because nothing on night was ever wrong.
           outline: isDark
               ? _mix(AppColors.black, AppColors.lightGreen, 0.3)
-              : _mix(AppColors.white, AppColors.darkGreen, 0.28),
+              : _mix(AppColors.white, AppColors.black, 0.25),
           outlineVariant: isDark
               ? _mix(AppColors.black, AppColors.lightGreen, 0.15)
-              : _mix(AppColors.white, AppColors.darkGreen, 0.14),
+              : _mix(AppColors.white, AppColors.black, 0.16),
         );
 
     final base = ThemeData(
@@ -167,9 +181,13 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
+        // A field is a WELL, and a well is a step away from the surface it is
+        // cut into — up on night, down on paper. The light value used to be
+        // white over a card that is itself white, which is how every form in
+        // the app came to be a set of labels with borders drawn round them.
         fillColor: isDark
             ? AppColors.white.withValues(alpha: 0.06)
-            : AppColors.white.withValues(alpha: 0.55),
+            : AppColors.black.withValues(alpha: 0.04),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.lg,
           vertical: AppSpacing.lg + 2,
@@ -222,7 +240,7 @@ class AppTheme {
           foregroundColor: scheme.onSurface,
           backgroundColor: isDark
               ? AppColors.white.withValues(alpha: 0.05)
-              : AppColors.white.withValues(alpha: 0.45),
+              : AppColors.black.withValues(alpha: 0.03),
           side: BorderSide(color: glass.strokeStrong),
           textStyle: textTheme.labelLarge?.copyWith(fontSize: 15),
           shape: RoundedRectangleBorder(borderRadius: borderRadius),
@@ -260,7 +278,7 @@ class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: isDark
             ? AppColors.white.withValues(alpha: 0.06)
-            : AppColors.white.withValues(alpha: 0.5),
+            : AppColors.black.withValues(alpha: 0.045),
         selectedColor: scheme.primary.withValues(alpha: isDark ? 0.32 : 0.20),
         secondarySelectedColor: scheme.primary.withValues(
           alpha: isDark ? 0.32 : 0.20,

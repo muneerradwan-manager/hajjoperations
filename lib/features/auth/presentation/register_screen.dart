@@ -105,7 +105,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 const SizedBox(height: AppSpacing.xxl),
                                 GlassCard(
                                   radius: AppRadius.xl,
-                                  padding: const EdgeInsets.all(AppSpacing.xl),
+                                  padding: const EdgeInsets.all(AppSpacing.lg),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.stretch,

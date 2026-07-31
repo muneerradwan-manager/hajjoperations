@@ -146,6 +146,26 @@ class EmployeeManageCubit extends SafeCubit<EmployeeManageState> {
     }
   }
 
+  /// Set a new password on this employee's account.
+  ///
+  /// Returns true once it is actually stored. The caller waits for that before
+  /// saying so: a sheet that closes on "saved" while the function is still
+  /// deciding would announce a password the employee does not have.
+  Future<bool> changePassword(String password) async {
+    emit(state.copyWith(busy: true));
+    try {
+      await _employees.setEmployeePassword(
+        profileId: state.profile.id,
+        password: password,
+      );
+      emit(state.copyWith(busy: false));
+      return true;
+    } catch (e) {
+      emit(state.copyWith(busy: false, error: e.toString()));
+      return false;
+    }
+  }
+
   /// Remove the account. Returns true when it is gone, so the screen knows to
   /// leave — there is nothing left to show.
   Future<bool> deleteEmployee() async {

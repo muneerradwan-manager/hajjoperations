@@ -49,6 +49,13 @@ class AppIcons {
   static const password = Iconsax.lock;
   static const settings = Iconsax.setting_2;
 
+  // Account switching. `removeAccount` is a person being taken off a list and
+  // not a bin, because that is what it does: the account is dropped from this
+  // device, and nothing at all happens to it on the server.
+  static const accounts = Iconsax.profile_circle;
+  static const switchAccount = Iconsax.arrow_swap_horizontal;
+  static const removeAccount = Iconsax.user_minus;
+
   // A tick, for stating that something is done or present — a file has been
   // chosen, an inbox has been read. NOT for the selected half of a pair of
   // states: that is `SelectionIndicator`, which draws both halves so the empty

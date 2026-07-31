@@ -1,9 +1,9 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hajjoperations/core/theme/app_accents.dart';
 import 'package:hajjoperations/core/theme/app_colors.dart';
+
+import 'contrast.dart';
 
 /// The brand palette is a PRINT palette, and it does not divide evenly across
 /// an app with both a night mode and a paper one: measured against the two
@@ -13,22 +13,15 @@ import 'package:hajjoperations/core/theme/app_colors.dart';
 ///
 /// So each accent carries both variants, and these tests are the measurement
 /// itself rather than a note claiming it was taken.
-double _luminance(Color c) {
-  double channel(double v) =>
-      v <= 0.03928 ? v / 12.92 : math.pow((v + 0.055) / 1.055, 2.4).toDouble();
-  return 0.2126 * channel(c.r) + 0.7152 * channel(c.g) + 0.0722 * channel(c.b);
-}
-
-double contrast(Color a, Color b) {
-  final la = _luminance(a), lb = _luminance(b);
-  final hi = math.max(la, lb), lo = math.min(la, lb);
-  return (hi + 0.05) / (lo + 0.05);
-}
-
 void main() {
   // What the aurora settles to behind the content, top to bottom.
   const night = AppColors.nightMid;
-  const paper = AppColors.paperMid;
+
+  // The BOTTOM of the light field rather than its middle. The paper backdrop
+  // is a gradient, and an accent that clears 4.5 halfway down a page and fails
+  // at the foot of it has not cleared anything — a long page is exactly where
+  // a colour is read last and looked at least.
+  const paper = AppColors.paperEnd;
 
   const accents = <String, Accent>{
     'green': Accent.green,

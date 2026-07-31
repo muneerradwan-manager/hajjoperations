@@ -84,11 +84,21 @@ class _AuroraBackgroundState extends State<AuroraBackground>
     );
   }
 
+  /// The field the orbs drift over.
+  ///
+  /// Slightly diagonal, and that is the whole of what a wide window needed. A
+  /// strictly vertical gradient gives every pixel on a row the same colour —
+  /// unnoticeable down a phone, where a row is 390 wide, and on a monitor a
+  /// flat band two and a half thousand pixels across, repeated all the way
+  /// down. Tilting it costs nothing at portrait aspect and gives the width
+  /// somewhere to fall away to.
   LinearGradient _baseGradient(bool isDark) {
+    const begin = Alignment(-0.5, -1);
+    const end = Alignment(0.5, 1);
     return isDark
         ? const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: begin,
+            end: end,
             colors: [
               AppColors.nightTop,
               AppColors.nightMid,
@@ -97,8 +107,8 @@ class _AuroraBackgroundState extends State<AuroraBackground>
             stops: [0, 0.55, 1],
           )
         : const LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: begin,
+            end: end,
             colors: [
               AppColors.paperTop,
               AppColors.paperMid,
@@ -218,11 +228,16 @@ class _AuroraPainter extends CustomPainter {
     final orbs = isDark ? _darkOrbs : _lightOrbs;
     final longest = math.max(size.width, size.height);
     final tau = math.pi * 2;
-    // Peak alpha at the orb core. Kept low in light mode — the colour should
-    // read as a tint in the paper, not as a wash over the whole screen. The
-    // brand hues are deep, so light mode needs less of them than a pastel
-    // would have taken.
-    final peak = isDark ? 0.26 : 0.14;
+    // Peak alpha at the orb core. Night ADDS light into black and can take a
+    // quarter of it; paper lays colour OVER a tone and cannot.
+    //
+    // Halved when the paper field was deepened, because the two compound: at
+    // 0.14 over a near-white page the orbs were a tint, and over the deeper
+    // field the same number turned the corners to mud — grey-green under the
+    // first orb, a dull pink under the red one. The field carries the warmth
+    // itself now, so all the orbs owe it is enough drift to keep a monitor's
+    // worth of it from reading as one flat sheet.
+    final peak = isDark ? 0.26 : 0.07;
 
     for (final orb in orbs) {
       final angle = tau * t * orb.speed + orb.phase;
@@ -263,12 +278,18 @@ class _GrainPainter extends CustomPainter {
     final random = math.Random(2026);
     final paint = Paint();
     final color = isDark ? AppColors.white : AppColors.black;
-    final count = (size.width * size.height / 900).clamp(200, 2600).toInt();
+    // One speck per 900 square pixels, and the ceiling has to leave room for a
+    // monitor: at 2600 a 2560×1440 window got two thirds of the density a phone
+    // gets, so the texture thinned out on exactly the screen where a flat field
+    // is most obvious. It is painted once and cached by the [RepaintBoundary]
+    // above, so the extra specks cost a frame at startup and nothing after.
+    final count = (size.width * size.height / 900).clamp(200, 6000).toInt();
 
     for (var i = 0; i < count; i++) {
-      paint.color = color.withValues(
-        alpha: (isDark ? 0.020 : 0.014) * random.nextDouble(),
-      );
+      // The same weight on both backdrops now that the paper one is a tone
+      // rather than a white: at 0.014 the light grain was a black speck on an
+      // all-but-white page, which is to say invisible.
+      paint.color = color.withValues(alpha: 0.020 * random.nextDouble());
       canvas.drawRect(
         Rect.fromLTWH(
           random.nextDouble() * size.width,

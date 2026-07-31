@@ -98,6 +98,25 @@ GoRouter buildRouter(SessionCubit session) {
 
       final onAuthPage = loc == Routes.login || loc == Routes.register;
 
+      // Adding a second account is the one time the sign-in form is wanted by
+      // somebody who is already signed in. The session is deliberately left
+      // running — switching accounts must never sign the current one out, or
+      // its saved token would be revoked and the switcher could not bring it
+      // back — so without this the redirect would send them straight home.
+      //
+      // A query parameter and not a separate route, because it is the same
+      // screen doing the same thing; only the way back differs.
+      //
+      // The parameter carries the id of the account that opened it, so the
+      // exemption ends by itself: the moment a different account signs in, it
+      // stops matching and the ordinary rules take over and send them home. A
+      // bare flag would have held the screen open over the session it was there
+      // to create.
+      final addingFor = state.uri.queryParameters['add'];
+      if (onAuthPage && addingFor != null && addingFor == session.userId) {
+        return null;
+      }
+
       switch (status) {
         case SessionStatus.unauthenticated:
           return onAuthPage ? null : Routes.login;
@@ -145,8 +164,12 @@ GoRouter buildRouter(SessionCubit session) {
       ),
       GoRoute(
         path: Routes.login,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const LoginScreen()),
+        pageBuilder: (c, s) => fadeThroughPage(
+          key: s.pageKey,
+          child: LoginScreen(
+            addingForUserId: s.uri.queryParameters['add'],
+          ),
+        ),
       ),
       GoRoute(
         path: Routes.register,

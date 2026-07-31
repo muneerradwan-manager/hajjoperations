@@ -47,14 +47,24 @@ class AppColors {
   static const Color nightEnd = Color(0xFF0A0907);
 
   // ── Surfaces (brand × white) ────────────────────────────────────────────
-  /// Top of the light backdrop: [lightGold] at 15% over [white].
-  static const Color paperTop = Color(0xFFFBFAF8);
+  // The light backdrop is a DESK, not a page. Every pane in this app is white
+  // at some alpha, so a white field leaves nothing for a pane to be white
+  // against: at the old 15/35/55 the whole of light mode was one sheet, panes
+  // and background alike, separated by six parts in a thousand. That reads as
+  // flat on a phone, where the screen edge frames each card anyway, and as
+  // nothing at all on a monitor, where three panes float in the middle of it.
+  //
+  // Deepened to 45/65/85, these three are the surface the paper sits ON.
 
-  /// Middle of the light backdrop: [lightGold] at 35% over [white].
-  static const Color paperMid = Color(0xFFF6F3F0);
+  /// Top of the light backdrop: [lightGold] at 45% over [white].
+  static const Color paperTop = Color(0xFFF3F0EB);
 
-  /// Bottom of the light backdrop: [lightGold] at 55% over [white].
-  static const Color paperEnd = Color(0xFFF0ECE7);
+  /// Middle of the light backdrop: [lightGold] at 65% over [white].
+  static const Color paperMid = Color(0xFFEDE9E2);
+
+  /// Bottom of the light backdrop: [lightGold] at 85% over [white], so the
+  /// field warms slightly as it falls away.
+  static const Color paperEnd = Color(0xFFE8E2DA);
 
   // ── Ink ─────────────────────────────────────────────────────────────────
   /// Body text on light surfaces: [darkGreen] at 25% over [black].

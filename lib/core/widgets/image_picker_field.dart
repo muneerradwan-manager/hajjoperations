@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../l10n/l10n_extension.dart';
 import '../theme/app_icons.dart';
+import '../theme/glass_tokens.dart';
 
 /// A tappable field that lets the user pick an image (camera or gallery) and
 /// previews the selection. Two shapes: a circular avatar or a rounded card.
@@ -76,7 +77,10 @@ class ImagePickerField extends StatelessWidget {
               height: 120,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.white.withValues(alpha: 0.06),
+                // The well token rather than a white at six per cent: an empty
+                // picker is a hollow cut into whatever it stands on, and on
+                // paper that surface is already white.
+                color: context.glass.fillSubtle,
                 // An empty picker glows in the brand colour so it reads as the
                 // next thing to tap; once filled it settles to a quiet rim.
                 border: Border.all(

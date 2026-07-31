@@ -85,12 +85,34 @@ class SessionCubit extends SafeCubit<SessionState> {
   final ProfileRepository _profiles;
   late final StreamSubscription<AuthState> _sub;
 
+  /// Who is signed in, whatever state their account is in.
+  ///
+  /// Not on [SessionState], which carries the profile — and an account that has
+  /// not filled one in yet still has an id. The router needs that id to tell
+  /// "still adding a second account" from "the second account has arrived".
+  String? get userId => _auth.currentUser?.id;
+
   Future<void> _onAuthChanged(AuthState event) async {
-    if (event.session == null) {
+    final session = event.session;
+    if (session == null) {
       emit(const SessionState(status: SessionStatus.unauthenticated));
-    } else {
-      await reload();
+      return;
     }
+
+    // A token rotating for the person already on screen changes nothing about
+    // them — only the credential the account switcher has to hold. Refetching
+    // the profile and the permission set every time one expires would be work
+    // done hourly to arrive at the answer already showing.
+    //
+    // The same event announces a switch to a different account, because that is
+    // what `setSession` does under it; the user id is what tells the two apart.
+    if (event.event == AuthChangeEvent.tokenRefreshed &&
+        session.user.id == state.profile?.id) {
+      await _auth.syncStoredToken();
+      return;
+    }
+
+    await reload();
   }
 
   /// Re-fetch the profile and permissions and recompute status.
@@ -101,6 +123,18 @@ class SessionCubit extends SafeCubit<SessionState> {
     }
 
     final profile = await _profiles.fetchMine();
+
+    // Recorded here rather than at sign-in: this is the first point at which
+    // the account has a face and a name to be recognised by in the switcher,
+    // and it runs again whenever either of them changes. Not awaited — the
+    // screen the person is waiting for does not depend on it.
+    unawaited(
+      _auth.rememberCurrentAccount(
+        name: profile?.fullName,
+        photoUrl: profile?.photoUrl,
+      ),
+    );
+
     if (profile == null) {
       // Row may not be visible for a beat right after signup; treat as incomplete.
       emit(const SessionState(status: SessionStatus.incomplete));

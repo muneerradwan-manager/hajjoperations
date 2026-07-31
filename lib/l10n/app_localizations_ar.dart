@@ -82,7 +82,8 @@ class AppLocalizationsAr extends AppLocalizations {
       'إيقافها يوقف تنبيه الجهاز فقط — الإشعارات تبقى تصلك داخل التطبيق';
 
   @override
-  String get settingsLogoutConfirm => 'تسجيل الخروج من هذا الجهاز؟';
+  String get settingsLogoutConfirm =>
+      'تسجيل الخروج من هذا الجهاز؟ سيُزال الحساب من قائمة التبديل السريع، وستحتاج كلمة المرور للدخول به مرة أخرى.';
 
   @override
   String get settingsTheme => 'المظهر';
@@ -153,6 +154,44 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get authCheckEmail =>
       'تحقق من بريدك الإلكتروني لتأكيد حسابك ثم سجّل الدخول.';
+
+  @override
+  String get accountsTitle => 'الحسابات';
+
+  @override
+  String get accountsSaved => 'الدخول السريع';
+
+  @override
+  String get accountsSavedHint =>
+      'حسابات محفوظة على هذا الجهاز — اضغط للدخول دون كلمة مرور';
+
+  @override
+  String get accountsCurrent => 'الحساب الحالي';
+
+  @override
+  String get accountsAdd => 'إضافة حساب آخر';
+
+  @override
+  String get accountsAddTitle => 'إضافة حساب';
+
+  @override
+  String get accountsAddSubtitle =>
+      'سجّل الدخول بحساب آخر — حسابك الحالي يبقى محفوظاً للعودة إليه';
+
+  @override
+  String get accountsSwitching => 'جارٍ تبديل الحساب…';
+
+  @override
+  String get accountsRemove => 'إزالة من هذا الجهاز';
+
+  @override
+  String accountsRemoveConfirm(String name) {
+    return 'إزالة $name من قائمة هذا الجهاز؟ ستحتاج كلمة المرور للدخول به مجدداً.';
+  }
+
+  @override
+  String get accountsExpired =>
+      'انتهت صلاحية جلسة هذا الحساب على هذا الجهاز. سجّل الدخول به من جديد.';
 
   @override
   String get profileCompleteTitle => 'أكمل ملفك الشخصي';
@@ -397,6 +436,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get permEmployeesDelete => 'حذف الموظفين';
+
+  @override
+  String get permEmployeesPassword => 'تغيير كلمة مرور الموظفين';
 
   @override
   String get permEmployeesSuspend => 'إيقاف/تفعيل الحسابات';
@@ -895,6 +937,31 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get employeeDeleteAdminBlocked =>
       'لا يمكن حذف مدير. أزل صفة الإدارة عنه أولاً.';
+
+  @override
+  String get employeePassword => 'تغيير كلمة المرور';
+
+  @override
+  String employeePasswordTitle(String name) {
+    return 'كلمة مرور جديدة لـ $name';
+  }
+
+  @override
+  String get employeePasswordHint =>
+      'سيدخل الموظف بكلمة المرور الجديدة في المرة القادمة. أبلغه بها بنفسك — لا تُرسل إليه رسالة.';
+
+  @override
+  String get employeePasswordNew => 'كلمة المرور الجديدة';
+
+  @override
+  String get employeePasswordConfirm => 'تأكيد كلمة المرور';
+
+  @override
+  String get employeePasswordChanged => 'تم تغيير كلمة المرور';
+
+  @override
+  String get employeePasswordAdminBlocked =>
+      'لا يمكن تغيير كلمة مرور مدير إلا من مدير آخر.';
 
   @override
   String get employeeEditExternalTitle => 'الصفة الخارجية';

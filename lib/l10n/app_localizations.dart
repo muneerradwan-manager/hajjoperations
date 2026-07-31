@@ -245,7 +245,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsLogoutConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Log out of this device?'**
+  /// **'Log out of this device? The account leaves the quick-switch list, and signing back in will ask for the password.'**
   String get settingsLogoutConfirm;
 
   /// No description provided for @settingsTheme.
@@ -385,6 +385,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check your email to confirm your account, then sign in.'**
   String get authCheckEmail;
+
+  /// No description provided for @accountsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts'**
+  String get accountsTitle;
+
+  /// No description provided for @accountsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick sign-in'**
+  String get accountsSaved;
+
+  /// No description provided for @accountsSavedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Accounts saved on this device — tap one to sign in without a password'**
+  String get accountsSavedHint;
+
+  /// No description provided for @accountsCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current account'**
+  String get accountsCurrent;
+
+  /// No description provided for @accountsAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another account'**
+  String get accountsAdd;
+
+  /// No description provided for @accountsAddTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add account'**
+  String get accountsAddTitle;
+
+  /// No description provided for @accountsAddSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with another account — the one you are using stays saved to return to'**
+  String get accountsAddSubtitle;
+
+  /// No description provided for @accountsSwitching.
+  ///
+  /// In en, this message translates to:
+  /// **'Switching account…'**
+  String get accountsSwitching;
+
+  /// No description provided for @accountsRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from this device'**
+  String get accountsRemove;
+
+  /// No description provided for @accountsRemoveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove {name} from this device\'s list? Signing back in will ask for the password.'**
+  String accountsRemoveConfirm(String name);
+
+  /// No description provided for @accountsExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This account\'s session on this device has expired. Sign in with it again.'**
+  String get accountsExpired;
 
   /// No description provided for @profileCompleteTitle.
   ///
@@ -853,6 +919,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete employee records'**
   String get permEmployeesDelete;
+
+  /// No description provided for @permEmployeesPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset employee passwords'**
+  String get permEmployeesPassword;
 
   /// No description provided for @permEmployeesSuspend.
   ///
@@ -1765,6 +1837,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'An administrator cannot be deleted. Remove their admin role first.'**
   String get employeeDeleteAdminBlocked;
+
+  /// No description provided for @employeePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get employeePassword;
+
+  /// No description provided for @employeePasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New password for {name}'**
+  String employeePasswordTitle(String name);
+
+  /// No description provided for @employeePasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The employee signs in with the new password from now on. Tell them yourself — no message is sent.'**
+  String get employeePasswordHint;
+
+  /// No description provided for @employeePasswordNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get employeePasswordNew;
+
+  /// No description provided for @employeePasswordConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get employeePasswordConfirm;
+
+  /// No description provided for @employeePasswordChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed'**
+  String get employeePasswordChanged;
+
+  /// No description provided for @employeePasswordAdminBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an administrator can change another administrator\'s password.'**
+  String get employeePasswordAdminBlocked;
 
   /// No description provided for @employeeEditExternalTitle.
   ///

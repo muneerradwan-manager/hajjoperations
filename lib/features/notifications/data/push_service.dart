@@ -80,7 +80,12 @@ class PushService {
   Future<void> start() async {
     if (!_available) return;
     if (_started) {
+      // Topics as well as the token. A second call to `start` means the session
+      // has changed under it — an account switch, which mutes this device on the
+      // way out — and a device that registered its token but subscribed to
+      // nothing is a device that goes quiet for the person now using it.
       await _upsertToken();
+      await syncTopics();
       return;
     }
     _started = true;

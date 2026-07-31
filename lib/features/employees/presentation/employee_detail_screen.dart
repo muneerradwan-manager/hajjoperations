@@ -25,6 +25,7 @@ import '../../notifications/presentation/send_notification_sheet.dart';
 import '../application/employee_manage_cubit.dart';
 import '../data/employees_repository.dart';
 import 'widgets/employee_edit_sheet.dart';
+import 'widgets/employee_password_sheet.dart';
 import 'widgets/external_edit_sheet.dart';
 
 class EmployeeDetailScreen extends StatelessWidget {
@@ -98,6 +99,27 @@ class _View extends StatelessWidget {
     if (navigator.canPop()) navigator.pop();
   }
 
+  /// Open the password sheet, unless this is an administrator's account and the
+  /// viewer is not one.
+  ///
+  /// The function refuses that combination too; saying so here saves a round
+  /// trip and, more to the point, saves the reader from typing a password that
+  /// was never going to be set.
+  void _changePassword(BuildContext context, {required bool viewerIsAdmin}) {
+    final cubit = context.read<EmployeeManageCubit>();
+    final profile = cubit.state.profile;
+
+    if (profile.isAdmin && !viewerIsAdmin) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(context.l10n.employeePasswordAdminBlocked)),
+        );
+      return;
+    }
+    showEmployeePasswordSheet(context, cubit, profile);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -106,6 +128,7 @@ class _View extends StatelessWidget {
     final canExternal = session.can(PermissionCodes.employeesExternal);
     final canEdit = session.can(PermissionCodes.employeesEdit);
     final canDelete = session.can(PermissionCodes.employeesDelete);
+    final canSetPassword = session.can(PermissionCodes.employeesPassword);
     final canManagePermissions = session.can(PermissionCodes.permissionsManage);
     final canManageParticipants = session.can(
       PermissionCodes.seasonsParticipants,
@@ -133,6 +156,15 @@ class _View extends StatelessWidget {
                     final cubit = context.read<EmployeeManageCubit>();
                     showEmployeeEditSheet(context, cubit, cubit.state.profile);
                   },
+                ),
+              if (canSetPassword)
+                MenuAction(
+                  icon: AppIcons.password,
+                  label: l.employeePassword,
+                  onSelected: () => _changePassword(
+                    context,
+                    viewerIsAdmin: session.isAdmin,
+                  ),
                 ),
               if (canDelete)
                 MenuAction(

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -6,9 +8,11 @@ import 'core/router/app_router.dart';
 import 'core/settings/settings_cubit.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/aurora_background.dart';
+import 'core/widgets/responsive.dart';
 import 'features/auth/application/auth_cubit.dart';
 import 'features/auth/application/session_cubit.dart';
 import 'features/auth/data/auth_repository.dart';
+import 'features/auth/data/saved_accounts_store.dart';
 import 'features/notifications/data/push_service.dart';
 import 'features/profile/data/profile_repository.dart';
 import 'l10n/app_localizations.dart';
@@ -22,7 +26,24 @@ class HajjOperationsApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
       providers: [
-        RepositoryProvider(create: (_) => AuthRepository()),
+        // The saved-accounts store is built here and reached through the
+        // repository that owns it, rather than provided in its own right: it is
+        // a Listenable, and `RepositoryProvider` refuses those outright — it
+        // cannot rebuild on a change, so handing one out invites a screen that
+        // reads the list once and never notices it grow. Whoever wants it takes
+        // `auth.accounts` and listens to it deliberately.
+        //
+        // Read off the keystore as the app builds rather than in `bootstrap`:
+        // the list only decides whether the login screen offers shortcuts, and
+        // nothing should wait on a keystore to reach the first frame. It
+        // notifies when it arrives, and the picker appears then.
+        RepositoryProvider(
+          create: (_) {
+            final accounts = SavedAccountsStore();
+            unawaited(accounts.load());
+            return AuthRepository(accounts);
+          },
+        ),
         RepositoryProvider(create: (_) => ProfileRepository()),
       ],
       child: MultiBlocProvider(
@@ -112,8 +133,11 @@ class _AppViewState extends State<_AppView> {
       routerConfig: _router,
       // The animated backdrop lives above the navigator's own background and
       // below every route, so it survives page transitions without restarting.
-      builder: (context, child) =>
-          AuroraBackground(child: child ?? const SizedBox.shrink()),
+      // The snack bar cap wraps it because it works by overriding the theme,
+      // and everything that shows a snack bar is inside.
+      builder: (context, child) => SnackBarWidthCap(
+        child: AuroraBackground(child: child ?? const SizedBox.shrink()),
+      ),
     );
   }
 }

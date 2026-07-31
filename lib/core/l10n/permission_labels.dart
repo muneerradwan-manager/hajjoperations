@@ -16,6 +16,7 @@ String permissionLabel(AppLocalizations l, String code) => switch (code) {
   'employees.create' => l.permEmployeesCreate,
   'employees.edit' => l.permEmployeesEdit,
   'employees.delete' => l.permEmployeesDelete,
+  'employees.password' => l.permEmployeesPassword,
   'employees.suspend' => l.permEmployeesSuspend,
   'employees.external' => l.permEmployeesExternal,
   'employees.documents' => l.permEmployeesDocuments,

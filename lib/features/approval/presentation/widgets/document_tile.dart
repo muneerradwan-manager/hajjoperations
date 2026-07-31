@@ -1,9 +1,9 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/l10n/l10n_extension.dart';
 import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/glass_tokens.dart';
+import '../../../../core/widgets/photo_viewer.dart';
 import '../../data/approval_repository.dart';
 
 /// A row for a private document. Resolves a signed URL lazily and opens a
@@ -33,11 +33,7 @@ class _DocumentTileState extends State<DocumentTile> {
     try {
       final url = await widget.repo.signedDocumentUrl(widget.path!);
       if (!mounted) return;
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (_) => _DocumentViewer(title: widget.label, url: url),
-        ),
-      );
+      PhotoViewer.show(context, title: widget.label, url: url);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -105,41 +101,6 @@ class _DocumentTileState extends State<DocumentTile> {
                 ),
               ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DocumentViewer extends StatelessWidget {
-  const _DocumentViewer({required this.title, required this.url});
-  final String title;
-  final String url;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        title: Text(title),
-      ),
-      body: Center(
-        child: InteractiveViewer(
-          minScale: 0.8,
-          maxScale: 4,
-          child: CachedNetworkImage(
-            imageUrl: url,
-            fit: BoxFit.contain,
-            placeholder: (_, _) =>
-                const CircularProgressIndicator(color: Colors.white),
-            errorWidget: (_, _, _) => const Icon(
-              AppIcons.brokenImage,
-              color: Colors.white54,
-              size: 64,
-            ),
-          ),
         ),
       ),
     );

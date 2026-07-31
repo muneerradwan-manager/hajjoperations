@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/animations/animations.dart';
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
@@ -12,12 +13,26 @@ import '../../../core/widgets/brand_header.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/password_field.dart';
 import '../application/auth_cubit.dart';
+import '../application/session_cubit.dart';
 import '../data/auth_repository.dart';
+import '../domain/saved_account.dart';
 import 'widgets/google_button.dart';
+import 'widgets/saved_accounts_list.dart';
 import 'widgets/settings_menu_button.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.addingForUserId});
+
+  /// The id of the account that opened this screen to add a second one, if
+  /// that is why it is open.
+  ///
+  /// It changes what the screen is: with a session already running there are no
+  /// saved accounts to offer — the person came here past them — and there is a
+  /// way back, because cancelling leaves them where they were rather than
+  /// signed out.
+  final String? addingForUserId;
+
+  bool get isAddingAccount => addingForUserId != null;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -27,6 +42,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
+
+  /// The account a tap is currently opening. Locks the picker while the swap
+  /// is in flight.
+  String? _switching;
 
   @override
   void dispose() {
@@ -42,13 +61,58 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// Opens a saved account. The router takes it from there — the session
+  /// changing is what moves the app off this screen.
+  Future<void> _open(SavedAccount account) async {
+    final l = context.l10n;
+    final auth = context.read<AuthRepository>();
+
+    setState(() => _switching = account.userId);
+    try {
+      await auth.switchTo(account);
+    } on AuthFailure {
+      if (!mounted) return;
+      // Named rather than relayed: what Supabase says about a refresh token is
+      // written for whoever wrote the call, and the account has already been
+      // dropped from the list by the time this is read.
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l.accountsExpired)));
+    } finally {
+      if (mounted) setState(() => _switching = null);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
 
+    return BlocListener<SessionCubit, SessionState>(
+      // Leaving is done here rather than left to the router's redirect, because
+      // this screen was pushed onto a live session and go_router does not
+      // re-decide an imperatively pushed route when the session changes under
+      // it: the second account would sign in and the sign-in form would stay
+      // exactly where it was, looking like the button had done nothing.
+      //
+      // `go` and not `pop`: the stack behind this belongs to the account that
+      // has just been left, and the new one starts at the top.
+      listener: (context, _) {
+        if (!widget.isAddingAccount) return;
+        final arrived = context.read<SessionCubit>().userId;
+        if (arrived != null && arrived != widget.addingForUserId) {
+          context.go(Routes.home);
+        }
+      },
+      child: _scaffold(context, l),
+    );
+  }
+
+  Widget _scaffold(BuildContext context, AppLocalizations l) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: GlassAppBar(actions: const [SettingsMenuButton()]),
+      appBar: GlassAppBar(
+        actions: widget.isAddingAccount ? null : const [SettingsMenuButton()],
+      ),
       body: SafeArea(
         child: BlocConsumer<AuthCubit, AuthUiState>(
           listener: (context, state) {
@@ -87,15 +151,27 @@ class _LoginScreenState extends State<LoginScreen> {
                               children: staggered([
                                 const SizedBox(height: AppSpacing.lg),
                                 BrandHeader(
-                                  title: l.authLoginTitle,
-                                  subtitle: l.authLoginSubtitle,
+                                  title: widget.isAddingAccount
+                                      ? l.accountsAddTitle
+                                      : l.authLoginTitle,
+                                  subtitle: widget.isAddingAccount
+                                      ? l.accountsAddSubtitle
+                                      : l.authLoginSubtitle,
                                 ),
                                 const SizedBox(height: AppSpacing.xxl),
+                                // Above the form, because for anyone who has
+                                // been here before this IS the way in, and a
+                                // shortcut under the thing it replaces is a
+                                // shortcut found after the long way round.
+                                if (!widget.isAddingAccount) _SavedAccounts(
+                                  busyUserId: _switching,
+                                  onSelect: _open,
+                                ),
                                 // The credentials sit on their own pane so the
                                 // form reads as one contained task.
                                 GlassCard(
                                   radius: AppRadius.xl,
-                                  padding: const EdgeInsets.all(AppSpacing.xl),
+                                  padding: const EdgeInsets.all(AppSpacing.lg),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.stretch,
@@ -174,8 +250,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                     ),
                                     TextButton(
-                                      onPressed: () =>
-                                          context.push(Routes.register),
+                                      // The exemption has to travel with the
+                                      // link: registering a second account is
+                                      // still done from inside a live session,
+                                      // and a plain /register would be sent
+                                      // straight back home.
+                                      onPressed: () => context.push(
+                                        widget.isAddingAccount
+                                            ? '${Routes.register}'
+                                                  '?add=${widget.addingForUserId}'
+                                            : Routes.register,
+                                      ),
                                       child: Text(l.authSignUp),
                                     ),
                                   ],
@@ -193,6 +278,57 @@ class _LoginScreenState extends State<LoginScreen> {
           },
         ),
       ),
+    );
+  }
+}
+
+/// The accounts this device can open without a password, if there are any.
+///
+/// Draws nothing at all when there are none — a heading over an empty space is
+/// a promise the device cannot keep, and the first person to use a phone should
+/// see the plain sign-in form and nothing else.
+class _SavedAccounts extends StatelessWidget {
+  const _SavedAccounts({required this.busyUserId, required this.onSelect});
+
+  final String? busyUserId;
+  final ValueChanged<SavedAccount> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+
+    return ValueListenableBuilder<List<SavedAccount>>(
+      valueListenable: context.read<AuthRepository>().accounts,
+      builder: (context, accounts, _) {
+        if (accounts.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              l.accountsSaved,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              l.accountsSavedHint,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            SavedAccountsList(
+              accounts: accounts,
+              busyUserId: busyUserId,
+              onSelect: onSelect,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            _OrDivider(label: l.authOrContinueWith),
+            const SizedBox(height: AppSpacing.lg),
+          ],
+        );
+      },
     );
   }
 }

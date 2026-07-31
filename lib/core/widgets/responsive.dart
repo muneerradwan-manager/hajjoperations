@@ -10,6 +10,15 @@ import '../theme/glass_tokens.dart';
 /// where this app keeps that column, and learns it once.
 const kSidePanelWidth = 320.0;
 
+/// Where a snack bar stops growing.
+///
+/// A floating snack bar is as wide as the window less its margins, which is the
+/// right answer on a phone and a poor one on a monitor: four words of
+/// confirmation smeared across 1600 pixels, with the action button parked at
+/// the far end of that journey. Past this the bar keeps a readable shape and
+/// takes the middle instead.
+const kSnackBarMaxWidth = 560.0;
+
 /// How much room a layout has, in five steps.
 ///
 /// Named for the room and not for the device, because the device stopped being
@@ -108,6 +117,37 @@ class WindowSizeBuilder extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) =>
           builder(context, WindowSize.fromWidth(constraints.maxWidth)),
+    );
+  }
+}
+
+/// Holds every snack bar below it to [kSnackBarMaxWidth], centred, once the
+/// window is wide enough for that to mean anything.
+///
+/// This cannot live in the app theme, even though it is a theme value:
+/// [SnackBarThemeData.width] is a fixed width rather than a maximum, and
+/// setting it also tells the snack bar to drop its side margins. On a phone
+/// that lands the bar flat against both screen edges — worse than the problem
+/// it fixes. So the cap is applied here, where the window's width is known and
+/// can be left alone when there is nothing to cap.
+class SnackBarWidthCap extends StatelessWidget {
+  const SnackBarWidthCap({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    // What the bar would take on its own: the window, less the margins the
+    // theme's insetPadding leaves it.
+    final natural = MediaQuery.sizeOf(context).width - AppSpacing.lg * 2;
+    if (natural <= kSnackBarMaxWidth) return child;
+
+    return Theme(
+      data: theme.copyWith(
+        snackBarTheme: theme.snackBarTheme.copyWith(width: kSnackBarMaxWidth),
+      ),
+      child: child,
     );
   }
 }

@@ -82,7 +82,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Turning this off only silences the device — messages still reach your inbox';
 
   @override
-  String get settingsLogoutConfirm => 'Log out of this device?';
+  String get settingsLogoutConfirm =>
+      'Log out of this device? The account leaves the quick-switch list, and signing back in will ask for the password.';
 
   @override
   String get settingsTheme => 'Appearance';
@@ -153,6 +154,44 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get authCheckEmail =>
       'Check your email to confirm your account, then sign in.';
+
+  @override
+  String get accountsTitle => 'Accounts';
+
+  @override
+  String get accountsSaved => 'Quick sign-in';
+
+  @override
+  String get accountsSavedHint =>
+      'Accounts saved on this device — tap one to sign in without a password';
+
+  @override
+  String get accountsCurrent => 'Current account';
+
+  @override
+  String get accountsAdd => 'Add another account';
+
+  @override
+  String get accountsAddTitle => 'Add account';
+
+  @override
+  String get accountsAddSubtitle =>
+      'Sign in with another account — the one you are using stays saved to return to';
+
+  @override
+  String get accountsSwitching => 'Switching account…';
+
+  @override
+  String get accountsRemove => 'Remove from this device';
+
+  @override
+  String accountsRemoveConfirm(String name) {
+    return 'Remove $name from this device\'s list? Signing back in will ask for the password.';
+  }
+
+  @override
+  String get accountsExpired =>
+      'This account\'s session on this device has expired. Sign in with it again.';
 
   @override
   String get profileCompleteTitle => 'Complete your profile';
@@ -398,6 +437,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get permEmployeesDelete => 'Delete employee records';
+
+  @override
+  String get permEmployeesPassword => 'Reset employee passwords';
 
   @override
   String get permEmployeesSuspend => 'Suspend / reactivate accounts';
@@ -895,6 +937,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get employeeDeleteAdminBlocked =>
       'An administrator cannot be deleted. Remove their admin role first.';
+
+  @override
+  String get employeePassword => 'Change password';
+
+  @override
+  String employeePasswordTitle(String name) {
+    return 'New password for $name';
+  }
+
+  @override
+  String get employeePasswordHint =>
+      'The employee signs in with the new password from now on. Tell them yourself — no message is sent.';
+
+  @override
+  String get employeePasswordNew => 'New password';
+
+  @override
+  String get employeePasswordConfirm => 'Confirm password';
+
+  @override
+  String get employeePasswordChanged => 'Password changed';
+
+  @override
+  String get employeePasswordAdminBlocked =>
+      'Only an administrator can change another administrator\'s password.';
 
   @override
   String get employeeEditExternalTitle => 'External status';

@@ -14,8 +14,13 @@ import 'package:flutter/material.dart';
 /// make it legible on a dark backdrop. No new hue is introduced. Each set was
 /// run through the six checks against the surface it is drawn on:
 ///
+/// A chart is always drawn inside a pane, never straight onto the backdrop, so
+/// the light column is measured against the PANE — which is white — and not
+/// against the field the pane stands on. That is the one place these differ
+/// from [Accent], whose colours do land on the bare backdrop.
+///
 /// ```
-///   light, on paper #F6F3F0     dark, on night #001613
+///   light, on pane #FDFCFB      dark, on night #001613
 ///   ─────────────────────────   ────────────────────────
 ///   teal  #00897B               teal  #009485
 ///   gold  #A8801A               gold  #B08B37

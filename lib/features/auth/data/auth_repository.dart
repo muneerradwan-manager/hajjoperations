@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart'
@@ -9,6 +10,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../core/supabase/supabase_client.dart';
 import '../../notifications/data/push_service.dart';
+import '../domain/saved_account.dart';
+import 'saved_accounts_store.dart';
 
 /// Domain-level auth error carrying a user-presentable message.
 class AuthFailure implements Exception {
@@ -43,6 +46,15 @@ bool get isGoogleSignInSupported {
 /// Wraps Supabase Auth. Supabase is the sole identity provider; Google is used
 /// only to obtain an ID token that we hand to Supabase.
 class AuthRepository {
+  AuthRepository(this._accounts);
+
+  /// The accounts this device may return to without a password. The repository
+  /// owns it because every event that changes it is an auth event: a sign-in
+  /// records one, a token rotation refreshes one, a sign-out removes one.
+  final SavedAccountsStore _accounts;
+
+  SavedAccountsStore get accounts => _accounts;
+
   User? get currentUser => supabase.auth.currentUser;
 
   Stream<AuthState> get authStateChanges => supabase.auth.onAuthStateChange;
@@ -155,6 +167,81 @@ class AuthRepository {
     }
   }
 
+  /// Records the account that is signed in now, so it can be reopened later
+  /// with a tap instead of a password.
+  ///
+  /// Called on every profile load rather than on sign-in alone, for two
+  /// reasons: the name and the photo are only known once the profile is read,
+  /// and they change afterwards — a card in the switcher showing last year's
+  /// photo is a card the person hesitates over.
+  Future<void> rememberCurrentAccount({String? name, String? photoUrl}) async {
+    final session = supabase.auth.currentSession;
+    final token = session?.refreshToken;
+    if (session == null || token == null) return;
+
+    await _accounts.remember(
+      userId: session.user.id,
+      email: session.user.email ?? '',
+      refreshToken: token,
+      name: name,
+      photoUrl: photoUrl,
+    );
+  }
+
+  /// Brings the stored token for the active account in line with the one
+  /// Supabase is now using.
+  ///
+  /// Refresh tokens rotate — each renewal issues a new one and retires the old.
+  /// Without this the entry saved at sign-in would quietly go dead in the hour
+  /// after it was written, and the switcher would offer a door that no longer
+  /// opens. Cheap to call: it writes only when the token actually changed.
+  Future<void> syncStoredToken() async {
+    final session = supabase.auth.currentSession;
+    final token = session?.refreshToken;
+    if (session == null || token == null) return;
+    await _accounts.updateToken(session.user.id, token);
+  }
+
+  /// Opens a saved account, replacing the current session with it.
+  ///
+  /// Nothing is signed out. Supabase revokes a session the moment you ask it
+  /// to sign out — even locally scoped, the call reaches the server — and a
+  /// revoked session is one the switcher can never reopen. So the account being
+  /// left keeps its session, and its stored token stays good; this is the whole
+  /// reason switching and signing out are two different actions in this app.
+  ///
+  /// Push is dropped first, and it has to be first: [PushService.mute] deletes
+  /// the row belonging to whoever is signed in, and after the swap that would
+  /// be the account we just arrived at. The new one re-subscribes when the
+  /// session settles.
+  ///
+  /// If the stored token has died — revoked elsewhere, or expired past its
+  /// reuse window — Supabase ends the current session too, which is why the
+  /// account is forgotten here: the app lands on the login screen, and the door
+  /// that did not open is no longer offered.
+  Future<void> switchTo(SavedAccount account) async {
+    if (account.userId == currentUser?.id) return;
+
+    await PushService.instance.mute().timeout(
+      const Duration(seconds: 4),
+      onTimeout: () {},
+    );
+
+    try {
+      await supabase.auth.setSession(account.refreshToken);
+    } on AuthException catch (e) {
+      await _accounts.forget(account.userId);
+      unawaited(PushService.instance.start());
+      throw AuthFailure(e.message);
+    } catch (e) {
+      unawaited(PushService.instance.start());
+      throw AuthFailure('$e');
+    }
+  }
+
+  /// Removes an account from the switcher without touching the current session.
+  Future<void> forgetAccount(String userId) => _accounts.forget(userId);
+
   /// Signs out, dropping this device's push subscriptions first: FCM topics
   /// outlive a session, and the next person to use the phone must not receive
   /// the last one's files.
@@ -165,11 +252,20 @@ class AuthRepository {
   /// leave must leave, so each half is bounded, and if the server cannot be
   /// reached the session is cleared on the device anyway — a token that outlives
   /// its use is the lesser problem, and it expires on its own.
+  ///
+  /// The account also leaves the switcher, and that is not a preference: this
+  /// call revokes the session on the server, so the token saved for it stops
+  /// working. Keeping the card would be keeping a door that reports itself
+  /// locked only after it has been tried. Whoever wants to come back without a
+  /// password uses "switch account", which revokes nothing.
   Future<void> signOut() async {
+    final uid = currentUser?.id;
+
     await PushService.instance.forgetTopics().timeout(
       const Duration(seconds: 4),
       onTimeout: () {},
     );
+    if (uid != null) await _accounts.forget(uid);
 
     try {
       await supabase.auth.signOut().timeout(const Duration(seconds: 8));
