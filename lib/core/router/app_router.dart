@@ -51,6 +51,38 @@ abstract class Routes {
   static const dashboard = '/dashboard';
 }
 
+/// What each administered section asks of whoever tries to open it.
+///
+/// One table rather than a run of `if`s, so that "is every managed section
+/// closed?" is a question you answer by reading a list instead of by trusting
+/// that nobody forgot. Each line is the same rule its card on the home screen
+/// is drawn by; keeping them side by side is what stops the two from drifting
+/// into a section that is hidden but open, or shown but shut.
+///
+/// Matched exactly, never by prefix. `/employees` is the directory and belongs
+/// to whoever keeps it, while an employee's own page is opened from inside an
+/// operational file by people who run files and may not keep the directory —
+/// so the page is pushed rather than routed, and closing the directory does not
+/// close the person.
+///
+/// Three sections are deliberately absent:
+///   * `/modules` and `/reports` — the first is everyone's own assigned work,
+///     the second is what the whole mission may read. What belongs to somebody
+///     is the paperwork behind them, and that is `/modules/manage` and
+///     `/reports/manage`, both listed here.
+///   * `/dashboard` — not one screen but a row of sections, each one answered
+///     for separately by `dashboard_stats` on the server. Anyone with any of
+///     them may open it, and sees only the ones they have.
+final sectionGuards = <String, bool Function(SessionState)>{
+  Routes.seasons: (s) => s.canSeeSeasons,
+  Routes.modulesManage: (s) => s.can(PermissionCodes.modulesManage),
+  Routes.reportsManage: (s) => s.can(PermissionCodes.reportsManage),
+  Routes.employees: (s) => s.can(PermissionCodes.employeesView),
+  Routes.approvals: (s) => s.can(PermissionCodes.approvalsDecide),
+  Routes.permissions: (s) => s.can(PermissionCodes.permissionsManage),
+  Routes.referenceData: (s) => s.can(PermissionCodes.modulesTypes),
+};
+
 GoRouter buildRouter(SessionCubit session) {
   return GoRouter(
     initialLocation: Routes.home,
@@ -90,25 +122,14 @@ GoRouter buildRouter(SessionCubit session) {
               loc == Routes.completeProfile) {
             return Routes.home;
           }
-          // Seasons belong to whoever runs them. The dashboard already hides
-          // the card, and this is what makes that a rule rather than a
-          // decoration: the route refuses too, so the section cannot be reached
-          // by a link, a restored location, or a card added somewhere later by
-          // someone who did not know to ask.
-          if (loc == Routes.seasons && !session.state.canSeeSeasons) {
-            return Routes.home;
-          }
-          // Same reasoning for the office: `/modules` is everyone's own work,
-          // `/modules/manage` is the season's paperwork and belongs to whoever
-          // was given it.
-          if (loc == Routes.modulesManage &&
-              !session.state.can(PermissionCodes.modulesManage)) {
-            return Routes.home;
-          }
-          // And the reports office, for the same reason: /reports is what
-          // everybody may read, /reports/manage is who may change it.
-          if (loc == Routes.reportsManage &&
-              !session.state.can(PermissionCodes.reportsManage)) {
+          // A section that is hidden has to be closed as well. The home screen
+          // already leaves the card out, and this is what makes that a rule
+          // rather than a decoration: the route refuses too, so a section
+          // cannot be reached by a link, by a location restored from the last
+          // run, or by a card added somewhere later by someone who did not
+          // know to ask.
+          final guard = sectionGuards[loc];
+          if (guard != null && !guard(session.state)) {
             return Routes.home;
           }
           return null;

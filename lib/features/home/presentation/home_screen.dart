@@ -127,11 +127,6 @@ class _HomeScreenState extends State<HomeScreen> {
         canManageModules ||
         session.can(PermissionCodes.modulesMembers);
 
-    // Everything held by a PERMISSION. A person is two things at once here —
-    // somebody with authority and somebody with work — and the two were mixed
-    // in one list: "الملفات التشغيلية" meant his own postings to one man and
-    // the season's whole paperwork to another, depending on what he held.
-    // Authority lives here; the work lives below.
     // Everything held by a PERMISSION, the dashboard among them. A person is
     // two things at once here — somebody with authority and somebody with work
     // — and the two were mixed in one list: "الملفات التشغيلية" meant his own
