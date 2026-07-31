@@ -112,6 +112,14 @@ class AppIcons {
   static const tasks = Iconsax.task_square;
   static const roles = Iconsax.user_octagon;
   static const pdf = Iconsax.document_download;
+
+  /// التقارير — the published tables and notices, as distinct from the
+  /// operational files. A clipboard rather than a document: a report is
+  /// something posted for people to read, not a dossier somebody owns.
+  static const reports = Iconsax.clipboard_text;
+
+  /// A link to somewhere outside the app.
+  static const link = Iconsax.link;
   static const referenceData = Iconsax.data;
   static const location = Iconsax.location;
   static const myLocation = Iconsax.gps;

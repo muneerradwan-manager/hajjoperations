@@ -5,6 +5,7 @@ import '../../features/approval/presentation/approval_queue_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
+import '../../features/reports/presentation/reports_screen.dart';
 import '../../features/employees/presentation/employees_directory_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/modules/application/modules_cubit.dart';
@@ -41,6 +42,7 @@ abstract class Routes {
   static const myProfile = '/my-profile';
   static const notifications = '/notifications';
   static const modules = '/modules';
+  static const reports = '/reports';
   static const modulesManage = '/modules/manage';
   static const referenceData = '/reference-data';
   static const settings = '/settings';
@@ -158,6 +160,11 @@ GoRouter buildRouter(SessionCubit session) {
         path: Routes.settings,
         pageBuilder: (c, s) =>
             fadeThroughPage(key: s.pageKey, child: const SettingsScreen()),
+      ),
+      GoRoute(
+        path: Routes.reports,
+        pageBuilder: (c, s) =>
+            fadeThroughPage(key: s.pageKey, child: const ReportsScreen()),
       ),
       GoRoute(
         path: Routes.dashboard,

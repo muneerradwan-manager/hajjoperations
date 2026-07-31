@@ -188,6 +188,16 @@ class _HomeScreenState extends State<HomeScreen> {
         color: _work.of(context),
         onTap: () => context.push(Routes.modules),
       ),
+      // Published to everybody, and gated by nothing: مواعيد الوجبات is not
+      // an assignment, it is information the whole mission needs. Reading is
+      // open to any approved account; entering one is what needs a permission.
+      DashboardCard(
+        icon: AppIcons.reports,
+        title: l.navReports,
+        subtitle: l.navReportsSubtitle,
+        color: _work.of(context),
+        onTap: () => context.push(Routes.reports),
+      ),
       // No tile for the profile: the greeting panel above already carries the
       // user's face and name, and tapping a card with your own name on it is
       // where anyone looks for it first.

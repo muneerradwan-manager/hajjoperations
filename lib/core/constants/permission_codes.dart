@@ -13,6 +13,7 @@ class PermissionCodes {
   static const permissions = 'permissions';
   static const notifications = 'notifications';
   static const modules = 'modules';
+  static const reports = 'reports';
 
   // Children (actions)
   static const employeesView = 'employees.view';
@@ -30,4 +31,8 @@ class PermissionCodes {
   static const modulesManage = 'modules.manage';
   static const modulesMembers = 'modules.members';
   static const modulesTypes = 'modules.types';
+
+  /// Reading a published report needs nothing — it is under عام. This is what
+  /// entering, correcting and publishing one needs.
+  static const reportsManage = 'reports.manage';
 }

@@ -24,7 +24,12 @@ enum ModuleFieldKind {
   pdf,
   url,
   location,
-  phone;
+  phone,
+
+  /// A value shown AS a scannable code rather than as text. A link is opened;
+  /// a code is held up. Reports declare these; nothing in the module catalog
+  /// does yet, and nothing has to.
+  qr;
 
   static ModuleFieldKind fromDb(String? value) => switch (value) {
     'textarea' => ModuleFieldKind.textarea,
@@ -35,6 +40,7 @@ enum ModuleFieldKind {
     'url' => ModuleFieldKind.url,
     'location' => ModuleFieldKind.location,
     'phone' => ModuleFieldKind.phone,
+    'qr' => ModuleFieldKind.qr,
     _ => ModuleFieldKind.text,
   };
 }

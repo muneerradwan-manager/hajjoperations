@@ -72,6 +72,15 @@ class ModuleFieldInput extends StatelessWidget {
         url: value?.toString() ?? '',
         onChanged: onChanged,
       ),
+      // Typed as text — what is stored is the string the code will carry, and
+      // it is usually a link. Drawing it as a code is the READER's side of it,
+      // which is why nothing here shows one.
+      ModuleFieldKind.qr => _TextField(
+        label: _label(context),
+        initial: value?.toString() ?? '',
+        keyboardType: TextInputType.url,
+        onChanged: onChanged,
+      ),
       // Text, not number: a phone number keeps its leading zero and may carry
       // a country prefix.
       ModuleFieldKind.phone => _TextField(

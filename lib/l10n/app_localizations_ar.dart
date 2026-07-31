@@ -420,6 +420,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get permPermissionsManage => 'منح وسحب الصلاحيات';
 
   @override
+  String get perm_reports => 'التقارير';
+
+  @override
+  String get permReportsManage => 'إنشاء التقارير وتعديلها ونشرها';
+
+  @override
   String get perm_notifications => 'الإشعارات';
 
   @override
@@ -513,6 +519,59 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get attachmentOpenFailed => 'تعذّر فتح المرفق';
+
+  @override
+  String get navReports => 'التقارير';
+
+  @override
+  String get navReportsSubtitle => 'الجداول والتعاميم المنشورة على البعثة';
+
+  @override
+  String get reportsEmpty => 'لم يُنشر أي تقرير بعد';
+
+  @override
+  String get reportsNoMatches => 'لا يوجد تقرير مطابق';
+
+  @override
+  String get reportsSearchHint => 'ابحث في التقارير';
+
+  @override
+  String get reportsScopeAll => 'الكل';
+
+  @override
+  String get reportsScopeSeasonal => 'هذا الموسم';
+
+  @override
+  String get reportsScopeGeneral => 'عام';
+
+  @override
+  String get reportsDraft => 'غير منشور';
+
+  @override
+  String get reportMissing => 'لم يعد هذا التقرير متاحاً';
+
+  @override
+  String get reportAboutSection => 'عن هذا التقرير';
+
+  @override
+  String get reportKind => 'النوع';
+
+  @override
+  String get reportScope => 'يسري على';
+
+  @override
+  String get reportAbout => 'ما يتناوله';
+
+  @override
+  String get reportSource => 'المستند الأصلي';
+
+  @override
+  String get reportQrFailed => 'تعذّر رسم هذا الرمز';
+
+  @override
+  String reportUpdated(String date) {
+    return 'آخر تحديث $date';
+  }
 
   @override
   String get navSeasons => 'المواسم';

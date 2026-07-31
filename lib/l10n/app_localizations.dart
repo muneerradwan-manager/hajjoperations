@@ -896,6 +896,18 @@ abstract class AppLocalizations {
   /// **'Grant & revoke permissions'**
   String get permPermissionsManage;
 
+  /// No description provided for @perm_reports.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get perm_reports;
+
+  /// No description provided for @permReportsManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Create, edit & publish reports'**
+  String get permReportsManage;
+
   /// No description provided for @perm_notifications.
   ///
   /// In en, this message translates to:
@@ -1063,6 +1075,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not open the attachment'**
   String get attachmentOpenFailed;
+
+  /// No description provided for @navReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get navReports;
+
+  /// No description provided for @navReportsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Timetables and notices published to the mission'**
+  String get navReportsSubtitle;
+
+  /// No description provided for @reportsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing has been published yet'**
+  String get reportsEmpty;
+
+  /// No description provided for @reportsNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No report matches'**
+  String get reportsNoMatches;
+
+  /// No description provided for @reportsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search reports'**
+  String get reportsSearchHint;
+
+  /// No description provided for @reportsScopeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get reportsScopeAll;
+
+  /// No description provided for @reportsScopeSeasonal.
+  ///
+  /// In en, this message translates to:
+  /// **'This season'**
+  String get reportsScopeSeasonal;
+
+  /// No description provided for @reportsScopeGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get reportsScopeGeneral;
+
+  /// No description provided for @reportsDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpublished'**
+  String get reportsDraft;
+
+  /// No description provided for @reportMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'That report is no longer available'**
+  String get reportMissing;
+
+  /// No description provided for @reportAboutSection.
+  ///
+  /// In en, this message translates to:
+  /// **'About this report'**
+  String get reportAboutSection;
+
+  /// No description provided for @reportKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Kind'**
+  String get reportKind;
+
+  /// No description provided for @reportScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies to'**
+  String get reportScope;
+
+  /// No description provided for @reportAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'What it covers'**
+  String get reportAbout;
+
+  /// No description provided for @reportSource.
+  ///
+  /// In en, this message translates to:
+  /// **'The original document'**
+  String get reportSource;
+
+  /// No description provided for @reportQrFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'This code could not be drawn'**
+  String get reportQrFailed;
+
+  /// No description provided for @reportUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated {date}'**
+  String reportUpdated(String date);
 
   /// No description provided for @navSeasons.
   ///

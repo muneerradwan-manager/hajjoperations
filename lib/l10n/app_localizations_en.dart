@@ -421,6 +421,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permPermissionsManage => 'Grant & revoke permissions';
 
   @override
+  String get perm_reports => 'Reports';
+
+  @override
+  String get permReportsManage => 'Create, edit & publish reports';
+
+  @override
   String get perm_notifications => 'Notifications';
 
   @override
@@ -512,6 +518,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get attachmentOpenFailed => 'Could not open the attachment';
+
+  @override
+  String get navReports => 'Reports';
+
+  @override
+  String get navReportsSubtitle =>
+      'Timetables and notices published to the mission';
+
+  @override
+  String get reportsEmpty => 'Nothing has been published yet';
+
+  @override
+  String get reportsNoMatches => 'No report matches';
+
+  @override
+  String get reportsSearchHint => 'Search reports';
+
+  @override
+  String get reportsScopeAll => 'All';
+
+  @override
+  String get reportsScopeSeasonal => 'This season';
+
+  @override
+  String get reportsScopeGeneral => 'General';
+
+  @override
+  String get reportsDraft => 'Unpublished';
+
+  @override
+  String get reportMissing => 'That report is no longer available';
+
+  @override
+  String get reportAboutSection => 'About this report';
+
+  @override
+  String get reportKind => 'Kind';
+
+  @override
+  String get reportScope => 'Applies to';
+
+  @override
+  String get reportAbout => 'What it covers';
+
+  @override
+  String get reportSource => 'The original document';
+
+  @override
+  String get reportQrFailed => 'This code could not be drawn';
+
+  @override
+  String reportUpdated(String date) {
+    return 'Last updated $date';
+  }
 
   @override
   String get navSeasons => 'Seasons';
