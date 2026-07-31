@@ -180,9 +180,11 @@ class _View extends StatelessWidget {
               ? Duration.zero
               : _step * (state.active.length.clamp(0, 8) + 2);
 
-          // A season runs fifteen files and a manager sees every one of them,
-          // drafts included. Long enough to want a way to say which.
-          final worthFiltering = state.modules.length >= 6;
+          // Always, and not past some count. التقارير shows its bar in both
+          // its lists whatever is in them, and a screen that hides the search
+          // box on عام and shows it in الإدارة teaches the reader that this
+          // list cannot be searched — which is the one thing it must not say
+          // when the very same list elsewhere can.
           final nothingLeft =
               state.active.isEmpty && state.drafts.isEmpty && state.isNarrowed;
 
@@ -191,10 +193,8 @@ class _View extends StatelessWidget {
               gutter: size.gutter,
               onRefresh: () => context.read<ModulesCubit>().load(),
               children: [
-                if (worthFiltering) ...[
-                  _ModulesFilterBar(state: state),
-                  const SizedBox(height: AppSpacing.md),
-                ],
+                _ModulesFilterBar(state: state),
+                const SizedBox(height: AppSpacing.md),
                 if (nothingLeft)
                   GlassCard(
                     padding: const EdgeInsets.all(AppSpacing.lg),

@@ -194,18 +194,6 @@ class _FilterBarState extends State<ReportsFilterBar> {
                     visualDensity: VisualDensity.compact,
                     onSelected: (_) => cubit.setScope(scope),
                   ),
-                // The kinds that actually have a report in the list. Offering a
-                // kind nobody has published leads to an empty screen and no
-                // explanation.
-                for (final t in s.types)
-                  if (s.reports.any((r) => r.reportTypeId == t.id))
-                    ChoiceChip(
-                      label: Text(t.name.of(context)),
-                      selected: s.typeId == t.id,
-                      visualDensity: VisualDensity.compact,
-                      onSelected: (on) =>
-                          cubit.setType(on && s.typeId != t.id ? t.id : null),
-                    ),
                 if (s.isNarrowed)
                   TextButton.icon(
                     onPressed: () {

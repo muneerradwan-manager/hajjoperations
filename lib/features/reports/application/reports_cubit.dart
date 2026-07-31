@@ -28,24 +28,24 @@ class ReportsState extends Equatable {
     this.types = const [],
     this.query = '',
     this.scope = ReportScope.all,
-    this.typeId,
     this.error,
   });
 
   final ReportsStatus status;
   final List<Report> reports;
 
-  /// The catalog, for the type filter. The reader never sees a type as a
-  /// concept — only as a way of narrowing a list that is otherwise long.
+  /// The catalog. Kept for the report cards, which name what kind each one is;
+  /// the reader is never offered the TYPE as a way of narrowing, because to
+  /// them these are all simply تقارير. The scope — الكل, هذا الموسم, عام — is
+  /// the only division that means anything on this screen.
   final List<ReportType> types;
 
   final String query;
   final ReportScope scope;
-  final String? typeId;
   final String? error;
 
   bool get isNarrowed =>
-      query.trim().isNotEmpty || scope != ReportScope.all || typeId != null;
+      query.trim().isNotEmpty || scope != ReportScope.all;
 
   /// The list after the reader's narrowing. Done here rather than in the
   /// database: the whole list is already in hand and it is tens of rows, not
@@ -53,7 +53,6 @@ class ReportsState extends Equatable {
   /// correct.
   List<Report> get visible {
     return reports.where((r) {
-      if (typeId != null && r.reportTypeId != typeId) return false;
       switch (scope) {
         case ReportScope.seasonal:
           if (!r.isSeasonal) return false;
@@ -77,7 +76,6 @@ class ReportsState extends Equatable {
     List<ReportType>? types,
     String? query,
     ReportScope? scope,
-    Object? typeId = _unset,
     String? error,
   }) => ReportsState(
     status: status ?? this.status,
@@ -85,9 +83,6 @@ class ReportsState extends Equatable {
     types: types ?? this.types,
     query: query ?? this.query,
     scope: scope ?? this.scope,
-    // Null is a real value here — it means "any kind" — so `??` could never
-    // clear it.
-    typeId: typeId == _unset ? this.typeId : typeId as String?,
     error: error,
   );
 
@@ -98,12 +93,10 @@ class ReportsState extends Equatable {
     types,
     query,
     scope,
-    typeId,
     error,
   ];
 }
 
-const Object _unset = Object();
 
 class ReportsCubit extends SafeCubit<ReportsState> {
   ReportsCubit(this._repo, this._seasons) : super(const ReportsState()) {
@@ -133,9 +126,7 @@ class ReportsCubit extends SafeCubit<ReportsState> {
 
   void search(String value) => emit(state.copyWith(query: value));
   void setScope(ReportScope scope) => emit(state.copyWith(scope: scope));
-  void setType(String? id) => emit(state.copyWith(typeId: id));
 
-  void clearFilters() => emit(
-    state.copyWith(query: '', scope: ReportScope.all, typeId: null),
-  );
+  void clearFilters() =>
+      emit(state.copyWith(query: '', scope: ReportScope.all));
 }
