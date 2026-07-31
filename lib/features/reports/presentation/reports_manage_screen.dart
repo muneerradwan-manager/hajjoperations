@@ -44,9 +44,9 @@ class _View extends StatelessWidget {
         ? null
         : await ReportsRepository().fetchReport(existing.id);
     if (!context.mounted) return;
-    final saved = await Navigator.of(context).push<bool>(
-      fadeThroughRoute((_) => ReportEditorScreen(existing: full)),
-    );
+    final saved = await Navigator.of(
+      context,
+    ).push<bool>(fadeThroughRoute((_) => ReportEditorScreen(existing: full)));
     if (saved == true) await cubit.load();
   }
 

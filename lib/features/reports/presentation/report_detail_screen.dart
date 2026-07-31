@@ -57,9 +57,9 @@ class _View extends StatelessWidget {
 
   Future<void> _edit(BuildContext context, Report report) async {
     final cubit = context.read<ReportDetailCubit>();
-    final saved = await Navigator.of(context).push<bool>(
-      fadeThroughRoute((_) => ReportEditorScreen(existing: report)),
-    );
+    final saved = await Navigator.of(
+      context,
+    ).push<bool>(fadeThroughRoute((_) => ReportEditorScreen(existing: report)));
     if (saved == true) await cubit.load();
   }
 
@@ -187,7 +187,9 @@ class _Body extends StatelessWidget {
 
     // Read straight through, not read across: a location and a code and a
     // document are three different things to DO, and each gets its own card.
-    final plain = fields.where((f) => !isActionableReportField(f.kind)).toList();
+    final plain = fields
+        .where((f) => !isActionableReportField(f.kind))
+        .toList();
     final own = fields.where((f) => isActionableReportField(f.kind)).toList();
 
     return Builder(
@@ -267,7 +269,10 @@ class _Body extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(l.reportSource, style: Theme.of(context).textTheme.titleSmall),
+                    Text(
+                      l.reportSource,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
                     const SizedBox(height: AppSpacing.sm),
                     AttachmentsView(
                       attachments: report.attachments,
@@ -281,9 +286,9 @@ class _Body extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Text(
               l.reportUpdated(formatDate(report.updatedAt)),
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
             ),
           ]),
         ),
@@ -377,7 +382,9 @@ class _TableCard extends StatelessWidget {
 class _Grid extends StatelessWidget {
   const _Grid({required this.columns, required this.rows});
 
-  final List<({String key, String Function(dynamic) label, ReportColumn column})>
+  final List<
+    ({String key, String Function(dynamic) label, ReportColumn column})
+  >
   columns;
   final List<Map<String, String>> rows;
 
@@ -416,9 +423,7 @@ class _Grid extends StatelessWidget {
                 ),
                 cells: [
                   for (final c in columns)
-                    DataCell(
-                      Text(rows[i][c.key] ?? '', style: text.bodySmall),
-                    ),
+                    DataCell(Text(rows[i][c.key] ?? '', style: text.bodySmall)),
                 ],
               ),
           ],
@@ -437,7 +442,9 @@ class _Grid extends StatelessWidget {
 class _Stacked extends StatelessWidget {
   const _Stacked({required this.columns, required this.rows});
 
-  final List<({String key, String Function(dynamic) label, ReportColumn column})>
+  final List<
+    ({String key, String Function(dynamic) label, ReportColumn column})
+  >
   columns;
   final List<Map<String, String>> rows;
 

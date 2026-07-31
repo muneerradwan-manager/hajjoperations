@@ -21,9 +21,7 @@ class ReportsRepository {
   Future<List<ReportType>> fetchTypes() async {
     final rows = await supabase
         .from('report_types')
-        .select(
-          '*, report_type_fields(*), report_type_columns(*)',
-        )
+        .select('*, report_type_fields(*), report_type_columns(*)')
         .order('sort_order');
     return (rows as List)
         .map((r) => ReportType.fromMap(r as Map<String, dynamic>))
@@ -37,10 +35,11 @@ class ReportsRepository {
   /// hiding something that applies. Null returns everything readable.
   Future<List<Report>> fetchReports({String? seasonId}) async {
     final query = supabase.from('reports').select(_columns);
-    final rows = await (seasonId == null
-            ? query
-            : query.or('season_id.is.null,season_id.eq.$seasonId'))
-        .order('updated_at', ascending: false);
+    final rows =
+        await (seasonId == null
+                ? query
+                : query.or('season_id.is.null,season_id.eq.$seasonId'))
+            .order('updated_at', ascending: false);
     return (rows as List)
         .map((r) => Report.fromMap(r as Map<String, dynamic>))
         .toList();

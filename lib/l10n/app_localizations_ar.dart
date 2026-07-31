@@ -631,6 +631,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get blockTableRowsHint => 'صف في كل سطر، والخلايا مفصولة بـ |';
 
   @override
+  String get blockAddItem => 'أضف عنصراً';
+
+  @override
+  String get blockAddColumn => 'أضف عموداً';
+
+  @override
+  String get blockTableNeedsColumns => 'سمِّ الأعمدة أولاً، ثم أضف الصفوف';
+
+  @override
   String get reportNew => 'تقرير جديد';
 
   @override

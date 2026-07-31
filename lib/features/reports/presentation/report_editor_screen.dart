@@ -15,6 +15,7 @@ import '../data/reports_repository.dart';
 import '../domain/report.dart';
 import '../domain/report_type.dart';
 import 'widgets/report_blocks_editor.dart';
+import 'widgets/tag_list_field.dart';
 
 /// Entering a report, and correcting one.
 ///
@@ -72,9 +73,7 @@ class _View extends StatelessWidget {
         final cubit = context.read<ReportEditorCubit>();
 
         return Scaffold(
-          appBar: GlassAppBar(
-            title: Text(isNew ? l.reportNew : l.reportEdit),
-          ),
+          appBar: GlassAppBar(title: Text(isNew ? l.reportNew : l.reportEdit)),
           bottomNavigationBar: GlassSurface(
             radius: 0,
             strong: true,
@@ -84,7 +83,8 @@ class _View extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: FilledButton(
-                  onPressed: state.canSave && state.status != EditorStatus.saving
+                  onPressed:
+                      state.canSave && state.status != EditorStatus.saving
                       ? () => _save(context)
                       : null,
                   child: state.status == EditorStatus.saving
@@ -192,10 +192,7 @@ class _IdentityState extends State<_Identity> {
             decoration: InputDecoration(labelText: '${l.reportKind} *'),
             items: [
               for (final t in s.types)
-                DropdownMenuItem(
-                  value: t.id,
-                  child: Text(t.name.of(context)),
-                ),
+                DropdownMenuItem(value: t.id, child: Text(t.name.of(context))),
             ],
             // Changing the kind empties the table: its columns are the type's,
             // and rows keyed to the old ones would be values with no column to
@@ -265,7 +262,10 @@ class _Fields extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l.reportAboutSection, style: Theme.of(context).textTheme.titleSmall),
+          Text(
+            l.reportAboutSection,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
           for (final f in state.type!.fields) ...[
             const SizedBox(height: AppSpacing.md),
             ModuleFieldInput(
@@ -430,10 +430,16 @@ class _Cell extends StatelessWidget {
     }
 
     if (c.isTags) {
-      return _TagsField(
+      return TagListField(
         label: label,
-        value: value,
-        onChanged: (v) => cubit.setCell(row, column.key, v),
+        items: [
+          for (final t in value.split('\n'))
+            if (t.trim().isNotEmpty) t.trim(),
+        ],
+        // Stored one per line, which is what the published document prints —
+        // so the joining happens here rather than inside a shared widget that
+        // has no business knowing this column's storage.
+        onChanged: (v) => cubit.setCell(row, column.key, v.join('\n')),
       );
     }
 
@@ -496,7 +502,8 @@ class _TimeRangeField extends StatelessWidget {
     final (from, to) = _parsed;
     final picked = await showTimePicker(
       context: context,
-      initialTime: (isStart ? from : to) ?? const TimeOfDay(hour: 13, minute: 0),
+      initialTime:
+          (isStart ? from : to) ?? const TimeOfDay(hour: 13, minute: 0),
     );
     if (picked == null) return;
     final start = isStart ? picked : from;
@@ -530,107 +537,6 @@ class _TimeRangeField extends StatelessWidget {
               onPressed: () => _pick(context, false),
               child: Text(to == null ? l.reportTimeTo : _two(to)),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// A list of small things, added one at a time.
-///
-/// المكونات is خبز, زبدة, زيتون, شوربة عدس — a list, and a textarea makes it
-/// one blob separated by whatever the typist happened to press. Stored one per
-/// line, which is what the published document prints and what was seeded.
-class _TagsField extends StatefulWidget {
-  const _TagsField({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String label;
-  final String value;
-  final ValueChanged<String> onChanged;
-
-  @override
-  State<_TagsField> createState() => _TagsFieldState();
-}
-
-class _TagsFieldState extends State<_TagsField> {
-  final _entry = TextEditingController();
-
-  List<String> get _tags => [
-    for (final t in widget.value.split('\n'))
-      if (t.trim().isNotEmpty) t.trim(),
-  ];
-
-  @override
-  void dispose() {
-    _entry.dispose();
-    super.dispose();
-  }
-
-  void _add() {
-    final v = _entry.text.trim();
-    if (v.isEmpty) return;
-    // Silently ignored rather than added twice: a meal does not contain خبز
-    // twice, and a duplicate is a slip of the finger.
-    if (_tags.contains(v)) {
-      _entry.clear();
-      return;
-    }
-    widget.onChanged([..._tags, v].join('\n'));
-    _entry.clear();
-  }
-
-  void _remove(String tag) =>
-      widget.onChanged(_tags.where((t) => t != tag).join('\n'));
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    return InputDecorator(
-      decoration: InputDecoration(labelText: widget.label),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (_tags.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: Wrap(
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.xs,
-                children: [
-                  for (final tag in _tags)
-                    InputChip(
-                      label: Text(tag),
-                      visualDensity: VisualDensity.compact,
-                      onDeleted: () => _remove(tag),
-                    ),
-                ],
-              ),
-            ),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _entry,
-                  textInputAction: TextInputAction.done,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    hintText: l.reportAddTag,
-                  ),
-                  // Enter adds it, which is how a list of nine gets typed
-                  // without reaching for the button nine times.
-                  onSubmitted: (_) => _add(),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(AppIcons.add),
-                onPressed: _add,
-              ),
-            ],
           ),
         ],
       ),

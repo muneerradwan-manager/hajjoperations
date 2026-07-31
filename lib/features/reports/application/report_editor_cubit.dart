@@ -85,8 +85,7 @@ class ReportEditorState extends Equatable {
   final bool isPublished;
   final String? error;
 
-  ReportType? get type =>
-      types.where((t) => t.id == typeId).firstOrNull;
+  ReportType? get type => types.where((t) => t.id == typeId).firstOrNull;
 
   ReferenceSet? setById(String? id) =>
       id == null ? null : referenceSets.where((s) => s.id == id).firstOrNull;
@@ -216,10 +215,7 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
       );
     } catch (err) {
       emit(
-        ReportEditorState(
-          status: EditorStatus.error,
-          error: err.toString(),
-        ),
+        ReportEditorState(status: EditorStatus.error, error: err.toString()),
       );
     }
   }
@@ -244,9 +240,8 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
 
   // ------------------------------------------------------------- the blocks
 
-  void addBlock(ReportBlockKind kind) => emit(
-    state.copyWith(blocks: [...state.blocks, DraftBlock(kind)]),
-  );
+  void addBlock(ReportBlockKind kind) =>
+      emit(state.copyWith(blocks: [...state.blocks, DraftBlock(kind)]));
 
   void removeBlock(int index) {
     final blocks = [...state.blocks]..removeAt(index);
@@ -261,6 +256,63 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
     final blocks = [...state.blocks];
     final moved = blocks.removeAt(index);
     blocks.insert(to, moved);
+    emit(state.copyWith(blocks: blocks));
+  }
+
+  /// The rows of a table BLOCK, kept aligned to its columns.
+  ///
+  /// A row is a list positioned against the column list, so adding a column has
+  /// to lengthen every row and removing one has to drop the same cell from each
+  /// — otherwise the third value starts reading under the second heading.
+  void setBlockColumns(int index, List<String> columns) {
+    final before = state.blocks[index].columns;
+    final rows = state.blocks[index].rows;
+    final moved = [
+      for (final row in rows)
+        [
+          for (final c in columns)
+            // Carried by NAME, so a column renamed keeps its data and a column
+            // dropped takes only its own cells with it.
+            before.contains(c) && before.indexOf(c) < row.length
+                ? row[before.indexOf(c)]
+                : '',
+        ],
+    ];
+    _setBlock(index, {'columns': columns, 'rows': moved});
+  }
+
+  void addBlockRow(int index) {
+    final b = state.blocks[index];
+    _setBlock(index, {
+      'rows': [
+        ...b.rows,
+        [for (final _ in b.columns) ''],
+      ],
+    });
+  }
+
+  void removeBlockRow(int index, int row) {
+    final rows = [...state.blocks[index].rows]..removeAt(row);
+    _setBlock(index, {'rows': rows});
+  }
+
+  void setBlockCell(int index, int row, int column, String value) {
+    final rows = [
+      for (final r in state.blocks[index].rows) [...r],
+    ];
+    while (rows[row].length <= column) {
+      rows[row].add('');
+    }
+    rows[row][column] = value;
+    _setBlock(index, {'rows': rows});
+  }
+
+  void _setBlock(int index, Map<String, dynamic> patch) {
+    final blocks = [...state.blocks];
+    blocks[index] = DraftBlock(
+      blocks[index].kind,
+      data: {...blocks[index].data, ...patch},
+    );
     emit(state.copyWith(blocks: blocks));
   }
 

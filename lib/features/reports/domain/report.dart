@@ -111,17 +111,19 @@ class Report {
   factory Report.fromMap(Map<String, dynamic> map) {
     final type = map['report_types'] as Map<String, dynamic>?;
     final season = map['seasons'] as Map<String, dynamic>?;
-    final rows = ((map['report_rows'] as List?) ?? const [])
-        .cast<Map<String, dynamic>>()
-        .map(ReportRow.fromMap)
-        .toList()
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final rows =
+        ((map['report_rows'] as List?) ?? const [])
+            .cast<Map<String, dynamic>>()
+            .map(ReportRow.fromMap)
+            .toList()
+          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
-    final blocks = ((map['report_blocks'] as List?) ?? const [])
-        .cast<Map<String, dynamic>>()
-        .map(ReportBlock.fromMap)
-        .toList()
-      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+    final blocks =
+        ((map['report_blocks'] as List?) ?? const [])
+            .cast<Map<String, dynamic>>()
+            .map(ReportBlock.fromMap)
+            .toList()
+          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
     return Report(
       id: map['id'] as String,

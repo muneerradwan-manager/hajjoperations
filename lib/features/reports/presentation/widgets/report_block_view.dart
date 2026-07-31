@@ -115,7 +115,9 @@ class ReportBlockView extends StatelessWidget {
 
       case ReportBlockKind.qr:
         return ReportFieldCard(
-          label: block.label.isEmpty ? context.l10n.reportScanCode : block.label,
+          label: block.label.isEmpty
+              ? context.l10n.reportScanCode
+              : block.label,
           value: block.value,
           kind: ModuleFieldKind.qr,
         );

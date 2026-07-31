@@ -1286,6 +1286,24 @@ abstract class AppLocalizations {
   /// **'One row per line, cells separated by |'**
   String get blockTableRowsHint;
 
+  /// No description provided for @blockAddItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an item'**
+  String get blockAddItem;
+
+  /// No description provided for @blockAddColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a column'**
+  String get blockAddColumn;
+
+  /// No description provided for @blockTableNeedsColumns.
+  ///
+  /// In en, this message translates to:
+  /// **'Name the columns first, then add rows'**
+  String get blockTableNeedsColumns;
+
   /// No description provided for @reportNew.
   ///
   /// In en, this message translates to:

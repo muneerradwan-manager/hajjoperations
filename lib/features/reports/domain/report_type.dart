@@ -113,8 +113,9 @@ class ReportType {
           .cast<Map<String, dynamic>>()
           .toList();
       rows.sort(
-        (a, b) => ((a['sort_order'] as int?) ?? 0)
-            .compareTo((b['sort_order'] as int?) ?? 0),
+        (a, b) => ((a['sort_order'] as int?) ?? 0).compareTo(
+          (b['sort_order'] as int?) ?? 0,
+        ),
       );
       return rows;
     }

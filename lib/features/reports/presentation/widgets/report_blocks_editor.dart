@@ -6,6 +6,7 @@ import '../../../../core/theme/glass_tokens.dart';
 import '../../../../core/widgets/glass.dart';
 import '../../application/report_editor_cubit.dart';
 import '../../domain/report_block.dart';
+import 'tag_list_field.dart';
 
 /// Writing a general report.
 ///
@@ -33,13 +34,16 @@ class ReportBlocksEditor extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(l.reportContentSection, style: Theme.of(context).textTheme.titleSmall),
+        Text(
+          l.reportContentSection,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         const SizedBox(height: AppSpacing.xs),
         Text(
           l.reportContentHint,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: scheme.onSurfaceVariant,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
         ),
         const SizedBox(height: AppSpacing.sm),
         // Every kind, always offered. A menu that hides the rare ones behind
@@ -205,18 +209,11 @@ class _BlockCard extends StatelessWidget {
       case ReportBlockKind.numbers:
         return [
           const SizedBox(height: AppSpacing.sm),
-          TextFormField(
-            initialValue: block.items.join('\n'),
-            maxLines: 6,
-            decoration: InputDecoration(
-              isDense: true,
-              labelText: l.blockItems,
-              helperText: l.blockItemsHint,
-            ),
-            onChanged: (v) => cubit.setBlockValue(index, 'items', [
-              for (final line in v.split('\n'))
-                if (line.trim().isNotEmpty) line.trim(),
-            ]),
+          TagListField(
+            label: l.blockItems,
+            items: block.items,
+            hint: l.blockAddItem,
+            onChanged: (v) => cubit.setBlockValue(index, 'items', v),
           ),
         ];
 
@@ -266,38 +263,87 @@ class _BlockCard extends StatelessWidget {
         ];
 
       case ReportBlockKind.table:
-        // Written as text, one row per line and cells separated by a pipe.
-        // A grid of inputs whose column count the writer is still deciding is
-        // a worse form than a box they can paste into.
         return [
           const SizedBox(height: AppSpacing.sm),
-          TextFormField(
-            initialValue: block.columns.join(' | '),
-            decoration: InputDecoration(
-              isDense: true,
-              labelText: l.blockTableColumns,
-              helperText: l.blockTableColumnsHint,
-            ),
-            onChanged: (v) => cubit.setBlockValue(index, 'columns', [
-              for (final c in v.split('|'))
-                if (c.trim().isNotEmpty) c.trim(),
-            ]),
+          // The columns first, and as tags: a table is not a table until it
+          // knows what its columns are, and naming them is a list of short
+          // things like any other.
+          TagListField(
+            label: l.blockTableColumns,
+            items: block.columns,
+            hint: l.blockAddColumn,
+            onChanged: (v) => cubit.setBlockColumns(index, v),
           ),
-          const SizedBox(height: AppSpacing.sm),
-          TextFormField(
-            initialValue: [for (final r in block.rows) r.join(' | ')].join('\n'),
-            maxLines: 8,
-            decoration: InputDecoration(
-              isDense: true,
-              labelText: l.blockTableRows,
-              helperText: l.blockTableRowsHint,
+          if (block.columns.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.sm),
+              child: Text(
+                l.blockTableNeedsColumns,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            )
+          else ...[
+            for (var r = 0; r < block.rows.length; r++) ...[
+              const SizedBox(height: AppSpacing.sm),
+              // One field per column, labelled with that column. Typed as a
+              // single line with separators it was impossible to tell which
+              // cell you were in, and one missing separator shifted the rest.
+              GlassCard(
+                subtle: true,
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            l.reportRowNumber(r + 1),
+                            style: Theme.of(context).textTheme.labelSmall,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: l.commonDelete,
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () => cubit.removeBlockRow(index, r),
+                          icon: Icon(
+                            AppIcons.delete,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ],
+                    ),
+                    for (var c = 0; c < block.columns.length; c++) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      TextFormField(
+                        key: ValueKey('b${index}_r${r}_c$c'),
+                        initialValue: c < block.rows[r].length
+                            ? block.rows[r][c]
+                            : '',
+                        decoration: InputDecoration(
+                          isDense: true,
+                          labelText: block.columns[c],
+                        ),
+                        onChanged: (v) => cubit.setBlockCell(index, r, c, v),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.sm),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: TextButton.icon(
+                onPressed: () => cubit.addBlockRow(index),
+                icon: const Icon(AppIcons.add, size: 18),
+                label: Text(l.reportAddRow),
+              ),
             ),
-            onChanged: (v) => cubit.setBlockValue(index, 'rows', [
-              for (final line in v.split('\n'))
-                if (line.trim().isNotEmpty)
-                  [for (final c in line.split('|')) c.trim()],
-            ]),
-          ),
+          ],
         ];
     }
   }

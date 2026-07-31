@@ -630,6 +630,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get blockTableRowsHint => 'One row per line, cells separated by |';
 
   @override
+  String get blockAddItem => 'Add an item';
+
+  @override
+  String get blockAddColumn => 'Add a column';
+
+  @override
+  String get blockTableNeedsColumns => 'Name the columns first, then add rows';
+
+  @override
   String get reportNew => 'New report';
 
   @override

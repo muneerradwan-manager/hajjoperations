@@ -44,8 +44,7 @@ class ReportsState extends Equatable {
   final ReportScope scope;
   final String? error;
 
-  bool get isNarrowed =>
-      query.trim().isNotEmpty || scope != ReportScope.all;
+  bool get isNarrowed => query.trim().isNotEmpty || scope != ReportScope.all;
 
   /// The list after the reader's narrowing. Done here rather than in the
   /// database: the whole list is already in hand and it is tens of rows, not
@@ -87,16 +86,8 @@ class ReportsState extends Equatable {
   );
 
   @override
-  List<Object?> get props => [
-    status,
-    reports,
-    types,
-    query,
-    scope,
-    error,
-  ];
+  List<Object?> get props => [status, reports, types, query, scope, error];
 }
-
 
 class ReportsCubit extends SafeCubit<ReportsState> {
   ReportsCubit(this._repo, this._seasons) : super(const ReportsState()) {

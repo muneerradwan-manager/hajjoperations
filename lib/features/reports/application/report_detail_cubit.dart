@@ -52,11 +52,7 @@ class ReportDetailState extends Equatable {
       final set = setById(c.sourceSetId);
       if (set == null) continue;
       for (final item in set.itemsForSeason(r.seasonId)) {
-        out.add((
-          key: item.id,
-          label: (ctx) => item.name.of(ctx),
-          column: c,
-        ));
+        out.add((key: item.id, label: (ctx) => item.name.of(ctx), column: c));
       }
     }
     return out;
