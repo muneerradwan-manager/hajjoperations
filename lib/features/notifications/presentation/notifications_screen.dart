@@ -8,6 +8,8 @@ import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/constants/permission_codes.dart';
 import '../../auth/application/session_cubit.dart';
+import '../../modules/data/modules_repository.dart';
+import '../../modules/presentation/module_detail_screen.dart';
 import '../application/notifications_cubit.dart';
 import '../data/notifications_repository.dart';
 import '../domain/app_notification.dart';
@@ -33,6 +35,41 @@ class _View extends StatelessWidget {
   const _View({required this.repo});
 
   final NotificationsRepository repo;
+
+  /// Mark it read, and take the reader to what it is about.
+  ///
+  /// "تم إسنادك إلى ملف تشغيلي" is a sentence about a place, and the reader's
+  /// next move is always to go and look at it. So the tap goes there — but only
+  /// after asking whether it is still there to go to.
+  ///
+  /// The file may be gone: deleted since, or deactivated, or the reader taken
+  /// off it. All three come back as nothing, and all three mean the same thing
+  /// to whoever is tapping — so they get one honest sentence rather than a
+  /// screen that opens onto an error. The notification itself stays; it is a
+  /// record of something that happened, and it happened.
+  Future<void> _open(BuildContext context, AppNotification n) async {
+    final l = context.l10n;
+    final cubit = context.read<NotificationsCubit>();
+    if (!n.isRead) cubit.markRead(n.id);
+
+    final moduleId = n.moduleId;
+    if (moduleId == null) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+    final module = await ModulesRepository().fetchModule(moduleId);
+    if (module == null) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l.notificationTargetGone)));
+      return;
+    }
+    // Not `fromOffice`: arriving from an inbox is not arriving through إدارة
+    // الملفات, so the file opens to be read rather than to be edited.
+    navigator.push(
+      fadeThroughRoute((_) => ModuleDetailScreen(moduleId: moduleId)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,11 +145,13 @@ class _View extends StatelessWidget {
                     child: _NotificationCard(
                       notification: n,
                       repo: repo,
-                      onTap: n.isRead
+                      // Tappable whenever there is something to do — opening
+                      // what it is about, marking it read, or both. A notice
+                      // already read still points at its file, so being read
+                      // must not make it inert.
+                      onTap: (n.isRead && !n.hasTarget)
                           ? null
-                          : () => context.read<NotificationsCubit>().markRead(
-                              n.id,
-                            ),
+                          : () => _open(context, n),
                     ),
                   );
                 },
@@ -135,6 +174,9 @@ class _NotificationCard extends StatelessWidget {
   final AppNotification notification;
   final NotificationsRepository repo;
   final VoidCallback? onTap;
+
+  /// Whether this card leads anywhere, which decides the chevron. Tapping to
+  /// mark something read is not "leading somewhere" — the card stays put.
 
   @override
   Widget build(BuildContext context) {
@@ -194,6 +236,14 @@ class _NotificationCard extends StatelessWidget {
                   color: scheme.primary,
                   shape: BoxShape.circle,
                 ),
+              ),
+            // Says the card goes somewhere. Without it the only way to find
+            // out is to tap, and half of these cards go nowhere — a broadcast
+            // names no place to open.
+            if (notification.hasTarget)
+              Padding(
+                padding: EdgeInsetsDirectional.only(start: unread ? 6 : 0),
+                child: const NavChevron(),
               ),
           ],
         ),

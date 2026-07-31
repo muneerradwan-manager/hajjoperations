@@ -149,6 +149,7 @@
   "permNotificationsSend": "إرسال الإشعارات",
 
   "navNotifications": "الإشعارات",
+  "notificationTargetGone": "لم يعد هذا الملف متاحاً",
   "notificationsEmpty": "لا توجد إشعارات بعد",
   "notificationSend": "إرسال إشعار",
   "notificationTitleField": "العنوان",

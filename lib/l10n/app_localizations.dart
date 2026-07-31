@@ -914,6 +914,12 @@ abstract class AppLocalizations {
   /// **'Notifications'**
   String get navNotifications;
 
+  /// No description provided for @notificationTargetGone.
+  ///
+  /// In en, this message translates to:
+  /// **'That file is no longer available'**
+  String get notificationTargetGone;
+
   /// No description provided for @notificationsEmpty.
   ///
   /// In en, this message translates to:

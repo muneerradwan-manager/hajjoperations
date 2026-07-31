@@ -430,6 +430,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navNotifications => 'Notifications';
 
   @override
+  String get notificationTargetGone => 'That file is no longer available';
+
+  @override
   String get notificationsEmpty => 'No notifications yet';
 
   @override

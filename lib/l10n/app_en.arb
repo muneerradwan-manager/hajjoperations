@@ -154,6 +154,7 @@
   "permNotificationsSend": "Send notifications",
 
   "navNotifications": "Notifications",
+  "notificationTargetGone": "That file is no longer available",
   "notificationsEmpty": "No notifications yet",
   "notificationSend": "Send notification",
   "notificationTitleField": "Title",

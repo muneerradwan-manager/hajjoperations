@@ -18,6 +18,7 @@ class AppNotification {
     required this.createdAt,
     required this.groupId,
     this.attachments = const [],
+    this.data = const {},
   });
 
   final String id;
@@ -34,6 +35,27 @@ class AppNotification {
   /// What came with it. Fetched alongside rather than embedded: the inbox is a
   /// realtime stream, and a stream cannot carry a joined table.
   final List<NotificationAttachment> attachments;
+
+  /// What the notification was ABOUT, as the trigger that raised it wrote it:
+  /// a `type` and whatever identifies the thing — `module_id`, `node_id`,
+  /// `role_id`. Carried through so a tap can open it. Empty for a notification
+  /// that points nowhere, which a plain broadcast does.
+  final Map<String, dynamic> data;
+
+  /// The file this notification is about, when it is about one.
+  ///
+  /// Both an assignment ('you were put into this file') and a broadcast to a
+  /// file's members are about the same place, so both open it. A general
+  /// broadcast names nothing and returns null.
+  String? get moduleId {
+    final type = data['type'];
+    if (type != 'module_assigned' && type != 'module_broadcast') return null;
+    final id = data['module_id'];
+    return id is String && id.isNotEmpty ? id : null;
+  }
+
+  /// Whether tapping this has anywhere to go.
+  bool get hasTarget => moduleId != null;
 
   bool get isRead => readAt != null;
 
@@ -54,6 +76,7 @@ class AppNotification {
     readAt: readAt ?? DateTime.now(),
     createdAt: createdAt,
     attachments: attachments,
+    data: data,
   );
 
   AppNotification withAttachments(List<NotificationAttachment> attachments) =>
@@ -65,6 +88,7 @@ class AppNotification {
         readAt: readAt,
         createdAt: createdAt,
         attachments: attachments,
+        data: data,
       );
 
   factory AppNotification.fromMap(Map<String, dynamic> map) => AppNotification(
@@ -80,5 +104,8 @@ class AppNotification {
         .cast<Map<String, dynamic>>()
         .map(NotificationAttachment.fromMap)
         .toList(),
+    data: Map<String, dynamic>.from(
+      (map['data'] as Map?) ?? const <String, dynamic>{},
+    ),
   );
 }

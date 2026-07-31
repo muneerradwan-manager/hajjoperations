@@ -429,6 +429,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navNotifications => 'الإشعارات';
 
   @override
+  String get notificationTargetGone => 'لم يعد هذا الملف متاحاً';
+
+  @override
   String get notificationsEmpty => 'لا توجد إشعارات بعد';
 
   @override
