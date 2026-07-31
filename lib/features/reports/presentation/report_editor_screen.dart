@@ -14,6 +14,7 @@ import '../application/report_editor_cubit.dart';
 import '../data/reports_repository.dart';
 import '../domain/report.dart';
 import '../domain/report_type.dart';
+import 'widgets/report_blocks_editor.dart';
 
 /// Entering a report, and correcting one.
 ///
@@ -124,9 +125,15 @@ class _View extends StatelessWidget {
                       const SizedBox(height: AppSpacing.md),
                       _Fields(state: state, cubit: cubit),
                     ],
+                    // A type with a table is FILLED IN; one without is
+                    // WRITTEN. Never both, and the form says which by showing
+                    // one of the two.
                     if (t.hasTable) ...[
                       const SizedBox(height: AppSpacing.md),
                       _Table(state: state, cubit: cubit),
+                    ] else ...[
+                      const SizedBox(height: AppSpacing.md),
+                      ReportBlocksEditor(state: state, cubit: cubit),
                     ],
                   ],
                   const SizedBox(height: AppSpacing.xl),

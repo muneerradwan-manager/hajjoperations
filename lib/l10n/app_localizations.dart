@@ -1130,6 +1130,162 @@ abstract class AppLocalizations {
   /// **'No. {number}'**
   String reportNumberBadge(String number);
 
+  /// No description provided for @reportContentSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Content'**
+  String get reportContentSection;
+
+  /// No description provided for @reportContentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Build the report from the pieces below — a heading, prose, a list, a table, a link, a code to scan. They appear in the order you add them.'**
+  String get reportContentHint;
+
+  /// No description provided for @reportNoBlocks.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing added yet'**
+  String get reportNoBlocks;
+
+  /// No description provided for @blockHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Heading'**
+  String get blockHeading;
+
+  /// No description provided for @blockSubheading.
+  ///
+  /// In en, this message translates to:
+  /// **'Subheading'**
+  String get blockSubheading;
+
+  /// No description provided for @blockParagraph.
+  ///
+  /// In en, this message translates to:
+  /// **'Paragraph'**
+  String get blockParagraph;
+
+  /// No description provided for @blockBullets.
+  ///
+  /// In en, this message translates to:
+  /// **'Bulleted list'**
+  String get blockBullets;
+
+  /// No description provided for @blockNumbers.
+  ///
+  /// In en, this message translates to:
+  /// **'Numbered list'**
+  String get blockNumbers;
+
+  /// No description provided for @blockTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Table'**
+  String get blockTable;
+
+  /// No description provided for @blockUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Link'**
+  String get blockUrl;
+
+  /// No description provided for @blockQr.
+  ///
+  /// In en, this message translates to:
+  /// **'QR code'**
+  String get blockQr;
+
+  /// No description provided for @blockNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get blockNote;
+
+  /// No description provided for @blockDivider.
+  ///
+  /// In en, this message translates to:
+  /// **'Divider'**
+  String get blockDivider;
+
+  /// No description provided for @blockMoveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up'**
+  String get blockMoveUp;
+
+  /// No description provided for @blockMoveDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move down'**
+  String get blockMoveDown;
+
+  /// No description provided for @blockTextShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get blockTextShort;
+
+  /// No description provided for @blockTextLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get blockTextLong;
+
+  /// No description provided for @blockItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Items'**
+  String get blockItems;
+
+  /// No description provided for @blockItemsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One per line'**
+  String get blockItemsHint;
+
+  /// No description provided for @blockLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Label'**
+  String get blockLabel;
+
+  /// No description provided for @blockQrValue.
+  ///
+  /// In en, this message translates to:
+  /// **'What the code carries'**
+  String get blockQrValue;
+
+  /// No description provided for @blockQrHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Usually a link'**
+  String get blockQrHint;
+
+  /// No description provided for @blockTableColumns.
+  ///
+  /// In en, this message translates to:
+  /// **'Columns'**
+  String get blockTableColumns;
+
+  /// No description provided for @blockTableColumnsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Separated by |'**
+  String get blockTableColumnsHint;
+
+  /// No description provided for @blockTableRows.
+  ///
+  /// In en, this message translates to:
+  /// **'Rows'**
+  String get blockTableRows;
+
+  /// No description provided for @blockTableRowsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One row per line, cells separated by |'**
+  String get blockTableRowsHint;
+
   /// No description provided for @reportNew.
   ///
   /// In en, this message translates to:

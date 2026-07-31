@@ -12,6 +12,29 @@ import '../domain/report_type.dart';
 
 enum EditorStatus { loading, ready, saving, error }
 
+/// A block being written, before it has an id of its own.
+class DraftBlock {
+  DraftBlock(this.kind, {Map<String, dynamic>? data}) : data = {...?data};
+
+  final ReportBlockKind kind;
+  final Map<String, dynamic> data;
+
+  String get text => data['text']?.toString() ?? '';
+
+  List<String> get items => [
+    for (final i in (data['items'] as List?) ?? const []) '$i',
+  ];
+
+  List<String> get columns => [
+    for (final c in (data['columns'] as List?) ?? const []) '$c',
+  ];
+
+  List<List<String>> get rows => [
+    for (final r in (data['rows'] as List?) ?? const [])
+      [for (final c in (r as List? ?? const [])) '$c'],
+  ];
+}
+
 /// A row being edited, before it has an id of its own.
 class DraftRow {
   DraftRow({Map<String, dynamic>? data}) : data = {...?data};
@@ -32,6 +55,7 @@ class ReportEditorState extends Equatable {
     this.seasonId,
     this.data = const {},
     this.rows = const [],
+    this.blocks = const [],
     this.isPublished = false,
     this.error,
   });
@@ -53,6 +77,11 @@ class ReportEditorState extends Equatable {
 
   final Map<String, dynamic> data;
   final List<DraftRow> rows;
+
+  /// What a WRITTEN report contains. A type with no table is written rather
+  /// than filled in, and these are what it is made of.
+  final List<DraftBlock> blocks;
+
   final bool isPublished;
   final String? error;
 
@@ -102,6 +131,7 @@ class ReportEditorState extends Equatable {
     Object? seasonId = _unset,
     Map<String, dynamic>? data,
     List<DraftRow>? rows,
+    List<DraftBlock>? blocks,
     bool? isPublished,
     String? error,
   }) => ReportEditorState(
@@ -116,6 +146,7 @@ class ReportEditorState extends Equatable {
     seasonId: seasonId == _unset ? this.seasonId : seasonId as String?,
     data: data ?? this.data,
     rows: rows ?? this.rows,
+    blocks: blocks ?? this.blocks,
     isPublished: isPublished ?? this.isPublished,
     error: error,
   );
@@ -132,6 +163,7 @@ class ReportEditorState extends Equatable {
     seasonId,
     data,
     rows,
+    blocks,
     isPublished,
     error,
   ];
@@ -175,6 +207,10 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
           seasonId: e?.seasonId,
           data: {...?e?.data},
           rows: [for (final r in e?.rows ?? const []) DraftRow(data: r.data)],
+          blocks: [
+            for (final b in e?.blocks ?? const [])
+              DraftBlock(b.kind, data: b.data),
+          ],
           isPublished: e?.isPublished ?? false,
         ),
       );
@@ -205,6 +241,40 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
   }
 
   void addRow() => emit(state.copyWith(rows: [...state.rows, DraftRow()]));
+
+  // ------------------------------------------------------------- the blocks
+
+  void addBlock(ReportBlockKind kind) => emit(
+    state.copyWith(blocks: [...state.blocks, DraftBlock(kind)]),
+  );
+
+  void removeBlock(int index) {
+    final blocks = [...state.blocks]..removeAt(index);
+    emit(state.copyWith(blocks: blocks));
+  }
+
+  /// Up or down by one. A notice is written in the order it is read, and the
+  /// order is the thing most often got wrong on the first pass.
+  void moveBlock(int index, int delta) {
+    final to = index + delta;
+    if (to < 0 || to >= state.blocks.length) return;
+    final blocks = [...state.blocks];
+    final moved = blocks.removeAt(index);
+    blocks.insert(to, moved);
+    emit(state.copyWith(blocks: blocks));
+  }
+
+  void setBlockValue(int index, String key, Object? value) {
+    final blocks = [...state.blocks];
+    final data = {...blocks[index].data};
+    if (value == null || (value is String && value.isEmpty)) {
+      data.remove(key);
+    } else {
+      data[key] = value;
+    }
+    blocks[index] = DraftBlock(blocks[index].kind, data: data);
+    emit(state.copyWith(blocks: blocks));
+  }
 
   void removeRow(int index) {
     final rows = [...state.rows]..removeAt(index);
@@ -306,6 +376,25 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
       ];
       if (rows.isNotEmpty) {
         await supabase.from('report_rows').insert(rows);
+      }
+
+      // Same wholesale replacement the rows get, and for the same reason: a
+      // notice is written as one thing, and diffing block against block would
+      // be more code and more ways to leave it half-written.
+      if (existing != null) {
+        await supabase.from('report_blocks').delete().eq('report_id', id);
+      }
+      final blocks = [
+        for (var i = 0; i < state.blocks.length; i++)
+          {
+            'report_id': id,
+            'kind': state.blocks[i].kind.db,
+            'data': state.blocks[i].data,
+            'sort_order': i + 1,
+          },
+      ];
+      if (blocks.isNotEmpty) {
+        await supabase.from('report_blocks').insert(blocks);
       }
 
       emit(state.copyWith(status: EditorStatus.ready));

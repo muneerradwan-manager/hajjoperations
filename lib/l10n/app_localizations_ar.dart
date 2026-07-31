@@ -552,6 +552,85 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get reportContentSection => 'المحتوى';
+
+  @override
+  String get reportContentHint =>
+      'ابنِ التقرير من العناصر أدناه — عنوان، نصّ، قائمة، جدول، رابط، رمز للمسح. تظهر بالترتيب الذي تضيفها به.';
+
+  @override
+  String get reportNoBlocks => 'لم يُضف شيء بعد';
+
+  @override
+  String get blockHeading => 'عنوان';
+
+  @override
+  String get blockSubheading => 'عنوان فرعي';
+
+  @override
+  String get blockParagraph => 'فقرة';
+
+  @override
+  String get blockBullets => 'قائمة نقاط';
+
+  @override
+  String get blockNumbers => 'قائمة مرقّمة';
+
+  @override
+  String get blockTable => 'جدول';
+
+  @override
+  String get blockUrl => 'رابط';
+
+  @override
+  String get blockQr => 'رمز QR';
+
+  @override
+  String get blockNote => 'ملاحظة';
+
+  @override
+  String get blockDivider => 'فاصل';
+
+  @override
+  String get blockMoveUp => 'تحريك للأعلى';
+
+  @override
+  String get blockMoveDown => 'تحريك للأسفل';
+
+  @override
+  String get blockTextShort => 'النص';
+
+  @override
+  String get blockTextLong => 'النص';
+
+  @override
+  String get blockItems => 'العناصر';
+
+  @override
+  String get blockItemsHint => 'عنصر في كل سطر';
+
+  @override
+  String get blockLabel => 'التسمية';
+
+  @override
+  String get blockQrValue => 'ما يحمله الرمز';
+
+  @override
+  String get blockQrHint => 'غالباً رابط';
+
+  @override
+  String get blockTableColumns => 'الأعمدة';
+
+  @override
+  String get blockTableColumnsHint => 'مفصولة بـ |';
+
+  @override
+  String get blockTableRows => 'الصفوف';
+
+  @override
+  String get blockTableRowsHint => 'صف في كل سطر، والخلايا مفصولة بـ |';
+
+  @override
   String get reportNew => 'تقرير جديد';
 
   @override

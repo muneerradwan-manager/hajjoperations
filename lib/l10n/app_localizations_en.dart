@@ -551,6 +551,85 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get reportContentSection => 'Content';
+
+  @override
+  String get reportContentHint =>
+      'Build the report from the pieces below — a heading, prose, a list, a table, a link, a code to scan. They appear in the order you add them.';
+
+  @override
+  String get reportNoBlocks => 'Nothing added yet';
+
+  @override
+  String get blockHeading => 'Heading';
+
+  @override
+  String get blockSubheading => 'Subheading';
+
+  @override
+  String get blockParagraph => 'Paragraph';
+
+  @override
+  String get blockBullets => 'Bulleted list';
+
+  @override
+  String get blockNumbers => 'Numbered list';
+
+  @override
+  String get blockTable => 'Table';
+
+  @override
+  String get blockUrl => 'Link';
+
+  @override
+  String get blockQr => 'QR code';
+
+  @override
+  String get blockNote => 'Note';
+
+  @override
+  String get blockDivider => 'Divider';
+
+  @override
+  String get blockMoveUp => 'Move up';
+
+  @override
+  String get blockMoveDown => 'Move down';
+
+  @override
+  String get blockTextShort => 'Text';
+
+  @override
+  String get blockTextLong => 'Text';
+
+  @override
+  String get blockItems => 'Items';
+
+  @override
+  String get blockItemsHint => 'One per line';
+
+  @override
+  String get blockLabel => 'Label';
+
+  @override
+  String get blockQrValue => 'What the code carries';
+
+  @override
+  String get blockQrHint => 'Usually a link';
+
+  @override
+  String get blockTableColumns => 'Columns';
+
+  @override
+  String get blockTableColumnsHint => 'Separated by |';
+
+  @override
+  String get blockTableRows => 'Rows';
+
+  @override
+  String get blockTableRowsHint => 'One row per line, cells separated by |';
+
+  @override
   String get reportNew => 'New report';
 
   @override
