@@ -196,6 +196,18 @@
   "employeesExternalSection": "الموظفون الخارجيون",
   "employeesExternalEmpty": "لا يوجد موظفون خارجيون",
   "employeeDetailTitle": "الموظف",
+  "modulePickerOnlyFree": "غير المسندين فقط",
+  "moduleRosterSearchHint": "ابحث بالاسم أو الصفة",
+  "moduleRosterAllRoles": "كل الصفات",
+  "moduleRosterClear": "إلغاء التصفية",
+  "moduleRosterShowing": "يُعرض {showing} من {total}",
+  "@moduleRosterShowing": {
+    "placeholders": {
+      "showing": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "moduleRosterNoMatch": "لا أحد في هذا الملف يطابق البحث",
   "referenceChildCount": "عدد {list} المسندة",
   "@referenceChildCount": {
     "placeholders": { "list": { "type": "String" } }

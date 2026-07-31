@@ -147,10 +147,13 @@ class _ViewState extends State<_View> {
           body: Column(
             children: [
               _SearchBar(
-                query: state.query,
-                filter: state.filter,
+                state: state,
                 onChanged: cubit.search,
                 onFilter: cubit.setFilter,
+                onJobTitle: cubit.setJobTitle,
+                onCity: cubit.setCity,
+                onOnlyFree: cubit.setOnlyFree,
+                onClear: cubit.clearFilters,
               ),
               Expanded(
                 child: switch (state.status) {
@@ -165,11 +168,12 @@ class _ViewState extends State<_View> {
                   ),
                   PickerStatus.ready when state.people.isEmpty => EmptyState(
                     icon: AppIcons.search,
-                    title:
-                        state.query.isEmpty &&
-                            state.filter == ParticipantFilter.all
-                        ? l.moduleNoParticipants
-                        : l.modulePickerNoMatches,
+                    // "Nobody matches" and "the season has nobody in it" are
+                    // different failures, and now that there are five ways to
+                    // narrow, the question is whether ANY of them is on.
+                    title: state.isNarrowed
+                        ? l.modulePickerNoMatches
+                        : l.moduleNoParticipants,
                   ),
                   PickerStatus.ready => ResponsivePage(
                     builder: (context, size) => AdaptiveGridView(
@@ -238,16 +242,25 @@ class _ViewState extends State<_View> {
 /// both go to the database, so neither is a view over something already here.
 class _SearchBar extends StatefulWidget {
   const _SearchBar({
-    required this.query,
-    required this.filter,
+    required this.state,
     required this.onChanged,
     required this.onFilter,
+    required this.onJobTitle,
+    required this.onCity,
+    required this.onOnlyFree,
+    required this.onClear,
   });
 
-  final String query;
-  final ParticipantFilter filter;
+  final EmployeePickerState state;
   final ValueChanged<String> onChanged;
   final ValueChanged<ParticipantFilter> onFilter;
+  final ValueChanged<String?> onJobTitle;
+  final ValueChanged<String?> onCity;
+  final ValueChanged<bool> onOnlyFree;
+  final VoidCallback onClear;
+
+  String get query => state.query;
+  ParticipantFilter get filter => state.filter;
 
   @override
   State<_SearchBar> createState() => _SearchBarState();
@@ -302,23 +315,61 @@ class _SearchBarState extends State<_SearchBar> {
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
-            Row(
+            // Everything narrows in the database, so the row is a set of
+            // questions rather than a view over the forty rows in hand. They
+            // wrap: on a phone this is four lines, on a monitor one.
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.xs,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 for (final filter in ParticipantFilter.values)
-                  Padding(
-                    padding: const EdgeInsetsDirectional.only(
-                      end: AppSpacing.sm,
-                    ),
-                    child: ChoiceChip(
-                      label: Text(switch (filter) {
-                        ParticipantFilter.all => l.modulePickerAll,
-                        ParticipantFilter.internal => l.modulePickerInternal,
-                        ParticipantFilter.external => l.modulePickerExternal,
-                      }),
-                      selected: widget.filter == filter,
-                      visualDensity: VisualDensity.compact,
-                      onSelected: (_) => widget.onFilter(filter),
-                    ),
+                  ChoiceChip(
+                    label: Text(switch (filter) {
+                      ParticipantFilter.all => l.modulePickerAll,
+                      ParticipantFilter.internal => l.modulePickerInternal,
+                      ParticipantFilter.external => l.modulePickerExternal,
+                    }),
+                    selected: widget.filter == filter,
+                    visualDensity: VisualDensity.compact,
+                    onSelected: (_) => widget.onFilter(filter),
+                  ),
+                // The one question this page exists to ask, made askable:
+                // who is not already carrying something this season.
+                FilterChip(
+                  label: Text(l.modulePickerOnlyFree),
+                  selected: widget.state.onlyFree,
+                  visualDensity: VisualDensity.compact,
+                  onSelected: widget.onOnlyFree,
+                ),
+                if (widget.state.jobTitles.isNotEmpty)
+                  _FilterDropdown(
+                    hint: l.profileJobTitle,
+                    value: widget.state.jobTitleId,
+                    options: [
+                      for (final t in widget.state.jobTitles)
+                        (t.id, t.name.of(context)),
+                    ],
+                    onChanged: widget.onJobTitle,
+                  ),
+                if (widget.state.cities.isNotEmpty)
+                  _FilterDropdown(
+                    hint: l.profileCity,
+                    value: widget.state.cityId,
+                    options: [
+                      for (final c in widget.state.cities)
+                        (c.id, c.name.of(context)),
+                    ],
+                    onChanged: widget.onCity,
+                  ),
+                if (widget.state.isNarrowed)
+                  TextButton.icon(
+                    onPressed: () {
+                      _controller.clear();
+                      widget.onClear();
+                    },
+                    icon: const Icon(AppIcons.reject, size: 16),
+                    label: Text(l.moduleRosterClear),
                   ),
               ],
             ),
@@ -492,6 +543,64 @@ class _Footer extends StatelessWidget {
                   context,
                 ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
               ),
+      ),
+    );
+  }
+}
+
+/// A dropdown that sits in a row of chips without looking like a form field.
+///
+/// Its "any" entry is what clears it — a filter you can turn on and not off is
+/// a trap, and a separate clear button beside every dropdown is clutter.
+class _FilterDropdown extends StatelessWidget {
+  const _FilterDropdown({
+    required this.hint,
+    required this.value,
+    required this.options,
+    required this.onChanged,
+  });
+
+  final String hint;
+  final String? value;
+
+  /// (id, label), in the order they should be offered.
+  final List<(String, String)> options;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final on = value != null;
+
+    return Container(
+      padding: const EdgeInsetsDirectional.only(
+        start: AppSpacing.md,
+        end: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: on ? scheme.secondaryContainer : Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(
+          color: on ? scheme.secondary : context.glass.stroke,
+        ),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String?>(
+          value: value,
+          isDense: true,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          hint: Text(hint, style: Theme.of(context).textTheme.labelLarge),
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: on ? scheme.onSecondaryContainer : scheme.onSurface,
+          ),
+          items: [
+            DropdownMenuItem(value: null, child: Text('$hint: ${l.modulePickerAll}')),
+            for (final (id, label) in options)
+              DropdownMenuItem(value: id, child: Text(label)),
+          ],
+          onChanged: onChanged,
+        ),
       ),
     );
   }

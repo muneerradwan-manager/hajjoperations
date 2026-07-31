@@ -11,6 +11,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_accents.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
+import '../../../core/utils/arabic_search.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/info_section.dart';
 import '../../../core/widgets/profile_avatar.dart';
@@ -265,7 +266,7 @@ class _ViewState extends State<_View> {
   }
 }
 
-class _Body extends StatelessWidget {
+class _Body extends StatefulWidget {
   const _Body({
     required this.state,
     required this.module,
@@ -280,12 +281,69 @@ class _Body extends StatelessWidget {
   final void Function(ModuleFile file) onOpenPdf;
   final VoidCallback onBuildTree;
 
+  @override
+  State<_Body> createState() => _BodyState();
+}
+
+class _BodyState extends State<_Body> {
+  /// Below this a filter bar is furniture: إدارة شؤون مكاتب البعثة has two
+  /// people in it, and a search box above two names is a worse page than no
+  /// search box. Files that need one have tens or hundreds.
+  static const _worthFiltering = 10;
+
+  _RosterFilter _filter = const _RosterFilter();
+
+  ModuleDetailState get state => widget.state;
+  OperationalModule get module => widget.module;
+  bool get canManage => widget.canManage;
+
   String _display(BuildContext context, ModuleField field) =>
       displayFieldValue(context, state, field, module.data[field.key]);
+
+  /// Every role somebody actually holds in this file, with how many hold it.
+  ///
+  /// Read off the postings rather than off the type: offering to filter by a
+  /// role nobody was given leads to an empty screen and no explanation.
+  (List<ModuleRole>, Map<String, int>) _rolesPresent() {
+    final counts = <String, int>{};
+    for (final m in state.members) {
+      counts.update(m.roleId, (v) => v + 1, ifAbsent: () => 1);
+    }
+    for (final n in state.nodes) {
+      for (final m in n.members) {
+        counts.update(m.roleId, (v) => v + 1, ifAbsent: () => 1);
+      }
+    }
+    final all = <ModuleRole>[
+      ...?state.type?.roles,
+      for (final level in state.type?.levels ?? const <ModuleLevel>[])
+        ...level.roles,
+    ];
+    return (all.where((r) => counts.containsKey(r.id)).toList(), counts);
+  }
+
+  /// How many postings survive the filter, over the whole file.
+  int _showing() {
+    if (!_filter.isActive) return state.peopleCount;
+    var n = 0;
+    for (final role in state.type?.roles ?? const <ModuleRole>[]) {
+      for (final m in state.membersOf(role.id)) {
+        if (_filter.keeps(m, role)) n++;
+      }
+    }
+    for (final level in state.type?.levels ?? const <ModuleLevel>[]) {
+      for (final node in state.nodes.where((n) => n.levelId == level.id)) {
+        n += _filter.survivorsIn(node, level);
+      }
+    }
+    return n;
+  }
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
+    final (rolesPresent, roleCounts) = _rolesPresent();
+    final showing = _showing();
     final type = state.type;
     final fields = type?.fields ?? const <ModuleField>[];
     final pdfFields = fields.where((f) => f.kind == ModuleFieldKind.pdf);
@@ -375,7 +433,7 @@ class _Body extends StatelessWidget {
         _PdfCard(
           label: field.label.of(context),
           file: module.fileAt(field.key),
-          onOpen: onOpenPdf,
+          onOpen: widget.onOpenPdf,
         ),
       ],
     ];
@@ -417,10 +475,30 @@ class _Body extends StatelessWidget {
         icon: AppIcons.participants,
       ),
 
+      if (state.peopleCount >= _worthFiltering) ...[
+        _RosterFilterBar(
+          filter: _filter,
+          roles: rolesPresent,
+          counts: roleCounts,
+          showing: showing,
+          total: state.peopleCount,
+          onChanged: (f) => setState(() => _filter = f),
+        ),
+        const SizedBox(height: AppSpacing.md),
+      ],
+
+      // Nothing survived, and the tree below has folded away entirely. Said
+      // once here rather than left as a page that looks like it failed to load.
+      if (_filter.isActive && showing == 0)
+        GlassCard(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Text(l.moduleRosterNoMatch),
+        ),
+
       // Roles held on the file itself — the entire roster of a file with
       // no tree, and each member's share of his team's duties.
       for (final role in type?.roles ?? const <ModuleRole>[])
-        _RoleRosterCard(state: state, role: role),
+        _RoleRosterCard(state: state, role: role, filter: _filter),
 
       if (type?.hasTree ?? true)
         if (sectorLevel == null || sectors.isEmpty)
@@ -433,7 +511,7 @@ class _Body extends StatelessWidget {
                 if (canManage) ...[
                   const SizedBox(height: AppSpacing.md),
                   OutlinedButton.icon(
-                    onPressed: onBuildTree,
+                    onPressed: widget.onBuildTree,
                     icon: const Icon(AppIcons.add),
                     // Named by the level, so the same button offers
                     // "إضافة القطاع" on one file and "إضافة المركز" on
@@ -450,7 +528,12 @@ class _Body extends StatelessWidget {
           )
         else
           for (final sector in sectors)
-            _SectorCard(state: state, level: sectorLevel, sector: sector)
+            _SectorCard(
+              state: state,
+              level: sectorLevel,
+              sector: sector,
+              filter: _filter,
+            )
       else if (state.members.isEmpty)
         GlassCard(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -461,7 +544,7 @@ class _Body extends StatelessWidget {
               if (canManage) ...[
                 const SizedBox(height: AppSpacing.md),
                 OutlinedButton.icon(
-                  onPressed: onBuildTree,
+                  onPressed: widget.onBuildTree,
                   icon: const Icon(AppIcons.add),
                   label: Text(l.moduleTeamPick),
                 ),
@@ -499,6 +582,191 @@ class _Body extends StatelessWidget {
   }
 }
 
+/// What the reader is currently looking for in a file's roster.
+///
+/// A file is not a small thing — تشكيل فرق المشاعر holds two hundred and
+/// fourteen postings across seven قطاعات — and until now the only way to find
+/// one man in it was to scroll. This narrows the whole screen at once: the tree
+/// keeps its shape, and the places with nobody left in them fold away.
+///
+/// View state, deliberately. It answers a question the reader is asking right
+/// now, it should not survive a reload, and it belongs to no one but this
+/// screen — so it lives in the widget rather than in the cubit's state.
+class _RosterFilter {
+  const _RosterFilter({this.query = '', this.roleId});
+
+  final String query;
+
+  /// Narrowed to holders of one role — "show me the مشرفون". Null for all.
+  final String? roleId;
+
+  bool get isActive => query.trim().isNotEmpty || roleId != null;
+
+  /// Whether this posting survives, under the role it is held here.
+  ///
+  /// The role's own name is searched alongside the person's, because "مشرف
+  /// البرج" is a thing a reader types into a box that is sitting above a list
+  /// of them. Spelling is folded the way the directory folds it: أ and ا are
+  /// one letter here too.
+  bool keeps(ModuleMember member, ModuleRole role) {
+    if (roleId != null && role.id != roleId) return false;
+    if (query.trim().isEmpty) return true;
+    final p = member.profile;
+    return arabicMatchesAll([
+      p?.firstName,
+      p?.fatherName,
+      p?.surname,
+      p?.fullName,
+      p?.jobTitleName?.ar,
+      p?.jobTitleName?.en,
+      role.name.ar,
+      role.name.en,
+    ], query);
+  }
+
+  /// How many of [node]'s postings survive, under [level]'s roles.
+  int survivorsIn(ModuleNode node, ModuleLevel level) {
+    var n = 0;
+    for (final role in level.roles) {
+      for (final member in node.membersOf(role.id)) {
+        if (keeps(member, role)) n++;
+      }
+    }
+    return n;
+  }
+}
+
+/// The search box and the role chips that narrow a file's roster.
+///
+/// The chips are the roles this file actually has somebody in — not the type's
+/// catalogue. A file where nobody was ever made نائب should not offer to filter
+/// by نائب and then show an empty screen.
+class _RosterFilterBar extends StatefulWidget {
+  const _RosterFilterBar({
+    required this.filter,
+    required this.roles,
+    required this.counts,
+    required this.showing,
+    required this.total,
+    required this.onChanged,
+  });
+
+  final _RosterFilter filter;
+  final List<ModuleRole> roles;
+
+  /// How many people hold each role here, shown on its chip.
+  final Map<String, int> counts;
+
+  final int showing;
+  final int total;
+  final ValueChanged<_RosterFilter> onChanged;
+
+  @override
+  State<_RosterFilterBar> createState() => _RosterFilterBarState();
+}
+
+class _RosterFilterBarState extends State<_RosterFilterBar> {
+  late final _controller = TextEditingController(text: widget.filter.query);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final f = widget.filter;
+
+    return GlassCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: _controller,
+            textInputAction: TextInputAction.search,
+            onChanged: (v) =>
+                widget.onChanged(_RosterFilter(query: v, roleId: f.roleId)),
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: l.moduleRosterSearchHint,
+              prefixIcon: const Icon(AppIcons.search, size: 20),
+              suffixIcon: f.query.isEmpty
+                  ? null
+                  : IconButton(
+                      icon: const Icon(AppIcons.reject, size: 18),
+                      onPressed: () {
+                        _controller.clear();
+                        widget.onChanged(_RosterFilter(roleId: f.roleId));
+                      },
+                    ),
+            ),
+          ),
+          if (widget.roles.length > 1) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.xs,
+              children: [
+                ChoiceChip(
+                  label: Text(l.moduleRosterAllRoles),
+                  selected: f.roleId == null,
+                  visualDensity: VisualDensity.compact,
+                  onSelected: (_) =>
+                      widget.onChanged(_RosterFilter(query: f.query)),
+                ),
+                for (final role in widget.roles)
+                  ChoiceChip(
+                    label: Text(
+                      '${role.name.of(context)} (${widget.counts[role.id] ?? 0})',
+                    ),
+                    selected: f.roleId == role.id,
+                    visualDensity: VisualDensity.compact,
+                    // Tapping the chip already on cancels it, so the way back
+                    // to everyone is the chip under your finger.
+                    onSelected: (on) => widget.onChanged(
+                      _RosterFilter(
+                        query: f.query,
+                        roleId: on && f.roleId != role.id ? role.id : null,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+          if (f.isActive) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l.moduleRosterShowing(widget.showing, widget.total),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: widget.showing == 0
+                          ? scheme.error
+                          : scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    _controller.clear();
+                    widget.onChanged(const _RosterFilter());
+                  },
+                  child: Text(l.moduleRosterClear),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 /// The narrowest a member may get before a roster drops a column.
 ///
 /// A member is a face, a name under it and up to three dialable numbers in a
@@ -524,14 +792,25 @@ const _kNestedMemberWidth = _kMemberWidth - AppSpacing.lg;
 /// what this file is for — "who is doing the passports" is the question it
 /// exists to answer.
 class _RoleRosterCard extends StatelessWidget {
-  const _RoleRosterCard({required this.state, required this.role});
+  const _RoleRosterCard({
+    required this.state,
+    required this.role,
+    this.filter = const _RosterFilter(),
+  });
 
   final ModuleDetailState state;
   final ModuleRole role;
+  final _RosterFilter filter;
 
   @override
   Widget build(BuildContext context) {
-    final members = state.membersOf(role.id);
+    final members = state
+        .membersOf(role.id)
+        .where((m) => filter.keeps(m, role))
+        .toList();
+    // A team nobody on it matches is not an empty team — it is a team the
+    // reader is not asking about, so it goes rather than showing a heading
+    // over nothing.
     if (members.isEmpty) return const SizedBox.shrink();
 
     return Column(
@@ -613,11 +892,13 @@ class _SectorCard extends StatelessWidget {
     required this.state,
     required this.level,
     required this.sector,
+    this.filter = const _RosterFilter(),
   });
 
   final ModuleDetailState state;
   final ModuleLevel level;
   final ModuleNode sector;
+  final _RosterFilter filter;
 
   @override
   Widget build(BuildContext context) {
@@ -628,8 +909,22 @@ class _SectorCard extends StatelessWidget {
     final supervisors = <Widget>[
       for (final role in level.roles)
         for (final member in sector.membersOf(role.id))
-          _MemberTile(member: member, roleName: role.name.of(context)),
+          if (filter.keeps(member, role))
+            _MemberTile(member: member, roleName: role.name.of(context)),
     ];
+
+    // A whole قطاع with nobody matching in it, nor in any برج beneath it, is
+    // not part of the answer — so the sector folds away rather than standing
+    // as a heading over a gap.
+    if (filter.isActive) {
+      final below = towerLevel == null
+          ? 0
+          : towers.fold<int>(
+              0,
+              (n, t) => n + filter.survivorsIn(t, towerLevel),
+            );
+      if (supervisors.isEmpty && below == 0) return const SizedBox.shrink();
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -645,7 +940,12 @@ class _SectorCard extends StatelessWidget {
         ],
         if (towerLevel != null)
           for (final tower in towers)
-            _TowerCard(state: state, level: towerLevel, tower: tower),
+            _TowerCard(
+              state: state,
+              level: towerLevel,
+              tower: tower,
+              filter: filter,
+            ),
         const SizedBox(height: AppSpacing.md),
       ],
     );
@@ -658,11 +958,13 @@ class _TowerCard extends StatelessWidget {
     required this.state,
     required this.level,
     required this.tower,
+    this.filter = const _RosterFilter(),
   });
 
   final ModuleDetailState state;
   final ModuleLevel level;
   final ModuleNode tower;
+  final _RosterFilter filter;
 
   @override
   Widget build(BuildContext context) {
@@ -686,12 +988,18 @@ class _TowerCard extends StatelessWidget {
     final serving = <Widget>[
       for (final role in level.roles)
         for (final member in tower.membersOf(role.id))
-          _MemberTile(
-            member: member,
-            roleName: role.name.of(context),
-            dense: true,
-          ),
+          if (filter.keeps(member, role))
+            _MemberTile(
+              member: member,
+              roleName: role.name.of(context),
+              dense: true,
+            ),
     ];
+
+    // The برج itself is only shown while it still has somebody the reader is
+    // looking for. Its hotel, its تكتل and its capacity are context for the
+    // people in it, not an answer on their own.
+    if (filter.isActive && serving.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),

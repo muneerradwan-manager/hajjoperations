@@ -575,6 +575,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get employeeDetailTitle => 'Employee';
 
   @override
+  String get modulePickerOnlyFree => 'Unassigned only';
+
+  @override
+  String get moduleRosterSearchHint => 'Search by name or role';
+
+  @override
+  String get moduleRosterAllRoles => 'All roles';
+
+  @override
+  String get moduleRosterClear => 'Clear';
+
+  @override
+  String moduleRosterShowing(int showing, int total) {
+    return 'Showing $showing of $total';
+  }
+
+  @override
+  String get moduleRosterNoMatch => 'Nobody in this file matches';
+
+  @override
   String referenceChildCount(String list) {
     return '$list assigned';
   }

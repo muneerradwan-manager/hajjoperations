@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 
 import '../../../core/bloc/safe_cubit.dart';
+import '../../profile/data/profile_repository.dart';
+import '../../profile/domain/city.dart';
+import '../../profile/domain/job_title.dart';
 import '../data/modules_repository.dart';
 import '../domain/assignable_employee.dart';
 
@@ -22,6 +25,10 @@ enum ParticipantFilter {
   };
 }
 
+/// Stands for "this argument was not passed", so that passing null CAN mean
+/// null. Only the two nullable filters need it.
+const Object _unset = Object();
+
 class EmployeePickerState extends Equatable {
   const EmployeePickerState({
     this.status = PickerStatus.loading,
@@ -29,6 +36,11 @@ class EmployeePickerState extends Equatable {
     this.selected = const {},
     this.query = '',
     this.filter = ParticipantFilter.all,
+    this.jobTitleId,
+    this.cityId,
+    this.onlyFree = false,
+    this.jobTitles = const [],
+    this.cities = const [],
     this.loadingMore = false,
     this.hasMore = true,
     this.error,
@@ -44,6 +56,26 @@ class EmployeePickerState extends Equatable {
 
   final String query;
   final ParticipantFilter filter;
+
+  /// Narrowed to one post, one city, or to people carrying nothing yet this
+  /// season. Null and false mean "everyone", which is where the page starts.
+  final String? jobTitleId;
+  final String? cityId;
+  final bool onlyFree;
+
+  /// What the two dropdowns may offer. Loaded once beside the first page.
+  final List<JobTitle> jobTitles;
+  final List<City> cities;
+
+  /// Whether anything beyond the plain list is being asked for — what the
+  /// "clear" button appears for.
+  bool get isNarrowed =>
+      query.trim().isNotEmpty ||
+      filter != ParticipantFilter.all ||
+      jobTitleId != null ||
+      cityId != null ||
+      onlyFree;
+
   final bool loadingMore;
 
   /// False once a page came back short — there is nothing further to ask for.
@@ -57,6 +89,11 @@ class EmployeePickerState extends Equatable {
     Set<String>? selected,
     String? query,
     ParticipantFilter? filter,
+    Object? jobTitleId = _unset,
+    Object? cityId = _unset,
+    bool? onlyFree,
+    List<JobTitle>? jobTitles,
+    List<City>? cities,
     bool? loadingMore,
     bool? hasMore,
     String? error,
@@ -67,6 +104,13 @@ class EmployeePickerState extends Equatable {
       selected: selected ?? this.selected,
       query: query ?? this.query,
       filter: filter ?? this.filter,
+      // Sentinels: null is a real value for these two — it is what "any post"
+      // and "any city" mean — so `??` could never clear them.
+      jobTitleId: jobTitleId == _unset ? this.jobTitleId : jobTitleId as String?,
+      cityId: cityId == _unset ? this.cityId : cityId as String?,
+      onlyFree: onlyFree ?? this.onlyFree,
+      jobTitles: jobTitles ?? this.jobTitles,
+      cities: cities ?? this.cities,
       loadingMore: loadingMore ?? this.loadingMore,
       hasMore: hasMore ?? this.hasMore,
       error: error,
@@ -80,6 +124,11 @@ class EmployeePickerState extends Equatable {
     selected,
     query,
     filter,
+    jobTitleId,
+    cityId,
+    onlyFree,
+    jobTitles,
+    cities,
     loadingMore,
     hasMore,
     error,
@@ -99,9 +148,11 @@ class EmployeePickerCubit extends SafeCubit<EmployeePickerState> {
     Set<String> selected = const {},
   }) : super(EmployeePickerState(selected: {...selected})) {
     _fetch();
+    _loadFilterOptions();
   }
 
   final ModulesRepository _repo;
+  final ProfileRepository _profiles = ProfileRepository();
   final String seasonId;
 
   static const _pageSize = 40;
@@ -132,6 +183,60 @@ class EmployeePickerCubit extends SafeCubit<EmployeePickerState> {
     _fetch();
   }
 
+  /// The post, the city, and "free only". Each narrows in the database, like
+  /// the search does — the list is paged, so a filter applied here would only
+  /// ever narrow the forty rows already in hand.
+  void setJobTitle(String? id) {
+    if (id == state.jobTitleId) return;
+    _debounce?.cancel();
+    emit(state.copyWith(jobTitleId: id));
+    _fetch();
+  }
+
+  void setCity(String? id) {
+    if (id == state.cityId) return;
+    _debounce?.cancel();
+    emit(state.copyWith(cityId: id));
+    _fetch();
+  }
+
+  void setOnlyFree(bool value) {
+    if (value == state.onlyFree) return;
+    _debounce?.cancel();
+    emit(state.copyWith(onlyFree: value));
+    _fetch();
+  }
+
+  /// Back to the plain list, in one call rather than four round trips.
+  void clearFilters() {
+    if (!state.isNarrowed) return;
+    _debounce?.cancel();
+    emit(
+      state.copyWith(
+        query: '',
+        filter: ParticipantFilter.all,
+        jobTitleId: null,
+        cityId: null,
+        onlyFree: false,
+      ),
+    );
+    _fetch();
+  }
+
+  /// What the dropdowns offer. Fetched once — the lists do not change while
+  /// somebody is choosing people — and a failure here must not take the page
+  /// down with it: the picker still works with the filters it already has.
+  Future<void> _loadFilterOptions() async {
+    try {
+      final titles = await _profiles.fetchActiveJobTitles();
+      final cities = await _profiles.fetchSyrianCities();
+      if (isClosed) return;
+      emit(state.copyWith(jobTitles: titles, cities: cities));
+    } catch (_) {
+      /* the filters simply stay unavailable */
+    }
+  }
+
   void toggle(String profileId) {
     final selected = {...state.selected};
     if (!selected.remove(profileId)) selected.add(profileId);
@@ -153,6 +258,9 @@ class EmployeePickerCubit extends SafeCubit<EmployeePickerState> {
         seasonId: seasonId,
         query: state.query,
         isExternal: state.filter.isExternal,
+        jobTitleId: state.jobTitleId,
+        cityId: state.cityId,
+        onlyFree: state.onlyFree,
         limit: _pageSize,
       );
       if (isClosed || generation != _generation) return;

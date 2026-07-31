@@ -203,6 +203,18 @@
   "employeesExternalSection": "External participants",
   "employeesExternalEmpty": "No external employees",
   "employeeDetailTitle": "Employee",
+  "modulePickerOnlyFree": "Unassigned only",
+  "moduleRosterSearchHint": "Search by name or role",
+  "moduleRosterAllRoles": "All roles",
+  "moduleRosterClear": "Clear",
+  "moduleRosterShowing": "Showing {showing} of {total}",
+  "@moduleRosterShowing": {
+    "placeholders": {
+      "showing": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "moduleRosterNoMatch": "Nobody in this file matches",
   "referenceChildCount": "{list} assigned",
   "@referenceChildCount": {
     "placeholders": { "list": { "type": "String" } }

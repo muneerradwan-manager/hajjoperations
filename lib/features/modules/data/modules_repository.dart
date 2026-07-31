@@ -790,6 +790,9 @@ class ModulesRepository {
     required String seasonId,
     String query = '',
     bool? isExternal,
+    String? jobTitleId,
+    String? cityId,
+    bool onlyFree = false,
     int limit = 40,
     int offset = 0,
   }) async {
@@ -797,8 +800,14 @@ class ModulesRepository {
       'assignable_employees',
       params: {
         'p_season_id': seasonId,
+        // Folded on BOTH sides inside the function, so 'احمد' finds 'أحمد'.
+        // It has to happen there rather than here: the list is paged, and a
+        // client cannot fold rows the server never sent.
         'p_query': query.trim().isEmpty ? null : query.trim(),
         'p_is_external': isExternal,
+        'p_job_title_id': jobTitleId,
+        'p_city_id': cityId,
+        'p_only_free': onlyFree,
         'p_limit': limit,
         'p_offset': offset,
       },

@@ -1178,6 +1178,42 @@ abstract class AppLocalizations {
   /// **'Employee'**
   String get employeeDetailTitle;
 
+  /// No description provided for @modulePickerOnlyFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Unassigned only'**
+  String get modulePickerOnlyFree;
+
+  /// No description provided for @moduleRosterSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name or role'**
+  String get moduleRosterSearchHint;
+
+  /// No description provided for @moduleRosterAllRoles.
+  ///
+  /// In en, this message translates to:
+  /// **'All roles'**
+  String get moduleRosterAllRoles;
+
+  /// No description provided for @moduleRosterClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get moduleRosterClear;
+
+  /// No description provided for @moduleRosterShowing.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing {showing} of {total}'**
+  String moduleRosterShowing(int showing, int total);
+
+  /// No description provided for @moduleRosterNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody in this file matches'**
+  String get moduleRosterNoMatch;
+
   /// No description provided for @referenceChildCount.
   ///
   /// In en, this message translates to:

@@ -576,6 +576,26 @@ class AppLocalizationsAr extends AppLocalizations {
   String get employeeDetailTitle => 'الموظف';
 
   @override
+  String get modulePickerOnlyFree => 'غير المسندين فقط';
+
+  @override
+  String get moduleRosterSearchHint => 'ابحث بالاسم أو الصفة';
+
+  @override
+  String get moduleRosterAllRoles => 'كل الصفات';
+
+  @override
+  String get moduleRosterClear => 'إلغاء التصفية';
+
+  @override
+  String moduleRosterShowing(int showing, int total) {
+    return 'يُعرض $showing من $total';
+  }
+
+  @override
+  String get moduleRosterNoMatch => 'لا أحد في هذا الملف يطابق البحث';
+
+  @override
   String referenceChildCount(String list) {
     return 'عدد $list المسندة';
   }
