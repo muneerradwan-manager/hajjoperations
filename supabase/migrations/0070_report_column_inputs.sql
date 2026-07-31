@@ -50,6 +50,12 @@ on conflict (code) do nothing;
 
 -- Seeded from the documents, because that is how the Administration writes
 -- them: the day is named together with what happens on it.
+--
+-- Guarded with NOT EXISTS rather than ON CONFLICT: 0040 replaced the plain
+-- (set_id, name_ar) constraint with an expression index that folds a null
+-- season to a sentinel, and ON CONFLICT cannot name an expression index without
+-- restating the whole expression. Asking is clearer than spelling it three
+-- times.
 insert into reference_items (set_id, name_ar, name_en, sort_order)
 select rs.id, v.name_ar, v.name_en, v.sort_order
 from (values
@@ -61,7 +67,10 @@ from (values
   ('13 ذي الحجة - تشريق', 'Dhul-Hijjah 13 — Tashreeq', 6)
 ) as v(name_ar, name_en, sort_order)
 join reference_sets rs on rs.code = 'mashaaer_days'
-on conflict (set_id, name_ar) do nothing;
+where not exists (
+  select 1 from reference_items i
+   where i.set_id = rs.id and i.name_ar = v.name_ar and i.season_id is null
+);
 
 insert into reference_items (set_id, name_ar, name_en, sort_order)
 select rs.id, v.name_ar, v.name_en, v.sort_order
@@ -71,7 +80,10 @@ from (values
   ('عشاء', 'Dinner',    3)
 ) as v(name_ar, name_en, sort_order)
 join reference_sets rs on rs.code = 'meal_times'
-on conflict (set_id, name_ar) do nothing;
+where not exists (
+  select 1 from reference_items i
+   where i.set_id = rs.id and i.name_ar = v.name_ar and i.season_id is null
+);
 
 insert into reference_items (set_id, name_ar, name_en, sort_order)
 select rs.id, v.name_ar, v.name_en, v.sort_order
@@ -80,7 +92,10 @@ from (values
   ('ساخنة', 'Hot', 2)
 ) as v(name_ar, name_en, sort_order)
 join reference_sets rs on rs.code = 'meal_natures'
-on conflict (set_id, name_ar) do nothing;
+where not exists (
+  select 1 from reference_items i
+   where i.set_id = rs.id and i.name_ar = v.name_ar and i.season_id is null
+);
 
 -- ------------------------------------------------- point the columns at them
 
@@ -146,7 +161,7 @@ update report_rows r
            where s.code = 'mashaaer_days'
              and i.name_ar = r.data ->> 'day'
         ))
- where r.data ? 'day'
+ where jsonb_exists(r.data, 'day')
    and exists (
      select 1 from reference_items i
      join reference_sets s on s.id = i.set_id
@@ -162,7 +177,7 @@ update report_rows r
            where s.code = 'meal_times'
              and i.name_ar = r.data ->> 'meal'
         ))
- where r.data ? 'meal'
+ where jsonb_exists(r.data, 'meal')
    and exists (
      select 1 from reference_items i
      join reference_sets s on s.id = i.set_id
@@ -178,7 +193,7 @@ update report_rows r
            where s.code = 'meal_natures'
              and i.name_ar = r.data ->> 'nature'
         ))
- where r.data ? 'nature'
+ where jsonb_exists(r.data, 'nature')
    and exists (
      select 1 from reference_items i
      join reference_sets s on s.id = i.set_id
