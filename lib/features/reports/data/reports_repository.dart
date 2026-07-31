@@ -10,7 +10,8 @@ import '../domain/report_type.dart';
 /// how the two answers come to disagree.
 class ReportsRepository {
   static const _columns = '''
-    id, report_type_id, season_id, title, data, is_published, updated_at,
+    id, report_type_id, season_id, title, number, data, is_published,
+    updated_at,
     created_at,
     report_types(name_ar, name_en),
     seasons(hijri_year)

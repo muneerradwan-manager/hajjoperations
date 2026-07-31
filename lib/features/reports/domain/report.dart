@@ -1,5 +1,8 @@
 import '../../../core/attachments/attachment.dart';
 import '../../../core/l10n/localized_name.dart';
+import 'report_block.dart';
+
+export 'report_block.dart';
 
 export '../../../core/attachments/attachment.dart';
 
@@ -37,12 +40,14 @@ class Report {
     required this.id,
     required this.reportTypeId,
     required this.title,
+    this.number,
     this.seasonId,
     this.seasonHijriYear,
     this.typeName,
     this.data = const {},
     this.isPublished = false,
     this.rows = const [],
+    this.blocks = const [],
     this.attachments = const [],
     required this.updatedAt,
   });
@@ -50,6 +55,11 @@ class Report {
   final String id;
   final String reportTypeId;
   final String title;
+
+  /// The reference number it was issued under — 3190, 3190/47 — when it has
+  /// one. Free text, because that is how they are written, and optional,
+  /// because a meal timetable is published without one.
+  final String? number;
 
   /// Null means GENERAL: true whichever season is being run. Most of what gets
   /// written down outlives one year, which is why it is the default.
@@ -64,6 +74,11 @@ class Report {
 
   final bool isPublished;
   final List<ReportRow> rows;
+
+  /// What a WRITTEN report contains, in reading order. Empty for a typed one,
+  /// whose content is its table.
+  final List<ReportBlock> blocks;
+
   final List<ReportAttachment> attachments;
   final DateTime updatedAt;
 
@@ -72,17 +87,23 @@ class Report {
   Report withRows(List<ReportRow> rows) => _copy(rows: rows);
   Report withAttachments(List<ReportAttachment> a) => _copy(attachments: a);
 
+  /// Whether this one is written rather than typed — which decides whether the
+  /// page draws blocks or a table.
+  bool get isWritten => blocks.isNotEmpty;
+
   Report _copy({List<ReportRow>? rows, List<ReportAttachment>? attachments}) =>
       Report(
         id: id,
         reportTypeId: reportTypeId,
         title: title,
+        number: number,
         seasonId: seasonId,
         seasonHijriYear: seasonHijriYear,
         typeName: typeName,
         data: data,
         isPublished: isPublished,
         rows: rows ?? this.rows,
+        blocks: blocks,
         attachments: attachments ?? this.attachments,
         updatedAt: updatedAt,
       );
@@ -96,10 +117,17 @@ class Report {
         .toList()
       ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
 
+    final blocks = ((map['report_blocks'] as List?) ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map(ReportBlock.fromMap)
+        .toList()
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
     return Report(
       id: map['id'] as String,
       reportTypeId: map['report_type_id'] as String,
       title: map['title'] as String,
+      number: map['number'] as String?,
       seasonId: map['season_id'] as String?,
       seasonHijriYear: season?['hijri_year'] as int?,
       typeName: type == null ? null : LocalizedName.fromMap(type),
@@ -108,6 +136,7 @@ class Report {
       ),
       isPublished: (map['is_published'] as bool?) ?? false,
       rows: rows,
+      blocks: blocks,
       attachments: ((map['report_attachments'] as List?) ?? const [])
           .cast<Map<String, dynamic>>()
           .map(ReportAttachment.fromMap)

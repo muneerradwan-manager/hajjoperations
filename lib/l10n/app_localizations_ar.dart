@@ -527,6 +527,31 @@ class AppLocalizationsAr extends AppLocalizations {
   String get modulesNoMatches => 'لا يوجد ملف مطابق';
 
   @override
+  String get reportScanCode => 'امسح الرمز';
+
+  @override
+  String get reportTimeFrom => 'من';
+
+  @override
+  String get reportTimeTo => 'إلى';
+
+  @override
+  String reportTimeRange(String from, String to) {
+    return 'من الساعة $from إلى الساعة $to';
+  }
+
+  @override
+  String get reportAddTag => 'أضف عنصراً';
+
+  @override
+  String get reportNumber => 'رقم التقرير';
+
+  @override
+  String reportNumberBadge(String number) {
+    return 'رقم $number';
+  }
+
+  @override
   String get reportNew => 'تقرير جديد';
 
   @override

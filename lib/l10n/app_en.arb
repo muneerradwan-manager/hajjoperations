@@ -185,6 +185,19 @@
 
   "modulesSearchHint": "Search files",
   "modulesNoMatches": "No file matches",
+  "reportScanCode": "Scan",
+  "reportTimeFrom": "From",
+  "reportTimeTo": "To",
+  "reportTimeRange": "From {from} to {to}",
+  "@reportTimeRange": {
+    "placeholders": { "from": { "type": "String" }, "to": { "type": "String" } }
+  },
+  "reportAddTag": "Add an item",
+  "reportNumber": "Report number",
+  "reportNumberBadge": "No. {number}",
+  "@reportNumberBadge": {
+    "placeholders": { "number": { "type": "String" } }
+  },
   "reportNew": "New report",
   "reportEdit": "Edit report",
   "reportSaved": "Report saved",

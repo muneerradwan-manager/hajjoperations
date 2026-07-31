@@ -293,6 +293,14 @@ class ReportCard extends StatelessWidget {
                           : scheme.tertiary,
                       dense: true,
                     ),
+                    // Beside the year, because a reader looking for '3190' is
+                    // looking for exactly that.
+                    if ((report.number ?? '').isNotEmpty)
+                      GlassBadge(
+                        label: l.reportNumberBadge(report.number!),
+                        icon: AppIcons.document,
+                        dense: true,
+                      ),
                     if (!report.isPublished)
                       GlassBadge(
                         label: l.reportsDraft,

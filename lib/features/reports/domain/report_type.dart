@@ -19,6 +19,7 @@ class ReportColumn {
     this.sourceSetId,
     this.referenceSetId,
     this.spansRows = false,
+    this.input,
   });
 
   final String id;
@@ -37,7 +38,29 @@ class ReportColumn {
   /// what is stored stays per row.
   final bool spansRows;
 
+  /// How the editor asks for this column when a LIST will not do: 'time_range'
+  /// for a from–to span, 'sum' for a value worked out rather than entered.
+  /// A column that offers a choice says so with [kind] and [referenceSetId],
+  /// like every other chooser in the app.
+  final String? input;
+
   bool get isExpanded => sourceSetId != null;
+
+  /// A choice from a real list the Administration keeps — the days of the
+  /// Mashaaer, the meals, their kinds — said the same way the hotels and the
+  /// clusters say it, so the same screen edits them all.
+  bool get isChoice =>
+      kind == ModuleFieldKind.reference && referenceSetId != null;
+
+  /// A list of small things, added and removed one at a time. Stored one per
+  /// line, which is how the published document prints them.
+  bool get isTags => input == 'tags';
+
+  bool get isTimeRange => input == 'time_range';
+
+  /// Worked out from the row rather than entered — the total of a distribution
+  /// is the sum of its clusters, and typing it is how it comes to disagree.
+  bool get isComputed => input == 'sum';
 
   factory ReportColumn.fromMap(Map<String, dynamic> map) => ReportColumn(
     id: map['id'] as String,
@@ -47,6 +70,7 @@ class ReportColumn {
     sourceSetId: map['source_set_id'] as String?,
     referenceSetId: map['reference_set_id'] as String?,
     spansRows: (map['spans_rows'] as bool?) ?? false,
+    input: map['input'] as String?,
   );
 }
 

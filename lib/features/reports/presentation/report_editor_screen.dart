@@ -8,12 +8,12 @@ import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../modules/data/modules_repository.dart';
-import '../../modules/domain/module_type.dart';
 import '../../modules/presentation/widgets/module_field_input.dart';
 import '../../seasons/data/seasons_repository.dart';
 import '../application/report_editor_cubit.dart';
 import '../data/reports_repository.dart';
 import '../domain/report.dart';
+import '../domain/report_type.dart';
 
 /// Entering a report, and correcting one.
 ///
@@ -158,10 +158,12 @@ class _Identity extends StatefulWidget {
 
 class _IdentityState extends State<_Identity> {
   late final _title = TextEditingController(text: widget.state.title);
+  late final _number = TextEditingController(text: widget.state.number);
 
   @override
   void dispose() {
     _title.dispose();
+    _number.dispose();
     super.dispose();
   }
 
@@ -198,6 +200,15 @@ class _IdentityState extends State<_Identity> {
             controller: _title,
             onChanged: widget.cubit.setTitle,
             decoration: InputDecoration(labelText: '${l.reportTitle} *'),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextField(
+            controller: _number,
+            onChanged: widget.cubit.setNumber,
+            decoration: InputDecoration(
+              labelText: l.reportNumber,
+              helperText: l.commonOptional,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           DropdownButtonFormField<String?>(
@@ -331,21 +342,15 @@ class _Table extends StatelessWidget {
                 ),
                 for (final c in columns) ...[
                   const SizedBox(height: AppSpacing.sm),
-                  TextFormField(
+                  _Cell(
                     // Keyed by row AND column: adding or removing a row must
                     // not leave a field showing the value of the one it
                     // replaced.
                     key: ValueKey('${i}_${c.key}'),
-                    initialValue: state.rows[i].value(c.key),
-                    keyboardType: c.column.kind == ModuleFieldKind.number
-                        ? TextInputType.number
-                        : TextInputType.text,
-                    maxLines: c.column.kind == ModuleFieldKind.textarea ? 4 : 1,
-                    decoration: InputDecoration(
-                      isDense: true,
-                      labelText: c.label(context),
-                    ),
-                    onChanged: (v) => cubit.setCell(i, c.key, v),
+                    row: i,
+                    column: c,
+                    state: state,
+                    cubit: cubit,
                   ),
                 ],
               ],
@@ -353,6 +358,275 @@ class _Table extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// One cell of the table, asked for the way its column says.
+///
+/// Four shapes, and each exists because typing was wrong for it: a choice from
+/// a list the Administration keeps, a span of clock times, a total that is
+/// worked out, and — for everything else — a plain field.
+class _Cell extends StatelessWidget {
+  const _Cell({
+    super.key,
+    required this.row,
+    required this.column,
+    required this.state,
+    required this.cubit,
+  });
+
+  final int row;
+  final ({String key, String Function(dynamic) label, ReportColumn column})
+  column;
+  final ReportEditorState state;
+  final ReportEditorCubit cubit;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = column.column;
+    final label = column.label(context);
+    final value = state.rows[row].value(column.key);
+
+    // Worked out, and shown so the enterer can see it move as they type the
+    // numbers it is a total of. Read-only rather than absent: a total nobody
+    // can see is a total nobody checks.
+    if (c.isComputed) {
+      return InputDecorator(
+        decoration: InputDecoration(
+          isDense: true,
+          labelText: label,
+          suffixIcon: const Icon(AppIcons.tasks, size: 18),
+        ),
+        child: Text(
+          '${cubit.computedFor(row, c)}',
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+      );
+    }
+
+    // A choice from real master data — the same list إدارة البيانات المرجعية
+    // edits, so a day renamed there is renamed here.
+    if (c.isChoice) {
+      final set = state.setById(c.referenceSetId);
+      final items = set?.itemsForSeason(state.seasonId) ?? const [];
+      return DropdownButtonFormField<String>(
+        initialValue: items.any((i) => i.id == value) ? value : null,
+        isExpanded: true,
+        decoration: InputDecoration(isDense: true, labelText: label),
+        items: [
+          for (final i in items)
+            DropdownMenuItem(value: i.id, child: Text(i.name.of(context))),
+        ],
+        onChanged: (v) => cubit.setCell(row, column.key, v ?? ''),
+      );
+    }
+
+    if (c.isTags) {
+      return _TagsField(
+        label: label,
+        value: value,
+        onChanged: (v) => cubit.setCell(row, column.key, v),
+      );
+    }
+
+    if (c.isTimeRange) {
+      return _TimeRangeField(
+        label: label,
+        value: value,
+        onChanged: (v) => cubit.setCell(row, column.key, v),
+      );
+    }
+
+    return TextFormField(
+      initialValue: value,
+      keyboardType: c.kind == ModuleFieldKind.number
+          ? TextInputType.number
+          : TextInputType.text,
+      maxLines: c.kind == ModuleFieldKind.textarea ? 4 : 1,
+      decoration: InputDecoration(isDense: true, labelText: label),
+      onChanged: (v) => cubit.setCell(row, column.key, v),
+    );
+  }
+}
+
+/// From one clock time to another.
+///
+/// Stored as the sentence the documents use — 'من الساعة 13:00 إلى الساعة
+/// 16:00' — rather than as two columns, because that is what the published
+/// table says and the report is a copy of a published table. The picker is what
+/// stops fourteen rows coming out fourteen ways.
+class _TimeRangeField extends StatelessWidget {
+  const _TimeRangeField({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  static final _clock = RegExp(r'(\d{1,2}):(\d{2})');
+
+  /// The two times already in the sentence, if it holds two.
+  (TimeOfDay?, TimeOfDay?) get _parsed {
+    final found = _clock.allMatches(value).toList();
+    TimeOfDay? at(int i) => i < found.length
+        ? TimeOfDay(
+            hour: int.parse(found[i].group(1)!),
+            minute: int.parse(found[i].group(2)!),
+          )
+        : null;
+    return (at(0), at(1));
+  }
+
+  String _two(TimeOfDay t) =>
+      '${t.hour}:${t.minute.toString().padLeft(2, '0')}';
+
+  Future<void> _pick(BuildContext context, bool isStart) async {
+    final l = context.l10n;
+    final (from, to) = _parsed;
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: (isStart ? from : to) ?? const TimeOfDay(hour: 13, minute: 0),
+    );
+    if (picked == null) return;
+    final start = isStart ? picked : from;
+    final end = isStart ? to : picked;
+    if (start == null || end == null) {
+      // Half a span is not a span, so it is held as the one time chosen and
+      // completed on the next tap rather than written out as a broken sentence.
+      onChanged(_two(picked));
+      return;
+    }
+    onChanged(l.reportTimeRange(_two(start), _two(end)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final (from, to) = _parsed;
+    return InputDecorator(
+      decoration: InputDecoration(isDense: true, labelText: label),
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: () => _pick(context, true),
+              child: Text(from == null ? l.reportTimeFrom : _two(from)),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: OutlinedButton(
+              onPressed: () => _pick(context, false),
+              child: Text(to == null ? l.reportTimeTo : _two(to)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A list of small things, added one at a time.
+///
+/// المكونات is خبز, زبدة, زيتون, شوربة عدس — a list, and a textarea makes it
+/// one blob separated by whatever the typist happened to press. Stored one per
+/// line, which is what the published document prints and what was seeded.
+class _TagsField extends StatefulWidget {
+  const _TagsField({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<_TagsField> createState() => _TagsFieldState();
+}
+
+class _TagsFieldState extends State<_TagsField> {
+  final _entry = TextEditingController();
+
+  List<String> get _tags => [
+    for (final t in widget.value.split('\n'))
+      if (t.trim().isNotEmpty) t.trim(),
+  ];
+
+  @override
+  void dispose() {
+    _entry.dispose();
+    super.dispose();
+  }
+
+  void _add() {
+    final v = _entry.text.trim();
+    if (v.isEmpty) return;
+    // Silently ignored rather than added twice: a meal does not contain خبز
+    // twice, and a duplicate is a slip of the finger.
+    if (_tags.contains(v)) {
+      _entry.clear();
+      return;
+    }
+    widget.onChanged([..._tags, v].join('\n'));
+    _entry.clear();
+  }
+
+  void _remove(String tag) =>
+      widget.onChanged(_tags.where((t) => t != tag).join('\n'));
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    return InputDecorator(
+      decoration: InputDecoration(labelText: widget.label),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (_tags.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.xs,
+                children: [
+                  for (final tag in _tags)
+                    InputChip(
+                      label: Text(tag),
+                      visualDensity: VisualDensity.compact,
+                      onDeleted: () => _remove(tag),
+                    ),
+                ],
+              ),
+            ),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _entry,
+                  textInputAction: TextInputAction.done,
+                  decoration: InputDecoration(
+                    isDense: true,
+                    hintText: l.reportAddTag,
+                  ),
+                  // Enter adds it, which is how a list of nine gets typed
+                  // without reaching for the button nine times.
+                  onSubmitted: (_) => _add(),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(AppIcons.add),
+                onPressed: _add,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

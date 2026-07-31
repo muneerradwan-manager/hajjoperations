@@ -64,6 +64,7 @@ class ReportsState extends Equatable {
       }
       return arabicMatchesAll([
         r.title,
+        r.number,
         r.typeName?.ar,
         r.typeName?.en,
       ], query);

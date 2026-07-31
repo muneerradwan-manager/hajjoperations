@@ -1088,6 +1088,48 @@ abstract class AppLocalizations {
   /// **'No file matches'**
   String get modulesNoMatches;
 
+  /// No description provided for @reportScanCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan'**
+  String get reportScanCode;
+
+  /// No description provided for @reportTimeFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get reportTimeFrom;
+
+  /// No description provided for @reportTimeTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get reportTimeTo;
+
+  /// No description provided for @reportTimeRange.
+  ///
+  /// In en, this message translates to:
+  /// **'From {from} to {to}'**
+  String reportTimeRange(String from, String to);
+
+  /// No description provided for @reportAddTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an item'**
+  String get reportAddTag;
+
+  /// No description provided for @reportNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Report number'**
+  String get reportNumber;
+
+  /// No description provided for @reportNumberBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'No. {number}'**
+  String reportNumberBadge(String number);
+
   /// No description provided for @reportNew.
   ///
   /// In en, this message translates to:

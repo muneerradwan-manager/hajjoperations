@@ -180,6 +180,19 @@
 
   "modulesSearchHint": "ابحث في الملفات",
   "modulesNoMatches": "لا يوجد ملف مطابق",
+  "reportScanCode": "امسح الرمز",
+  "reportTimeFrom": "من",
+  "reportTimeTo": "إلى",
+  "reportTimeRange": "من الساعة {from} إلى الساعة {to}",
+  "@reportTimeRange": {
+    "placeholders": { "from": { "type": "String" }, "to": { "type": "String" } }
+  },
+  "reportAddTag": "أضف عنصراً",
+  "reportNumber": "رقم التقرير",
+  "reportNumberBadge": "رقم {number}",
+  "@reportNumberBadge": {
+    "placeholders": { "number": { "type": "String" } }
+  },
   "reportNew": "تقرير جديد",
   "reportEdit": "تعديل التقرير",
   "reportSaved": "تم حفظ التقرير",

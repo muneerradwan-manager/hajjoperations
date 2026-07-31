@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/animations/animations.dart';
+import '../../../core/constants/permission_codes.dart';
+import '../../../core/supabase/supabase_client.dart';
+import '../../../core/widgets/overflow_menu.dart';
+import '../../auth/application/session_cubit.dart';
 import '../../../core/attachments/attachments_view.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
@@ -18,23 +20,89 @@ import '../application/report_detail_cubit.dart';
 import '../data/reports_repository.dart';
 import '../domain/report.dart';
 import '../domain/report_type.dart';
+import 'report_editor_screen.dart';
+import 'widgets/report_block_view.dart';
+import 'widgets/report_field_card.dart';
 
 /// One report in full: what it states, its table, the paper it came from.
 class ReportDetailScreen extends StatelessWidget {
-  const ReportDetailScreen({super.key, required this.reportId});
+  const ReportDetailScreen({
+    super.key,
+    required this.reportId,
+    this.fromOffice = false,
+  });
 
   final String reportId;
+
+  /// Whether this was opened from إدارة التقارير rather than from عام.
+  ///
+  /// The same rule the operational file follows: holding the permission is what
+  /// makes editing possible, and coming in through the office is what makes
+  /// THIS page the place to do it. Reached from عام the report is something
+  /// being read, and a delete button does not belong on it.
+  final bool fromOffice;
 
   @override
   Widget build(BuildContext context) => BlocProvider(
     create: (_) =>
         ReportDetailCubit(ReportsRepository(), ModulesRepository(), reportId),
-    child: const _View(),
+    child: _View(fromOffice: fromOffice),
   );
 }
 
 class _View extends StatelessWidget {
-  const _View();
+  const _View({required this.fromOffice});
+
+  final bool fromOffice;
+
+  Future<void> _edit(BuildContext context, Report report) async {
+    final cubit = context.read<ReportDetailCubit>();
+    final saved = await Navigator.of(context).push<bool>(
+      fadeThroughRoute((_) => ReportEditorScreen(existing: report)),
+    );
+    if (saved == true) await cubit.load();
+  }
+
+  Future<void> _delete(BuildContext context, Report report) async {
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l.commonDelete),
+        content: Text(l.reportDeleteConfirm(report.title)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l.commonCancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
+            ),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l.commonDelete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    try {
+      await supabase.from('reports').delete().eq('id', report.id);
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l.reportDeleted)));
+      // Nothing left on this page to look at.
+      navigator.pop(true);
+    } catch (e) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text('$e')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +114,31 @@ class _View extends StatelessWidget {
 
         return Scaffold(
           extendBodyBehindAppBar: true,
-          appBar: GlassAppBar(title: Text(report?.title ?? l.navReports)),
+          appBar: GlassAppBar(
+            title: Text(report?.title ?? l.navReports),
+            actions: [
+              if (fromOffice &&
+                  report != null &&
+                  context.watch<SessionCubit>().state.can(
+                    PermissionCodes.reportsManage,
+                  ))
+                OverflowMenu(
+                  actions: [
+                    MenuAction(
+                      icon: AppIcons.edit,
+                      label: l.commonEdit,
+                      onSelected: () => _edit(context, report),
+                    ),
+                    MenuAction(
+                      icon: AppIcons.delete,
+                      label: l.commonDelete,
+                      isDestructive: true,
+                      onSelected: () => _delete(context, report),
+                    ),
+                  ],
+                ),
+            ],
+          ),
           body: switch (state.status) {
             // Shaped like what is about to replace it: one column of tall
             // cards, at the page's own gutter. A skeleton that columns
@@ -95,8 +187,8 @@ class _Body extends StatelessWidget {
 
     // Read straight through, not read across: a location and a code and a
     // document are three different things to DO, and each gets its own card.
-    final plain = fields.where((f) => !_isOwnCard(f.kind)).toList();
-    final own = fields.where((f) => _isOwnCard(f.kind)).toList();
+    final plain = fields.where((f) => !isActionableReportField(f.kind)).toList();
+    final own = fields.where((f) => isActionableReportField(f.kind)).toList();
 
     return Builder(
       builder: (context) => ResponsivePage(
@@ -113,6 +205,12 @@ class _Body extends StatelessWidget {
                   label: l.reportKind,
                   value: report.typeName?.of(context),
                 ),
+                if ((report.number ?? '').isNotEmpty)
+                  InfoRow(
+                    icon: AppIcons.document,
+                    label: l.reportNumber,
+                    value: report.number,
+                  ),
                 InfoRow(
                   icon: AppIcons.seasons,
                   label: l.reportScope,
@@ -138,8 +236,15 @@ class _Body extends StatelessWidget {
               ],
             ),
 
-            // The table. Horizontally scrollable in its own right: توزيع
-            // الوجبات is seventeen columns wide and the page must not be.
+            // A written report's content, in the order it was written.
+            if (report.isWritten)
+              for (final block in report.blocks)
+                if (!block.isEmpty) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  ReportBlockView(block: block),
+                ],
+
+            // A typed one's content is its table.
             if ((type?.hasTable ?? false) && report.rows.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.md),
               _TableCard(state: state, report: report),
@@ -148,7 +253,7 @@ class _Body extends StatelessWidget {
             for (final f in own)
               if ((report.data[f.key]?.toString() ?? '').isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.md),
-                _FieldCard(
+                ReportFieldCard(
                   label: f.label.of(context),
                   value: report.data[f.key].toString(),
                   kind: f.kind,
@@ -187,111 +292,6 @@ class _Body extends StatelessWidget {
   }
 }
 
-/// Kinds that are something to act on rather than something to read.
-bool _isOwnCard(ModuleFieldKind kind) =>
-    kind == ModuleFieldKind.url ||
-    kind == ModuleFieldKind.qr ||
-    kind == ModuleFieldKind.pdf ||
-    kind == ModuleFieldKind.location;
-
-/// A link to follow, or a code to hold up.
-class _FieldCard extends StatelessWidget {
-  const _FieldCard({
-    required this.label,
-    required this.value,
-    required this.kind,
-  });
-
-  final String label;
-  final String value;
-  final ModuleFieldKind kind;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-
-    if (kind == ModuleFieldKind.qr) {
-      return GlassCard(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          children: [
-            Text(label, style: text.titleSmall),
-            const SizedBox(height: AppSpacing.md),
-            // On white, always. A QR is read by a camera looking for dark
-            // modules on a light field, and rendering it on the dark theme's
-            // surface makes it slower to scan or impossible.
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
-              child: QrImageView(
-                data: value,
-                size: 180,
-                backgroundColor: Colors.white,
-                // Fails to a message rather than to a red X nobody can read.
-                errorStateBuilder: (context, _) => SizedBox(
-                  width: 180,
-                  height: 180,
-                  child: Center(
-                    child: Text(
-                      context.l10n.reportQrFailed,
-                      textAlign: TextAlign.center,
-                      style: text.bodySmall,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              value,
-              textAlign: TextAlign.center,
-              style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final uri = Uri.tryParse(value);
-    return GlassCard(
-      onTap: uri == null
-          ? null
-          : () => launchUrl(uri, mode: LaunchMode.externalApplication),
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Row(
-        children: [
-          Icon(
-            kind == ModuleFieldKind.pdf ? AppIcons.pdf : AppIcons.link,
-            color: scheme.primary,
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: text.titleSmall),
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: text.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const NavChevron(),
-        ],
-      ),
-    );
-  }
-}
-
 /// The report's table, drawn the way the window can actually hold it.
 ///
 /// A column declared over a master-data list has already been expanded into one
@@ -324,7 +324,21 @@ class _TableCard extends StatelessWidget {
         {
           for (final c in columns)
             c.key: () {
-              final raw = row.value(c.key);
+              // A reference cell holds an id; the reader wants the name. And a
+              // name looked up in a set that no longer has it reads as blank
+              // rather than as a uuid nobody can use.
+              var raw = row.value(c.key);
+              if (c.column.isChoice && raw.isNotEmpty) {
+                raw =
+                    state
+                        .setById(c.column.referenceSetId)
+                        ?.items
+                        .where((i) => i.id == raw)
+                        .firstOrNull
+                        ?.name
+                        .of(context) ??
+                    '';
+              }
               if (!c.column.spansRows) return raw;
               if (raw.isNotEmpty) {
                 carried[c.key] = raw;

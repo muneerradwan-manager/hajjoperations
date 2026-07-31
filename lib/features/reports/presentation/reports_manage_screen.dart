@@ -169,6 +169,7 @@ class _View extends StatelessWidget {
                                   fadeThroughRoute(
                                     (_) => ReportDetailScreen(
                                       reportId: visible[i].id,
+                                      fromOffice: true,
                                     ),
                                   ),
                                 ),

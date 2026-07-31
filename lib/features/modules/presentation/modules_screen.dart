@@ -9,6 +9,7 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/info_section.dart';
+import '../../../core/widgets/overflow_menu.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
@@ -209,7 +210,17 @@ class _View extends StatelessWidget {
                   AdaptiveGrid(
                     children: staggered([
                       for (final m in state.active)
-                        _ModuleCard(module: m, fromOffice: fromOffice),
+                        _ModuleCard(
+                          module: m,
+                          fromOffice: fromOffice,
+                          // Only in the office, and only for whoever runs it.
+                          onEdit: fromOffice && canManage
+                              ? () => _editModule(context, m)
+                              : null,
+                          onDelete: fromOffice && canManage
+                              ? () => _deleteModule(context, m)
+                              : null,
+                        ),
                     ], start: _step),
                   ),
                 ],
@@ -225,7 +236,17 @@ class _View extends StatelessWidget {
                   AdaptiveGrid(
                     children: staggered([
                       for (final m in state.drafts)
-                        _ModuleCard(module: m, fromOffice: fromOffice),
+                        _ModuleCard(
+                          module: m,
+                          fromOffice: fromOffice,
+                          // Only in the office, and only for whoever runs it.
+                          onEdit: fromOffice && canManage
+                              ? () => _editModule(context, m)
+                              : null,
+                          onDelete: fromOffice && canManage
+                              ? () => _deleteModule(context, m)
+                              : null,
+                        ),
                     ], start: draftBeat + _step),
                   ),
                 ],
@@ -238,8 +259,70 @@ class _View extends StatelessWidget {
   }
 }
 
+/// Straight into the file's editor, without opening the file first.
+Future<void> _editModule(BuildContext context, OperationalModule m) async {
+  final cubit = context.read<ModulesCubit>();
+  final saved = await Navigator.of(context).push<bool>(
+    fadeThroughRoute(
+      (_) => ModuleEditorScreen(
+        moduleTypeId: m.moduleTypeId,
+        seasonId: m.seasonId,
+        existing: m,
+      ),
+    ),
+  );
+  if (saved == true) await cubit.load();
+}
+
+/// Removing a file takes its tree and its roster with it, so the confirmation
+/// names it rather than asking "are you sure".
+Future<void> _deleteModule(BuildContext context, OperationalModule m) async {
+  final l = context.l10n;
+  final cubit = context.read<ModulesCubit>();
+  final messenger = ScaffoldMessenger.of(context);
+
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(l.moduleDelete),
+      content: Text(l.moduleDeleteConfirm),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: Text(l.commonCancel),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: Theme.of(dialogContext).colorScheme.error,
+          ),
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          child: Text(l.commonDelete),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true) return;
+
+  try {
+    await ModulesRepository().deleteModule(m.id);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(l.moduleDeleted)));
+  } catch (e) {
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text('$e')));
+  }
+  await cubit.load();
+}
+
 class _ModuleCard extends StatelessWidget {
-  const _ModuleCard({required this.module, required this.fromOffice});
+  const _ModuleCard({
+    required this.module,
+    required this.fromOffice,
+    this.onEdit,
+    this.onDelete,
+  });
 
   final OperationalModule module;
 
@@ -248,6 +331,12 @@ class _ModuleCard extends StatelessWidget {
   /// somebody holding `modules.manage`: there he is a member of it like anyone
   /// else, and that list has never been about running the season's paperwork.
   final bool fromOffice;
+
+  /// The office's actions, reached without opening the file first — the same
+  /// affordance إدارة التقارير gives its rows. Null under عام, where the card
+  /// only opens.
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -358,7 +447,26 @@ class _ModuleCard extends StatelessWidget {
               ],
             ),
           ),
-          const NavChevron(),
+          if (onEdit != null || onDelete != null)
+            OverflowMenu(
+              actions: [
+                if (onEdit case final edit?)
+                  MenuAction(
+                    icon: AppIcons.edit,
+                    label: l.commonEdit,
+                    onSelected: edit,
+                  ),
+                if (onDelete case final remove?)
+                  MenuAction(
+                    icon: AppIcons.delete,
+                    label: l.moduleDelete,
+                    isDestructive: true,
+                    onSelected: remove,
+                  ),
+              ],
+            )
+          else
+            const NavChevron(),
         ],
       ),
     );

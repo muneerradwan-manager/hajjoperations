@@ -28,6 +28,7 @@ class ReportEditorState extends Equatable {
     this.referenceSets = const [],
     this.typeId,
     this.title = '',
+    this.number = '',
     this.seasonId,
     this.data = const {},
     this.rows = const [],
@@ -42,6 +43,9 @@ class ReportEditorState extends Equatable {
 
   final String? typeId;
   final String title;
+
+  /// The reference number it was issued under, when it has one.
+  final String number;
 
   /// Null is GENERAL, and it is where a new report starts. Most of what gets
   /// written down outlives one year.
@@ -94,6 +98,7 @@ class ReportEditorState extends Equatable {
     List<ReferenceSet>? referenceSets,
     Object? typeId = _unset,
     String? title,
+    String? number,
     Object? seasonId = _unset,
     Map<String, dynamic>? data,
     List<DraftRow>? rows,
@@ -106,6 +111,7 @@ class ReportEditorState extends Equatable {
     referenceSets: referenceSets ?? this.referenceSets,
     typeId: typeId == _unset ? this.typeId : typeId as String?,
     title: title ?? this.title,
+    number: number ?? this.number,
     // Null means general, so it cannot be defaulted away with `??`.
     seasonId: seasonId == _unset ? this.seasonId : seasonId as String?,
     data: data ?? this.data,
@@ -122,6 +128,7 @@ class ReportEditorState extends Equatable {
     referenceSets,
     typeId,
     title,
+    number,
     seasonId,
     data,
     rows,
@@ -146,6 +153,10 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
   /// The report being corrected, or null when a new one is being entered.
   final Report? existing;
 
+  /// The columns as the form must ask for them — the state works them out.
+  List<({String key, String Function(dynamic) label, ReportColumn column})>
+  get columns => state.columns;
+
   Future<void> _load() async {
     try {
       final types = await _repo.fetchTypes();
@@ -160,6 +171,7 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
           referenceSets: sets,
           typeId: e?.reportTypeId,
           title: e?.title ?? '',
+          number: e?.number ?? '',
           seasonId: e?.seasonId,
           data: {...?e?.data},
           rows: [for (final r in e?.rows ?? const []) DraftRow(data: r.data)],
@@ -178,6 +190,7 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
 
   void setType(String? id) => emit(state.copyWith(typeId: id, rows: const []));
   void setTitle(String v) => emit(state.copyWith(title: v));
+  void setNumber(String v) => emit(state.copyWith(number: v));
   void setSeason(String? id) => emit(state.copyWith(seasonId: id));
   void setPublished(bool v) => emit(state.copyWith(isPublished: v));
 
@@ -198,6 +211,27 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
     emit(state.copyWith(rows: rows));
   }
 
+  /// The value a computed column works out for a row.
+  ///
+  /// One arrangement, named rather than expressed in a formula language nobody
+  /// else will write in: the total of a distribution row is the sum of its
+  /// expanded columns — the clusters. Recomputed on every read, so it cannot
+  /// drift from the numbers it is a total of.
+  int computedFor(int index, ReportColumn column) {
+    if (!column.isComputed) return 0;
+    final expanded = {
+      for (final c in columns)
+        if (c.column.isExpanded) c.key,
+    };
+    var total = 0;
+    state.rows[index].data.forEach((key, value) {
+      if (expanded.contains(key)) {
+        total += int.tryParse('$value'.trim()) ?? 0;
+      }
+    });
+    return total;
+  }
+
   void setCell(int index, String key, String value) {
     final rows = [...state.rows];
     final data = {...rows[index].data};
@@ -205,6 +239,26 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
       data.remove(key);
     } else {
       data[key] = value;
+    }
+    rows[index] = DraftRow(data: data);
+    emit(state.copyWith(rows: rows));
+    _recompute(index);
+  }
+
+  /// Writes the computed columns of a row after one of its cells changed.
+  ///
+  /// Stored rather than left to the reader: the report is read by people who
+  /// never open this editor, and by a screen that draws whatever is in the row.
+  void _recompute(int index) {
+    final computed = [
+      for (final c in columns)
+        if (c.column.isComputed) c,
+    ];
+    if (computed.isEmpty) return;
+    final rows = [...state.rows];
+    final data = {...rows[index].data};
+    for (final c in computed) {
+      data[c.key] = '${computedFor(index, c.column)}';
     }
     rows[index] = DraftRow(data: data);
     emit(state.copyWith(rows: rows));
@@ -224,6 +278,9 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
         'report_type_id': state.typeId,
         'season_id': state.seasonId,
         'title': state.title.trim(),
+        // Empty is NULL, not an empty string: a report without a number has
+        // none, and '' would sort and search as though it did.
+        'number': state.number.trim().isEmpty ? null : state.number.trim(),
         'data': state.data,
         'is_published': state.isPublished,
       };

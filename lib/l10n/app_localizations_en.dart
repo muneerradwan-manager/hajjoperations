@@ -526,6 +526,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get modulesNoMatches => 'No file matches';
 
   @override
+  String get reportScanCode => 'Scan';
+
+  @override
+  String get reportTimeFrom => 'From';
+
+  @override
+  String get reportTimeTo => 'To';
+
+  @override
+  String reportTimeRange(String from, String to) {
+    return 'From $from to $to';
+  }
+
+  @override
+  String get reportAddTag => 'Add an item';
+
+  @override
+  String get reportNumber => 'Report number';
+
+  @override
+  String reportNumberBadge(String number) {
+    return 'No. $number';
+  }
+
+  @override
   String get reportNew => 'New report';
 
   @override
