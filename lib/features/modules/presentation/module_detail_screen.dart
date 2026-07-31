@@ -502,6 +502,17 @@ class _Body extends StatelessWidget {
 /// taller than the column it just saved — which is the opposite of the point.
 const _kMemberWidth = 340.0;
 
+/// The same, for a roster nested inside a node's card.
+///
+/// A grid measures the box it is given, and inside the card that box is already
+/// two paddings narrower than the one the file-level rosters get. Asked for the
+/// full [_kMemberWidth] it therefore drops a column before they do — at 1200,
+/// where the side panel first appears and the content pane is at its narrowest,
+/// مخيمات عرفات would stand in one column while the team beside it stood in
+/// two. Giving back a gutter's width is what keeps the tree columning in step
+/// with everything else on the screen.
+const _kNestedMemberWidth = _kMemberWidth - AppSpacing.lg;
+
 /// One team of a file with no tree: everyone on it, and under each of them the
 /// duties he was actually handed.
 ///
@@ -524,10 +535,21 @@ class _RoleRosterCard extends StatelessWidget {
       children: [
         const SizedBox(height: AppSpacing.sm),
         SectionHeader(role.name.of(context), icon: AppIcons.roles),
-        // Wider than a bare member: this card also carries the duties he was
-        // handed, and a task's name has to fit on its line.
+        // The same width every other roster on this screen uses.
+        //
+        // It asked for 400 once, so that a duty title would fit on one line.
+        // It bought the opposite: 400 columns one step later than 340, so at
+        // the widths people actually work at — a 1280 laptop, a half-screen
+        // window — a FILE-LEVEL team stood in a single column while the tree
+        // beside it stood in two. Two files in three carry such a team, so most
+        // of the catalog read as though it were laid out differently from
+        // مخيمات عرفات, which happens to have none.
+        //
+        // And the line it was protecting does not exist: a duty is a sentence,
+        // it wraps at 400 as readily as at 340. A column was traded for a wrap
+        // that happened anyway.
         AdaptiveGrid(
-          minTileWidth: 400,
+          minTileWidth: _kMemberWidth,
           children: [
             for (final member in members)
               GlassCard(
@@ -777,7 +799,7 @@ class _TowerCard extends StatelessWidget {
                 // no forced equal heights, because there is no bottom edge to
                 // line up.
                 child: AdaptiveGrid(
-                  minTileWidth: _kMemberWidth,
+                  minTileWidth: _kNestedMemberWidth,
                   spacing: AppSpacing.lg,
                   equalHeights: false,
                   children: serving,
