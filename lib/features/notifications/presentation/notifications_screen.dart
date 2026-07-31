@@ -12,6 +12,7 @@ import '../../modules/data/modules_repository.dart';
 import '../../modules/presentation/module_detail_screen.dart';
 import '../application/notifications_cubit.dart';
 import '../data/notifications_repository.dart';
+import '../data/push_service.dart';
 import '../domain/app_notification.dart';
 import 'send_notification_sheet.dart';
 import '../../../core/attachments/attachments_view.dart';
@@ -31,10 +32,35 @@ class NotificationsScreen extends StatelessWidget {
   }
 }
 
-class _View extends StatelessWidget {
+class _View extends StatefulWidget {
   const _View({required this.repo});
 
   final NotificationsRepository repo;
+
+  @override
+  State<_View> createState() => _ViewState();
+}
+
+class _ViewState extends State<_View> {
+  NotificationsRepository get repo => widget.repo;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Arriving here from a notification tapped in the phone's own tray. The
+    // tap named a file, so opening the inbox is only half of what was asked
+    // for — the reader pressed a sentence about a place.
+    //
+    // Waited for a frame because opening it may fail: the file can have been
+    // deleted since, and saying so needs a Scaffold that exists.
+    final tap = PushService.instance.takePendingTap();
+    final moduleId = tap == null ? null : AppNotification.moduleIdIn(tap);
+    if (moduleId == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _openModule(context, moduleId);
+    });
+  }
 
   /// Mark it read, and take the reader to what it is about.
   ///
@@ -48,13 +74,19 @@ class _View extends StatelessWidget {
   /// screen that opens onto an error. The notification itself stays; it is a
   /// record of something that happened, and it happened.
   Future<void> _open(BuildContext context, AppNotification n) async {
-    final l = context.l10n;
     final cubit = context.read<NotificationsCubit>();
     if (!n.isRead) cubit.markRead(n.id);
 
     final moduleId = n.moduleId;
     if (moduleId == null) return;
+    await _openModule(context, moduleId);
+  }
 
+  /// Opens a file a notification pointed at, from either door: a row tapped in
+  /// this list, or the notification tapped in the phone's tray that opened the
+  /// app on this list. Both are the same act and must not drift apart.
+  Future<void> _openModule(BuildContext context, String moduleId) async {
+    final l = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     final module = await ModulesRepository().fetchModule(moduleId);

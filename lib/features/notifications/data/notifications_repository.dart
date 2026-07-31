@@ -195,6 +195,11 @@ class NotificationsRepository {
       'topic': PushTopics.module(moduleId),
       'title': title,
       'body': body,
+      // The same two keys the inbox row carries, so a tap from the phone's tray
+      // arrives at the file the message is about — exactly as a tap inside the
+      // app does. `broadcast_to_module` writes them into the row; this is the
+      // copy that travels with the push, and the two have to agree.
+      'data': {'type': 'module_broadcast', 'module_id': moduleId},
     });
   }
 

@@ -47,7 +47,15 @@ class AppNotification {
   /// Both an assignment ('you were put into this file') and a broadcast to a
   /// file's members are about the same place, so both open it. A general
   /// broadcast names nothing and returns null.
-  String? get moduleId {
+  String? get moduleId => moduleIdIn(data);
+
+  /// The same rule, asked of a bare map.
+  ///
+  /// A push carries these two keys as well, and a notification tapped in the
+  /// phone's own tray has to reach the same file as the identical row tapped in
+  /// the inbox. Two copies of this rule would be two answers the first time one
+  /// of them was extended.
+  static String? moduleIdIn(Map<String, dynamic> data) {
     final type = data['type'];
     if (type != 'module_assigned' && type != 'module_broadcast') return null;
     final id = data['module_id'];

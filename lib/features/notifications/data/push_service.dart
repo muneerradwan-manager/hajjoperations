@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -9,6 +12,20 @@ import '../../../core/logging/app_logger.dart';
 import '../../../core/supabase/supabase_client.dart';
 import 'notifications_repository.dart';
 
+/// What a tapped notification carried, as keys this app can act on.
+///
+/// FCM hands `data` back as strings on one platform and as whatever it was
+/// given on the other, and a payload written by anything other than this app —
+/// a test send from the Firebase console, say — can hold nulls or nested maps.
+/// All of it becomes strings here, and an absent payload becomes an empty map
+/// rather than null: a notification with no target is still a notification that
+/// was tapped, and the inbox is where it should land.
+Map<String, String> tapPayload(Map<String, dynamic>? data) => {
+  for (final e in (data ?? const <String, dynamic>{}).entries)
+    if (e.value != null && e.value is! Map && e.value is! List)
+      e.key: e.value.toString(),
+};
+
 /// Registers this device's FCM token for the signed-in user and surfaces
 /// foreground push messages as local notifications.
 class PushService {
@@ -17,6 +34,32 @@ class PushService {
 
   final _local = FlutterLocalNotificationsPlugin();
   bool _started = false;
+
+  /// A notification tapped in the phone's own tray, waiting to be acted on.
+  ///
+  /// It is held rather than acted on here because there may be nowhere to go
+  /// yet. A tap on a notification for an app that is not running launches it
+  /// cold: at the moment this is set there is no session, no router, and the
+  /// only screen is the splash. Navigating then is navigating into a redirect
+  /// that sends you straight back to the home page — which looked exactly like
+  /// the deep link being ignored, because it was.
+  ///
+  /// So the tap waits here until somebody is signed in and can be shown it. See
+  /// `_AppViewState._deliverTap`, which watches both this and the session.
+  final pendingTap = ValueNotifier<Map<String, String>?>(null);
+
+  /// Takes the waiting tap, leaving nothing behind. Called by the inbox once it
+  /// is on screen and able to open what the tap was about — a second read must
+  /// not reopen it, or coming back to the inbox would fling you into the file
+  /// again.
+  Map<String, String>? takePendingTap() {
+    final tap = pendingTap.value;
+    pendingTap.value = null;
+    return tap;
+  }
+
+  void _tapped(Map<String, dynamic>? data) =>
+      pendingTap.value = tapPayload(data);
 
   static const _channel = AndroidNotificationChannel(
     'general',
@@ -48,6 +91,20 @@ class PushService {
       settings: const InitializationSettings(
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       ),
+      // The notification raised while the app is in front is a LOCAL one, shown
+      // by this service rather than by the system, so Firebase never hears it
+      // being tapped. Without this it was the one notification in the app that
+      // did nothing at all when pressed.
+      onDidReceiveNotificationResponse: (response) {
+        final payload = response.payload;
+        if (payload == null || payload.isEmpty) return;
+        try {
+          _tapped(jsonDecode(payload) as Map<String, dynamic>);
+        } catch (_) {
+          // A payload we did not write. Opening the inbox is still right.
+          _tapped(const {});
+        }
+      },
     );
     await _local
         .resolvePlatformSpecificImplementation<
@@ -57,6 +114,19 @@ class PushService {
 
     FirebaseMessaging.onMessage.listen(_showForeground);
     FirebaseMessaging.instance.onTokenRefresh.listen((_) => _upsertToken());
+
+    // The other two ways a notification gets tapped. Both are Firebase's, and
+    // both were missing: tapping one in the phone's tray raised the app onto
+    // whatever screen it had been left on, which is indistinguishable from the
+    // tap having done nothing.
+    //
+    //   * the app was in the background and is being brought forward;
+    FirebaseMessaging.onMessageOpenedApp.listen((m) => _tapped(m.data));
+    //   * the app was not running at all, and this tap is what started it. The
+    //     message is delivered once, to whoever asks first, so it is asked for
+    //     here at startup and parked until there is a session to open it with.
+    final launch = await FirebaseMessaging.instance.getInitialMessage();
+    if (launch != null) _tapped(launch.data);
 
     await _upsertToken();
     await syncTopics();
@@ -184,6 +254,9 @@ class PushService {
           priority: Priority.high,
         ),
       ),
+      // What the push was about, carried across so that this notification can
+      // be tapped for the same effect as the one the system would have shown.
+      payload: jsonEncode(message.data),
     );
   }
 }

@@ -123,7 +123,11 @@ Deno.serve(async (req) => {
     // The second is the one that scales. A file with five hundred members is a
     // single HTTP call instead of five hundred, and the function does not have
     // to hold the token list at all.
-    const { recipient_id, topic, title, body } = (await req.json()) ?? {};
+    // `data` is what the notification is ABOUT, and it is the only reason a tap
+    // on the phone's own tray can go anywhere. Without it the push carries a
+    // sentence and nothing else: the app opens where it was left, and "تم
+    // إسنادك إلى ملف تشغيلي" leads nowhere.
+    const { recipient_id, topic, title, body, data } = (await req.json()) ?? {};
     if (!title || (!recipient_id && !topic)) {
       return json({ error: 'title and one of recipient_id / topic are required' }, 400);
     }
@@ -141,6 +145,21 @@ Deno.serve(async (req) => {
     const accessToken = await getAccessToken(sa);
     const endpoint = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`;
 
+    // FCM will only carry strings here, and rejects the whole message if it is
+    // handed anything else — so a nested value is dropped rather than allowed
+    // to lose the notification it was riding on. Nothing this app targets with
+    // is nested; if that changes, this is the line to widen.
+    const payload = (() => {
+      if (!data || typeof data !== 'object') return null;
+      const out: Record<string, string> = {};
+      for (const [k, v] of Object.entries(data)) {
+        if (v === null || v === undefined) continue;
+        if (typeof v === 'object') continue;
+        out[k] = String(v);
+      }
+      return Object.keys(out).length ? out : null;
+    })();
+
     const send = async (target: Record<string, unknown>) => {
       const r = await fetch(endpoint, {
         method: 'POST',
@@ -152,6 +171,7 @@ Deno.serve(async (req) => {
           message: {
             ...target,
             notification: { title, body: body ?? '' },
+            ...(payload ? { data: payload } : {}),
             android: { priority: 'high' },
           },
         }),

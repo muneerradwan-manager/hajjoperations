@@ -9,6 +9,7 @@ import 'core/widgets/aurora_background.dart';
 import 'features/auth/application/auth_cubit.dart';
 import 'features/auth/application/session_cubit.dart';
 import 'features/auth/data/auth_repository.dart';
+import 'features/notifications/data/push_service.dart';
 import 'features/profile/data/profile_repository.dart';
 import 'l10n/app_localizations.dart';
 
@@ -54,9 +55,51 @@ class _AppViewState extends State<_AppView> {
   late final _router = buildRouter(context.read<SessionCubit>());
 
   @override
+  void initState() {
+    super.initState();
+    PushService.instance.pendingTap.addListener(_deliverTap);
+    _deliverTap();
+  }
+
+  @override
+  void dispose() {
+    PushService.instance.pendingTap.removeListener(_deliverTap);
+    super.dispose();
+  }
+
+  /// Takes a notification tapped in the phone's tray to the inbox.
+  ///
+  /// Two things have to be true at once, and they do not arrive together. The
+  /// tap can land before there is anybody signed in — a cold start from a tap
+  /// begins at the splash with the session still resolving — and navigating
+  /// then means navigating into a redirect that sends you back to the home
+  /// page. So this runs on both: whenever a tap arrives, and whenever the
+  /// session changes. Whichever is second is the one that does the work.
+  ///
+  /// The tap is deliberately NOT consumed here. The inbox takes it when it is
+  /// on screen, and only then, because it is the inbox that knows how to open
+  /// what the notification was about — and how to say so honestly when the file
+  /// has since been deleted.
+  void _deliverTap() {
+    if (!mounted) return;
+    if (PushService.instance.pendingTap.value == null) return;
+    if (context.read<SessionCubit>().state.status != SessionStatus.approved) {
+      return;
+    }
+    _router.go(Routes.notifications);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsCubit>().state;
 
+    return BlocListener<SessionCubit, SessionState>(
+      listener: (_, _) => _deliverTap(),
+      child: _app(settings),
+    );
+  }
+
+  Widget _app(SettingsState settings) {
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,

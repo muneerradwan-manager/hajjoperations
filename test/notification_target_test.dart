@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hajjoperations/features/notifications/data/push_service.dart';
 import 'package:hajjoperations/features/notifications/domain/app_notification.dart';
 
 /// Where a notification takes you when you tap it.
@@ -17,6 +18,7 @@ AppNotification _n(Map<String, dynamic> data) => AppNotification.fromMap({
 });
 
 void main() {
+  _pushTests();
   group('what a notification points at', () {
     test('an assignment opens its file', () {
       // Exactly the shape notify_module_assignment builds.
@@ -71,6 +73,98 @@ void main() {
       final n = _n({'type': 'module_assigned', 'module_id': 'm-42'});
       expect(n.markedRead().moduleId, 'm-42');
       expect(n.withAttachments(const []).moduleId, 'm-42');
+    });
+  });
+}
+
+/// The same journey, begun from the phone's own notification tray.
+///
+/// A push carries the target as FCM `data`, which is strings and only strings.
+/// The inbox row and the push are two copies of one fact, and the whole point of
+/// [AppNotification.moduleIdIn] is that they cannot disagree — so it is asked
+/// here in the shape a push actually arrives in.
+void _pushTests() {
+  group('a notification tapped in the phone tray', () {
+    test('an assignment reaches the same file as the inbox row would', () {
+      const data = {'type': 'module_assigned', 'module_id': 'm-7'};
+      expect(AppNotification.moduleIdIn(data), 'm-7');
+      // And the identical row read from the inbox agrees.
+      expect(_n(data).moduleId, 'm-7');
+    });
+
+    test('a broadcast to a file reaches that file', () {
+      expect(
+        AppNotification.moduleIdIn(const {
+          'type': 'module_broadcast',
+          'module_id': 'm-9',
+        }),
+        'm-9',
+      );
+    });
+
+    test('a push with no data at all opens the inbox and nothing more', () {
+      expect(AppNotification.moduleIdIn(const {}), isNull);
+    });
+
+    test('a push from somewhere else is not followed', () {
+      // A test send from the Firebase console, or a future message this build
+      // does not understand. It must not be guessed at.
+      expect(
+        AppNotification.moduleIdIn(const {'type': 'promo', 'module_id': 'm-1'}),
+        isNull,
+      );
+    });
+  });
+
+  group('what a tap carries', () {
+    test('every value becomes a string, whatever it arrived as', () {
+      // iOS hands these back as they were sent; Android as strings. The app
+      // must not care which platform it woke up on.
+      expect(tapPayload({'type': 'module_broadcast', 'count': 3}), {
+        'type': 'module_broadcast',
+        'count': '3',
+      });
+    });
+
+    test('nulls and nested values are dropped rather than stringified', () {
+      // '{a: b}' as a module id would be followed as if it were one.
+      expect(
+        tapPayload({
+          'type': 'module_assigned',
+          'module_id': 'm-2',
+          'empty': null,
+          'nested': {'a': 'b'},
+          'list': ['a'],
+        }),
+        {'type': 'module_assigned', 'module_id': 'm-2'},
+      );
+    });
+
+    test('no payload is an empty map, not null', () {
+      // A tap with nothing attached still means "take me to my notifications".
+      expect(tapPayload(null), isEmpty);
+    });
+  });
+
+  group('the tap waits until there is somewhere to put it', () {
+    setUp(() => PushService.instance.pendingTap.value = null);
+
+    test('it is taken once and once only', () {
+      PushService.instance.pendingTap.value = const {
+        'type': 'module_assigned',
+        'module_id': 'm-3',
+      };
+      expect(PushService.instance.takePendingTap(), {
+        'type': 'module_assigned',
+        'module_id': 'm-3',
+      });
+      // Coming back to the inbox later must not fling the reader into the file
+      // a second time.
+      expect(PushService.instance.takePendingTap(), isNull);
+    });
+
+    test('nothing waiting is nothing taken', () {
+      expect(PushService.instance.takePendingTap(), isNull);
     });
   });
 }
