@@ -9,6 +9,7 @@ import '../../seasons/domain/season.dart';
 import '../data/reports_repository.dart';
 import '../domain/report.dart';
 import '../domain/report_type.dart';
+import '../domain/table_columns.dart';
 
 enum EditorStatus { loading, ready, saving, error }
 
@@ -261,24 +262,18 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
 
   /// The rows of a table BLOCK, kept aligned to its columns.
   ///
-  /// A row is a list positioned against the column list, so adding a column has
-  /// to lengthen every row and removing one has to drop the same cell from each
-  /// — otherwise the third value starts reading under the second heading.
+  /// The moving is [realignRows], which is where the awkward part lives: the
+  /// columns are entered as tags, so a rename is indistinguishable from a
+  /// removal and an addition, and it has to be recognised rather than told.
   void setBlockColumns(int index, List<String> columns) {
-    final before = state.blocks[index].columns;
-    final rows = state.blocks[index].rows;
-    final moved = [
-      for (final row in rows)
-        [
-          for (final c in columns)
-            // Carried by NAME, so a column renamed keeps its data and a column
-            // dropped takes only its own cells with it.
-            before.contains(c) && before.indexOf(c) < row.length
-                ? row[before.indexOf(c)]
-                : '',
-        ],
-    ];
-    _setBlock(index, {'columns': columns, 'rows': moved});
+    _setBlock(index, {
+      'columns': columns,
+      'rows': realignRows(
+        before: state.blocks[index].columns,
+        after: columns,
+        rows: state.blocks[index].rows,
+      ),
+    });
   }
 
   void addBlockRow(int index) {
