@@ -178,6 +178,34 @@
   "attachmentDownload": "تحميل",
   "attachmentOpenFailed": "تعذّر فتح المرفق",
 
+  "modulesSearchHint": "ابحث في الملفات",
+  "modulesNoMatches": "لا يوجد ملف مطابق",
+  "reportNew": "تقرير جديد",
+  "reportEdit": "تعديل التقرير",
+  "reportSaved": "تم حفظ التقرير",
+  "reportIdentity": "ما هذا التقرير",
+  "reportTitle": "العنوان",
+  "reportScopeHint": "التقرير العام يبقى سارياً مهما كان الموسم الجاري",
+  "reportPublished": "منشور",
+  "reportPublishedHint": "التقرير غير المنشور لا يراه إلا من يدير التقارير",
+  "reportAddRow": "إضافة صف",
+  "reportNoRows": "لا توجد صفوف بعد",
+  "reportsManageEmpty": "لا توجد تقارير بعد",
+  "reportDeleteConfirm": "حذف {title}؟ لا يمكن التراجع.",
+  "reportDeleted": "تم حذف التقرير",
+  "reportRowsSection": "الصفوف ({count})",
+  "reportRowNumber": "الصف {number}",
+  "@reportDeleteConfirm": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "@reportRowsSection": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "@reportRowNumber": {
+    "placeholders": { "number": { "type": "int" } }
+  },
+  "navReportsManage": "إدارة التقارير",
+  "navReportsManageSubtitle": "إدخال التقارير وتعديلها ونشرها",
   "navReports": "التقارير",
   "navReportsSubtitle": "الجداول والتعاميم المنشورة على البعثة",
   "reportsEmpty": "لم يُنشر أي تقرير بعد",

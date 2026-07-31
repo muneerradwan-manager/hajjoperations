@@ -1076,6 +1076,120 @@ abstract class AppLocalizations {
   /// **'Could not open the attachment'**
   String get attachmentOpenFailed;
 
+  /// No description provided for @modulesSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search files'**
+  String get modulesSearchHint;
+
+  /// No description provided for @modulesNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No file matches'**
+  String get modulesNoMatches;
+
+  /// No description provided for @reportNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New report'**
+  String get reportNew;
+
+  /// No description provided for @reportEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit report'**
+  String get reportEdit;
+
+  /// No description provided for @reportSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Report saved'**
+  String get reportSaved;
+
+  /// No description provided for @reportIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'What this report is'**
+  String get reportIdentity;
+
+  /// No description provided for @reportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get reportTitle;
+
+  /// No description provided for @reportScopeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'General reports stay true whichever season is running'**
+  String get reportScopeHint;
+
+  /// No description provided for @reportPublished.
+  ///
+  /// In en, this message translates to:
+  /// **'Published'**
+  String get reportPublished;
+
+  /// No description provided for @reportPublishedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'An unpublished report is visible only to whoever manages reports'**
+  String get reportPublishedHint;
+
+  /// No description provided for @reportAddRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a row'**
+  String get reportAddRow;
+
+  /// No description provided for @reportNoRows.
+  ///
+  /// In en, this message translates to:
+  /// **'No rows yet'**
+  String get reportNoRows;
+
+  /// No description provided for @reportsManageEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No reports yet'**
+  String get reportsManageEmpty;
+
+  /// No description provided for @reportDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {title}? This cannot be undone.'**
+  String reportDeleteConfirm(String title);
+
+  /// No description provided for @reportDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Report deleted'**
+  String get reportDeleted;
+
+  /// No description provided for @reportRowsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Rows ({count})'**
+  String reportRowsSection(int count);
+
+  /// No description provided for @reportRowNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Row {number}'**
+  String reportRowNumber(int number);
+
+  /// No description provided for @navReportsManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports management'**
+  String get navReportsManage;
+
+  /// No description provided for @navReportsManageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter, correct and publish reports'**
+  String get navReportsManageSubtitle;
+
   /// No description provided for @navReports.
   ///
   /// In en, this message translates to:

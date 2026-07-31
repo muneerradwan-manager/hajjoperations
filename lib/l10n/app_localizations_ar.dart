@@ -521,6 +521,71 @@ class AppLocalizationsAr extends AppLocalizations {
   String get attachmentOpenFailed => 'تعذّر فتح المرفق';
 
   @override
+  String get modulesSearchHint => 'ابحث في الملفات';
+
+  @override
+  String get modulesNoMatches => 'لا يوجد ملف مطابق';
+
+  @override
+  String get reportNew => 'تقرير جديد';
+
+  @override
+  String get reportEdit => 'تعديل التقرير';
+
+  @override
+  String get reportSaved => 'تم حفظ التقرير';
+
+  @override
+  String get reportIdentity => 'ما هذا التقرير';
+
+  @override
+  String get reportTitle => 'العنوان';
+
+  @override
+  String get reportScopeHint =>
+      'التقرير العام يبقى سارياً مهما كان الموسم الجاري';
+
+  @override
+  String get reportPublished => 'منشور';
+
+  @override
+  String get reportPublishedHint =>
+      'التقرير غير المنشور لا يراه إلا من يدير التقارير';
+
+  @override
+  String get reportAddRow => 'إضافة صف';
+
+  @override
+  String get reportNoRows => 'لا توجد صفوف بعد';
+
+  @override
+  String get reportsManageEmpty => 'لا توجد تقارير بعد';
+
+  @override
+  String reportDeleteConfirm(String title) {
+    return 'حذف $title؟ لا يمكن التراجع.';
+  }
+
+  @override
+  String get reportDeleted => 'تم حذف التقرير';
+
+  @override
+  String reportRowsSection(int count) {
+    return 'الصفوف ($count)';
+  }
+
+  @override
+  String reportRowNumber(int number) {
+    return 'الصف $number';
+  }
+
+  @override
+  String get navReportsManage => 'إدارة التقارير';
+
+  @override
+  String get navReportsManageSubtitle => 'إدخال التقارير وتعديلها ونشرها';
+
+  @override
   String get navReports => 'التقارير';
 
   @override

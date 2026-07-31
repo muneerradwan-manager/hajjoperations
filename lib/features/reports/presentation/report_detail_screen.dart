@@ -17,6 +17,7 @@ import '../../modules/domain/module_type.dart';
 import '../application/report_detail_cubit.dart';
 import '../data/reports_repository.dart';
 import '../domain/report.dart';
+import '../domain/report_type.dart';
 
 /// One report in full: what it states, its table, the paper it came from.
 class ReportDetailScreen extends StatelessWidget {
@@ -47,10 +48,21 @@ class _View extends StatelessWidget {
           extendBodyBehindAppBar: true,
           appBar: GlassAppBar(title: Text(report?.title ?? l.navReports)),
           body: switch (state.status) {
-            ReportDetailStatus.loading => const SkeletonList(
-              maxColumns: 1,
-              height: 180,
-              count: 3,
+            // Shaped like what is about to replace it: one column of tall
+            // cards, at the page's own gutter. A skeleton that columns
+            // differently from the screen it stands in for is a flash of a
+            // layout that never arrives.
+            ReportDetailStatus.loading => ResponsivePage(
+              builder: (context, size) => SkeletonList(
+                maxColumns: 1,
+                minTileWidth: double.infinity,
+                height: 200,
+                count: 3,
+                padding: context.scrollPadding(
+                  horizontal: size.gutter,
+                  bottom: AppSpacing.xl,
+                ),
+              ),
             ),
             ReportDetailStatus.missing => EmptyState(
               icon: AppIcons.reports,
@@ -280,67 +292,203 @@ class _FieldCard extends StatelessWidget {
   }
 }
 
-/// The report's table.
+/// The report's table, drawn the way the window can actually hold it.
 ///
 /// A column declared over a master-data list has already been expanded into one
-/// column per entry by the cubit, so this draws whatever it is handed.
+/// column per entry by the cubit, so this draws whatever it is handed — which
+/// for توزيع الوجبات is seventeen columns.
+///
+/// Seventeen columns do not go on a phone. A grid that wide either scrolls
+/// sideways with the row labels sliding out of sight, or squeezes every cell to
+/// three characters; both are worse than not being a grid. So below a wide
+/// window each ROW is drawn as its own card — the key columns as a heading, the
+/// rest as label-and-value lines. Same data, read down instead of across, which
+/// is the direction a phone actually scrolls.
 class _TableCard extends StatelessWidget {
   const _TableCard({required this.state, required this.report});
 
   final ReportDetailState state;
   final Report report;
 
+  /// Values resolved once, with a spanning column's blank cell filled from the
+  /// row above it — the date of all three documents is written once and read
+  /// down the page.
+  List<Map<String, String>> _resolved(
+    BuildContext context,
+    List<({String key, String Function(dynamic) label, ReportColumn column})>
+    columns,
+  ) {
+    final carried = <String, String>{};
+    return [
+      for (final row in report.rows)
+        {
+          for (final c in columns)
+            c.key: () {
+              final raw = row.value(c.key);
+              if (!c.column.spansRows) return raw;
+              if (raw.isNotEmpty) {
+                carried[c.key] = raw;
+                return raw;
+              }
+              return carried[c.key] ?? '';
+            }(),
+        },
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final columns = state.drawnColumns;
+    if (columns.isEmpty) return const SizedBox.shrink();
+    final rows = _resolved(context, columns);
+
+    return WindowSizeBuilder(
+      builder: (context, size) {
+        // The threshold is the data's, not the device's: four columns fit
+        // anywhere, seventeen need a monitor. Asked of the table rather than
+        // assumed from a breakpoint.
+        final roomy =
+            size.isAtLeast(WindowSize.expanded) && columns.length <= 6 ||
+            size.isAtLeast(WindowSize.large) && columns.length <= 10 ||
+            size.isAtLeast(WindowSize.extraLarge);
+        return roomy
+            ? _Grid(columns: columns, rows: rows)
+            : _Stacked(columns: columns, rows: rows);
+      },
+    );
+  }
+}
+
+/// The wide arrangement: an actual table, striped so the eye keeps its row.
+class _Grid extends StatelessWidget {
+  const _Grid({required this.columns, required this.rows});
+
+  final List<({String key, String Function(dynamic) label, ReportColumn column})>
+  columns;
+  final List<Map<String, String>> rows;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final columns = state.drawnColumns;
-    if (columns.isEmpty) return const SizedBox.shrink();
-
-    // A blank cell in a spanning column means "same as above" — the date of
-    // every one of these documents is written once and read down. Resolved
-    // here so the reader of a filtered or a scrolled table still sees it.
-    final carried = <String, String>{};
 
     return GlassCard(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.sm),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: DataTable(
-          headingRowHeight: 44,
+          headingRowHeight: 46,
           dataRowMinHeight: 40,
-          dataRowMaxHeight: 96,
+          dataRowMaxHeight: 120,
           columnSpacing: AppSpacing.lg,
+          horizontalMargin: AppSpacing.md,
+          dividerThickness: 0.4,
           headingTextStyle: text.labelLarge?.copyWith(
             color: scheme.onSurfaceVariant,
+            fontWeight: FontWeight.w700,
           ),
           columns: [
             for (final c in columns) DataColumn(label: Text(c.label(context))),
           ],
           rows: [
-            for (final row in report.rows)
+            for (var i = 0; i < rows.length; i++)
               DataRow(
+                // Striping, not borders: a seventeen-column grid with a line
+                // under every cell reads as graph paper.
+                color: WidgetStatePropertyAll(
+                  i.isOdd
+                      ? scheme.onSurface.withValues(alpha: 0.03)
+                      : Colors.transparent,
+                ),
                 cells: [
                   for (final c in columns)
                     DataCell(
-                      Text(
-                        () {
-                          final raw = row.value(c.key);
-                          if (!c.column.spansRows) return raw;
-                          if (raw.isNotEmpty) {
-                            carried[c.key] = raw;
-                            return raw;
-                          }
-                          return carried[c.key] ?? '';
-                        }(),
-                        style: text.bodySmall,
-                      ),
+                      Text(rows[i][c.key] ?? '', style: text.bodySmall),
                     ),
                 ],
               ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// The narrow arrangement: one card per row, read downwards.
+///
+/// The first two columns become the card's heading — for all three meal
+/// documents those are التاريخ and الوجبة, which is exactly how somebody names
+/// the row out loud. Everything else is a labelled line, and an empty cell is
+/// left out rather than printed as a blank.
+class _Stacked extends StatelessWidget {
+  const _Stacked({required this.columns, required this.rows});
+
+  final List<({String key, String Function(dynamic) label, ReportColumn column})>
+  columns;
+  final List<Map<String, String>> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    final heading = columns.take(2).toList();
+    final rest = columns.skip(2).toList();
+
+    return Column(
+      children: [
+        for (var i = 0; i < rows.length; i++) ...[
+          if (i > 0) const SizedBox(height: AppSpacing.sm),
+          GlassCard(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    for (final c in heading)
+                      if ((rows[i][c.key] ?? '').isNotEmpty)
+                        Text(
+                          rows[i][c.key]!,
+                          style: text.titleSmall?.copyWith(
+                            color: c == heading.first
+                                ? scheme.onSurface
+                                : scheme.primary,
+                          ),
+                        ),
+                  ],
+                ),
+                for (final c in rest)
+                  if ((rows[i][c.key] ?? '').isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: AppSpacing.sm),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: 104,
+                            child: Text(
+                              c.label(context),
+                              style: text.labelSmall?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Text(
+                              rows[i][c.key]!,
+                              style: text.bodyMedium,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

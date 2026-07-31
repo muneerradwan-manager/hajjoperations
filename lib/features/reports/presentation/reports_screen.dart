@@ -45,7 +45,21 @@ class _View extends StatelessWidget {
             final cubit = context.read<ReportsCubit>();
 
             if (state.status == ReportsStatus.loading) {
-              return const SkeletonList(minTileWidth: 380);
+              // The same grid the list uses — 380 wide, two columns at most,
+              // inside the same 1200 page — so the cards do not jump when the
+              // real ones arrive.
+              return ResponsivePage(
+                maxWidth: 1200,
+                builder: (context, size) => SkeletonList(
+                  minTileWidth: 380,
+                  maxColumns: 2,
+                  height: 108,
+                  padding: context.scrollPadding(
+                    horizontal: size.gutter,
+                    bottom: AppSpacing.xl,
+                  ),
+                ),
+              );
             }
             if (state.status == ReportsStatus.error) {
               return EmptyState(
@@ -61,7 +75,7 @@ class _View extends StatelessWidget {
             final visible = state.visible;
             return Column(
               children: [
-                _FilterBar(state: state),
+                ReportsFilterBar(state: state),
                 Expanded(
                   child: visible.isEmpty
                       ? EmptyState(
@@ -89,7 +103,7 @@ class _View extends StatelessWidget {
                             itemCount: visible.length,
                             itemBuilder: (context, i) => FadeSlideIn(
                               delay: Duration(milliseconds: 25 * i),
-                              child: _ReportCard(report: visible[i]),
+                              child: ReportCard(report: visible[i]),
                             ),
                           ),
                         ),
@@ -103,15 +117,18 @@ class _View extends StatelessWidget {
   }
 }
 
-class _FilterBar extends StatefulWidget {
-  const _FilterBar({required this.state});
+/// Search, "this season / general", and the kinds present — shared by the
+/// reader's list and the office's, because the two show the same rows and
+/// narrowing them is the same question.
+class ReportsFilterBar extends StatefulWidget {
+  const ReportsFilterBar({super.key, required this.state});
   final ReportsState state;
 
   @override
-  State<_FilterBar> createState() => _FilterBarState();
+  State<ReportsFilterBar> createState() => _FilterBarState();
 }
 
-class _FilterBarState extends State<_FilterBar> {
+class _FilterBarState extends State<ReportsFilterBar> {
   late final _controller = TextEditingController(text: widget.state.query);
 
   @override
@@ -207,9 +224,22 @@ class _FilterBarState extends State<_FilterBar> {
   }
 }
 
-class _ReportCard extends StatelessWidget {
-  const _ReportCard({required this.report});
+/// One report as a row in either list.
+///
+/// [trailing] is what the office puts there — its overflow menu. عام passes
+/// nothing and gets the chevron, which is the honest affordance for a card that
+/// only opens.
+class ReportCard extends StatelessWidget {
+  const ReportCard({
+    super.key,
+    required this.report,
+    this.onOpen,
+    this.trailing,
+  });
+
   final Report report;
+  final VoidCallback? onOpen;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -218,9 +248,11 @@ class _ReportCard extends StatelessWidget {
     final text = Theme.of(context).textTheme;
 
     return GlassCard(
-      onTap: () => Navigator.of(context).push(
-        fadeThroughRoute((_) => ReportDetailScreen(reportId: report.id)),
-      ),
+      onTap:
+          onOpen ??
+          () => Navigator.of(context).push(
+            fadeThroughRoute((_) => ReportDetailScreen(reportId: report.id)),
+          ),
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -273,7 +305,7 @@ class _ReportCard extends StatelessWidget {
               ],
             ),
           ),
-          const NavChevron(),
+          trailing ?? const NavChevron(),
         ],
       ),
     );

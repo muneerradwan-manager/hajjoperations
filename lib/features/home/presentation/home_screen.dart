@@ -40,13 +40,19 @@ import 'widgets/dashboard_card.dart';
 /// unreadable on the dark backdrop and every gold on the light. See
 /// app_accents.dart for the measurements.
 const _work = Accent.green;
-const _office = Accent.greenDeep;
-const _people = Accent.greenDark;
-const _season = Accent.gold;
-const _reference = Accent.goldSoft;
-const _approvals = Accent.red;
-const _permissions = Accent.redDeep;
-const _dashboard = Accent.plum;
+
+/// The الإدارة tiles, two to a colour.
+///
+/// Grouped rather than one-per-tile: eight different colours in one grid is a
+/// swatch card, not a menu. A pair shares a colour because the two of them are
+/// one kind of thing — the paperwork, the people, the year and its lists, and
+/// oversight — so the colour says something rather than merely differing.
+const _adminPalette = <Accent>[
+  Accent.greenDeep,
+  Accent.greenDark,
+  Accent.gold,
+  Accent.redDeep,
+];
 
 /// One beat of the entry cascade.
 const _step = Duration(milliseconds: 70);
@@ -109,6 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final canSeeSeasons = session.canSeeSeasons;
     final canManageModules = session.can(PermissionCodes.modulesManage);
+    final canManageReports = session.can(PermissionCodes.reportsManage);
 
     // The dashboard has a section per permission and drops the rest, so the
     // door opens for anyone holding any one of them. Listed here rather than
@@ -125,54 +132,96 @@ class _HomeScreenState extends State<HomeScreen> {
     // in one list: "الملفات التشغيلية" meant his own postings to one man and
     // the season's whole paperwork to another, depending on what he held.
     // Authority lives here; the work lives below.
-    final adminCards = <Widget>[
+    // Everything held by a PERMISSION, the dashboard among them. A person is
+    // two things at once here — somebody with authority and somebody with work
+    // — and the two were mixed in one list: "الملفات التشغيلية" meant his own
+    // postings to one man and the season's whole paperwork to another,
+    // depending on what he held. Authority lives here; the work lives below.
+    //
+    // Declared as entries rather than built as widgets, because the COLOUR is
+    // not a property of the entry — it is a property of where the entry lands
+    // once the reader's permissions have been applied. See [_adminPalette].
+    final admin = <({IconData icon, String title, String subtitle, VoidCallback onTap})>[
+      // Paired by meaning as well as by position: the paperwork, the people,
+      // the year and its lists, then oversight. Two to a colour, in this order.
       if (canManageModules)
-        DashboardCard(
+        (
           icon: AppIcons.modules,
           title: l.navModulesManage,
           subtitle: l.navModulesManageSubtitle,
-          color: _office.of(context),
           onTap: () => context.push(Routes.modulesManage),
         ),
+      if (canManageReports)
+        (
+          icon: AppIcons.reports,
+          title: l.navReportsManage,
+          subtitle: l.navReportsManageSubtitle,
+          onTap: () => context.push(Routes.reportsManage),
+        ),
       if (canViewEmployees)
-        DashboardCard(
+        (
           icon: AppIcons.employees,
           title: l.navEmployees,
           subtitle: l.navEmployeesSubtitle,
-          color: _people.of(context),
           onTap: () => context.push(Routes.employees),
         ),
-      if (canSeeSeasons)
-        DashboardCard(
-          icon: AppIcons.seasons,
-          title: l.navSeasons,
-          subtitle: l.navSeasonsSubtitle,
-          color: _season.of(context),
-          onTap: _openSeasons,
-        ),
-      if (canManageReferenceData)
-        DashboardCard(
-          icon: AppIcons.referenceData,
-          title: l.navReferenceData,
-          subtitle: l.navReferenceDataSubtitle,
-          color: _reference.of(context),
-          onTap: () => context.push(Routes.referenceData),
-        ),
       if (canApprove)
-        DashboardCard(
+        (
           icon: AppIcons.approvals,
           title: l.navApprovals,
           subtitle: l.navApprovalsSubtitle,
-          color: _approvals.of(context),
           onTap: () => context.push(Routes.approvals),
         ),
+      if (canSeeSeasons)
+        (
+          icon: AppIcons.seasons,
+          title: l.navSeasons,
+          subtitle: l.navSeasonsSubtitle,
+          onTap: _openSeasons,
+        ),
+      if (canManageReferenceData)
+        (
+          icon: AppIcons.referenceData,
+          title: l.navReferenceData,
+          subtitle: l.navReferenceDataSubtitle,
+          onTap: () => context.push(Routes.referenceData),
+        ),
       if (canManagePermissions)
-        DashboardCard(
+        (
           icon: AppIcons.permissions,
           title: l.navPermissions,
           subtitle: l.navPermissionsSubtitle,
-          color: _permissions.of(context),
           onTap: () => context.push(Routes.permissions),
+        ),
+      // No longer standing apart beside the greeting. It is one of these — the
+      // season from above — and eight tiles in a list read better than seven
+      // and an orphan.
+      if (canSeeDashboard)
+        (
+          icon: AppIcons.dashboard,
+          title: l.navDashboard,
+          subtitle: l.navDashboardSubtitle,
+          onTap: () => context.push(Routes.dashboard),
+        ),
+    ];
+
+    // Two tiles to a colour, by POSITION in the list the reader actually gets.
+    //
+    // Which is why the colour could not be written beside each entry: a reader
+    // without `approvals.decide` is shown seven tiles, not eight, and every
+    // pair after the missing one shifts. Assigning here — after the list is
+    // filtered — is what keeps the pairs paired.
+    //
+    // The rule reads the same in both arrangements the page uses: side by side
+    // on two columns, one above the other on one.
+    final adminCards = <Widget>[
+      for (var i = 0; i < admin.length; i++)
+        DashboardCard(
+          icon: admin[i].icon,
+          title: admin[i].title,
+          subtitle: admin[i].subtitle,
+          color: _adminPalette[(i ~/ 2) % _adminPalette.length].of(context),
+          onTap: admin[i].onTap,
         ),
     ];
 
@@ -238,19 +287,6 @@ class _HomeScreenState extends State<HomeScreen> {
             // the greeting, which is the other thing on this screen that is
             // about the season rather than about a task.
             //
-            // Shown to anyone holding a permission the dashboard has a section
-            // for; the page then draws only that section, so a man with the
-            // approvals queue and nothing else opens it and sees the queue.
-            final dashboard = canSeeDashboard
-                ? DashboardCard(
-                    icon: AppIcons.dashboard,
-                    title: l.navDashboard,
-                    subtitle: l.navDashboardSubtitle,
-                    color: _dashboard.of(context),
-                    onTap: () => context.push(Routes.dashboard),
-                  )
-                : null;
-
             final sections = <Widget>[
               FadeSlideIn(
                 delay: _step * 2,
@@ -300,10 +336,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           greeting,
-                          if (dashboard != null) ...[
-                            const SizedBox(height: AppSpacing.md),
-                            dashboard,
-                          ],
                         ],
                       ),
                     ),
@@ -315,10 +347,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     onRefresh: _refresh,
                     children: [
                       FadeSlideIn(child: greeting),
-                      if (dashboard != null) ...[
-                        const SizedBox(height: AppSpacing.md),
-                        FadeSlideIn(delay: _step, child: dashboard),
-                      ],
                       const SizedBox(height: AppSpacing.xl),
                       ...sections,
                     ],

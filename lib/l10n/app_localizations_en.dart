@@ -520,6 +520,71 @@ class AppLocalizationsEn extends AppLocalizations {
   String get attachmentOpenFailed => 'Could not open the attachment';
 
   @override
+  String get modulesSearchHint => 'Search files';
+
+  @override
+  String get modulesNoMatches => 'No file matches';
+
+  @override
+  String get reportNew => 'New report';
+
+  @override
+  String get reportEdit => 'Edit report';
+
+  @override
+  String get reportSaved => 'Report saved';
+
+  @override
+  String get reportIdentity => 'What this report is';
+
+  @override
+  String get reportTitle => 'Title';
+
+  @override
+  String get reportScopeHint =>
+      'General reports stay true whichever season is running';
+
+  @override
+  String get reportPublished => 'Published';
+
+  @override
+  String get reportPublishedHint =>
+      'An unpublished report is visible only to whoever manages reports';
+
+  @override
+  String get reportAddRow => 'Add a row';
+
+  @override
+  String get reportNoRows => 'No rows yet';
+
+  @override
+  String get reportsManageEmpty => 'No reports yet';
+
+  @override
+  String reportDeleteConfirm(String title) {
+    return 'Delete $title? This cannot be undone.';
+  }
+
+  @override
+  String get reportDeleted => 'Report deleted';
+
+  @override
+  String reportRowsSection(int count) {
+    return 'Rows ($count)';
+  }
+
+  @override
+  String reportRowNumber(int number) {
+    return 'Row $number';
+  }
+
+  @override
+  String get navReportsManage => 'Reports management';
+
+  @override
+  String get navReportsManageSubtitle => 'Enter, correct and publish reports';
+
+  @override
   String get navReports => 'Reports';
 
   @override

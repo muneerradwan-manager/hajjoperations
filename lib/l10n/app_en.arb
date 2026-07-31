@@ -183,6 +183,34 @@
   "attachmentDownload": "Download",
   "attachmentOpenFailed": "Could not open the attachment",
 
+  "modulesSearchHint": "Search files",
+  "modulesNoMatches": "No file matches",
+  "reportNew": "New report",
+  "reportEdit": "Edit report",
+  "reportSaved": "Report saved",
+  "reportIdentity": "What this report is",
+  "reportTitle": "Title",
+  "reportScopeHint": "General reports stay true whichever season is running",
+  "reportPublished": "Published",
+  "reportPublishedHint": "An unpublished report is visible only to whoever manages reports",
+  "reportAddRow": "Add a row",
+  "reportNoRows": "No rows yet",
+  "reportsManageEmpty": "No reports yet",
+  "reportDeleteConfirm": "Delete {title}? This cannot be undone.",
+  "reportDeleted": "Report deleted",
+  "reportRowsSection": "Rows ({count})",
+  "reportRowNumber": "Row {number}",
+  "@reportDeleteConfirm": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "@reportRowsSection": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "@reportRowNumber": {
+    "placeholders": { "number": { "type": "int" } }
+  },
+  "navReportsManage": "Reports management",
+  "navReportsManageSubtitle": "Enter, correct and publish reports",
   "navReports": "Reports",
   "navReportsSubtitle": "Timetables and notices published to the mission",
   "reportsEmpty": "Nothing has been published yet",

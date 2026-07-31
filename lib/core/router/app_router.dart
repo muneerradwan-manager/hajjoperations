@@ -6,6 +6,7 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../features/reports/presentation/reports_screen.dart';
+import '../../features/reports/presentation/reports_manage_screen.dart';
 import '../../features/employees/presentation/employees_directory_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/modules/application/modules_cubit.dart';
@@ -43,6 +44,7 @@ abstract class Routes {
   static const notifications = '/notifications';
   static const modules = '/modules';
   static const reports = '/reports';
+  static const reportsManage = '/reports/manage';
   static const modulesManage = '/modules/manage';
   static const referenceData = '/reference-data';
   static const settings = '/settings';
@@ -101,6 +103,12 @@ GoRouter buildRouter(SessionCubit session) {
           // was given it.
           if (loc == Routes.modulesManage &&
               !session.state.can(PermissionCodes.modulesManage)) {
+            return Routes.home;
+          }
+          // And the reports office, for the same reason: /reports is what
+          // everybody may read, /reports/manage is who may change it.
+          if (loc == Routes.reportsManage &&
+              !session.state.can(PermissionCodes.reportsManage)) {
             return Routes.home;
           }
           return null;
@@ -165,6 +173,11 @@ GoRouter buildRouter(SessionCubit session) {
         path: Routes.reports,
         pageBuilder: (c, s) =>
             fadeThroughPage(key: s.pageKey, child: const ReportsScreen()),
+      ),
+      GoRoute(
+        path: Routes.reportsManage,
+        pageBuilder: (c, s) =>
+            fadeThroughPage(key: s.pageKey, child: const ReportsManageScreen()),
       ),
       GoRoute(
         path: Routes.dashboard,

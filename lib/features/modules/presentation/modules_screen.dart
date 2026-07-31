@@ -179,11 +179,26 @@ class _View extends StatelessWidget {
               ? Duration.zero
               : _step * (state.active.length.clamp(0, 8) + 2);
 
+          // A season runs fifteen files and a manager sees every one of them,
+          // drafts included. Long enough to want a way to say which.
+          final worthFiltering = state.modules.length >= 6;
+          final nothingLeft =
+              state.active.isEmpty && state.drafts.isEmpty && state.isNarrowed;
+
           return ResponsivePage(
             builder: (context, size) => SinglePaneLayout(
               gutter: size.gutter,
               onRefresh: () => context.read<ModulesCubit>().load(),
               children: [
+                if (worthFiltering) ...[
+                  _ModulesFilterBar(state: state),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+                if (nothingLeft)
+                  GlassCard(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Text(l.modulesNoMatches),
+                  ),
                 if (state.active.isNotEmpty) ...[
                   FadeSlideIn(
                     child: SectionHeader(
@@ -451,6 +466,97 @@ class _TypePickerSheet extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Search and a running/not-running switch, above a season's files.
+///
+/// The two sections below already separate running from the rest, so the chips
+/// are not a second way of saying the same thing — they COLLAPSE the page to
+/// one of them, which is what somebody looking for a draft actually wants.
+class _ModulesFilterBar extends StatefulWidget {
+  const _ModulesFilterBar({required this.state});
+  final ModulesState state;
+
+  @override
+  State<_ModulesFilterBar> createState() => _ModulesFilterBarState();
+}
+
+class _ModulesFilterBarState extends State<_ModulesFilterBar> {
+  late final _controller = TextEditingController(text: widget.state.query);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cubit = context.read<ModulesCubit>();
+    final s = widget.state;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 460),
+          child: TextField(
+            controller: _controller,
+            textInputAction: TextInputAction.search,
+            onChanged: cubit.search,
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: l.modulesSearchHint,
+              prefixIcon: const Icon(AppIcons.search, size: 20),
+              suffixIcon: s.query.isEmpty
+                  ? null
+                  : IconButton(
+                      icon: const Icon(AppIcons.reject, size: 18),
+                      onPressed: () {
+                        _controller.clear();
+                        cubit.search('');
+                      },
+                    ),
+            ),
+          ),
+        ),
+        // Only where both kinds exist. On عام a member sees running files and
+        // nothing else, and a chip that filters to an empty half of a page is
+        // furniture.
+        if (s.modules.any((m) => !m.isRunning)) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              for (final f in ModuleFilter.values)
+                ChoiceChip(
+                  label: Text(switch (f) {
+                    ModuleFilter.all => l.reportsScopeAll,
+                    ModuleFilter.running => l.moduleActiveSection,
+                    ModuleFilter.notRunning => l.moduleDraftSection,
+                  }),
+                  selected: s.filter == f,
+                  visualDensity: VisualDensity.compact,
+                  onSelected: (_) => cubit.setFilter(f),
+                ),
+              if (s.isNarrowed)
+                TextButton.icon(
+                  onPressed: () {
+                    _controller.clear();
+                    cubit.clearFilters();
+                  },
+                  icon: const Icon(AppIcons.reject, size: 16),
+                  label: Text(l.moduleRosterClear),
+                ),
+            ],
+          ),
+        ],
+      ],
     );
   }
 }
