@@ -23,6 +23,7 @@ import '../domain/report_type.dart';
 import 'report_editor_screen.dart';
 import 'widgets/report_block_view.dart';
 import 'widgets/report_field_card.dart';
+import 'widgets/report_table.dart';
 
 /// One report in full: what it states, its table, the paper it came from.
 class ReportDetailScreen extends StatelessWidget {
@@ -357,159 +358,44 @@ class _TableCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final columns = state.drawnColumns;
+    final all = state.drawnColumns;
+    if (all.isEmpty) return const SizedBox.shrink();
+    final resolved = _resolved(context, all);
+
+    // A column the season declared and this report never filled is dropped.
+    //
+    // The clusters are the season's — twenty-five of them in 1447 — while
+    // توزيع الوجبات على التكتلات allots meals to the thirteen that are camped
+    // at المشاعر. Expanding one column per cluster therefore built a table
+    // twelve columns of which were blank from top to bottom: twice the width
+    // for nothing, which is what pushed it out of being a table at all and
+    // would have made poor reading if it had fit. Only EXPANDED columns are
+    // dropped this way — a declared column standing empty is the type saying
+    // something, and stays.
+    final columns = [
+      for (final c in all)
+        if (!c.column.isExpanded ||
+            resolved.any((row) => (row[c.key] ?? '').isNotEmpty))
+          c,
+    ];
     if (columns.isEmpty) return const SizedBox.shrink();
-    final rows = _resolved(context, columns);
+    final rows = resolved;
 
-    return WindowSizeBuilder(
-      builder: (context, size) {
-        // The threshold is the data's, not the device's: four columns fit
-        // anywhere, seventeen need a monitor. Asked of the table rather than
-        // assumed from a breakpoint.
-        final roomy =
-            size.isAtLeast(WindowSize.expanded) && columns.length <= 6 ||
-            size.isAtLeast(WindowSize.large) && columns.length <= 10 ||
-            size.isAtLeast(WindowSize.extraLarge);
-        return roomy
-            ? _Grid(columns: columns, rows: rows)
-            : _Stacked(columns: columns, rows: rows);
-      },
-    );
-  }
-}
-
-/// The wide arrangement: an actual table, striped so the eye keeps its row.
-class _Grid extends StatelessWidget {
-  const _Grid({required this.columns, required this.rows});
-
-  final List<
-    ({String key, String Function(dynamic) label, ReportColumn column})
-  >
-  columns;
-  final List<Map<String, String>> rows;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-
-    return GlassCard(
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          headingRowHeight: 46,
-          dataRowMinHeight: 40,
-          dataRowMaxHeight: 120,
-          columnSpacing: AppSpacing.lg,
-          horizontalMargin: AppSpacing.md,
-          dividerThickness: 0.4,
-          headingTextStyle: text.labelLarge?.copyWith(
-            color: scheme.onSurfaceVariant,
-            fontWeight: FontWeight.w700,
-          ),
-          columns: [
-            for (final c in columns) DataColumn(label: Text(c.label(context))),
-          ],
-          rows: [
-            for (var i = 0; i < rows.length; i++)
-              DataRow(
-                // Striping, not borders: a seventeen-column grid with a line
-                // under every cell reads as graph paper.
-                color: WidgetStatePropertyAll(
-                  i.isOdd
-                      ? scheme.onSurface.withValues(alpha: 0.03)
-                      : Colors.transparent,
-                ),
-                cells: [
-                  for (final c in columns)
-                    DataCell(Text(rows[i][c.key] ?? '', style: text.bodySmall)),
-                ],
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// The narrow arrangement: one card per row, read downwards.
-///
-/// The first two columns become the card's heading — for all three meal
-/// documents those are التاريخ and الوجبة, which is exactly how somebody names
-/// the row out loud. Everything else is a labelled line, and an empty cell is
-/// left out rather than printed as a blank.
-class _Stacked extends StatelessWidget {
-  const _Stacked({required this.columns, required this.rows});
-
-  final List<
-    ({String key, String Function(dynamic) label, ReportColumn column})
-  >
-  columns;
-  final List<Map<String, String>> rows;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-    final heading = columns.take(2).toList();
-    final rest = columns.skip(2).toList();
-
-    return Column(
-      children: [
-        for (var i = 0; i < rows.length; i++) ...[
-          if (i > 0) const SizedBox(height: AppSpacing.sm),
-          GlassCard(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    for (final c in heading)
-                      if ((rows[i][c.key] ?? '').isNotEmpty)
-                        Text(
-                          rows[i][c.key]!,
-                          style: text.titleSmall?.copyWith(
-                            color: c == heading.first
-                                ? scheme.onSurface
-                                : scheme.primary,
-                          ),
-                        ),
-                  ],
-                ),
-                for (final c in rest)
-                  if ((rows[i][c.key] ?? '').isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: AppSpacing.sm),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            width: 104,
-                            child: Text(
-                              c.label(context),
-                              style: text.labelSmall?.copyWith(
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              rows[i][c.key]!,
-                              style: text.bodyMedium,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-              ],
-            ),
-          ),
-        ],
+    // Which arrangement fits is [ReportTable]'s to decide, and it decides it by
+    // measuring the room it is actually given. This used to be guessed here
+    // from the window size, which is how a monitor at 150% scaling ended up
+    // showing the season's cluster distribution as a stack of phone cards.
+    return ReportTable(
+      columns: [for (final c in columns) c.label(context)],
+      rows: [
+        for (final row in rows) [for (final c in columns) row[c.key] ?? ''],
       ],
+      // A column entered as tags is read as tags. المكونات is nine items, and
+      // nine items down a column is nine lines of table for one meal.
+      tagged: {
+        for (var i = 0; i < columns.length; i++)
+          if (columns[i].column.isTags) i,
+      },
     );
   }
 }

@@ -98,7 +98,7 @@ class _BrandHeaderState extends State<BrandHeader>
                       ),
                     ],
                   ),
-                  child: const AppLogo(size: 132),
+                  child: const AppLogo(size: 100),
                 ),
               ),
             ],
