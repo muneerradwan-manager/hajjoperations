@@ -27,6 +27,22 @@ class PermissionsRepository {
         .toList();
   }
 
+  /// What each permission requires before it means anything:
+  /// permission id → the ids it depends on. Mirrors the DB triggers that
+  /// refuse a grant without its ground and cascade a revoke onto its
+  /// dependents (see migration 0073).
+  Future<Map<String, Set<String>>> fetchPrerequisites() async {
+    final rows = await supabase.from('permission_prerequisites').select();
+    final map = <String, Set<String>>{};
+    for (final r in rows as List) {
+      final m = r as Map<String, dynamic>;
+      map
+          .putIfAbsent(m['permission_id'] as String, () => <String>{})
+          .add(m['requires_id'] as String);
+    }
+    return map;
+  }
+
   /// Permission ids currently granted to [userId].
   Future<Set<String>> fetchGranted(String userId) async {
     final rows = await supabase

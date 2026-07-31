@@ -110,7 +110,9 @@ class _View extends StatelessWidget {
     // button on the list of a man's own postings, and it does not put Edit,
     // Delete and Deactivate on a file he opened from that list either.
     final fromOffice = view == ModulesView.manage;
-    final canManage = fromOffice && session.can(PermissionCodes.modulesManage);
+    final canCreate = fromOffice && session.can(PermissionCodes.modulesCreate);
+    final canEdit = fromOffice && session.can(PermissionCodes.modulesEdit);
+    final canDelete = fromOffice && session.can(PermissionCodes.modulesDelete);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -131,7 +133,7 @@ class _View extends StatelessWidget {
           ),
         ),
       ),
-      floatingActionButton: canManage
+      floatingActionButton: canCreate
           ? BlocBuilder<ModulesCubit, ModulesState>(
               buildWhen: (p, c) => p.types != c.types,
               builder: (context, state) => FloatingActionButton.extended(
@@ -161,12 +163,12 @@ class _View extends StatelessWidget {
           if (state.modules.isEmpty) {
             return EmptyState(
               icon: AppIcons.modules,
-              title: canManage
+              title: canCreate
                   ? l.modulesEmptyManager
                   : (view == ModulesView.mine
                         ? l.modulesEmptyMine
                         : l.modulesEmpty),
-              message: canManage && state.types.isEmpty
+              message: canCreate && state.types.isEmpty
                   ? l.moduleNoTypes
                   : null,
             );
@@ -214,10 +216,10 @@ class _View extends StatelessWidget {
                           module: m,
                           fromOffice: fromOffice,
                           // Only in the office, and only for whoever runs it.
-                          onEdit: fromOffice && canManage
+                          onEdit: fromOffice && canEdit
                               ? () => _editModule(context, m)
                               : null,
-                          onDelete: fromOffice && canManage
+                          onDelete: fromOffice && canDelete
                               ? () => _deleteModule(context, m)
                               : null,
                         ),
@@ -240,10 +242,10 @@ class _View extends StatelessWidget {
                           module: m,
                           fromOffice: fromOffice,
                           // Only in the office, and only for whoever runs it.
-                          onEdit: fromOffice && canManage
+                          onEdit: fromOffice && canEdit
                               ? () => _editModule(context, m)
                               : null,
-                          onDelete: fromOffice && canManage
+                          onDelete: fromOffice && canDelete
                               ? () => _deleteModule(context, m)
                               : null,
                         ),

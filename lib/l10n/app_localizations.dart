@@ -923,13 +923,13 @@ abstract class AppLocalizations {
   /// No description provided for @permEmployeesPassword.
   ///
   /// In en, this message translates to:
-  /// **'Reset employee passwords'**
+  /// **'Reset an employee\'s password'**
   String get permEmployeesPassword;
 
   /// No description provided for @permEmployeesSuspend.
   ///
   /// In en, this message translates to:
-  /// **'Suspend / reactivate accounts'**
+  /// **'Suspend & reactivate accounts'**
   String get permEmployeesSuspend;
 
   /// No description provided for @permEmployeesExternal.
@@ -941,26 +941,50 @@ abstract class AppLocalizations {
   /// No description provided for @permEmployeesDocuments.
   ///
   /// In en, this message translates to:
-  /// **'View documents'**
+  /// **'View employee documents'**
   String get permEmployeesDocuments;
+
+  /// No description provided for @permApprovalsView.
+  ///
+  /// In en, this message translates to:
+  /// **'View registration requests'**
+  String get permApprovalsView;
 
   /// No description provided for @permApprovalsDecide.
   ///
   /// In en, this message translates to:
-  /// **'Approve & reject accounts'**
+  /// **'Approve & reject requests'**
   String get permApprovalsDecide;
 
-  /// No description provided for @permSeasonsManage.
+  /// No description provided for @permSeasonsView.
   ///
   /// In en, this message translates to:
-  /// **'Manage seasons'**
-  String get permSeasonsManage;
+  /// **'View seasons'**
+  String get permSeasonsView;
 
-  /// No description provided for @permSeasonsParticipants.
+  /// No description provided for @permSeasonsSwitch.
   ///
   /// In en, this message translates to:
-  /// **'Manage participants'**
-  String get permSeasonsParticipants;
+  /// **'Set the current season'**
+  String get permSeasonsSwitch;
+
+  /// No description provided for @permSeasonsParticipantsView.
+  ///
+  /// In en, this message translates to:
+  /// **'View season participants'**
+  String get permSeasonsParticipantsView;
+
+  /// No description provided for @permSeasonsParticipantsManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add & withdraw participants'**
+  String get permSeasonsParticipantsManage;
+
+  /// No description provided for @permPermissionsView.
+  ///
+  /// In en, this message translates to:
+  /// **'View granted permissions'**
+  String get permPermissionsView;
 
   /// No description provided for @permPermissionsManage.
   ///
@@ -968,17 +992,71 @@ abstract class AppLocalizations {
   /// **'Grant & revoke permissions'**
   String get permPermissionsManage;
 
+  /// No description provided for @perm_reference.
+  ///
+  /// In en, this message translates to:
+  /// **'Master data'**
+  String get perm_reference;
+
+  /// No description provided for @permReferenceView.
+  ///
+  /// In en, this message translates to:
+  /// **'View master data'**
+  String get permReferenceView;
+
+  /// No description provided for @permReferenceEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Add & edit master data'**
+  String get permReferenceEdit;
+
+  /// No description provided for @permReferenceDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete master data'**
+  String get permReferenceDelete;
+
+  /// No description provided for @permReferenceImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy data from another season'**
+  String get permReferenceImport;
+
   /// No description provided for @perm_reports.
   ///
   /// In en, this message translates to:
   /// **'Reports'**
   String get perm_reports;
 
-  /// No description provided for @permReportsManage.
+  /// No description provided for @permReportsViewAll.
   ///
   /// In en, this message translates to:
-  /// **'Create, edit & publish reports'**
-  String get permReportsManage;
+  /// **'View all reports, including drafts'**
+  String get permReportsViewAll;
+
+  /// No description provided for @permReportsCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create reports'**
+  String get permReportsCreate;
+
+  /// No description provided for @permReportsEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit reports'**
+  String get permReportsEdit;
+
+  /// No description provided for @permReportsDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete reports'**
+  String get permReportsDelete;
+
+  /// No description provided for @permReportsPublish.
+  ///
+  /// In en, this message translates to:
+  /// **'Publish & unpublish reports'**
+  String get permReportsPublish;
 
   /// No description provided for @perm_notifications.
   ///
@@ -989,8 +1067,32 @@ abstract class AppLocalizations {
   /// No description provided for @permNotificationsSend.
   ///
   /// In en, this message translates to:
-  /// **'Send notifications'**
+  /// **'Notify an individual employee'**
   String get permNotificationsSend;
+
+  /// No description provided for @permNotificationsBroadcastModule.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify a file\'s members'**
+  String get permNotificationsBroadcastModule;
+
+  /// No description provided for @permNotificationsBroadcastAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify everyone'**
+  String get permNotificationsBroadcastAll;
+
+  /// No description provided for @permissionRequires.
+  ///
+  /// In en, this message translates to:
+  /// **'Requires: {names}'**
+  String permissionRequires(String names);
+
+  /// No description provided for @permissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t hold the permission this action needs'**
+  String get permissionDenied;
 
   /// No description provided for @navNotifications.
   ///
@@ -2033,26 +2135,50 @@ abstract class AppLocalizations {
   /// No description provided for @perm_modules.
   ///
   /// In en, this message translates to:
-  /// **'Operational modules'**
+  /// **'Operational files'**
   String get perm_modules;
 
-  /// No description provided for @permModulesManage.
+  /// No description provided for @permModulesViewAll.
   ///
   /// In en, this message translates to:
-  /// **'Create, edit & activate modules'**
-  String get permModulesManage;
+  /// **'View all files, including drafts'**
+  String get permModulesViewAll;
+
+  /// No description provided for @permModulesCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create an operational file'**
+  String get permModulesCreate;
+
+  /// No description provided for @permModulesEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit a file & its structure'**
+  String get permModulesEdit;
+
+  /// No description provided for @permModulesDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete an operational file'**
+  String get permModulesDelete;
+
+  /// No description provided for @permModulesActivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate & deactivate files'**
+  String get permModulesActivate;
 
   /// No description provided for @permModulesMembers.
   ///
   /// In en, this message translates to:
-  /// **'Assign module members'**
+  /// **'Assign members & duties'**
   String get permModulesMembers;
 
-  /// No description provided for @permModulesTypes.
+  /// No description provided for @permModulesReports.
   ///
   /// In en, this message translates to:
-  /// **'Manage module types & master data'**
-  String get permModulesTypes;
+  /// **'Read members\' file reports'**
+  String get permModulesReports;
 
   /// No description provided for @navModules.
   ///

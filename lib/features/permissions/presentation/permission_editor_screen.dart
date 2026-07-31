@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/animations/animations.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/l10n/permission_labels.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/responsive.dart';
@@ -106,6 +107,10 @@ class _View extends StatelessWidget {
                               children: cubit.childrenOf(parent.id),
                               granted: state.granted,
                               busy: state.busy,
+                              byId: {
+                                for (final p in state.catalog) p.id: p,
+                              },
+                              prerequisites: state.prerequisites,
                               onToggle: cubit.toggle,
                             ),
                         ], step: const Duration(milliseconds: 40)),
@@ -169,14 +174,20 @@ class _CountHeader extends StatelessWidget {
   }
 }
 
-/// A collapsible section: a parent permission (section access) with a switch,
-/// and — when granted — its child actions as indented switches.
+/// One section of the sheet: a heading (sections are not grants) and every
+/// action under it, each with its own switch.
+///
+/// An action that depends on others says so under its name. Granting it grants
+/// the missing ground with it; revoking a ground visibly takes its dependents
+/// — the same rule the database enforces, drawn rather than documented.
 class _PermissionSection extends StatelessWidget {
   const _PermissionSection({
     required this.parent,
     required this.children,
     required this.granted,
     required this.busy,
+    required this.byId,
+    required this.prerequisites,
     required this.onToggle,
   });
 
@@ -184,13 +195,14 @@ class _PermissionSection extends StatelessWidget {
   final List<Permission> children;
   final Set<String> granted;
   final Set<String> busy;
+  final Map<String, Permission> byId;
+  final Map<String, Set<String>> prerequisites;
   final ValueChanged<String> onToggle;
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final parentGranted = granted.contains(parent.id);
     final grantedChildren = children
         .where((c) => granted.contains(c.id))
         .length;
@@ -199,57 +211,50 @@ class _PermissionSection extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: Column(
         children: [
-          SwitchListTile(
-            secondary: _busyOr(
-              parent.id,
-              Icon(AppIcons.shield, color: scheme.primary),
-            ),
+          ListTile(
+            leading: Icon(AppIcons.shield, color: scheme.primary),
             title: Text(
               permissionLabel(l, parent.code),
               style: const TextStyle(fontWeight: FontWeight.w700),
             ),
-            subtitle: (children.isEmpty || !parentGranted)
+            subtitle: children.isEmpty
                 ? null
                 : Text('$grantedChildren / ${children.length}'),
-            value: parentGranted,
-            onChanged: busy.contains(parent.id)
-                ? null
-                : (_) => onToggle(parent.id),
           ),
-          // Children are revealed only while the parent section is granted.
-          AnimatedSize(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeInOut,
-            alignment: Alignment.topCenter,
-            child: (!parentGranted || children.isEmpty)
-                ? const SizedBox(width: double.infinity)
-                : Column(
-                    children: [
-                      Divider(height: 1, color: scheme.outlineVariant),
-                      for (final child in children)
-                        SwitchListTile(
-                          contentPadding: const EdgeInsetsDirectional.only(
-                            start: 32,
-                            end: 16,
-                          ),
-                          dense: true,
-                          secondary: _busyOr(
-                            child.id,
-                            const SizedBox(width: 1),
-                          ),
-                          title: Text(permissionLabel(l, child.code)),
-                          value: granted.contains(child.id),
-                          onChanged: busy.contains(child.id)
-                              ? null
-                              : (_) => onToggle(child.id),
-                        ),
-                      const SizedBox(height: 4),
-                    ],
-                  ),
-          ),
+          Divider(height: 1, color: scheme.outlineVariant),
+          for (final child in children)
+            SwitchListTile(
+              contentPadding: const EdgeInsetsDirectional.only(
+                start: 32,
+                end: 16,
+              ),
+              dense: true,
+              secondary: _busyOr(child.id, const SizedBox(width: 1)),
+              title: Text(permissionLabel(l, child.code)),
+              subtitle: _requiresLine(l, child),
+              value: granted.contains(child.id),
+              onChanged: busy.contains(child.id)
+                  ? null
+                  : (_) => onToggle(child.id),
+            ),
+          const SizedBox(height: 4),
         ],
       ),
     );
+  }
+
+  /// "يتطلب: عرض الموظفين" — the action's direct ground, named. Written under
+  /// every dependent action, granted or not, because it also explains why
+  /// revoking the ground will pull this switch down.
+  Widget? _requiresLine(AppLocalizations l, Permission child) {
+    final reqs = prerequisites[child.id] ?? const <String>{};
+    if (reqs.isEmpty) return null;
+    final names = [
+      for (final id in reqs)
+        if (byId[id] != null) permissionLabel(l, byId[id]!.code),
+    ].join('، ');
+    if (names.isEmpty) return null;
+    return Text(l.permissionRequires(names));
   }
 
   Widget _busyOr(String id, Widget fallback) {

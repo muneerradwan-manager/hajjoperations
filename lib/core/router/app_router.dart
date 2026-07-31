@@ -75,12 +75,12 @@ abstract class Routes {
 ///     them may open it, and sees only the ones they have.
 final sectionGuards = <String, bool Function(SessionState)>{
   Routes.seasons: (s) => s.canSeeSeasons,
-  Routes.modulesManage: (s) => s.can(PermissionCodes.modulesManage),
-  Routes.reportsManage: (s) => s.can(PermissionCodes.reportsManage),
+  Routes.modulesManage: (s) => s.can(PermissionCodes.modulesViewAll),
+  Routes.reportsManage: (s) => s.can(PermissionCodes.reportsViewAll),
   Routes.employees: (s) => s.can(PermissionCodes.employeesView),
-  Routes.approvals: (s) => s.can(PermissionCodes.approvalsDecide),
-  Routes.permissions: (s) => s.can(PermissionCodes.permissionsManage),
-  Routes.referenceData: (s) => s.can(PermissionCodes.modulesTypes),
+  Routes.approvals: (s) => s.can(PermissionCodes.approvalsView),
+  Routes.permissions: (s) => s.can(PermissionCodes.permissionsView),
+  Routes.referenceData: (s) => s.can(PermissionCodes.referenceView),
 };
 
 GoRouter buildRouter(SessionCubit session) {

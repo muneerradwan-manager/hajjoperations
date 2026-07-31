@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/constants/permission_codes.dart';
 import '../../../../core/l10n/l10n_extension.dart';
 import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/glass_tokens.dart';
 import '../../../../core/widgets/glass.dart';
 import '../../../../core/widgets/profile_avatar.dart';
+import '../../../auth/application/session_cubit.dart';
 import '../../../profile/domain/profile.dart';
 import '../../application/module_editor_cubit.dart';
 import '../../domain/module_type.dart';
@@ -324,20 +327,26 @@ class _NodeEditorSheetState extends State<_NodeEditorSheet> {
                               setState(() => _data[field.key] = v),
                         ),
                       ],
-                      for (final role in level.roles) ...[
-                        const SizedBox(height: AppSpacing.md),
-                        _RolePicker(
-                          role: role,
-                          people: [
-                            for (final e in widget.employees)
-                              if ((_members[role.id] ?? const {}).contains(
-                                e.id,
-                              ))
-                                e,
-                          ],
-                          onTap: () => _pickRole(role),
-                        ),
-                      ],
+                      // Staffing is its own permission: an editor without
+                      // modules.members shapes the node but does not put
+                      // people on it, so the pickers are not offered.
+                      if (context.watch<SessionCubit>().state.can(
+                        PermissionCodes.modulesMembers,
+                      ))
+                        for (final role in level.roles) ...[
+                          const SizedBox(height: AppSpacing.md),
+                          _RolePicker(
+                            role: role,
+                            people: [
+                              for (final e in widget.employees)
+                                if ((_members[role.id] ?? const {}).contains(
+                                  e.id,
+                                ))
+                                  e,
+                            ],
+                            onTap: () => _pickRole(role),
+                          ),
+                        ],
                       const SizedBox(height: AppSpacing.lg),
                       FilledButton.icon(
                         onPressed: _submit,

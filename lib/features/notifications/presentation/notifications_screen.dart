@@ -6,7 +6,6 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
-import '../../../core/constants/permission_codes.dart';
 import '../../auth/application/session_cubit.dart';
 import '../../modules/data/modules_repository.dart';
 import '../../modules/presentation/module_detail_screen.dart';
@@ -108,9 +107,7 @@ class _ViewState extends State<_View> {
     final l = context.l10n;
     return Scaffold(
       floatingActionButton:
-          context.watch<SessionCubit>().state.can(
-            PermissionCodes.notificationsSend,
-          )
+          context.watch<SessionCubit>().state.canSendAnyNotification
           ? Builder(
               builder: (context) => FloatingActionButton.extended(
                 onPressed: () async {

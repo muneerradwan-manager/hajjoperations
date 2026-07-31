@@ -33,13 +33,13 @@ void main() {
       // that changing one without the other fails here rather than in the
       // hands of somebody who should not have seen the page.
       const owners = {
-        '/seasons': PermissionCodes.seasons,
-        '/modules/manage': PermissionCodes.modulesManage,
-        '/reports/manage': PermissionCodes.reportsManage,
+        '/seasons': PermissionCodes.seasonsView,
+        '/modules/manage': PermissionCodes.modulesViewAll,
+        '/reports/manage': PermissionCodes.reportsViewAll,
         '/employees': PermissionCodes.employeesView,
-        '/approvals': PermissionCodes.approvalsDecide,
-        '/permissions': PermissionCodes.permissionsManage,
-        '/reference-data': PermissionCodes.modulesTypes,
+        '/approvals': PermissionCodes.approvalsView,
+        '/permissions': PermissionCodes.permissionsView,
+        '/reference-data': PermissionCodes.referenceView,
       };
 
       owners.forEach((route, code) {
@@ -65,18 +65,16 @@ void main() {
       });
     });
 
-    test('the seasons door opens for any of the three season permissions', () {
-      // The permissions editor grants the section before it shows the actions,
-      // but nothing in the database enforces that order, and a row written any
-      // other way still means this person works with seasons.
+    test('the seasons door opens for seasons.view alone', () {
+      // Every other seasons action names seasons.view as a prerequisite and
+      // the DB refuses a grant without it (0073), so the guard needs only the
+      // one code.
       final guard = sectionGuards['/seasons']!;
-      for (final code in [
-        PermissionCodes.seasons,
-        PermissionCodes.seasonsManage,
-        PermissionCodes.seasonsParticipants,
-      ]) {
-        expect(guard(_holding({code})), isTrue, reason: '$code was refused');
-      }
+      expect(
+        guard(_holding({PermissionCodes.seasonsView})),
+        isTrue,
+        reason: 'seasons.view was refused',
+      );
     });
 
     test('an admin is admitted everywhere without holding a single code', () {

@@ -179,11 +179,17 @@ class _ViewState extends State<_View> {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final session = context.watch<SessionCubit>().state;
-    // Both, and in that order: holding the permission is what makes editing
+    // Both, and in that order: holding the permission is what makes the act
     // possible at all, and coming in through إدارة الملفات is what makes this
     // page the place to do it. See [ModuleDetailScreen.fromOffice].
-    final canManage =
-        widget.fromOffice && session.can(PermissionCodes.modulesManage);
+    final canEdit =
+        widget.fromOffice && session.can(PermissionCodes.modulesEdit);
+    final canDelete =
+        widget.fromOffice && session.can(PermissionCodes.modulesDelete);
+    final canActivate =
+        widget.fromOffice && session.can(PermissionCodes.modulesActivate);
+    final canMembers =
+        widget.fromOffice && session.can(PermissionCodes.modulesMembers);
 
     return BlocBuilder<ModuleDetailCubit, ModuleDetailState>(
       builder: (context, state) {
@@ -204,25 +210,27 @@ class _ViewState extends State<_View> {
                     l.modulesTitle,
               ),
               actions: [
-                if (canManage && module != null)
+                if ((canEdit || canDelete) && module != null)
                   OverflowMenu(
                     actions: [
-                      MenuAction(
-                        icon: AppIcons.edit,
-                        label: l.commonEdit,
-                        onSelected: () => _edit(module),
-                      ),
-                      MenuAction(
-                        icon: AppIcons.delete,
-                        label: l.moduleDelete,
-                        isDestructive: true,
-                        onSelected: _delete,
-                      ),
+                      if (canEdit)
+                        MenuAction(
+                          icon: AppIcons.edit,
+                          label: l.commonEdit,
+                          onSelected: () => _edit(module),
+                        ),
+                      if (canDelete)
+                        MenuAction(
+                          icon: AppIcons.delete,
+                          label: l.moduleDelete,
+                          isDestructive: true,
+                          onSelected: _delete,
+                        ),
                     ],
                   ),
               ],
             ),
-            bottomNavigationBar: (canManage && module != null)
+            bottomNavigationBar: (canActivate && module != null)
                 ? GlassSurface(
                     radius: 0,
                     strong: true,
@@ -260,7 +268,8 @@ class _ViewState extends State<_View> {
               ModuleDetailStatus.ready => _Body(
                 state: state,
                 module: module!,
-                canManage: canManage,
+                canEdit: canEdit,
+                canMembers: canMembers,
                 onOpenPdf: _openPdf,
                 onBuildTree: () => _edit(module, step: 1),
               ),
@@ -276,14 +285,16 @@ class _Body extends StatefulWidget {
   const _Body({
     required this.state,
     required this.module,
-    required this.canManage,
+    required this.canEdit,
+    required this.canMembers,
     required this.onOpenPdf,
     required this.onBuildTree,
   });
 
   final ModuleDetailState state;
   final OperationalModule module;
-  final bool canManage;
+  final bool canEdit;
+  final bool canMembers;
   final void Function(ModuleFile file) onOpenPdf;
   final VoidCallback onBuildTree;
 
@@ -301,7 +312,8 @@ class _BodyState extends State<_Body> {
 
   ModuleDetailState get state => widget.state;
   OperationalModule get module => widget.module;
-  bool get canManage => widget.canManage;
+  bool get canEdit => widget.canEdit;
+  bool get canMembers => widget.canMembers;
 
   String _display(BuildContext context, ModuleField field) =>
       displayFieldValue(context, state, field, module.data[field.key]);
@@ -348,10 +360,11 @@ class _BodyState extends State<_Body> {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
+    // Writing to the whole file is a broadcast, and carries its own permission.
     final canNotify = context
         .watch<SessionCubit>()
         .state
-        .can(PermissionCodes.notificationsSend);
+        .can(PermissionCodes.notificationsBroadcastModule);
     final (rolesPresent, roleCounts) = _rolesPresent();
     final showing = _showing();
     final type = state.type;
@@ -532,7 +545,7 @@ class _BodyState extends State<_Body> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(l.moduleNoNodes),
-                if (canManage) ...[
+                if (canEdit) ...[
                   const SizedBox(height: AppSpacing.md),
                   OutlinedButton.icon(
                     onPressed: widget.onBuildTree,
@@ -565,7 +578,7 @@ class _BodyState extends State<_Body> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(l.moduleNoMembers),
-              if (canManage) ...[
+              if (canMembers) ...[
                 const SizedBox(height: AppSpacing.md),
                 OutlinedButton.icon(
                   onPressed: widget.onBuildTree,

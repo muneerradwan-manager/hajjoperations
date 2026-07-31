@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/attachments/attachment_picker.dart';
+import '../../../core/constants/permission_codes.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
+import '../../auth/application/session_cubit.dart';
 import '../../modules/data/modules_repository.dart';
 import '../../modules/domain/operational_module.dart';
 import '../../seasons/data/seasons_repository.dart';
@@ -69,10 +72,27 @@ class _FormState extends State<_Form> {
   bool get _asksAudience =>
       widget.recipientId == null && widget.moduleId == null;
 
+  /// The audiences this sender's permissions actually reach. Each blast radius
+  /// is its own permission, so the dropdown offers only what would not be
+  /// refused by the server.
+  late final List<SendAudience> _allowed;
+
   @override
   void initState() {
     super.initState();
-    if (_asksAudience) _modules = _loadModules();
+    final session = context.read<SessionCubit>().state;
+    _allowed = [
+      if (session.can(PermissionCodes.notificationsBroadcastAll))
+        SendAudience.all,
+      if (session.can(PermissionCodes.notificationsBroadcastModule))
+        SendAudience.module,
+    ];
+    if (_asksAudience) {
+      if (!_allowed.contains(_audience) && _allowed.isNotEmpty) {
+        _audience = _allowed.first;
+      }
+      _modules = _loadModules();
+    }
   }
 
   Future<List<OperationalModule>> _loadModules() async {
@@ -163,6 +183,7 @@ class _FormState extends State<_Form> {
             if (_asksAudience) ...[
               _AudienceField(
                 audience: _audience,
+                allowed: _allowed,
                 onChanged: (v) => setState(() => _audience = v),
               ),
               if (_audience == SendAudience.module) ...[
@@ -257,9 +278,14 @@ class _FormState extends State<_Form> {
 /// Everyone, or the members of one file. A person is not offered here — that
 /// send starts from their page, where you already know who you mean.
 class _AudienceField extends StatelessWidget {
-  const _AudienceField({required this.audience, required this.onChanged});
+  const _AudienceField({
+    required this.audience,
+    required this.allowed,
+    required this.onChanged,
+  });
 
   final SendAudience audience;
+  final List<SendAudience> allowed;
   final ValueChanged<SendAudience> onChanged;
 
   @override
@@ -274,16 +300,18 @@ class _AudienceField extends StatelessWidget {
         prefixIcon: const Icon(AppIcons.participants),
       ),
       items: [
-        DropdownMenuItem(
-          value: SendAudience.all,
-          child: Text(l.notificationAudienceAll),
-        ),
-        DropdownMenuItem(
-          value: SendAudience.module,
-          child: Text(l.notificationAudienceModule),
-        ),
+        if (allowed.contains(SendAudience.all))
+          DropdownMenuItem(
+            value: SendAudience.all,
+            child: Text(l.notificationAudienceAll),
+          ),
+        if (allowed.contains(SendAudience.module))
+          DropdownMenuItem(
+            value: SendAudience.module,
+            child: Text(l.notificationAudienceModule),
+          ),
       ],
-      onChanged: (v) => onChanged(v ?? SendAudience.all),
+      onChanged: (v) => onChanged(v ?? audience),
     );
   }
 }

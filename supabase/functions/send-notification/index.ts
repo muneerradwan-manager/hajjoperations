@@ -4,7 +4,10 @@
 // via FCM HTTP v1. The in-app inbox row is inserted by the client (RLS-guarded);
 // this function is push-only and best-effort.
 //
-// Auth: caller must be an approved admin or hold `notifications.send`.
+// Auth: caller must be an approved admin, or hold the permission matching the
+// send's shape — `notifications.send` for one person,
+// `notifications.broadcast_module` for a file topic,
+// `notifications.broadcast_all` for the everyone topic.
 //
 // Secret required (set once):
 //   supabase secrets set FIREBASE_SERVICE_ACCOUNT="$(cat firebase/hajjoperations-firebase-adminsdk-*.json)"
@@ -100,21 +103,6 @@ Deno.serve(async (req) => {
     const callerId = u?.user?.id;
     if (!callerId) return json({ error: 'unauthorized' }, 401);
 
-    const admin = createClient(url, serviceKey);
-    const { data: allowed } = await admin.rpc('has_permission', {
-      p_code: 'notifications.send',
-    });
-    // has_permission runs as the definer using the caller context only when
-    // invoked with their JWT; here we re-check via a direct query instead.
-    const { data: prof } = await admin
-      .from('profiles')
-      .select('is_admin, account_status, is_suspended')
-      .eq('id', callerId)
-      .single();
-    const isAdmin =
-      prof?.is_admin && prof?.account_status === 'approved' && !prof?.is_suspended;
-    if (!isAdmin && allowed !== true) return json({ error: 'forbidden' }, 403);
-
     // Two shapes of send:
     //
     //   { recipient_id } — one person, fanned out over their devices here.
@@ -130,6 +118,36 @@ Deno.serve(async (req) => {
     const { recipient_id, topic, title, body, data } = (await req.json()) ?? {};
     if (!title || (!recipient_id && !topic)) {
       return json({ error: 'title and one of recipient_id / topic are required' }, 400);
+    }
+
+    // The shape of the send decides which permission it needs — the same three
+    // the database enforces on the inbox rows (0073): one person, one file's
+    // topic, or the everyone topic.
+    const requiredCode = recipient_id
+      ? 'notifications.send'
+      : topic === 'all'
+        ? 'notifications.broadcast_all'
+        : 'notifications.broadcast_module';
+
+    const admin = createClient(url, serviceKey);
+    // `has_permission` reads auth.uid(), which a service-role call does not
+    // carry — so the grant is read directly, the way admin-delete-user does.
+    const { data: prof } = await admin
+      .from('profiles')
+      .select('is_admin, account_status, is_suspended')
+      .eq('id', callerId)
+      .single();
+    const active =
+      prof?.account_status === 'approved' && !prof?.is_suspended;
+    if (!active) return json({ error: 'forbidden' }, 403);
+    if (!prof?.is_admin) {
+      const { data: grant } = await admin
+        .from('user_permissions')
+        .select('permission_id, permissions!inner(code)')
+        .eq('user_id', callerId)
+        .eq('permissions.code', requiredCode)
+        .maybeSingle();
+      if (!grant) return json({ error: 'forbidden' }, 403);
     }
     // A topic name reaches FCM verbatim, so it is checked rather than trusted.
     if (topic && !/^[a-zA-Z0-9\-_.~%]{1,900}$/.test(topic)) {

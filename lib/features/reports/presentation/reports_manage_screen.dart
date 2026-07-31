@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/animations/animations.dart';
+import '../../../core/constants/permission_codes.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/supabase/supabase_client.dart';
 import '../../../core/theme/app_icons.dart';
@@ -10,6 +11,7 @@ import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/overflow_menu.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
+import '../../auth/application/session_cubit.dart';
 import '../../seasons/data/seasons_repository.dart';
 import '../application/reports_cubit.dart';
 import '../data/reports_repository.dart';
@@ -94,16 +96,22 @@ class _View extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
+    final session = context.watch<SessionCubit>().state;
+    final canCreate = session.can(PermissionCodes.reportsCreate);
+    final canEdit = session.can(PermissionCodes.reportsEdit);
+    final canDelete = session.can(PermissionCodes.reportsDelete);
 
     return Scaffold(
       appBar: GlassAppBar(title: Text(l.navReportsManage)),
-      floatingActionButton: Builder(
-        builder: (context) => FloatingActionButton.extended(
-          onPressed: () => _edit(context),
-          icon: const Icon(AppIcons.add),
-          label: Text(l.reportNew),
-        ),
-      ),
+      floatingActionButton: canCreate
+          ? Builder(
+              builder: (context) => FloatingActionButton.extended(
+                onPressed: () => _edit(context),
+                icon: const Icon(AppIcons.add),
+                label: Text(l.reportNew),
+              ),
+            )
+          : null,
       body: SafeArea(
         child: BlocBuilder<ReportsCubit, ReportsState>(
           builder: (context, state) {
@@ -173,23 +181,29 @@ class _View extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                trailing: OverflowMenu(
-                                  actions: [
-                                    MenuAction(
-                                      icon: AppIcons.edit,
-                                      label: l.commonEdit,
-                                      onSelected: () =>
-                                          _edit(context, existing: visible[i]),
-                                    ),
-                                    MenuAction(
-                                      icon: AppIcons.delete,
-                                      label: l.commonDelete,
-                                      isDestructive: true,
-                                      onSelected: () =>
-                                          _delete(context, visible[i]),
-                                    ),
-                                  ],
-                                ),
+                                trailing: (canEdit || canDelete)
+                                    ? OverflowMenu(
+                                        actions: [
+                                          if (canEdit)
+                                            MenuAction(
+                                              icon: AppIcons.edit,
+                                              label: l.commonEdit,
+                                              onSelected: () => _edit(
+                                                context,
+                                                existing: visible[i],
+                                              ),
+                                            ),
+                                          if (canDelete)
+                                            MenuAction(
+                                              icon: AppIcons.delete,
+                                              label: l.commonDelete,
+                                              isDestructive: true,
+                                              onSelected: () =>
+                                                  _delete(context, visible[i]),
+                                            ),
+                                        ],
+                                      )
+                                    : null,
                               ),
                             ),
                           ),

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../core/constants/permission_codes.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
+import '../../auth/application/session_cubit.dart';
 import '../../modules/data/modules_repository.dart';
 import '../../modules/presentation/widgets/module_field_input.dart';
 import '../../seasons/data/seasons_repository.dart';
@@ -233,13 +235,21 @@ class _IdentityState extends State<_Identity> {
             ],
             onChanged: widget.cubit.setSeason,
           ),
+          // Publishing carries its own permission: an editor without it keeps
+          // the switch in sight — the report's state is a fact of the page —
+          // but cannot throw it.
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             secondary: const Icon(AppIcons.activate),
             title: Text(l.reportPublished),
             subtitle: Text(l.reportPublishedHint),
             value: s.isPublished,
-            onChanged: widget.cubit.setPublished,
+            onChanged:
+                context.watch<SessionCubit>().state.can(
+                  PermissionCodes.reportsPublish,
+                )
+                ? widget.cubit.setPublished
+                : null,
           ),
         ],
       ),

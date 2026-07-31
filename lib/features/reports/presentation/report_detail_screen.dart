@@ -118,25 +118,33 @@ class _View extends StatelessWidget {
           appBar: GlassAppBar(
             title: Text(report?.title ?? l.navReports),
             actions: [
-              if (fromOffice &&
-                  report != null &&
-                  context.watch<SessionCubit>().state.can(
-                    PermissionCodes.reportsManage,
-                  ))
-                OverflowMenu(
-                  actions: [
-                    MenuAction(
-                      icon: AppIcons.edit,
-                      label: l.commonEdit,
-                      onSelected: () => _edit(context, report),
-                    ),
-                    MenuAction(
-                      icon: AppIcons.delete,
-                      label: l.commonDelete,
-                      isDestructive: true,
-                      onSelected: () => _delete(context, report),
-                    ),
-                  ],
+              if (fromOffice && report != null)
+                Builder(
+                  builder: (context) {
+                    final session = context.watch<SessionCubit>().state;
+                    final canEdit = session.can(PermissionCodes.reportsEdit);
+                    final canDelete = session.can(PermissionCodes.reportsDelete);
+                    if (!canEdit && !canDelete) {
+                      return const SizedBox.shrink();
+                    }
+                    return OverflowMenu(
+                      actions: [
+                        if (canEdit)
+                          MenuAction(
+                            icon: AppIcons.edit,
+                            label: l.commonEdit,
+                            onSelected: () => _edit(context, report),
+                          ),
+                        if (canDelete)
+                          MenuAction(
+                            icon: AppIcons.delete,
+                            label: l.commonDelete,
+                            isDestructive: true,
+                            onSelected: () => _delete(context, report),
+                          ),
+                      ],
+                    );
+                  },
                 ),
             ],
           ),

@@ -108,14 +108,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final session = context.watch<SessionCubit>().state;
     final profile = session.profile;
 
-    final canApprove = session.can(PermissionCodes.approvalsDecide);
-    final canManagePermissions = session.can(PermissionCodes.permissionsManage);
+    final canApprove = session.can(PermissionCodes.approvalsView);
+    final canManagePermissions = session.can(PermissionCodes.permissionsView);
     final canViewEmployees = session.can(PermissionCodes.employeesView);
-    final canManageReferenceData = session.can(PermissionCodes.modulesTypes);
+    final canManageReferenceData = session.can(PermissionCodes.referenceView);
 
     final canSeeSeasons = session.canSeeSeasons;
-    final canManageModules = session.can(PermissionCodes.modulesManage);
-    final canManageReports = session.can(PermissionCodes.reportsManage);
+    final canManageModules = session.can(PermissionCodes.modulesViewAll);
+    final canManageReports = session.can(PermissionCodes.reportsViewAll);
 
     // The dashboard has a section per permission and drops the rest, so the
     // door opens for anyone holding any one of them. Listed here rather than

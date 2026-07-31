@@ -10,6 +10,7 @@ class PermissionEditorState extends Equatable {
   const PermissionEditorState({
     this.status = PermissionEditorStatus.loading,
     this.catalog = const [],
+    this.prerequisites = const {},
     this.granted = const {},
     this.busy = const {},
     this.error,
@@ -17,6 +18,10 @@ class PermissionEditorState extends Equatable {
 
   final PermissionEditorStatus status;
   final List<Permission> catalog;
+
+  /// permission id → the ids it requires. The same rows the DB enforces with,
+  /// so what this editor promises is exactly what the server will hold to.
+  final Map<String, Set<String>> prerequisites;
   final Set<String> granted; // permission ids
   final Set<String> busy; // permission ids currently toggling
   final String? error;
@@ -24,6 +29,7 @@ class PermissionEditorState extends Equatable {
   PermissionEditorState copyWith({
     PermissionEditorStatus? status,
     List<Permission>? catalog,
+    Map<String, Set<String>>? prerequisites,
     Set<String>? granted,
     Set<String>? busy,
     String? error,
@@ -31,6 +37,7 @@ class PermissionEditorState extends Equatable {
     return PermissionEditorState(
       status: status ?? this.status,
       catalog: catalog ?? this.catalog,
+      prerequisites: prerequisites ?? this.prerequisites,
       granted: granted ?? this.granted,
       busy: busy ?? this.busy,
       error: error,
@@ -38,11 +45,24 @@ class PermissionEditorState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [status, catalog, granted, busy, error];
+  List<Object?> get props => [
+    status,
+    catalog,
+    prerequisites,
+    granted,
+    busy,
+    error,
+  ];
 }
 
-/// Loads the catalog + the employee's granted set and toggles each permission,
-/// writing through to the DB immediately.
+/// Loads the catalog, the dependency rows and the employee's granted set, and
+/// toggles actions — writing through to the DB immediately.
+///
+/// Sections are headings, not grants; only actions toggle. Granting an action
+/// grants its missing prerequisites first (ground before what stands on it —
+/// the DB refuses any other order), and revoking one lets the DB cascade the
+/// revoke onto everything that required it, then re-reads the sheet so the
+/// switches show what actually happened.
 class PermissionEditorCubit extends SafeCubit<PermissionEditorState> {
   PermissionEditorCubit(this._repo, this.userId)
     : super(const PermissionEditorState()) {
@@ -57,13 +77,15 @@ class PermissionEditorCubit extends SafeCubit<PermissionEditorState> {
     try {
       final results = await Future.wait([
         _repo.fetchCatalog(),
+        _repo.fetchPrerequisites(),
         _repo.fetchGranted(userId),
       ]);
       emit(
         state.copyWith(
           status: PermissionEditorStatus.ready,
           catalog: results[0] as List<Permission>,
-          granted: results[1] as Set<String>,
+          prerequisites: results[1] as Map<String, Set<String>>,
+          granted: results[2] as Set<String>,
         ),
       );
     } catch (e) {
@@ -79,74 +101,92 @@ class PermissionEditorCubit extends SafeCubit<PermissionEditorState> {
   List<Permission> childrenOf(String parentId) =>
       state.catalog.where((p) => p.parentId == parentId).toList();
 
-  /// Toggles a permission. Parents cascade: turning a parent off revokes all its
-  /// granted children; a child can only be toggled while its parent is granted.
+  /// The prerequisites of [id] not yet granted, transitively, ordered so every
+  /// requirement precedes what requires it.
+  List<String> missingPrerequisitesOf(String id) {
+    final out = <String>[];
+    void visit(String p) {
+      for (final req in state.prerequisites[p] ?? const <String>{}) {
+        if (state.granted.contains(req) || out.contains(req)) continue;
+        visit(req);
+        out.add(req);
+      }
+    }
+
+    visit(id);
+    return out;
+  }
+
+  /// The granted permissions that stand on [id], transitively — what a revoke
+  /// of [id] will take with it.
+  Set<String> grantedDependentsOf(String id) {
+    bool requires(String p, String target, Set<String> seen) {
+      if (!seen.add(p)) return false;
+      final reqs = state.prerequisites[p] ?? const <String>{};
+      return reqs.contains(target) ||
+          reqs.any((r) => requires(r, target, seen));
+    }
+
+    return {
+      for (final g in state.granted)
+        if (g != id && requires(g, id, <String>{})) g,
+    };
+  }
+
+  /// Toggles an action. Sections have no switch and are refused outright.
   Future<void> toggle(String permissionId) async {
     if (state.busy.contains(permissionId)) return;
     final perm = state.catalog.firstWhere((p) => p.id == permissionId);
+    if (perm.isParent) return;
     final isGranted = state.granted.contains(permissionId);
 
-    emit(state.copyWith(busy: {...state.busy, permissionId}));
-    try {
-      if (perm.isParent) {
-        if (isGranted) {
-          // Revoke the parent and every granted child.
-          final children = childrenOf(
-            perm.id,
-          ).where((c) => state.granted.contains(c.id)).toList();
-          for (final c in children) {
-            await _repo.revoke(userId, c.id);
-          }
-          await _repo.revoke(userId, perm.id);
-          final removed = {perm.id, ...children.map((c) => c.id)};
-          emit(
-            state.copyWith(
-              granted: state.granted.difference(removed),
-              busy: state.busy.difference({permissionId}),
-            ),
-          );
-        } else {
-          await _repo.grant(userId, perm.id);
-          emit(
-            state.copyWith(
-              granted: {...state.granted, perm.id},
-              busy: state.busy.difference({permissionId}),
-            ),
-          );
-        }
-      } else {
-        // Child — parent must be granted first (UI enforces this too).
-        if (!isGranted &&
-            perm.parentId != null &&
-            !state.granted.contains(perm.parentId)) {
-          emit(state.copyWith(busy: state.busy.difference({permissionId})));
-          return;
-        }
-        if (isGranted) {
-          await _repo.revoke(userId, perm.id);
-          emit(
-            state.copyWith(
-              granted: state.granted.difference({perm.id}),
-              busy: state.busy.difference({permissionId}),
-            ),
-          );
-        } else {
-          await _repo.grant(userId, perm.id);
-          emit(
-            state.copyWith(
-              granted: {...state.granted, perm.id},
-              busy: state.busy.difference({permissionId}),
-            ),
-          );
-        }
+    if (isGranted) {
+      // The DB cascades this revoke onto every dependent, so the sheet is
+      // re-read afterwards rather than second-guessed.
+      final affected = {permissionId, ...grantedDependentsOf(permissionId)};
+      emit(state.copyWith(busy: {...state.busy, ...affected}));
+      try {
+        await _repo.revoke(userId, permissionId);
+        final granted = await _repo.fetchGranted(userId);
+        emit(
+          state.copyWith(
+            granted: granted,
+            busy: state.busy.difference(affected),
+          ),
+        );
+      } catch (e) {
+        emit(
+          state.copyWith(
+            busy: state.busy.difference(affected),
+            error: e.toString(),
+          ),
+        );
       }
-    } catch (e) {
-      emit(
-        state.copyWith(
-          busy: state.busy.difference({permissionId}),
-          error: e.toString(),
-        ),
-      );
+    } else {
+      // Ground first: the DB refuses a grant whose prerequisites are absent.
+      final chain = [...missingPrerequisitesOf(permissionId), permissionId];
+      emit(state.copyWith(busy: {...state.busy, ...chain}));
+      try {
+        for (final id in chain) {
+          await _repo.grant(userId, id);
+        }
+        emit(
+          state.copyWith(
+            granted: {...state.granted, ...chain},
+            busy: state.busy.difference(chain.toSet()),
+          ),
+        );
+      } catch (e) {
+        // A chain may have landed partway; re-read rather than guess.
+        final granted = await _repo.fetchGranted(userId);
+        emit(
+          state.copyWith(
+            granted: granted,
+            busy: state.busy.difference(chain.toSet()),
+            error: e.toString(),
+          ),
+        );
+      }
     }
   }
 }

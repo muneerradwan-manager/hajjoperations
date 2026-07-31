@@ -129,13 +129,16 @@ class _View extends StatelessWidget {
     final canEdit = session.can(PermissionCodes.employeesEdit);
     final canDelete = session.can(PermissionCodes.employeesDelete);
     final canSetPassword = session.can(PermissionCodes.employeesPassword);
-    final canManagePermissions = session.can(PermissionCodes.permissionsManage);
+    final canSeePermissions = session.can(PermissionCodes.permissionsView);
+    final canSeeParticipation = session.can(
+      PermissionCodes.seasonsParticipantsView,
+    );
     final canManageParticipants = session.can(
-      PermissionCodes.seasonsParticipants,
+      PermissionCodes.seasonsParticipantsManage,
     );
     final canNotify = session.can(PermissionCodes.notificationsSend);
     final canSeeModules =
-        session.can(PermissionCodes.modulesManage) ||
+        session.can(PermissionCodes.modulesViewAll) ||
         session.can(PermissionCodes.modulesMembers);
     final showManagement = canSuspend || canExternal || canManageParticipants;
 
@@ -309,10 +312,10 @@ class _View extends StatelessWidget {
                   ),
                 ],
               ),
-              // Reading another employee's participation rows needs the
-              // same permission as managing them, so gate on it rather
-              // than render an empty list the viewer cannot see into.
-              if (canManageParticipants) ...[
+              // Reading another employee's participation rows is its own
+              // permission now, so gate on it rather than render an empty
+              // list the viewer cannot see into.
+              if (canSeeParticipation) ...[
                 const SizedBox(height: AppSpacing.lg),
                 _SeasonHistorySection(state: state),
               ],
@@ -326,11 +329,10 @@ class _View extends StatelessWidget {
                 profileId: p.id,
                 showWhenEmpty: canSeeModules,
               ),
-              // What this person is ALLOWED to do, for whoever decides it.
-              // Gated on the permission that grants and revokes: reading
-              // someone's permissions is the first half of changing them, and
-              // it is not everyone's business.
-              if (canManagePermissions) ...[
+              // What this person is ALLOWED to do, for whoever may read grant
+              // sheets: seeing is permissions.view, changing is
+              // permissions.manage, and this card only reads.
+              if (canSeePermissions) ...[
                 const SizedBox(height: AppSpacing.lg),
                 _GrantedPermissionsSection(profile: p),
               ],

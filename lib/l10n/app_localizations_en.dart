@@ -439,40 +439,94 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permEmployeesDelete => 'Delete employee records';
 
   @override
-  String get permEmployeesPassword => 'Reset employee passwords';
+  String get permEmployeesPassword => 'Reset an employee\'s password';
 
   @override
-  String get permEmployeesSuspend => 'Suspend / reactivate accounts';
+  String get permEmployeesSuspend => 'Suspend & reactivate accounts';
 
   @override
   String get permEmployeesExternal => 'Manage external status';
 
   @override
-  String get permEmployeesDocuments => 'View documents';
+  String get permEmployeesDocuments => 'View employee documents';
 
   @override
-  String get permApprovalsDecide => 'Approve & reject accounts';
+  String get permApprovalsView => 'View registration requests';
 
   @override
-  String get permSeasonsManage => 'Manage seasons';
+  String get permApprovalsDecide => 'Approve & reject requests';
 
   @override
-  String get permSeasonsParticipants => 'Manage participants';
+  String get permSeasonsView => 'View seasons';
+
+  @override
+  String get permSeasonsSwitch => 'Set the current season';
+
+  @override
+  String get permSeasonsParticipantsView => 'View season participants';
+
+  @override
+  String get permSeasonsParticipantsManage => 'Add & withdraw participants';
+
+  @override
+  String get permPermissionsView => 'View granted permissions';
 
   @override
   String get permPermissionsManage => 'Grant & revoke permissions';
 
   @override
+  String get perm_reference => 'Master data';
+
+  @override
+  String get permReferenceView => 'View master data';
+
+  @override
+  String get permReferenceEdit => 'Add & edit master data';
+
+  @override
+  String get permReferenceDelete => 'Delete master data';
+
+  @override
+  String get permReferenceImport => 'Copy data from another season';
+
+  @override
   String get perm_reports => 'Reports';
 
   @override
-  String get permReportsManage => 'Create, edit & publish reports';
+  String get permReportsViewAll => 'View all reports, including drafts';
+
+  @override
+  String get permReportsCreate => 'Create reports';
+
+  @override
+  String get permReportsEdit => 'Edit reports';
+
+  @override
+  String get permReportsDelete => 'Delete reports';
+
+  @override
+  String get permReportsPublish => 'Publish & unpublish reports';
 
   @override
   String get perm_notifications => 'Notifications';
 
   @override
-  String get permNotificationsSend => 'Send notifications';
+  String get permNotificationsSend => 'Notify an individual employee';
+
+  @override
+  String get permNotificationsBroadcastModule => 'Notify a file\'s members';
+
+  @override
+  String get permNotificationsBroadcastAll => 'Notify everyone';
+
+  @override
+  String permissionRequires(String names) {
+    return 'Requires: $names';
+  }
+
+  @override
+  String get permissionDenied =>
+      'You don\'t hold the permission this action needs';
 
   @override
   String get navNotifications => 'Notifications';
@@ -1040,16 +1094,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonDelete => 'Delete';
 
   @override
-  String get perm_modules => 'Operational modules';
+  String get perm_modules => 'Operational files';
 
   @override
-  String get permModulesManage => 'Create, edit & activate modules';
+  String get permModulesViewAll => 'View all files, including drafts';
 
   @override
-  String get permModulesMembers => 'Assign module members';
+  String get permModulesCreate => 'Create an operational file';
 
   @override
-  String get permModulesTypes => 'Manage module types & master data';
+  String get permModulesEdit => 'Edit a file & its structure';
+
+  @override
+  String get permModulesDelete => 'Delete an operational file';
+
+  @override
+  String get permModulesActivate => 'Activate & deactivate files';
+
+  @override
+  String get permModulesMembers => 'Assign members & duties';
+
+  @override
+  String get permModulesReports => 'Read members\' file reports';
 
   @override
   String get navModules => 'Operational modules';

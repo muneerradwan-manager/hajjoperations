@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/animations/animations.dart';
+import '../../../core/constants/permission_codes.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
@@ -11,6 +12,7 @@ import '../../../core/widgets/overflow_menu.dart';
 import '../../../core/widgets/profile_avatar.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
+import '../../auth/application/session_cubit.dart';
 import '../application/module_editor_cubit.dart';
 import '../data/modules_repository.dart';
 import '../domain/module_type.dart';
@@ -129,8 +131,18 @@ class _ViewState extends State<_View> {
     Navigator.of(context).pop(_dirty);
   }
 
+  /// Whether this editor may also staff the file. Editing the structure and
+  /// putting people on it are two permissions; the server refuses the second
+  /// without its code, so the sheet is not opened on a promise it cannot keep.
+  bool get _canStaff =>
+      context.read<SessionCubit>().state.can(PermissionCodes.modulesMembers);
+
   /// Puts people on one of the teams of a file that has no tree.
   Future<void> _pickTeam(ModuleRole role) async {
+    if (!_canStaff) {
+      _say(context.l10n.permissionDenied);
+      return;
+    }
     final cubit = context.read<ModuleEditorCubit>();
 
     final result = await showEmployeePicker(
@@ -157,6 +169,10 @@ class _ViewState extends State<_View> {
   /// What is open to him is his role's own list and the file's, whichever the
   /// type declares, laid out in the stages the work happens in.
   Future<void> _pickTasks(ModuleRole role, ModuleMember member) async {
+    if (!_canStaff) {
+      _say(context.l10n.permissionDenied);
+      return;
+    }
     final cubit = context.read<ModuleEditorCubit>();
     final type = cubit.state.type;
     final l = context.l10n;

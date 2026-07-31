@@ -64,9 +64,9 @@ class _SeasonDetailScreenState extends State<SeasonDetailScreen> {
     final l = context.l10n;
     final session = context.watch<SessionCubit>().state;
     final canManageParticipants = session.can(
-      PermissionCodes.seasonsParticipants,
+      PermissionCodes.seasonsParticipantsManage,
     );
-    final canManageSeasons = session.can(PermissionCodes.seasonsManage);
+    final canSwitchSeason = session.can(PermissionCodes.seasonsSwitch);
 
     return Scaffold(
       appBar: GlassAppBar(
@@ -192,7 +192,7 @@ class _SeasonDetailScreenState extends State<SeasonDetailScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: (!widget.season.isCurrent && canManageSeasons)
+      bottomNavigationBar: (!widget.season.isCurrent && canSwitchSeason)
           ? GlassSurface(
               radius: 0,
               strong: true,

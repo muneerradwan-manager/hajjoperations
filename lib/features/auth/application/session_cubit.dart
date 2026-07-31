@@ -35,22 +35,24 @@ class SessionState extends Equatable {
   bool get isAdmin => profile?.isAdmin ?? false;
   bool can(String code) => isAdmin || permissions.contains(code);
 
-  /// Whether seasons are this person's business at all — the section itself, or
-  /// either of the two things one can do inside it.
+  /// Whether seasons are this person's business at all.
+  ///
+  /// `seasons.view` is the door, and every other seasons action requires it as
+  /// a prerequisite (enforced by the DB, see 0073) — so asking for the door
+  /// alone is asking for all of them.
   ///
   /// A getter rather than a check written out at each call site, because it is
   /// asked in two places that must not drift: the dashboard decides whether to
   /// show the door, and the router decides whether the door opens. A rule kept
   /// in one of those places only is decoration.
-  ///
-  /// All three codes are asked. The permissions editor grants the section
-  /// before it will show the actions, but nothing in the database enforces that
-  /// order, and a row written any other way still means this person works with
-  /// seasons.
-  bool get canSeeSeasons =>
-      can(PermissionCodes.seasons) ||
-      can(PermissionCodes.seasonsManage) ||
-      can(PermissionCodes.seasonsParticipants);
+  bool get canSeeSeasons => can(PermissionCodes.seasonsView);
+
+  /// Whether one may send a notification of any of the three blast radii —
+  /// what decides if a compose button appears at all.
+  bool get canSendAnyNotification =>
+      can(PermissionCodes.notificationsSend) ||
+      can(PermissionCodes.notificationsBroadcastModule) ||
+      can(PermissionCodes.notificationsBroadcastAll);
 
   SessionState copyWith({
     SessionStatus? status,

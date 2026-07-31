@@ -35,18 +35,14 @@ void main() {
     );
   });
 
-  test('the section, or either action inside it, is enough', () {
-    for (final code in [
-      PermissionCodes.seasons,
-      PermissionCodes.seasonsManage,
-      PermissionCodes.seasonsParticipants,
-    ]) {
-      expect(
-        session(permissions: {code}).canSeeSeasons,
-        isTrue,
-        reason: '$code should open the seasons section',
-      );
-    }
+  test('seasons.view is the door', () {
+    // Every other seasons action requires seasons.view as a prerequisite —
+    // the DB refuses a grant without it (0073) — so the door only ever needs
+    // to ask for the one code.
+    expect(
+      session(permissions: {PermissionCodes.seasonsView}).canSeeSeasons,
+      isTrue,
+    );
   });
 
   test('an admin sees everything, as everywhere else', () {

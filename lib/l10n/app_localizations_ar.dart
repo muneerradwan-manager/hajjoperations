@@ -438,40 +438,93 @@ class AppLocalizationsAr extends AppLocalizations {
   String get permEmployeesDelete => 'حذف الموظفين';
 
   @override
-  String get permEmployeesPassword => 'تغيير كلمة مرور الموظفين';
+  String get permEmployeesPassword => 'إعادة تعيين كلمة مرور موظف';
 
   @override
-  String get permEmployeesSuspend => 'إيقاف/تفعيل الحسابات';
+  String get permEmployeesSuspend => 'إيقاف الحسابات وتفعيلها';
 
   @override
   String get permEmployeesExternal => 'إدارة الصفة الخارجية';
 
   @override
-  String get permEmployeesDocuments => 'عرض المستندات';
+  String get permEmployeesDocuments => 'عرض مستندات الموظفين';
 
   @override
-  String get permApprovalsDecide => 'قبول ورفض الحسابات';
+  String get permApprovalsView => 'عرض طلبات التسجيل';
 
   @override
-  String get permSeasonsManage => 'إدارة المواسم';
+  String get permApprovalsDecide => 'قبول الطلبات ورفضها';
 
   @override
-  String get permSeasonsParticipants => 'إدارة المشاركين';
+  String get permSeasonsView => 'عرض المواسم';
 
   @override
-  String get permPermissionsManage => 'منح وسحب الصلاحيات';
+  String get permSeasonsSwitch => 'تعيين الموسم الحالي';
+
+  @override
+  String get permSeasonsParticipantsView => 'عرض مشاركي المواسم';
+
+  @override
+  String get permSeasonsParticipantsManage => 'إضافة المشاركين وسحبهم';
+
+  @override
+  String get permPermissionsView => 'عرض الصلاحيات الممنوحة';
+
+  @override
+  String get permPermissionsManage => 'منح الصلاحيات وسحبها';
+
+  @override
+  String get perm_reference => 'البيانات المرجعية';
+
+  @override
+  String get permReferenceView => 'عرض البيانات المرجعية';
+
+  @override
+  String get permReferenceEdit => 'إضافة البيانات المرجعية وتعديلها';
+
+  @override
+  String get permReferenceDelete => 'حذف البيانات المرجعية';
+
+  @override
+  String get permReferenceImport => 'نسخ البيانات من موسم آخر';
 
   @override
   String get perm_reports => 'التقارير';
 
   @override
-  String get permReportsManage => 'إنشاء التقارير وتعديلها ونشرها';
+  String get permReportsViewAll => 'عرض كل التقارير بما فيها المسودات';
+
+  @override
+  String get permReportsCreate => 'إنشاء التقارير';
+
+  @override
+  String get permReportsEdit => 'تعديل التقارير';
+
+  @override
+  String get permReportsDelete => 'حذف التقارير';
+
+  @override
+  String get permReportsPublish => 'نشر التقارير وإلغاء نشرها';
 
   @override
   String get perm_notifications => 'الإشعارات';
 
   @override
-  String get permNotificationsSend => 'إرسال الإشعارات';
+  String get permNotificationsSend => 'إرسال إشعار لموظف';
+
+  @override
+  String get permNotificationsBroadcastModule => 'إرسال إشعار لأعضاء ملف';
+
+  @override
+  String get permNotificationsBroadcastAll => 'إرسال إشعار عام للجميع';
+
+  @override
+  String permissionRequires(String names) {
+    return 'يتطلب: $names';
+  }
+
+  @override
+  String get permissionDenied => 'لا تملك الصلاحية اللازمة لهذا الإجراء';
 
   @override
   String get navNotifications => 'الإشعارات';
@@ -1043,13 +1096,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get perm_modules => 'الملفات التشغيلية';
 
   @override
-  String get permModulesManage => 'إنشاء وتعديل وتفعيل الملفات';
+  String get permModulesViewAll => 'عرض كل الملفات بما فيها المسودات';
 
   @override
-  String get permModulesMembers => 'إسناد أعضاء الملفات';
+  String get permModulesCreate => 'إنشاء ملف تشغيلي';
 
   @override
-  String get permModulesTypes => 'إدارة أنواع الملفات والبيانات المرجعية';
+  String get permModulesEdit => 'تعديل الملف وهيكله';
+
+  @override
+  String get permModulesDelete => 'حذف ملف تشغيلي';
+
+  @override
+  String get permModulesActivate => 'تفعيل الملفات وإيقافها';
+
+  @override
+  String get permModulesMembers => 'إسناد الأعضاء والمهام';
+
+  @override
+  String get permModulesReports => 'عرض تقارير أعضاء الملفات';
 
   @override
   String get navModules => 'الملفات التشغيلية';
