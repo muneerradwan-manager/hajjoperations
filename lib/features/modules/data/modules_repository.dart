@@ -348,9 +348,12 @@ class ModulesRepository {
         .from('module_nodes')
         // Embedded through `profile_id` explicitly: the table also points at
         // profiles via `assigned_by`, and a bare `profiles(...)` is ambiguous.
+        // The city comes along too: tapping a member opens his record, and it
+        // is read from the row already in hand rather than fetched again.
         .select(
           '*, module_node_members(*, module_assigned_tasks(task_id), '
-          'profiles:profile_id(*, job_titles(name, name_en)))',
+          'profiles:profile_id(*, job_titles(name, name_en), '
+          'reference_items(name_ar, name_en)))',
         )
         .eq('module_id', moduleId)
         .order('sort_order');
@@ -422,7 +425,8 @@ class ModulesRepository {
         .from('module_members')
         .select(
           '*, module_assigned_tasks(task_id), '
-          'profiles:profile_id(*, job_titles(name, name_en))',
+          'profiles:profile_id(*, job_titles(name, name_en), '
+          'reference_items(name_ar, name_en))',
         )
         .eq('module_id', moduleId);
     final members = (rows as List)

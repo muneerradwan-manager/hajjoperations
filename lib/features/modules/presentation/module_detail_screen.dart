@@ -17,6 +17,10 @@ import '../../../core/widgets/profile_avatar.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
+// The two screens link to each other — a file lists its people, and a person
+// lists his files. Dart allows the cycle; the alternative is a router constant
+// that hides which screen is actually being opened.
+import '../../employees/presentation/employee_detail_screen.dart';
 import '../application/module_detail_cubit.dart';
 import '../data/modules_repository.dart';
 import '../domain/module_type.dart';
@@ -1177,8 +1181,34 @@ class _MemberTile extends StatelessWidget {
       ],
     );
 
-    if (dense) return body;
-    return GlassCard(padding: const EdgeInsets.all(AppSpacing.md), child: body);
+    // The roster is a list of people, and a person on this screen is somebody
+    // you may need to know more about than his phone number — which season he
+    // has served, what else he is assigned to, how to reach him a second way.
+    // All of that is already a page; this is the link to it.
+    //
+    // The profile travels with the tap rather than being fetched again: the
+    // roster query already embeds it whole, and the detail screen takes one.
+    void open() => Navigator.of(context).push(
+      fadeThroughRoute((_) => EmployeeDetailScreen(profile: profile)),
+    );
+
+    if (dense) {
+      // No card of its own here, so the tap needs a shape to land in — and a
+      // little padding, so the ripple does not stop at the text's edge.
+      return InkWell(
+        onTap: open,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xs),
+          child: body,
+        ),
+      );
+    }
+    return GlassCard(
+      onTap: open,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: body,
+    );
   }
 }
 
