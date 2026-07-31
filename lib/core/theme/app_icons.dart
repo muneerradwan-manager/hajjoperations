@@ -131,6 +131,14 @@ class AppIcons {
   static const approve = Iconsax.tick_circle;
   static const reject = Iconsax.close_circle;
   static const edit = Iconsax.edit_2;
+
+  /// The overflow affordance: Material's own, not Iconsax's.
+  ///
+  /// This one glyph is a convention before it is an icon — three dots stacked
+  /// is what "there are more actions here" looks like on every Android screen a
+  /// user has ever tapped. Drawing our own version of it would be style at the
+  /// cost of recognition, and it is symmetrical, so it needs no RTL flipping.
+  static const more = Icons.more_vert;
   static const emptyInbox = Iconsax.box;
 
   // Status

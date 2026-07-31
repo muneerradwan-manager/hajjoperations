@@ -7,6 +7,7 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/info_section.dart';
+import '../../../core/widgets/overflow_menu.dart';
 import '../../../core/widgets/profile_avatar.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
@@ -1175,17 +1176,20 @@ class _NodeCard extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.xs),
               ],
-              IconButton(
-                tooltip: context.l10n.commonEdit,
-                visualDensity: VisualDensity.compact,
-                onPressed: onEdit,
-                icon: const Icon(AppIcons.edit, size: 18),
-              ),
-              IconButton(
-                tooltip: context.l10n.commonDelete,
-                visualDensity: VisualDensity.compact,
-                onPressed: () => onDelete(name),
-                icon: const Icon(AppIcons.delete, size: 18),
+              OverflowMenu(
+                actions: [
+                  MenuAction(
+                    icon: AppIcons.edit,
+                    label: context.l10n.commonEdit,
+                    onSelected: onEdit,
+                  ),
+                  MenuAction(
+                    icon: AppIcons.delete,
+                    label: context.l10n.commonDelete,
+                    isDestructive: true,
+                    onSelected: () => onDelete(name),
+                  ),
+                ],
               ),
             ],
           ),

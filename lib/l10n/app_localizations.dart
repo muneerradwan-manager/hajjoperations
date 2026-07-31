@@ -188,6 +188,24 @@ abstract class AppLocalizations {
   /// **'Email'**
   String get profileEmail;
 
+  /// No description provided for @commonMore.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get commonMore;
+
+  /// No description provided for @moduleNotifyMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify everyone in this file'**
+  String get moduleNotifyMembers;
+
+  /// No description provided for @employeeNotify.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a notification'**
+  String get employeeNotify;
+
   /// No description provided for @commonEdit.
   ///
   /// In en, this message translates to:

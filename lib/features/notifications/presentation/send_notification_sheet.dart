@@ -13,11 +13,16 @@ enum SendAudience { person, module, all }
 
 /// Compose + send a notification.
 ///
-/// With [recipientId] it goes to that one person. Without, the sheet asks who
-/// to send to — everyone, or the members of one operational file.
+/// With [recipientId] it goes to that one person; with [moduleId] it goes to
+/// everyone holding a role in that file. Given neither, the sheet asks who to
+/// send to — everyone, or the members of one operational file.
+///
+/// Opened FROM a file or FROM a person, the audience is already settled by the
+/// page the reader is standing on, so the sheet does not ask again.
 Future<void> showSendNotificationSheet(
   BuildContext context, {
   String? recipientId,
+  String? moduleId,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -27,14 +32,15 @@ Future<void> showSendNotificationSheet(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
       ),
-      child: _Form(recipientId: recipientId),
+      child: _Form(recipientId: recipientId, moduleId: moduleId),
     ),
   );
 }
 
 class _Form extends StatefulWidget {
-  const _Form({required this.recipientId});
+  const _Form({required this.recipientId, required this.moduleId});
   final String? recipientId;
+  final String? moduleId;
 
   @override
   State<_Form> createState() => _FormState();
@@ -48,18 +54,25 @@ class _FormState extends State<_Form> {
   final _attachments = <PendingAttachment>[];
   bool _busy = false;
 
-  late SendAudience _audience = widget.recipientId != null
-      ? SendAudience.person
-      : SendAudience.all;
+  late SendAudience _audience = switch ((widget.recipientId, widget.moduleId)) {
+    (final String _, _) => SendAudience.person,
+    (_, final String _) => SendAudience.module,
+    _ => SendAudience.all,
+  };
 
   /// The season's files, to choose one from. Loaded once when the sheet opens.
   Future<List<OperationalModule>>? _modules;
-  String? _moduleId;
+  late String? _moduleId = widget.moduleId;
+
+  /// Whether the reader still has to be asked. Arriving from a person's page or
+  /// a file's page, they do not — the question was answered by getting here.
+  bool get _asksAudience =>
+      widget.recipientId == null && widget.moduleId == null;
 
   @override
   void initState() {
     super.initState();
-    if (widget.recipientId == null) _modules = _loadModules();
+    if (_asksAudience) _modules = _loadModules();
   }
 
   Future<List<OperationalModule>> _loadModules() async {
@@ -147,7 +160,7 @@ class _FormState extends State<_Form> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
-            if (widget.recipientId == null) ...[
+            if (_asksAudience) ...[
               _AudienceField(
                 audience: _audience,
                 onChanged: (v) => setState(() => _audience = v),

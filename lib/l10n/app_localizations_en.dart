@@ -54,6 +54,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileEmail => 'Email';
 
   @override
+  String get commonMore => 'More';
+
+  @override
+  String get moduleNotifyMembers => 'Notify everyone in this file';
+
+  @override
+  String get employeeNotify => 'Send a notification';
+
+  @override
   String get commonEdit => 'Edit';
 
   @override

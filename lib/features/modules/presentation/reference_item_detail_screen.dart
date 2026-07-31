@@ -8,6 +8,7 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/info_section.dart';
+import '../../../core/widgets/overflow_menu.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../application/reference_data_cubit.dart';
@@ -87,16 +88,21 @@ class ReferenceItemDetailScreen extends StatelessWidget {
           appBar: GlassAppBar(
             title: Text(item.name.of(context)),
             actions: [
-              IconButton(
-                tooltip: l.commonEdit,
-                onPressed: () =>
-                    showReferenceItemForm(context, set: set, item: item),
-                icon: const Icon(AppIcons.edit),
-              ),
-              IconButton(
-                tooltip: l.commonDelete,
-                onPressed: () => _delete(context, item),
-                icon: const Icon(AppIcons.delete),
+              OverflowMenu(
+                actions: [
+                  MenuAction(
+                    icon: AppIcons.edit,
+                    label: l.commonEdit,
+                    onSelected: () =>
+                        showReferenceItemForm(context, set: set, item: item),
+                  ),
+                  MenuAction(
+                    icon: AppIcons.delete,
+                    label: l.commonDelete,
+                    isDestructive: true,
+                    onSelected: () => _delete(context, item),
+                  ),
+                ],
               ),
             ],
           ),

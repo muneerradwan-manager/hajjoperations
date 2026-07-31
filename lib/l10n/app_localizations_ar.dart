@@ -54,6 +54,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profileEmail => 'البريد الإلكتروني';
 
   @override
+  String get commonMore => 'المزيد';
+
+  @override
+  String get moduleNotifyMembers => 'إشعار جميع أعضاء الملف';
+
+  @override
+  String get employeeNotify => 'إرسال إشعار';
+
+  @override
   String get commonEdit => 'تعديل';
 
   @override

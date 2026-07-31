@@ -10,6 +10,7 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/info_section.dart';
+import '../../../core/widgets/overflow_menu.dart';
 import '../../../core/widgets/profile_hero.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../auth/application/session_cubit.dart';
@@ -114,34 +115,34 @@ class _View extends StatelessWidget {
         session.can(PermissionCodes.modulesManage) ||
         session.can(PermissionCodes.modulesMembers);
     final showManagement = canSuspend || canExternal || canManageParticipants;
-    final employeeId = context.read<EmployeeManageCubit>().state.profile.id;
 
     return Scaffold(
       appBar: GlassAppBar(
         title: Text(l.employeeDetailTitle),
         actions: [
-          if (canNotify)
-            IconButton(
-              tooltip: l.notificationSend,
-              icon: const Icon(AppIcons.send),
-              onPressed: () =>
-                  showSendNotificationSheet(context, recipientId: employeeId),
-            ),
-          if (canEdit)
-            IconButton(
-              tooltip: l.employeeEdit,
-              icon: const Icon(AppIcons.edit),
-              onPressed: () {
-                final cubit = context.read<EmployeeManageCubit>();
-                showEmployeeEditSheet(context, cubit, cubit.state.profile);
-              },
-            ),
-          if (canDelete)
-            IconButton(
-              tooltip: l.employeeDelete,
-              icon: const Icon(AppIcons.delete),
-              onPressed: () => _confirmDelete(context),
-            ),
+          // Editing and deleting behind one overflow. Sending a notification
+          // is not an act on this RECORD, so it is not in here with them — it
+          // is a button in the page, beside the person it writes to.
+          OverflowMenu(
+            actions: [
+              if (canEdit)
+                MenuAction(
+                  icon: AppIcons.edit,
+                  label: l.employeeEdit,
+                  onSelected: () {
+                    final cubit = context.read<EmployeeManageCubit>();
+                    showEmployeeEditSheet(context, cubit, cubit.state.profile);
+                  },
+                ),
+              if (canDelete)
+                MenuAction(
+                  icon: AppIcons.delete,
+                  label: l.employeeDelete,
+                  isDestructive: true,
+                  onSelected: () => _confirmDelete(context),
+                ),
+            ],
+          ),
         ],
       ),
       body: SafeArea(
@@ -185,6 +186,19 @@ class _View extends StatelessWidget {
                     ),
                 ],
               ),
+              // Writing to this person is a thing you DO with the page open,
+              // not an action on their record — so it stands in the page under
+              // their name, where the reader is already looking, rather than as
+              // a glyph in the bar.
+              if (canNotify) ...[
+                const SizedBox(height: AppSpacing.lg),
+                FilledButton.tonalIcon(
+                  onPressed: () =>
+                      showSendNotificationSheet(context, recipientId: p.id),
+                  icon: const Icon(AppIcons.send),
+                  label: Text(l.employeeNotify),
+                ),
+              ],
               if (showManagement) ...[
                 const SizedBox(height: AppSpacing.lg),
                 _ManagementCard(

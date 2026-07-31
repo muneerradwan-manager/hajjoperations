@@ -16,6 +16,9 @@
   "commonDone": "إنهاء",
   "commonCopied": "تم النسخ",
   "profileEmail": "البريد الإلكتروني",
+  "commonMore": "المزيد",
+  "moduleNotifyMembers": "إشعار جميع أعضاء الملف",
+  "employeeNotify": "إرسال إشعار",
   "commonEdit": "تعديل",
   "commonSettings": "الإعدادات",
 

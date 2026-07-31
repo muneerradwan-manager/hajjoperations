@@ -14,6 +14,7 @@ import '../../../core/theme/glass_tokens.dart';
 import '../../../core/utils/arabic_search.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/info_section.dart';
+import '../../../core/widgets/overflow_menu.dart';
 import '../../../core/widgets/profile_avatar.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
@@ -22,6 +23,7 @@ import '../../auth/application/session_cubit.dart';
 // lists his files. Dart allows the cycle; the alternative is a router constant
 // that hides which screen is actually being opened.
 import '../../employees/presentation/employee_detail_screen.dart';
+import '../../notifications/presentation/send_notification_sheet.dart';
 import '../application/module_detail_cubit.dart';
 import '../data/modules_repository.dart';
 import '../domain/module_type.dart';
@@ -202,18 +204,22 @@ class _ViewState extends State<_View> {
                     l.modulesTitle,
               ),
               actions: [
-                if (canManage && module != null) ...[
-                  IconButton(
-                    tooltip: l.commonEdit,
-                    onPressed: () => _edit(module),
-                    icon: const Icon(AppIcons.edit),
+                if (canManage && module != null)
+                  OverflowMenu(
+                    actions: [
+                      MenuAction(
+                        icon: AppIcons.edit,
+                        label: l.commonEdit,
+                        onSelected: () => _edit(module),
+                      ),
+                      MenuAction(
+                        icon: AppIcons.delete,
+                        label: l.moduleDelete,
+                        isDestructive: true,
+                        onSelected: _delete,
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    tooltip: l.moduleDelete,
-                    onPressed: _delete,
-                    icon: const Icon(AppIcons.delete),
-                  ),
-                ],
               ],
             ),
             bottomNavigationBar: (canManage && module != null)
@@ -342,6 +348,10 @@ class _BodyState extends State<_Body> {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
+    final canNotify = context
+        .watch<SessionCubit>()
+        .state
+        .can(PermissionCodes.notificationsSend);
     final (rolesPresent, roleCounts) = _rolesPresent();
     final showing = _showing();
     final type = state.type;
@@ -474,6 +484,20 @@ class _BodyState extends State<_Body> {
         l.moduleMembersCount(state.peopleCount),
         icon: AppIcons.participants,
       ),
+
+      // Writing to everyone in the file, from the page that lists them. The
+      // audience is not asked for — standing here IS the answer, and a sheet
+      // that opened from this button and then made you choose the file again
+      // would be asking a question it had already been told.
+      if (canNotify && state.peopleCount > 0) ...[
+        FilledButton.tonalIcon(
+          onPressed: () =>
+              showSendNotificationSheet(context, moduleId: module.id),
+          icon: const Icon(AppIcons.send),
+          label: Text(l.moduleNotifyMembers),
+        ),
+        const SizedBox(height: AppSpacing.md),
+      ],
 
       if (state.peopleCount >= _worthFiltering) ...[
         _RosterFilterBar(

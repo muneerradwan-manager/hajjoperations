@@ -17,6 +17,9 @@
   "commonDone": "Done",
   "commonCopied": "Copied",
   "profileEmail": "Email",
+  "commonMore": "More",
+  "moduleNotifyMembers": "Notify everyone in this file",
+  "employeeNotify": "Send a notification",
   "commonEdit": "Edit",
   "commonSettings": "Settings",
 
