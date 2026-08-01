@@ -7,6 +7,7 @@ import '../../../core/attachments/attachment_picker.dart';
 import '../../../core/attachments/attachments_view.dart';
 import '../../../core/constants/permission_codes.dart';
 import '../../../core/supabase/supabase_client.dart';
+import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_accents.dart';
 import '../../../core/theme/app_icons.dart';
@@ -263,11 +264,12 @@ class _ViewState extends State<_View> {
               ),
               ModuleDetailStatus.error => EmptyState(
                 icon: AppIcons.modules,
-                title: state.error ?? '',
+                title: friendlyError(context, state.error),
               ),
               ModuleDetailStatus.ready => _Body(
                 state: state,
                 module: module!,
+                fromOffice: widget.fromOffice,
                 canEdit: canEdit,
                 canMembers: canMembers,
                 onOpenPdf: _openPdf,
@@ -285,6 +287,7 @@ class _Body extends StatefulWidget {
   const _Body({
     required this.state,
     required this.module,
+    required this.fromOffice,
     required this.canEdit,
     required this.canMembers,
     required this.onOpenPdf,
@@ -293,6 +296,12 @@ class _Body extends StatefulWidget {
 
   final ModuleDetailState state;
   final OperationalModule module;
+
+  /// Whether this page was reached through إدارة الملفات rather than عام —
+  /// the same distinction the edit/delete flags above already encode, carried
+  /// separately for the acts decided inside the body (the broadcast button).
+  final bool fromOffice;
+
   final bool canEdit;
   final bool canMembers;
   final void Function(ModuleFile file) onOpenPdf;
@@ -360,11 +369,16 @@ class _BodyState extends State<_Body> {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    // Writing to the whole file is a broadcast, and carries its own permission.
-    final canNotify = context
-        .watch<SessionCubit>()
-        .state
-        .can(PermissionCodes.notificationsBroadcastModule);
+    // Writing to the whole file is a broadcast, and carries its own permission
+    // — and, like every other act of administration on this page, it belongs
+    // to the office door only. Reached from عام the file is something being
+    // read, and a broadcast button on a reading page is administration leaking
+    // into the general section, permission or no permission.
+    final canNotify =
+        widget.fromOffice &&
+        context.watch<SessionCubit>().state.can(
+          PermissionCodes.notificationsBroadcastModule,
+        );
     final (rolesPresent, roleCounts) = _rolesPresent();
     final showing = _showing();
     final type = state.type;

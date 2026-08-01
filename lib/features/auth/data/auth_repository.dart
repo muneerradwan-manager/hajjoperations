@@ -244,7 +244,10 @@ class AuthRepository {
 
   /// Signs out, dropping this device's push subscriptions first: FCM topics
   /// outlive a session, and the next person to use the phone must not receive
-  /// the last one's files.
+  /// the last one's files. The device token row goes too — [PushService.mute]
+  /// rather than just the topics, or pushes addressed to the departed account
+  /// personally would keep reaching this phone, including after somebody else
+  /// signs in on it.
   ///
   /// Neither step is allowed to hold the door shut. Unsubscribing talks to
   /// Firebase one topic at a time and on a bad connection simply does not come
@@ -261,7 +264,7 @@ class AuthRepository {
   Future<void> signOut() async {
     final uid = currentUser?.id;
 
-    await PushService.instance.forgetTopics().timeout(
+    await PushService.instance.mute().timeout(
       const Duration(seconds: 4),
       onTimeout: () {},
     );

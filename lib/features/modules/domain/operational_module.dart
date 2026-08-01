@@ -297,7 +297,8 @@ class ModuleReport {
       authorId: map['author_id'] as String,
       notes: map['body'] as String?,
       attachments: attachments,
-      createdAt: DateTime.parse(map['created_at'] as String),
+      // Local time for display; period_start is a plain date and stays as-is.
+      createdAt: DateTime.parse(map['created_at'] as String).toLocal(),
       periodStart: map['period_start'] == null
           ? null
           : DateTime.tryParse(map['period_start'] as String),
@@ -414,7 +415,7 @@ class OperationalModule {
           : LocalizedName.fromMap(type, prefix: 'end_condition'),
       createdAt: map['created_at'] == null
           ? null
-          : DateTime.parse(map['created_at'] as String),
+          : DateTime.parse(map['created_at'] as String).toLocal(),
     );
   }
 }

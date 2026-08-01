@@ -383,66 +383,50 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
 
   /// Saves and returns the report's id, or null with [state.error] set.
   ///
-  /// The rows are replaced wholesale rather than diffed. A report's table is
-  /// small and entered as one thing; matching row against row to write three
-  /// updates instead of a delete and an insert would be more code and more
-  /// ways to leave it half-written.
+  /// The rows and blocks are replaced wholesale rather than diffed. A report's
+  /// table is small and entered as one thing; matching row against row to
+  /// write three updates instead of a delete and an insert would be more code
+  /// and more ways to leave it half-written.
+  ///
+  /// One RPC, not five requests: the `save_report` function (migration 0074)
+  /// does header + rows + blocks in a single transaction, so a connection that
+  /// dies mid-save can no longer leave a report stripped of its table.
   Future<String?> save() async {
     if (!state.canSave) return null;
     emit(state.copyWith(status: EditorStatus.saving, error: null));
     try {
-      final payload = {
-        'report_type_id': state.typeId,
-        'season_id': state.seasonId,
-        'title': state.title.trim(),
-        // Empty is NULL, not an empty string: a report without a number has
-        // none, and '' would sort and search as though it did.
-        'number': state.number.trim().isEmpty ? null : state.number.trim(),
-        'data': state.data,
-        'is_published': state.isPublished,
-      };
-
-      String id;
-      if (existing == null) {
-        final row = await supabase
-            .from('reports')
-            .insert({...payload, 'created_by': supabase.auth.currentUser?.id})
-            .select('id')
-            .single();
-        id = row['id'] as String;
-      } else {
-        id = existing!.id;
-        await supabase.from('reports').update(payload).eq('id', id);
-        await supabase.from('report_rows').delete().eq('report_id', id);
-      }
-
-      final rows = [
-        for (var i = 0; i < state.rows.length; i++)
-          if (state.rows[i].data.isNotEmpty)
-            {'report_id': id, 'data': state.rows[i].data, 'sort_order': i + 1},
-      ];
-      if (rows.isNotEmpty) {
-        await supabase.from('report_rows').insert(rows);
-      }
-
-      // Same wholesale replacement the rows get, and for the same reason: a
-      // notice is written as one thing, and diffing block against block would
-      // be more code and more ways to leave it half-written.
-      if (existing != null) {
-        await supabase.from('report_blocks').delete().eq('report_id', id);
-      }
-      final blocks = [
-        for (var i = 0; i < state.blocks.length; i++)
-          {
-            'report_id': id,
-            'kind': state.blocks[i].kind.db,
-            'data': state.blocks[i].data,
-            'sort_order': i + 1,
-          },
-      ];
-      if (blocks.isNotEmpty) {
-        await supabase.from('report_blocks').insert(blocks);
-      }
+      final id =
+          await supabase.rpc(
+                'save_report',
+                params: {
+                  'p_report_id': existing?.id,
+                  'p_report_type_id': state.typeId,
+                  'p_season_id': state.seasonId,
+                  'p_title': state.title.trim(),
+                  // Empty is NULL, not an empty string: a report without a
+                  // number has none, and '' would sort and search as though
+                  // it did.
+                  'p_number': state.number.trim().isEmpty
+                      ? null
+                      : state.number.trim(),
+                  'p_data': state.data,
+                  'p_is_published': state.isPublished,
+                  'p_rows': [
+                    for (var i = 0; i < state.rows.length; i++)
+                      if (state.rows[i].data.isNotEmpty)
+                        {'data': state.rows[i].data, 'sort_order': i + 1},
+                  ],
+                  'p_blocks': [
+                    for (var i = 0; i < state.blocks.length; i++)
+                      {
+                        'kind': state.blocks[i].kind.db,
+                        'data': state.blocks[i].data,
+                        'sort_order': i + 1,
+                      },
+                  ],
+                },
+              )
+              as String;
 
       emit(state.copyWith(status: EditorStatus.ready));
       return id;

@@ -41,6 +41,13 @@ class LoggingHttpClient extends http.BaseClient {
         type.contains('x-www-form-urlencoded');
   }
 
+  /// Auth traffic's bodies are never printed, in either direction. The header
+  /// redaction above was guarding tokens while the password login's request
+  /// body (email + password) and its response (access and refresh tokens) went
+  /// to the console verbatim — the very credentials it existed to keep out of
+  /// a screen recording.
+  static bool _isAuthTraffic(Uri url) => url.path.contains('/auth/v1/');
+
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
     if (!AppLogger.enabled) return _inner.send(request);
@@ -50,7 +57,9 @@ class LoggingHttpClient extends http.BaseClient {
     _logHeaders('→', request.headers);
 
     if (request is http.Request && request.body.isNotEmpty) {
-      if (_isPrintable(request.headers['content-type'])) {
+      if (_isAuthTraffic(request.url)) {
+        AppLogger.debug(_tag, '→ body <auth, redacted>');
+      } else if (_isPrintable(request.headers['content-type'])) {
         AppLogger.debug(_tag, '→ body ${AppLogger.truncate(request.body)}');
       } else {
         AppLogger.debug(
@@ -98,6 +107,10 @@ class LoggingHttpClient extends http.BaseClient {
     // nothing for the caller. So it is buffered and handed on as a fresh
     // stream — the cost of seeing what came back.
     final contentType = response.headers['content-type'];
+    if (_isAuthTraffic(request.url)) {
+      AppLogger.debug(_tag, '← body <auth, redacted>');
+      return response;
+    }
     if (!_isPrintable(contentType)) {
       AppLogger.debug(
         _tag,

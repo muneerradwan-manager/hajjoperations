@@ -34,6 +34,13 @@ class PushService {
 
   final _local = FlutterLocalNotificationsPlugin();
   bool _started = false;
+  Future<void>? _starting;
+
+  /// Firebase's own initialization, handed over by [bootstrap]. It was taken
+  /// off the startup critical path — push is not worth holding the first frame
+  /// for — so anything here that talks to Firebase awaits this first, and
+  /// nothing races the app coming up.
+  static Future<void>? firebaseInit;
 
   /// A notification tapped in the phone's own tray, waiting to be acted on.
   ///
@@ -76,20 +83,39 @@ class PushService {
   /// [bootstrap] actually managed to start.
   bool get _available => Firebase.apps.isNotEmpty;
 
-  /// Call once the user is approved. Safe to call repeatedly.
+  /// Call once the user is approved. Safe to call repeatedly, and never
+  /// throws: it is fired unawaited from the session cubit, and push failing is
+  /// not worth an unhandled zone error.
   Future<void> start() async {
-    if (!_available) return;
-    if (_started) {
-      // Topics as well as the token. A second call to `start` means the session
-      // has changed under it — an account switch, which mutes this device on the
-      // way out — and a device that registered its token but subscribed to
-      // nothing is a device that goes quiet for the person now using it.
-      await _upsertToken();
-      await syncTopics();
-      return;
+    try {
+      await firebaseInit;
+      if (!_available) return;
+      if (_started) {
+        // Topics as well as the token. A second call to `start` means the
+        // session has changed under it — an account switch, which mutes this
+        // device on the way out — and a device that registered its token but
+        // subscribed to nothing is a device that goes quiet for the person now
+        // using it.
+        await _upsertToken();
+        await syncTopics();
+        return;
+      }
+      // An in-flight future rather than flipping `_started` up front: set
+      // before the awaited init, one thrown exception (a permission dialog
+      // gone wrong, a plugin hiccup) left every later call taking the
+      // already-started fast path against a plugin that was never initialized
+      // — foreground notifications silently off for the rest of the process.
+      // This way concurrent callers still coalesce, but a failure clears the
+      // way for the next attempt.
+      await (_starting ??= _initialize().whenComplete(
+        () => _starting = null,
+      ));
+    } catch (e) {
+      AppLogger.warn('push', 'start failed: $e');
     }
-    _started = true;
+  }
 
+  Future<void> _initialize() async {
     await FirebaseMessaging.instance.requestPermission();
 
     await _local.initialize(
@@ -100,16 +126,9 @@ class PushService {
       // by this service rather than by the system, so Firebase never hears it
       // being tapped. Without this it was the one notification in the app that
       // did nothing at all when pressed.
-      onDidReceiveNotificationResponse: (response) {
-        final payload = response.payload;
-        if (payload == null || payload.isEmpty) return;
-        try {
-          _tapped(jsonDecode(payload) as Map<String, dynamic>);
-        } catch (_) {
-          // A payload we did not write. Opening the inbox is still right.
-          _tapped(const {});
-        }
-      },
+      onDidReceiveNotificationResponse: (response) => _tappedLocal(
+        response.payload,
+      ),
     );
     await _local
         .resolvePlatformSpecificImplementation<
@@ -120,21 +139,45 @@ class PushService {
     FirebaseMessaging.onMessage.listen(_showForeground);
     FirebaseMessaging.instance.onTokenRefresh.listen((_) => _upsertToken());
 
-    // The other two ways a notification gets tapped. Both are Firebase's, and
-    // both were missing: tapping one in the phone's tray raised the app onto
-    // whatever screen it had been left on, which is indistinguishable from the
-    // tap having done nothing.
+    // The other ways a notification gets tapped, and all of them were missing
+    // at one point: without these, tapping one raised the app onto whatever
+    // screen it had been left on, which is indistinguishable from the tap
+    // having done nothing.
     //
     //   * the app was in the background and is being brought forward;
     FirebaseMessaging.onMessageOpenedApp.listen((m) => _tapped(m.data));
-    //   * the app was not running at all, and this tap is what started it. The
-    //     message is delivered once, to whoever asks first, so it is asked for
-    //     here at startup and parked until there is a session to open it with.
+    //   * the app was not running at all and a FIREBASE-shown notification's
+    //     tap started it. The message is delivered once, to whoever asks
+    //     first, so it is asked for here and parked until there is a session;
     final launch = await FirebaseMessaging.instance.getInitialMessage();
     if (launch != null) _tapped(launch.data);
+    //   * the app was not running at all and a LOCAL notification's tap
+    //     started it — one this service showed while foregrounded, tapped
+    //     after the app was later killed. Firebase never heard of it, so it is
+    //     the local plugin that has to be asked.
+    final localLaunch = await _local.getNotificationAppLaunchDetails();
+    if (localLaunch?.didNotificationLaunchApp ?? false) {
+      _tappedLocal(localLaunch!.notificationResponse?.payload);
+    }
+
+    // Only now, with everything above it done: a failure anywhere before this
+    // line leaves the service unstarted, so the next `start()` tries again.
+    _started = true;
 
     await _upsertToken();
     await syncTopics();
+  }
+
+  /// A tap on a notification this service itself showed, whatever route it
+  /// arrived by: pressed while the app lived, or the tap that launched it.
+  void _tappedLocal(String? payload) {
+    if (payload == null || payload.isEmpty) return;
+    try {
+      _tapped(jsonDecode(payload) as Map<String, dynamic>);
+    } catch (_) {
+      // A payload we did not write. Opening the inbox is still right.
+      _tapped(const {});
+    }
   }
 
   static const _prefsKey = 'fcm_topics';
@@ -146,6 +189,7 @@ class PushService {
   /// what it is subscribed to — without that record, a member removed from a
   /// file would go on receiving that file's messages forever.
   Future<void> syncTopics() async {
+    await firebaseInit;
     if (!_available) return;
     final uid = supabase.auth.currentUser?.id;
     if (uid == null) return;
@@ -195,6 +239,7 @@ class PushService {
   /// Stops delivery to this device: no topics, and no token to send to. The
   /// inbox is untouched — the messages still arrive, the phone just stays quiet.
   Future<void> mute() async {
+    await firebaseInit;
     if (!_available) return;
     await forgetTopics();
     final uid = supabase.auth.currentUser?.id;
@@ -215,6 +260,7 @@ class PushService {
   /// Drops every subscription. Called on sign-out, so the next person to use
   /// this device does not receive the last one's files.
   Future<void> forgetTopics() async {
+    await firebaseInit;
     if (!_available) return;
     try {
       final prefs = await SharedPreferences.getInstance();

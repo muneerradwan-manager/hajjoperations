@@ -16,8 +16,14 @@ class AppTheme {
 
   static const _fontFamily = 'itfQomra';
 
-  static ThemeData light() => _build(Brightness.light);
-  static ThemeData dark() => _build(Brightness.dark);
+  // Built once per process: nothing in either theme depends on runtime state,
+  // and `_build` runs ColorScheme.fromSeed plus ~20 sub-themes — work the app
+  // shell was repeating on every rebuild that watched settings.
+  static final ThemeData _light = _build(Brightness.light);
+  static final ThemeData _dark = _build(Brightness.dark);
+
+  static ThemeData light() => _light;
+  static ThemeData dark() => _dark;
 
   /// Mixes two palette entries. Used only to pull a brand colour towards
   /// [AppColors.black] or [AppColors.white] — never to invent a hue.

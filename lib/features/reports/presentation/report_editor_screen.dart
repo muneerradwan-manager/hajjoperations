@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/constants/permission_codes.dart';
+import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
@@ -115,7 +116,7 @@ class _View extends StatelessWidget {
             ),
             EditorStatus.error => EmptyState(
               icon: AppIcons.reports,
-              title: state.error ?? '',
+              title: friendlyError(context, state.error),
             ),
             _ => ResponsivePage(
               builder: (context, size) => SinglePaneLayout(

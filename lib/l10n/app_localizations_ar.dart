@@ -24,6 +24,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commonRetry => 'إعادة المحاولة';
 
   @override
+  String get commonConnectionErrorTitle => 'تعذّر الاتصال بالخادم';
+
+  @override
+  String get commonConnectionErrorBody =>
+      'تحقق من اتصالك بالإنترنت وحاول مجدداً.';
+
+  @override
+  String get commonGenericError => 'حدث خطأ ما. حاول مرة أخرى.';
+
+  @override
   String get commonLogout => 'تسجيل الخروج';
 
   @override
@@ -1685,6 +1695,86 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get dashboardSectionQueue => 'طلبات الاعتماد';
+
+  @override
+  String get dashboardSectionCentralReports => 'التقارير المركزية';
+
+  @override
+  String get dashboardCentralPublished => 'منشور';
+
+  @override
+  String get dashboardCentralDrafts => 'مسودّات';
+
+  @override
+  String get dashboardCentralGeneral => 'عامة (كل المواسم)';
+
+  @override
+  String get dashboardCentralByType => 'حسب النوع';
+
+  @override
+  String get dashboardCentralSplit => 'المنشور والمسودّات';
+
+  @override
+  String get dashboardSectionNotifications => 'الإشعارات';
+
+  @override
+  String get dashboardNotifMessages30 => 'رسائل (٣٠ يوماً)';
+
+  @override
+  String get dashboardNotifRecipients => 'مستلمون';
+
+  @override
+  String get dashboardNotifReadShare => 'نسبة المقروء';
+
+  @override
+  String get dashboardNotifTrend => 'رسائل آخر ٣٠ يوماً';
+
+  @override
+  String get dashboardNotifTrendEmpty => 'لا رسائل في آخر ٣٠ يوماً';
+
+  @override
+  String dashboardNotifAllTime(Object n) {
+    return '$n رسالة منذ البداية';
+  }
+
+  @override
+  String get dashboardSectionReference => 'البيانات المرجعية';
+
+  @override
+  String get dashboardRefSets => 'قوائم';
+
+  @override
+  String get dashboardRefItems => 'عناصر';
+
+  @override
+  String get dashboardRefActive => 'مفعّلة';
+
+  @override
+  String get dashboardRefSeasonSplit => 'موسمية وعامة';
+
+  @override
+  String get dashboardRefSeasonItems => 'لهذا الموسم';
+
+  @override
+  String get dashboardRefGeneralItems => 'عامة';
+
+  @override
+  String get dashboardRefBySet => 'العناصر في كل قائمة';
+
+  @override
+  String get dashboardSectionPermissions => 'الصلاحيات';
+
+  @override
+  String get dashboardPermAdmins => 'مديرو نظام';
+
+  @override
+  String get dashboardPermGrantees => 'موظفون بصلاحيات';
+
+  @override
+  String get dashboardPermGrants => 'منح ممنوحة';
+
+  @override
+  String get dashboardPermBySection => 'المنح حسب القسم';
 
   @override
   String get dashboardParticipants => 'مشاركو الموسم';

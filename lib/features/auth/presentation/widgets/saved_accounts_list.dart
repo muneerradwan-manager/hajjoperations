@@ -58,7 +58,13 @@ class SavedAccountsList extends StatelessWidget {
             isBusy: account.userId == busyUserId,
             locked: busyUserId != null,
             onSelect: () => onSelect(account),
-            onForget: onForget == null ? null : () => onForget!(account),
+            // Not offered on the account that is open: forgetting it would
+            // only undo itself — the signed-in account is re-remembered on
+            // every profile load — and a button that promises what it cannot
+            // keep teaches the reader not to trust the rest.
+            onForget: (onForget == null || account.userId == currentUserId)
+                ? null
+                : () => onForget!(account),
           ),
           const SizedBox(height: AppSpacing.sm),
         ],

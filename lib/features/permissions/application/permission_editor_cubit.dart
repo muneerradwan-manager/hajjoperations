@@ -177,11 +177,20 @@ class PermissionEditorCubit extends SafeCubit<PermissionEditorState> {
           ),
         );
       } catch (e) {
-        // A chain may have landed partway; re-read rather than guess.
-        final granted = await _repo.fetchGranted(userId);
+        // A chain may have landed partway; re-read rather than guess. The
+        // re-read is itself guarded: the likeliest reason the grant failed is
+        // that the network is down, in which case this second call fails the
+        // same way — and unguarded it escaped the catch and left every switch
+        // in the chain spinning "busy" until the screen was reopened.
+        Set<String>? granted;
+        try {
+          granted = await _repo.fetchGranted(userId);
+        } catch (_) {
+          // Keep what we believed before the attempt.
+        }
         emit(
           state.copyWith(
-            granted: granted,
+            granted: granted ?? state.granted,
             busy: state.busy.difference(chain.toSet()),
             error: e.toString(),
           ),

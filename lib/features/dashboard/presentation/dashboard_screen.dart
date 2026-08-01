@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/animations/animations.dart';
+import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../core/l10n/permission_labels.dart';
 import '../../../core/theme/app_accents.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
@@ -60,7 +62,7 @@ class _View extends StatelessWidget {
             if (state.status == DashboardStatus.error) {
               return EmptyState(
                 icon: AppIcons.dashboard,
-                title: state.error ?? '',
+                title: friendlyError(context, state.error),
                 action: FilledButton(
                   onPressed: () => context.read<DashboardCubit>().refresh(),
                   child: Text(l.commonRetry),
@@ -278,6 +280,233 @@ class _View extends StatelessWidget {
               child: StarBars(counts: stats.ratings!.distribution),
             ),
         ]),
+      ],
+
+      if (stats.centralReports != null) ...[
+        const SizedBox(height: AppSpacing.xl),
+        FadeSlideIn(
+          child: SectionHeader(
+            l.dashboardSectionCentralReports,
+            icon: AppIcons.reports,
+          ),
+        ),
+        AdaptiveGrid(
+          minTileWidth: 200,
+          maxColumns: 4,
+          children: staggered([
+            StatTile(
+              label: l.dashboardCentralPublished,
+              value: '${stats.centralReports!.published}',
+              icon: AppIcons.reports,
+              color: Accent.green.of(context),
+            ),
+            // Alarm colour only while there is actually something unfinished,
+            // same rule as the unstaffed-files tile.
+            StatTile(
+              label: l.dashboardCentralDrafts,
+              value: '${stats.centralReports!.drafts}',
+              icon: AppIcons.documentEmpty,
+              color: stats.centralReports!.drafts > 0
+                  ? Accent.goldSoft.of(context)
+                  : Accent.greenDark.of(context),
+            ),
+            StatTile(
+              label: l.dashboardCentralGeneral,
+              value: '${stats.centralReports!.general}',
+              icon: AppIcons.file,
+              color: Accent.greenDeep.of(context),
+            ),
+          ]),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _cards([
+          _Card(
+            title: l.dashboardCentralSplit,
+            child: SplitBar(
+              slices: [
+                ChartSlice(
+                  label: l.dashboardCentralPublished,
+                  value: stats.centralReports!.published,
+                ),
+                ChartSlice(
+                  label: l.dashboardCentralDrafts,
+                  value: stats.centralReports!.drafts,
+                ),
+              ],
+            ),
+          ),
+          if (stats.centralReports!.byType.isNotEmpty)
+            _Card(
+              title: l.dashboardCentralByType,
+              child: RankedBars(
+                slices: [
+                  for (final t in stats.centralReports!.byType)
+                    ChartSlice(label: _label(context, t), value: t.count),
+                ],
+              ),
+            ),
+        ]),
+      ],
+
+      if (stats.notifications != null) ...[
+        const SizedBox(height: AppSpacing.xl),
+        FadeSlideIn(
+          child: SectionHeader(
+            l.dashboardSectionNotifications,
+            icon: AppIcons.notifications,
+          ),
+        ),
+        AdaptiveGrid(
+          minTileWidth: 200,
+          maxColumns: 4,
+          children: staggered([
+            StatTile(
+              label: l.dashboardNotifMessages30,
+              value: '${stats.notifications!.messages}',
+              icon: AppIcons.send,
+              color: Accent.green.of(context),
+              caption: l.dashboardNotifAllTime(
+                stats.notifications!.totalMessages,
+              ),
+            ),
+            StatTile(
+              label: l.dashboardNotifRecipients,
+              value: '${stats.notifications!.recipients}',
+              icon: AppIcons.participants,
+              color: Accent.greenDeep.of(context),
+            ),
+            if (stats.notifications!.readShare != null)
+              StatTile(
+                label: l.dashboardNotifReadShare,
+                value:
+                    '${(stats.notifications!.readShare! * 100).round()}%',
+                icon: AppIcons.view,
+                color: Accent.gold.of(context),
+              ),
+          ]),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _cards([
+          _Card(
+            title: l.dashboardNotifTrend,
+            child: TrendChart(
+              emptyLabel: l.dashboardNotifTrendEmpty,
+              labelForDay: _day,
+              points: [
+                for (final d in stats.notifications!.series)
+                  TrendPoint(day: d.day, value: d.count),
+              ],
+            ),
+          ),
+        ]),
+      ],
+
+      if (stats.reference != null) ...[
+        const SizedBox(height: AppSpacing.xl),
+        FadeSlideIn(
+          child: SectionHeader(
+            l.dashboardSectionReference,
+            icon: AppIcons.referenceData,
+          ),
+        ),
+        AdaptiveGrid(
+          minTileWidth: 200,
+          maxColumns: 4,
+          children: staggered([
+            StatTile(
+              label: l.dashboardRefSets,
+              value: '${stats.reference!.sets}',
+              icon: AppIcons.referenceData,
+              color: Accent.greenDeep.of(context),
+            ),
+            StatTile(
+              label: l.dashboardRefItems,
+              value: '${stats.reference!.items}',
+              icon: AppIcons.document,
+              color: Accent.green.of(context),
+              caption: '${l.dashboardRefActive}: ${stats.reference!.active}',
+            ),
+          ]),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _cards([
+          _Card(
+            title: l.dashboardRefSeasonSplit,
+            child: SplitBar(
+              slices: [
+                ChartSlice(
+                  label: l.dashboardRefSeasonItems,
+                  value: stats.reference!.seasonItems,
+                ),
+                ChartSlice(
+                  label: l.dashboardRefGeneralItems,
+                  value: stats.reference!.generalItems,
+                ),
+              ],
+            ),
+          ),
+          if (stats.reference!.bySet.isNotEmpty)
+            _Card(
+              title: l.dashboardRefBySet,
+              child: RankedBars(
+                slices: [
+                  for (final s in stats.reference!.bySet)
+                    ChartSlice(label: _label(context, s), value: s.count),
+                ],
+              ),
+            ),
+        ]),
+      ],
+
+      if (stats.permissions != null) ...[
+        const SizedBox(height: AppSpacing.xl),
+        FadeSlideIn(
+          child: SectionHeader(
+            l.dashboardSectionPermissions,
+            icon: AppIcons.permissions,
+          ),
+        ),
+        AdaptiveGrid(
+          minTileWidth: 200,
+          maxColumns: 4,
+          children: staggered([
+            StatTile(
+              label: l.dashboardPermAdmins,
+              value: '${stats.permissions!.admins}',
+              icon: AppIcons.permissions,
+              color: Accent.gold.of(context),
+            ),
+            StatTile(
+              label: l.dashboardPermGrantees,
+              value: '${stats.permissions!.grantees}',
+              icon: AppIcons.participants,
+              color: Accent.green.of(context),
+            ),
+            StatTile(
+              label: l.dashboardPermGrants,
+              value: '${stats.permissions!.grants}',
+              icon: AppIcons.selected,
+              color: Accent.greenDeep.of(context),
+            ),
+          ]),
+        ),
+        if (stats.permissions!.bySection.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.md),
+          _cards([
+            _Card(
+              title: l.dashboardPermBySection,
+              child: RankedBars(
+                slices: [
+                  for (final s in stats.permissions!.bySection)
+                    ChartSlice(
+                      label: permissionLabel(l, s.key),
+                      value: s.count,
+                    ),
+                ],
+              ),
+            ),
+          ]),
+        ],
       ],
 
       if (stats.approvals != null) ...[

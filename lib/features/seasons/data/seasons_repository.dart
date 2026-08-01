@@ -3,6 +3,22 @@ import '../../profile/domain/profile.dart';
 import '../domain/season.dart';
 
 class SeasonsRepository {
+  /// The current season, held per process for [_currentTtl].
+  ///
+  /// It is a value that changes about once a year, and it was being fetched by
+  /// nearly every screen on every open — reports, employees, modules all ask
+  /// for it before they can ask their own question. Static because the
+  /// repository itself is newed up per screen. The two writes that can change
+  /// the answer ([ensureCurrentSeason], [setCurrent]) drop it.
+  static Season? _currentCache;
+  static DateTime? _currentFetchedAt;
+  static const _currentTtl = Duration(minutes: 5);
+
+  static void _dropCurrentCache() {
+    _currentCache = null;
+    _currentFetchedAt = null;
+  }
+
   /// Ensures a season row exists for [hijriYear] and makes it current if newer.
   /// Admin-only (enforced by the RPC). Returns the season id.
   Future<String?> ensureCurrentSeason(int hijriYear, String label) async {
@@ -10,6 +26,7 @@ class SeasonsRepository {
       'ensure_current_season',
       params: {'p_hijri_year': hijriYear, 'p_label': label},
     );
+    _dropCurrentCache();
     return id as String?;
   }
 
@@ -34,15 +51,30 @@ class SeasonsRepository {
         'p_pinned_for_hijri_year': pinnedForHijriYear,
       },
     );
+    _dropCurrentCache();
   }
 
   Future<Season?> fetchCurrentSeason() async {
+    final cached = _currentCache;
+    final at = _currentFetchedAt;
+    if (cached != null &&
+        at != null &&
+        DateTime.now().difference(at) < _currentTtl) {
+      return cached;
+    }
     final row = await supabase
         .from('seasons')
         .select()
         .eq('is_current', true)
         .maybeSingle();
-    return row == null ? null : Season.fromMap(row);
+    final season = row == null ? null : Season.fromMap(row);
+    // A null is not cached: "no season yet" is exactly the state the seasons
+    // screen is about to fix, and a stale null would hide the fix for minutes.
+    if (season != null) {
+      _currentCache = season;
+      _currentFetchedAt = DateTime.now();
+    }
+    return season;
   }
 
   /// Active participants of a season, with profile + job title.

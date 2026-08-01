@@ -36,30 +36,50 @@ class NotificationsCubit extends SafeCubit<NotificationsState> {
   final NotificationsRepository _repo;
   late final StreamSubscription<List<AppNotification>> _sub;
 
+  /// Attachments already fetched, by group. A broadcast's file does not change
+  /// once sent, so there is no reason to ask for it again on every Realtime
+  /// emission — only groups this cubit has not seen yet go over the wire.
+  final _attachmentsByGroup = <String, List<NotificationAttachment>>{};
+
+  /// Bumped by every emission and every optimistic write. An attachment fetch
+  /// that comes back late checks it before emitting: without this, its
+  /// captured snapshot overwrote whatever happened during the await — a tapped
+  /// notification turned unread again, a just-arrived one vanished.
+  int _generation = 0;
+
   /// The list lands first and the attachments follow, in one query for the
   /// whole inbox. Shown straight away rather than held back: the title and the
   /// body are the notification, and a photo arriving a moment later is a photo
   /// arriving a moment later.
   Future<void> _onNotifications(List<AppNotification> items) async {
-    emit(state.copyWith(items: items, loading: false));
+    final generation = ++_generation;
+    emit(state.copyWith(items: _withKnownAttachments(items), loading: false));
     if (items.isEmpty) return;
+
+    final missing = [
+      for (final n in items)
+        if (!_attachmentsByGroup.containsKey(n.groupId)) n.groupId,
+    ];
+    if (missing.isEmpty) return;
+
     try {
-      final byGroup = await _repo.fetchAttachments([
-        for (final n in items) n.groupId,
-      ]);
-      if (isClosed || byGroup.isEmpty) return;
-      emit(
-        state.copyWith(
-          items: [
-            for (final n in items)
-              n.withAttachments(byGroup[n.groupId] ?? const []),
-          ],
-        ),
-      );
+      final byGroup = await _repo.fetchAttachments(missing);
+      for (final id in missing) {
+        _attachmentsByGroup[id] = byGroup[id] ?? const [];
+      }
+      if (isClosed || generation != _generation) return;
+      emit(state.copyWith(items: _withKnownAttachments(state.items)));
     } catch (_) {
       // The inbox is already on screen; attachments simply do not appear.
     }
   }
+
+  List<AppNotification> _withKnownAttachments(List<AppNotification> items) => [
+    for (final n in items)
+      _attachmentsByGroup[n.groupId] == null
+          ? n
+          : n.withAttachments(_attachmentsByGroup[n.groupId]!),
+  ];
 
   /// Re-reads the inbox now. The stream covers the normal case; this covers
   /// the two it does not — a pull-to-refresh, and having just sent something to
@@ -80,6 +100,7 @@ class NotificationsCubit extends SafeCubit<NotificationsState> {
   /// like it had done nothing. So the state moves now and the server catches
   /// up; if the write fails, a re-read puts the truth back.
   Future<void> markRead(String id) async {
+    _generation++;
     emit(
       state.copyWith(
         items: [
@@ -96,6 +117,7 @@ class NotificationsCubit extends SafeCubit<NotificationsState> {
   }
 
   Future<void> markAllRead() async {
+    _generation++;
     emit(
       state.copyWith(items: [for (final n in state.items) n.markedRead()]),
     );

@@ -143,9 +143,11 @@ class Report {
           .cast<Map<String, dynamic>>()
           .map(ReportAttachment.fromMap)
           .toList(),
+      // Local time, not the server's UTC: shown to a person, and near
+      // midnight the raw value even lands on the wrong date.
       updatedAt: DateTime.parse(
         (map['updated_at'] ?? map['created_at']) as String,
-      ),
+      ).toLocal(),
     );
   }
 }

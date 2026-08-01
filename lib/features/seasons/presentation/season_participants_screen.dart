@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/animations/animations.dart';
+import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/profile_avatar.dart';
@@ -83,7 +84,7 @@ class _View extends StatelessWidget {
                       listener: (context, state) {
                         ScaffoldMessenger.of(context)
                           ..hideCurrentSnackBar()
-                          ..showSnackBar(SnackBar(content: Text(state.error!)));
+                          ..showSnackBar(SnackBar(content: Text(friendlyError(context, state.error))));
                       },
                       builder: (context, state) {
                         if (state.status == ParticipantsStatus.loading) {
@@ -107,7 +108,9 @@ class _View extends StatelessWidget {
                             );
                             final busy = state.busy.contains(e.id);
                             return FadeSlideIn(
-                              delay: Duration(milliseconds: 25 * i),
+                              // Cap the cascade so a row first built deep in the scroll doesn't
+                              // sit invisible for seconds (same rule as the directory).
+                              delay: Duration(milliseconds: 25 * (i < 8 ? i : 8)),
                               child: GlassCard(
                                 child: CheckboxListTile(
                                   value: selected,

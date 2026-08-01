@@ -11,6 +11,8 @@ import 'core/logging/app_bloc_observer.dart';
 import 'core/logging/app_logger.dart';
 import 'core/logging/logging_http_client.dart';
 import 'core/logging/error_reporting.dart';
+import 'core/supabase/secure_session_storage.dart';
+import 'features/notifications/data/push_service.dart';
 import 'firebase_options.dart';
 
 /// Result of app initialization, passed into the widget tree.
@@ -42,6 +44,19 @@ Future<void> _initFirebaseIfConfigured() async {
   }
 }
 
+/// Reads a required key out of `.env`, failing with a sentence that names the
+/// key instead of the bare null-check error the `!` operator used to die with.
+String _requireEnv(String key) {
+  final value = dotenv.env[key];
+  if (value == null || value.isEmpty) {
+    throw StateError(
+      '.env is missing $key — copy .env.example (or ask the team for the '
+      'values) and rebuild; the file ships as a bundled asset.',
+    );
+  }
+  return value;
+}
+
 /// Initializes env, Supabase, Firebase (messaging only) and shared prefs.
 Future<AppDependencies> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -64,10 +79,26 @@ Future<AppDependencies> bootstrap() async {
   );
 
   await dotenv.load();
+  final supabaseUrl = _requireEnv('SUPABASE_URL');
+  final supabaseKey = _requireEnv('SUPABASE_ANON_KEY');
+
+  // Prefs alongside Supabase: neither needs the other, and both are on the
+  // path to the first frame.
+  final prefsFuture = SharedPreferences.getInstance();
 
   await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    publishableKey: dotenv.env['SUPABASE_ANON_KEY']!,
+    url: supabaseUrl,
+    publishableKey: supabaseKey,
+    // The session — a live refresh token — goes to the platform keystore, not
+    // the plaintext SharedPreferences file the library defaults to. Same key
+    // name as the default so the first run migrates the existing session
+    // instead of signing everyone out.
+    authOptions: FlutterAuthClientOptions(
+      localStorage: SecureSessionStorage(
+        persistSessionKey:
+            'sb-${Uri.parse(supabaseUrl).host.split('.').first}-auth-token',
+      ),
+    ),
     // Every query, auth call, upload and function invocation goes through this
     // one client, so the log covers them without a line at each call site. In
     // release the wrapper is not built at all.
@@ -77,9 +108,13 @@ Future<AppDependencies> bootstrap() async {
     debug: kDebugMode,
   );
 
-  await _initFirebaseIfConfigured();
+  // Off the critical path on purpose: push is explicitly non-critical (see
+  // _initFirebaseIfConfigured), yet its platform-channel init was holding the
+  // first frame hostage. PushService awaits this future before it talks to
+  // Firebase, so nothing races it.
+  PushService.firebaseInit = _initFirebaseIfConfigured();
 
-  final prefs = await SharedPreferences.getInstance();
+  final prefs = await prefsFuture;
 
   return AppDependencies(prefs: prefs);
 }

@@ -110,6 +110,8 @@ class _FormState extends State<_Form> {
 
   Future<void> _attach() async {
     final picked = await pickAttachment(context);
+    // The sheet can be dismissed while the picker is up.
+    if (!mounted) return;
     if (picked != null) setState(() => _attachments.add(picked));
   }
 

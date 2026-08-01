@@ -20,13 +20,20 @@ class AuroraBackground extends StatefulWidget {
 }
 
 class _AuroraBackgroundState extends State<AuroraBackground>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(seconds: 32),
   );
 
   bool _motionEnabled = true;
+  bool _appVisible = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
 
   @override
   void didChangeDependencies() {
@@ -34,20 +41,34 @@ class _AuroraBackgroundState extends State<AuroraBackground>
     // Honour the OS "reduce motion" switch: hold the field on a still frame
     // rather than animating it.
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final enabled = !reduceMotion;
-    if (enabled != _motionEnabled || (!_c.isAnimating && enabled)) {
-      _motionEnabled = enabled;
-      if (enabled) {
-        _c.repeat();
-      } else {
-        _c.stop();
-        _c.value = 0.18;
-      }
+    _motionEnabled = !reduceMotion;
+    _applyMotion();
+  }
+
+  /// This painter repaints the whole viewport at refresh rate for the app's
+  /// entire life. That is a fine price for a living backdrop somebody is
+  /// looking at, and pure battery drain for one they have left: the ticker
+  /// stops the moment the app is backgrounded and picks the drift back up on
+  /// return.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _appVisible = state == AppLifecycleState.resumed;
+    _applyMotion();
+  }
+
+  void _applyMotion() {
+    final shouldAnimate = _motionEnabled && _appVisible;
+    if (shouldAnimate && !_c.isAnimating) {
+      _c.repeat();
+    } else if (!shouldAnimate && _c.isAnimating) {
+      _c.stop();
+      if (!_motionEnabled) _c.value = 0.18;
     }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _c.dispose();
     super.dispose();
   }

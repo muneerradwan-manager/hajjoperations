@@ -99,6 +99,78 @@ void main() {
       expect(r.series.first.day, DateTime(2026, 7, 20));
       expect(r.series.last.count, 1);
     });
+
+    test('the four newer sections parse, and their absence stays absence', () {
+      final stats = DashboardStats.fromMap({
+        'season': {'id': 's1', 'hijri_year': 1447, 'is_current': true},
+        'central_reports': {
+          'total': 6,
+          'published': 4,
+          'drafts': 2,
+          'general': 1,
+          'by_type': [
+            {'label_ar': 'تقرير الوجبات', 'n': 3},
+          ],
+        },
+        'notifications': {
+          'messages': 5,
+          'recipients': 40,
+          'read': 30,
+          'total_messages': 12,
+          'series': [
+            {'day': '2026-07-30', 'n': 2},
+          ],
+        },
+        'reference': {
+          'sets': 3,
+          'items': 20,
+          'active': 18,
+          'season_items': 15,
+          'general_items': 5,
+          'by_set': [
+            {'label_ar': 'فنادق مكة', 'n': 9},
+          ],
+        },
+        'permissions': {
+          'admins': 2,
+          'grantees': 7,
+          'grants': 21,
+          'by_section': [
+            {'key': 'modules', 'count': 9},
+          ],
+        },
+      });
+
+      expect(stats.centralReports!.published, 4);
+      expect(stats.centralReports!.byType.single.count, 3);
+      // 30 of 40 rows opened.
+      expect(stats.notifications!.readShare, closeTo(0.75, 0.0001));
+      expect(stats.notifications!.series.single.day, DateTime(2026, 7, 30));
+      expect(stats.reference!.bySet.single.labelAr, 'فنادق مكة');
+      expect(stats.permissions!.bySection.single.key, 'modules');
+      expect(stats.isEmpty, isFalse);
+
+      // And a payload without them still reads as "you may not ask".
+      final none = DashboardStats.fromMap({
+        'season': {'id': 's1', 'hijri_year': 1447, 'is_current': true},
+      });
+      expect(none.centralReports, isNull);
+      expect(none.notifications, isNull);
+      expect(none.reference, isNull);
+      expect(none.permissions, isNull);
+      expect(none.isEmpty, isTrue);
+    });
+
+    test('a read share over zero recipients is no claim at all', () {
+      final n = NotificationDashStats.fromMap({
+        'messages': 0,
+        'recipients': 0,
+        'read': 0,
+        'total_messages': 0,
+        'series': [],
+      });
+      expect(n.readShare, isNull);
+    });
   });
 
   group('the palette', () {

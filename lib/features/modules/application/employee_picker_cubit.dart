@@ -288,10 +288,16 @@ class EmployeePickerCubit extends SafeCubit<EmployeePickerState> {
     final generation = _generation;
     emit(state.copyWith(loadingMore: true));
     try {
+      // The same filters as the first page, or the offset is applied against a
+      // different result set: page two would arrive unfiltered, with rows that
+      // duplicate or skip what is already showing.
       final more = await _repo.searchAssignableEmployees(
         seasonId: seasonId,
         query: state.query,
         isExternal: state.filter.isExternal,
+        jobTitleId: state.jobTitleId,
+        cityId: state.cityId,
+        onlyFree: state.onlyFree,
         limit: _pageSize,
         offset: state.people.length,
       );

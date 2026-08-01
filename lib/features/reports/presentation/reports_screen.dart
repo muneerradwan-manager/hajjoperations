@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/animations/animations.dart';
+import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
@@ -64,7 +65,7 @@ class _View extends StatelessWidget {
             if (state.status == ReportsStatus.error) {
               return EmptyState(
                 icon: AppIcons.reports,
-                title: state.error ?? '',
+                title: friendlyError(context, state.error),
                 action: FilledButton(
                   onPressed: cubit.load,
                   child: Text(l.commonRetry),
@@ -102,7 +103,9 @@ class _View extends StatelessWidget {
                             spacing: AppSpacing.md,
                             itemCount: visible.length,
                             itemBuilder: (context, i) => FadeSlideIn(
-                              delay: Duration(milliseconds: 25 * i),
+                              // Cap the cascade so a row first built deep in the scroll doesn't
+                              // sit invisible for seconds (same rule as the directory).
+                              delay: Duration(milliseconds: 25 * (i < 8 ? i : 8)),
                               child: ReportCard(report: visible[i]),
                             ),
                           ),

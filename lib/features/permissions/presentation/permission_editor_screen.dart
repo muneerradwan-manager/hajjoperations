@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/animations/animations.dart';
+import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/l10n/permission_labels.dart';
 import '../../../l10n/app_localizations.dart';
@@ -54,7 +55,7 @@ class _View extends StatelessWidget {
                 listener: (context, state) {
                   ScaffoldMessenger.of(context)
                     ..hideCurrentSnackBar()
-                    ..showSnackBar(SnackBar(content: Text(state.error!)));
+                    ..showSnackBar(SnackBar(content: Text(friendlyError(context, state.error))));
                 },
                 builder: (context, state) {
                   if (state.status == PermissionEditorStatus.loading) {

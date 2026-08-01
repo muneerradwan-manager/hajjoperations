@@ -8,6 +8,7 @@ import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../auth/application/session_cubit.dart';
 import '../../modules/data/modules_repository.dart';
+import '../../modules/domain/operational_module.dart';
 import '../../modules/presentation/module_detail_screen.dart';
 import '../application/notifications_cubit.dart';
 import '../data/notifications_repository.dart';
@@ -51,11 +52,28 @@ class _ViewState extends State<_View> {
     // tap named a file, so opening the inbox is only half of what was asked
     // for — the reader pressed a sentence about a place.
     //
-    // Waited for a frame because opening it may fail: the file can have been
-    // deleted since, and saying so needs a Scaffold that exists.
+    // A listener and not a one-time read: a tap can land while the inbox is
+    // ALREADY on screen, in which case `go(notifications)` changes nothing and
+    // initState never runs again. Read once in initState only, the tap did
+    // nothing then — and stayed parked, flinging the reader into that file the
+    // next time the inbox happened to be opened.
+    PushService.instance.pendingTap.addListener(_onPendingTap);
+    _onPendingTap();
+  }
+
+  @override
+  void dispose() {
+    PushService.instance.pendingTap.removeListener(_onPendingTap);
+    super.dispose();
+  }
+
+  void _onPendingTap() {
+    if (!mounted) return;
     final tap = PushService.instance.takePendingTap();
     final moduleId = tap == null ? null : AppNotification.moduleIdIn(tap);
     if (moduleId == null) return;
+    // Waited for a frame because opening it may fail: the file can have been
+    // deleted since, and saying so needs a Scaffold that exists.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _openModule(context, moduleId);
     });
@@ -88,7 +106,17 @@ class _ViewState extends State<_View> {
     final l = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
-    final module = await ModulesRepository().fetchModule(moduleId);
+    final OperationalModule? module;
+    try {
+      module = await ModulesRepository().fetchModule(moduleId);
+    } catch (_) {
+      // A network error is not "the file is gone" — say what actually failed
+      // instead of letting the tap die in silence.
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l.commonConnectionErrorTitle)));
+      return;
+    }
     if (module == null) {
       messenger
         ..hideCurrentSnackBar()
@@ -170,7 +198,9 @@ class _ViewState extends State<_View> {
                 itemBuilder: (context, i) {
                   final n = state.items[i];
                   return FadeSlideIn(
-                    delay: Duration(milliseconds: 25 * i),
+                    // Cap the cascade so a row first built deep in the scroll doesn't
+                    // sit invisible for seconds (same rule as the directory).
+                    delay: Duration(milliseconds: 25 * (i < 8 ? i : 8)),
                     child: _NotificationCard(
                       notification: n,
                       repo: repo,

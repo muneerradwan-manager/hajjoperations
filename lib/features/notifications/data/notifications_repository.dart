@@ -7,6 +7,11 @@ import '../domain/app_notification.dart';
 class NotificationsRepository {
   static const _bucket = 'notifications';
 
+  /// How much of the inbox one read carries. The table grows for as long as
+  /// the account lives; without a ceiling every open of the inbox — and every
+  /// Realtime emission — hauled the whole history over the wire.
+  static const inboxLimit = 100;
+
   /// Realtime stream of the signed-in user's notifications, newest first.
   ///
   /// Attachments are not in it: a Supabase stream is a single table and cannot
@@ -18,6 +23,7 @@ class NotificationsRepository {
         .stream(primaryKey: ['id'])
         .eq('recipient_id', uid ?? '')
         .order('created_at')
+        .limit(inboxLimit)
         .map((rows) {
           final list = rows.map(AppNotification.fromMap).toList()
             ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -37,7 +43,8 @@ class NotificationsRepository {
         .from('notifications')
         .select()
         .eq('recipient_id', uid)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .limit(inboxLimit);
     return (rows as List)
         .cast<Map<String, dynamic>>()
         .map(AppNotification.fromMap)

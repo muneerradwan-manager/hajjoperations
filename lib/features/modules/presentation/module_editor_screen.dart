@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/animations/animations.dart';
 import '../../../core/constants/permission_codes.dart';
+import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
@@ -418,7 +419,7 @@ class _ViewState extends State<_View> {
           EditorStatus.loading => const AppLoader(),
           EditorStatus.error => EmptyState(
             icon: AppIcons.modules,
-            title: state.error ?? '',
+            title: friendlyError(context, state.error),
           ),
           _ => switch (state.currentStep) {
             EditorStep.info => _InfoStep(state: state),

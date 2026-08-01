@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../core/bloc/safe_cubit.dart';
+import '../../../core/utils/arabic_search.dart';
 import '../../profile/domain/profile.dart';
 import '../data/permissions_repository.dart';
 
@@ -21,9 +22,11 @@ class EmployeesState extends Equatable {
 
   List<Profile> get filtered {
     if (query.trim().isEmpty) return employees;
-    final q = query.trim().toLowerCase();
+    // Folded on both sides, like every other directory in the app: احمد must
+    // find أحمد here too.
+    final q = foldArabic(query.trim());
     return employees
-        .where((e) => e.fullName.toLowerCase().contains(q))
+        .where((e) => foldArabic(e.fullName).contains(q))
         .toList();
   }
 

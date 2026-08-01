@@ -9,6 +9,7 @@ import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/employee_tile.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../auth/application/session_cubit.dart';
+import '../../employees/presentation/employee_detail_screen.dart';
 import '../../profile/domain/profile.dart';
 import '../application/seasons_cubit.dart';
 import '../data/seasons_repository.dart';
@@ -173,11 +174,21 @@ class _SeasonDetailScreenState extends State<SeasonDetailScreen> {
                                       delay: Duration(
                                         milliseconds: 30 * (i < 8 ? i : 8),
                                       ),
+                                      // A name on a roster is a person you can
+                                      // open — same as the module rosters and
+                                      // the directory.
                                       child: EmployeeTile(
                                         name: p.fullName,
                                         photoUrl: p.photoUrl,
                                         subtitle: p.jobTitleName?.of(context),
                                         isExternal: p.isExternal,
+                                        onTap: () => Navigator.of(context).push(
+                                          fadeThroughRoute(
+                                            (_) => EmployeeDetailScreen(
+                                              profile: p,
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     );
                                   },

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/animations/animations.dart';
 import '../../../core/constants/permission_codes.dart';
+import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_accents.dart';
 import '../../../core/theme/app_icons.dart';
@@ -153,7 +154,7 @@ class _View extends StatelessWidget {
           if (state.status == ModulesStatus.error) {
             return EmptyState(
               icon: AppIcons.modules,
-              title: state.error ?? '',
+              title: friendlyError(context, state.error),
               action: FilledButton(
                 onPressed: () => context.read<ModulesCubit>().load(),
                 child: Text(l.commonRetry),

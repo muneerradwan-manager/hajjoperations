@@ -17,16 +17,52 @@ class ReportsRepository {
     seasons(hijri_year)
   ''';
 
+  /// The list's projection: everything a ReportCard shows, and NOT `data` —
+  /// the header jsonb can carry paragraphs, and the list never renders it.
+  static const _listColumns = '''
+    id, report_type_id, season_id, title, number, is_published,
+    updated_at,
+    created_at,
+    report_types(name_ar, name_en),
+    seasons(hijri_year)
+  ''';
+
+  /// A ceiling on the list. Not pagination — reports are entered by hand and a
+  /// season's worth is small — but a guard against the year the table grows
+  /// past what one screenful of cards was ever going to show.
+  static const listLimit = 200;
+
+  /// The type catalog changes when somebody edits the schema, which is close
+  /// enough to never that every screen re-fetching it was pure waste. Held per
+  /// process for [_typesTtl]; [fetchTypes] refreshes it when it goes stale.
+  static List<ReportType>? _typesCache;
+  static DateTime? _typesFetchedAt;
+  static const _typesTtl = Duration(minutes: 5);
+
   /// The catalog: every kind of report, with its header fields and its columns.
   Future<List<ReportType>> fetchTypes() async {
+    final cache = _typesCache;
+    final at = _typesFetchedAt;
+    if (cache != null &&
+        at != null &&
+        DateTime.now().difference(at) < _typesTtl) {
+      return cache;
+    }
     final rows = await supabase
         .from('report_types')
         .select('*, report_type_fields(*), report_type_columns(*)')
         .order('sort_order');
-    return (rows as List)
+    final types = (rows as List)
         .map((r) => ReportType.fromMap(r as Map<String, dynamic>))
         .toList();
+    _typesCache = types;
+    _typesFetchedAt = DateTime.now();
+    return types;
   }
+
+  /// One type by id, from the same cached catalog.
+  Future<ReportType?> fetchType(String id) async =>
+      (await fetchTypes()).where((t) => t.id == id).firstOrNull;
 
   /// The list, newest first.
   ///
@@ -34,12 +70,13 @@ class ReportsRepository {
   /// report is true in every season, so filtering it out of one would be
   /// hiding something that applies. Null returns everything readable.
   Future<List<Report>> fetchReports({String? seasonId}) async {
-    final query = supabase.from('reports').select(_columns);
+    final query = supabase.from('reports').select(_listColumns);
     final rows =
         await (seasonId == null
                 ? query
                 : query.or('season_id.is.null,season_id.eq.$seasonId'))
-            .order('updated_at', ascending: false);
+            .order('updated_at', ascending: false)
+            .limit(listLimit);
     return (rows as List)
         .map((r) => Report.fromMap(r as Map<String, dynamic>))
         .toList();
@@ -53,6 +90,15 @@ class ReportsRepository {
         .eq('id', id)
         .maybeSingle();
     return row == null ? null : Report.fromMap(row);
+  }
+
+  /// Deletes a report; rows, blocks and attachments cascade with it.
+  ///
+  /// Here and not in the two screens that ask for it: presentation deleting
+  /// straight through `supabase.from` was the only raw query left in a widget,
+  /// twice, and both copies have to change together or they drift.
+  Future<void> deleteReport(String id) async {
+    await supabase.from('reports').delete().eq('id', id);
   }
 
   /// A signed URL for an attachment, minted on demand — the bucket is private.

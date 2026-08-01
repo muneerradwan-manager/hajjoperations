@@ -149,9 +149,27 @@ Deno.serve(async (req) => {
         .maybeSingle();
       if (!grant) return json({ error: 'forbidden' }, 403);
     }
-    // A topic name reaches FCM verbatim, so it is checked rather than trusted.
-    if (topic && !/^[a-zA-Z0-9\-_.~%]{1,900}$/.test(topic)) {
-      return json({ error: 'invalid topic' }, 400);
+    // A topic is never taken verbatim. This app has exactly two shapes of
+    // topic — `all`, and `module_<uuid>` — and anything else is refused, so a
+    // grant-holder cannot use this function to push to an arbitrary FCM topic
+    // string. A module topic must also name a module that exists: the DB rule
+    // (0073) is that `broadcast_module` may address any file, but it has to be
+    // a file, not a guess.
+    //
+    // Note on confidentiality: FCM topic subscription is client-controlled, so
+    // a topic push is a megaphone, not an envelope — anything secret belongs
+    // in the RLS-guarded inbox row, not in the push's title or body.
+    if (topic && topic !== 'all') {
+      const m = /^module_([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/.exec(
+        topic,
+      );
+      if (!m) return json({ error: 'invalid topic' }, 400);
+      const { data: module } = await admin
+        .from('modules')
+        .select('id')
+        .eq('id', m[1])
+        .maybeSingle();
+      if (!module) return json({ error: 'unknown module' }, 400);
     }
 
     if (!saRaw) {

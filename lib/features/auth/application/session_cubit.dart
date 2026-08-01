@@ -26,11 +26,17 @@ class SessionState extends Equatable {
     this.status = SessionStatus.unknown,
     this.profile,
     this.permissions = const {},
+    this.loadFailed = false,
   });
 
   final SessionStatus status;
   final Profile? profile;
   final Set<String> permissions;
+
+  /// True when resolving the session at startup failed (network down, server
+  /// unreachable) and there is nothing older on screen to fall back to. The
+  /// splash reads this to offer a retry instead of an endless progress bar.
+  final bool loadFailed;
 
   bool get isAdmin => profile?.isAdmin ?? false;
   bool can(String code) => isAdmin || permissions.contains(code);
@@ -58,16 +64,18 @@ class SessionState extends Equatable {
     SessionStatus? status,
     Profile? profile,
     Set<String>? permissions,
+    bool? loadFailed,
   }) {
     return SessionState(
       status: status ?? this.status,
       profile: profile ?? this.profile,
       permissions: permissions ?? this.permissions,
+      loadFailed: loadFailed ?? this.loadFailed,
     );
   }
 
   @override
-  List<Object?> get props => [status, profile, permissions];
+  List<Object?> get props => [status, profile, permissions, loadFailed];
 }
 
 /// Owns the app's authenticated session: reacts to Supabase auth events,
@@ -118,12 +126,33 @@ class SessionCubit extends SafeCubit<SessionState> {
   }
 
   /// Re-fetch the profile and permissions and recompute status.
+  ///
+  /// Never throws: at startup a failure would otherwise escape to the zone and
+  /// leave the splash up forever with nothing to tap; on a later refresh the
+  /// state already on screen is better than a crash, so it is kept.
   Future<void> reload() async {
     if (_auth.currentUser == null) {
       emit(const SessionState(status: SessionStatus.unauthenticated));
       return;
     }
 
+    // A retry from the splash: put the progress bar back while it runs.
+    if (state.loadFailed) {
+      emit(state.copyWith(loadFailed: false));
+    }
+
+    try {
+      await _reload();
+    } catch (_) {
+      if (state.status == SessionStatus.unknown) {
+        // Startup with nothing resolved yet — surface a retryable failure.
+        emit(state.copyWith(loadFailed: true));
+      }
+      // Otherwise: keep what is showing; the person can refresh again.
+    }
+  }
+
+  Future<void> _reload() async {
     final profile = await _profiles.fetchMine();
 
     // Recorded here rather than at sign-in: this is the first point at which
@@ -166,13 +195,13 @@ class SessionCubit extends SafeCubit<SessionState> {
     }
   }
 
+  /// Throws on failure rather than returning an empty set: an error here used
+  /// to silently strip every section card off the home screen until the next
+  /// reload. Letting it propagate turns it into the same retryable failure as
+  /// a profile fetch that never arrived.
   Future<Set<String>> _loadPermissions() async {
-    try {
-      final rows = await Supabase.instance.client.rpc('my_permissions');
-      return (rows as List).map((e) => e as String).toSet();
-    } catch (_) {
-      return const {};
-    }
+    final rows = await Supabase.instance.client.rpc('my_permissions');
+    return (rows as List).map((e) => e as String).toSet();
   }
 
   @override

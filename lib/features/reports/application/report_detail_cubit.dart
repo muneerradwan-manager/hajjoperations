@@ -79,13 +79,22 @@ class ReportDetailCubit extends SafeCubit<ReportDetailState> {
   Future<void> load() async {
     emit(const ReportDetailState());
     try {
-      final report = await _repo.fetchReport(reportId);
+      // None of the three needs another's answer, so they go out together:
+      // this screen used to be four sequential round trips. Future.wait and
+      // not the record `.wait`, so a failure surfaces as the original
+      // exception rather than a ParallelWaitError nobody can read.
+      final results = await Future.wait<Object?>([
+        _repo.fetchReport(reportId),
+        _repo.fetchTypes(),
+        _modules.fetchReferenceSets(activeOnly: false),
+      ]);
+      final report = results[0] as Report?;
+      final types = (results[1] as List).cast<ReportType>();
+      final sets = (results[2] as List).cast<ReferenceSet>();
       if (report == null) {
         emit(const ReportDetailState(status: ReportDetailStatus.missing));
         return;
       }
-      final types = await _repo.fetchTypes();
-      final sets = await _modules.fetchReferenceSets(activeOnly: false);
       emit(
         ReportDetailState(
           status: ReportDetailStatus.ready,

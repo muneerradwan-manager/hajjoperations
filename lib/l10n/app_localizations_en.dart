@@ -24,6 +24,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonRetry => 'Retry';
 
   @override
+  String get commonConnectionErrorTitle => 'Couldn\'t reach the server';
+
+  @override
+  String get commonConnectionErrorBody =>
+      'Check your internet connection and try again.';
+
+  @override
+  String get commonGenericError => 'Something went wrong. Please try again.';
+
+  @override
   String get commonLogout => 'Log out';
 
   @override
@@ -1688,6 +1698,86 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardSectionQueue => 'Approvals';
+
+  @override
+  String get dashboardSectionCentralReports => 'Central reports';
+
+  @override
+  String get dashboardCentralPublished => 'Published';
+
+  @override
+  String get dashboardCentralDrafts => 'Drafts';
+
+  @override
+  String get dashboardCentralGeneral => 'General (all seasons)';
+
+  @override
+  String get dashboardCentralByType => 'By type';
+
+  @override
+  String get dashboardCentralSplit => 'Published vs drafts';
+
+  @override
+  String get dashboardSectionNotifications => 'Notifications';
+
+  @override
+  String get dashboardNotifMessages30 => 'Messages (30 days)';
+
+  @override
+  String get dashboardNotifRecipients => 'Recipients';
+
+  @override
+  String get dashboardNotifReadShare => 'Read rate';
+
+  @override
+  String get dashboardNotifTrend => 'Messages, last 30 days';
+
+  @override
+  String get dashboardNotifTrendEmpty => 'No messages in the last 30 days';
+
+  @override
+  String dashboardNotifAllTime(Object n) {
+    return '$n messages all-time';
+  }
+
+  @override
+  String get dashboardSectionReference => 'Master data';
+
+  @override
+  String get dashboardRefSets => 'Lists';
+
+  @override
+  String get dashboardRefItems => 'Entries';
+
+  @override
+  String get dashboardRefActive => 'Active';
+
+  @override
+  String get dashboardRefSeasonSplit => 'Seasonal vs general';
+
+  @override
+  String get dashboardRefSeasonItems => 'This season';
+
+  @override
+  String get dashboardRefGeneralItems => 'General';
+
+  @override
+  String get dashboardRefBySet => 'Entries per list';
+
+  @override
+  String get dashboardSectionPermissions => 'Permissions';
+
+  @override
+  String get dashboardPermAdmins => 'Admins';
+
+  @override
+  String get dashboardPermGrantees => 'Employees with grants';
+
+  @override
+  String get dashboardPermGrants => 'Grants held';
+
+  @override
+  String get dashboardPermBySection => 'Grants by section';
 
   @override
   String get dashboardParticipants => 'On this season';

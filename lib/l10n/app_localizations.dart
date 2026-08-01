@@ -128,6 +128,24 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get commonRetry;
 
+  /// No description provided for @commonConnectionErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t reach the server'**
+  String get commonConnectionErrorTitle;
+
+  /// No description provided for @commonConnectionErrorBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your internet connection and try again.'**
+  String get commonConnectionErrorBody;
+
+  /// No description provided for @commonGenericError.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get commonGenericError;
+
   /// No description provided for @commonLogout.
   ///
   /// In en, this message translates to:
@@ -3139,6 +3157,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Approvals'**
   String get dashboardSectionQueue;
+
+  /// No description provided for @dashboardSectionCentralReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Central reports'**
+  String get dashboardSectionCentralReports;
+
+  /// No description provided for @dashboardCentralPublished.
+  ///
+  /// In en, this message translates to:
+  /// **'Published'**
+  String get dashboardCentralPublished;
+
+  /// No description provided for @dashboardCentralDrafts.
+  ///
+  /// In en, this message translates to:
+  /// **'Drafts'**
+  String get dashboardCentralDrafts;
+
+  /// No description provided for @dashboardCentralGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General (all seasons)'**
+  String get dashboardCentralGeneral;
+
+  /// No description provided for @dashboardCentralByType.
+  ///
+  /// In en, this message translates to:
+  /// **'By type'**
+  String get dashboardCentralByType;
+
+  /// No description provided for @dashboardCentralSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Published vs drafts'**
+  String get dashboardCentralSplit;
+
+  /// No description provided for @dashboardSectionNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get dashboardSectionNotifications;
+
+  /// No description provided for @dashboardNotifMessages30.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages (30 days)'**
+  String get dashboardNotifMessages30;
+
+  /// No description provided for @dashboardNotifRecipients.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipients'**
+  String get dashboardNotifRecipients;
+
+  /// No description provided for @dashboardNotifReadShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Read rate'**
+  String get dashboardNotifReadShare;
+
+  /// No description provided for @dashboardNotifTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages, last 30 days'**
+  String get dashboardNotifTrend;
+
+  /// No description provided for @dashboardNotifTrendEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No messages in the last 30 days'**
+  String get dashboardNotifTrendEmpty;
+
+  /// No description provided for @dashboardNotifAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} messages all-time'**
+  String dashboardNotifAllTime(Object n);
+
+  /// No description provided for @dashboardSectionReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Master data'**
+  String get dashboardSectionReference;
+
+  /// No description provided for @dashboardRefSets.
+  ///
+  /// In en, this message translates to:
+  /// **'Lists'**
+  String get dashboardRefSets;
+
+  /// No description provided for @dashboardRefItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Entries'**
+  String get dashboardRefItems;
+
+  /// No description provided for @dashboardRefActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get dashboardRefActive;
+
+  /// No description provided for @dashboardRefSeasonSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Seasonal vs general'**
+  String get dashboardRefSeasonSplit;
+
+  /// No description provided for @dashboardRefSeasonItems.
+  ///
+  /// In en, this message translates to:
+  /// **'This season'**
+  String get dashboardRefSeasonItems;
+
+  /// No description provided for @dashboardRefGeneralItems.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get dashboardRefGeneralItems;
+
+  /// No description provided for @dashboardRefBySet.
+  ///
+  /// In en, this message translates to:
+  /// **'Entries per list'**
+  String get dashboardRefBySet;
+
+  /// No description provided for @dashboardSectionPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions'**
+  String get dashboardSectionPermissions;
+
+  /// No description provided for @dashboardPermAdmins.
+  ///
+  /// In en, this message translates to:
+  /// **'Admins'**
+  String get dashboardPermAdmins;
+
+  /// No description provided for @dashboardPermGrantees.
+  ///
+  /// In en, this message translates to:
+  /// **'Employees with grants'**
+  String get dashboardPermGrantees;
+
+  /// No description provided for @dashboardPermGrants.
+  ///
+  /// In en, this message translates to:
+  /// **'Grants held'**
+  String get dashboardPermGrants;
+
+  /// No description provided for @dashboardPermBySection.
+  ///
+  /// In en, this message translates to:
+  /// **'Grants by section'**
+  String get dashboardPermBySection;
 
   /// No description provided for @dashboardParticipants.
   ///

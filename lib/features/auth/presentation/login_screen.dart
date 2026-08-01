@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/animations/animations.dart';
+import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/router/app_router.dart';
@@ -119,7 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
             if (state.status == AuthStatus.error && state.error != null) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
-                ..showSnackBar(SnackBar(content: Text(state.error!)));
+                ..showSnackBar(SnackBar(content: Text(friendlyError(context, state.error))));
             }
           },
           builder: (context, state) {

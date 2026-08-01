@@ -258,6 +258,154 @@ class RatingStats extends Equatable {
   List<Object?> get props => [count, ratedPeople, average, distribution];
 }
 
+/// التقارير المركزية — what the office has published, and what still sits in
+/// drafts. Scoped like the reports screen itself: this season's plus the
+/// general ones.
+class CentralReportStats extends Equatable {
+  const CentralReportStats({
+    required this.total,
+    required this.published,
+    required this.drafts,
+    required this.general,
+    required this.byType,
+  });
+
+  final int total;
+  final int published;
+  final int drafts;
+
+  /// Reports true in every season (`season_id` null).
+  final int general;
+
+  final List<CountedLabel> byType;
+
+  static CentralReportStats fromMap(Map<String, dynamic> m) =>
+      CentralReportStats(
+        total: m['total'] as int? ?? 0,
+        published: m['published'] as int? ?? 0,
+        drafts: m['drafts'] as int? ?? 0,
+        general: m['general'] as int? ?? 0,
+        byType: _labels(m['by_type']),
+      );
+
+  @override
+  List<Object?> get props => [total, published, drafts, general, byType];
+}
+
+/// What the mission has been told lately. A notification belongs to a moment,
+/// not a season, so the window is the last thirty days.
+class NotificationDashStats extends Equatable {
+  const NotificationDashStats({
+    required this.messages,
+    required this.recipients,
+    required this.read,
+    required this.totalMessages,
+    required this.series,
+  });
+
+  /// Distinct messages (broadcast groups) in the last 30 days.
+  final int messages;
+
+  /// Inbox rows those messages became — the reach.
+  final int recipients;
+
+  /// Of those rows, how many have been opened.
+  final int read;
+
+  /// Distinct messages ever sent.
+  final int totalMessages;
+
+  /// Messages per day, last 30 days.
+  final List<ReportDay> series;
+
+  double? get readShare => recipients == 0 ? null : read / recipients;
+
+  static NotificationDashStats fromMap(Map<String, dynamic> m) =>
+      NotificationDashStats(
+        messages: m['messages'] as int? ?? 0,
+        recipients: m['recipients'] as int? ?? 0,
+        read: m['read'] as int? ?? 0,
+        totalMessages: m['total_messages'] as int? ?? 0,
+        series: _days(m['series']),
+      );
+
+  @override
+  List<Object?> get props => [messages, recipients, read, totalMessages, series];
+}
+
+/// The master data underneath the season's files: how many lists, how many
+/// entries, and where the weight sits.
+class ReferenceStats extends Equatable {
+  const ReferenceStats({
+    required this.sets,
+    required this.items,
+    required this.active,
+    required this.seasonItems,
+    required this.generalItems,
+    required this.bySet,
+  });
+
+  final int sets;
+
+  /// Items this season works with: its own plus the general ones.
+  final int items;
+  final int active;
+  final int seasonItems;
+  final int generalItems;
+  final List<CountedLabel> bySet;
+
+  static ReferenceStats fromMap(Map<String, dynamic> m) => ReferenceStats(
+    sets: m['sets'] as int? ?? 0,
+    items: m['items'] as int? ?? 0,
+    active: m['active'] as int? ?? 0,
+    seasonItems: m['season_items'] as int? ?? 0,
+    generalItems: m['general_items'] as int? ?? 0,
+    bySet: _labels(m['by_set']),
+  );
+
+  @override
+  List<Object?> get props => [
+    sets,
+    items,
+    active,
+    seasonItems,
+    generalItems,
+    bySet,
+  ];
+}
+
+/// The shape of the keyring: how many admins, how many hold grants, and which
+/// sections the grants pile up in. The keys themselves stay on their screen.
+class PermissionStats extends Equatable {
+  const PermissionStats({
+    required this.admins,
+    required this.grantees,
+    required this.grants,
+    required this.bySection,
+  });
+
+  final int admins;
+
+  /// Distinct non-admin accounts holding at least one grant.
+  final int grantees;
+
+  final int grants;
+
+  /// Grants per section; the key is the section's code
+  /// (`employees`, `modules`, …) and the app owns its wording.
+  final List<CountedKey> bySection;
+
+  static PermissionStats fromMap(Map<String, dynamic> m) => PermissionStats(
+    admins: m['admins'] as int? ?? 0,
+    grantees: m['grantees'] as int? ?? 0,
+    grants: m['grants'] as int? ?? 0,
+    bySection: _keys(m['by_section']),
+  );
+
+  @override
+  List<Object?> get props => [admins, grantees, grants, bySection];
+}
+
 /// The season a dashboard is pointed at.
 class DashboardSeason extends Equatable {
   const DashboardSeason({
@@ -298,6 +446,10 @@ class DashboardStats extends Equatable {
     this.modules,
     this.reports,
     this.ratings,
+    this.centralReports,
+    this.notifications,
+    this.reference,
+    this.permissions,
   });
 
   final DashboardSeason? season;
@@ -306,6 +458,10 @@ class DashboardStats extends Equatable {
   final ModuleStats? modules;
   final ReportStats? reports;
   final RatingStats? ratings;
+  final CentralReportStats? centralReports;
+  final NotificationDashStats? notifications;
+  final ReferenceStats? reference;
+  final PermissionStats? permissions;
 
   /// Whether there is anything at all to draw. A reader holding none of the
   /// permissions gets a season and nothing else, and should be told so plainly
@@ -315,7 +471,11 @@ class DashboardStats extends Equatable {
       approvals == null &&
       modules == null &&
       reports == null &&
-      ratings == null;
+      ratings == null &&
+      centralReports == null &&
+      notifications == null &&
+      reference == null &&
+      permissions == null;
 
   static DashboardStats fromMap(Map<String, dynamic> m) => DashboardStats(
     season: _sub(m['season'], DashboardSeason.fromMap),
@@ -324,6 +484,10 @@ class DashboardStats extends Equatable {
     modules: _sub(m['modules'], ModuleStats.fromMap),
     reports: _sub(m['reports'], ReportStats.fromMap),
     ratings: _sub(m['ratings'], RatingStats.fromMap),
+    centralReports: _sub(m['central_reports'], CentralReportStats.fromMap),
+    notifications: _sub(m['notifications'], NotificationDashStats.fromMap),
+    reference: _sub(m['reference'], ReferenceStats.fromMap),
+    permissions: _sub(m['permissions'], PermissionStats.fromMap),
   );
 
   @override
@@ -334,6 +498,10 @@ class DashboardStats extends Equatable {
     modules,
     reports,
     ratings,
+    centralReports,
+    notifications,
+    reference,
+    permissions,
   ];
 }
 
@@ -348,4 +516,12 @@ List<CountedKey> _keys(Object? rows) => [
 List<CountedLabel> _labels(Object? rows) => [
   for (final r in (rows as List? ?? const []))
     CountedLabel.fromMap(Map<String, dynamic>.from(r as Map)),
+];
+
+List<ReportDay> _days(Object? rows) => [
+  for (final r in (rows as List? ?? const []))
+    ReportDay(
+      day: DateTime.parse((r as Map)['day'] as String),
+      count: r['n'] as int? ?? 0,
+    ),
 ];

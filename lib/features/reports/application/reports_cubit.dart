@@ -100,9 +100,17 @@ class ReportsCubit extends SafeCubit<ReportsState> {
   Future<void> load() async {
     emit(state.copyWith(status: ReportsStatus.loading, error: null));
     try {
-      final season = await _seasons.fetchCurrentSeason();
-      final reports = await _repo.fetchReports(seasonId: season?.id);
-      final types = await _repo.fetchTypes();
+      // The list needs the season first; the type catalog needs neither, so it
+      // rides alongside instead of queueing behind them. Future.wait and not
+      // the record `.wait`, so a failure surfaces as the original exception.
+      final results = await Future.wait<Object?>([
+        _seasons.fetchCurrentSeason().then(
+          (season) => _repo.fetchReports(seasonId: season?.id),
+        ),
+        _repo.fetchTypes(),
+      ]);
+      final reports = (results[0] as List).cast<Report>();
+      final types = (results[1] as List).cast<ReportType>();
       emit(
         state.copyWith(
           status: ReportsStatus.ready,

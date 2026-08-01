@@ -104,10 +104,12 @@ class AppNotification {
     groupId: (map['group_id'] as String?) ?? map['id'] as String,
     title: map['title'] as String,
     body: map['body'] as String?,
+    // `.toLocal()` because the server speaks UTC and these are shown to a
+    // person: without it every inbox time was three hours out in Saudi Arabia.
     readAt: map['read_at'] == null
         ? null
-        : DateTime.parse(map['read_at'] as String),
-    createdAt: DateTime.parse(map['created_at'] as String),
+        : DateTime.parse(map['read_at'] as String).toLocal(),
+    createdAt: DateTime.parse(map['created_at'] as String).toLocal(),
     attachments: ((map['notification_attachments'] as List?) ?? const [])
         .cast<Map<String, dynamic>>()
         .map(NotificationAttachment.fromMap)

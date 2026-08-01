@@ -5,10 +5,17 @@
          Coarse is enough to place a building; fine sharpens it when granted. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <!-- Backup is off on purpose: the Supabase session (a live refresh token)
+         and other prefs live in this app's private storage, and auto-backup
+         would carry them off the device into cloud backups and adb extraction.
+         Accounts are re-entered by signing in; a token must not outlive its
+         phone. -->
     <application
         android:label="@string/app_name"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
         android:enableOnBackInvokedCallback="true">
         <activity
             android:name=".MainActivity"
