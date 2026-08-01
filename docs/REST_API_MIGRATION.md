@@ -85,7 +85,7 @@
 
 | القسم             | الأكواد                                                                                                                                                     |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| الموظفون          | `employees.view` `employees.create` `employees.edit` `employees.delete` `employees.suspend` `employees.external` `employees.documents` `employees.password` |
+| الموظفون          | `employees.view` `employees.create` `employees.edit` `employees.delete` `employees.suspend` `employees.external` `employees.documents` `employees.password` `employees.email` |
 | الموافقات         | `approvals.view` `approvals.decide`                                                                                                                         |
 | المواسم           | `seasons.view` `seasons.switch` `seasons.participants_view` `seasons.participants_manage`                                                                   |
 | الملفات التشغيلية | `modules.view_all` `modules.create` `modules.edit` `modules.delete` `modules.activate` `modules.members` `modules.reports`                                  |
@@ -249,6 +249,26 @@ PATCH /auth/password
 
 **Request:** `{ "new_password": "..." }` — **Response:** `204`.
 **أخطاء:** `422 weak_password`.
+
+### 2.7 تغيير البريد الإلكتروني للمستخدم نفسه
+
+في التطبيق الحالي يمر عبر Edge Function `admin-set-email` نفسها (المستخدم يمرر
+معرّفه هو): **لا تُرسل رسائل تأكيد** لأي من العنوانين — البعثة تسلّم الحسابات
+يداً بيد، والعنوان يتغيّر فوراً ويبقى تسجيل الدخول قائماً.
+
+```
+PATCH /auth/email
+```
+
+**Request:** `{ "email": "new@example.com" }` — **Response:** `200 { "email" }`.
+
+**قواعد إلزامية:**
+
+- متاح لكل حساب **مقبول وغير موقوف** (لا يحتاج أي صلاحية).
+- `400 email_invalid` — صيغة غير صالحة.
+- `400 email_taken` — البريد مستخدم من حساب آخر (فرادة `auth.users`).
+- البريد يُكتب مؤكَّداً، وعمود `profiles.email` مرآة تتبعه عبر trigger
+  (migration 0026).
 
 ---
 
@@ -534,6 +554,26 @@ PUT /admin/employees/{profileId}/password
 ```
 
 **Request:** `{ "password": "newSecret" }` — **Response:** `204`.
+
+### 5.7b تغيير البريد الإلكتروني لموظف (بديل Edge Function `admin-set-email`)
+
+**الصلاحية:** `employees.email`، مع رفض تغيير بريد **أدمن** لغير الأدمن.
+(الدالة نفسها تسمح لأي مستخدم مقبول بتغيير بريده **هو** دون صلاحية — §2.7.)
+
+```
+PUT /admin/employees/{profileId}/email
+```
+
+**Request:** `{ "email": "new@example.com" }` — **Response:** `200 { "id", "email" }`.
+
+**قواعد رفض إلزامية (كما في الدالة الحالية):**
+
+- `400 email_invalid` — صيغة بريد غير صالحة.
+- `400 email_taken` — البريد مستخدم من حساب آخر (فرادة `auth.users`).
+- `403 cannot_set_admin_email` — بريد أدمن لغير الأدمن.
+- `404 not_found` — معرف غير موجود.
+- البريد يُكتب **مؤكَّداً** (لا تُرسل رسالة تحقق)، وعمود `profiles.email` مرآة
+  تتبعه تلقائياً عبر trigger (migration 0026).
 
 ### 5.8 إيقاف / إعادة تفعيل
 
@@ -2097,10 +2137,11 @@ WS /ws/notifications          (Authorization عبر query أو header)
 | RPC `broadcast_to_module` / `broadcast_to_all`                                             | §16.6 / §16.7         |
 | RPC `dashboard_seasons` / `dashboard_stats`                                                | §18                   |
 | Edge `admin-create-user` / `admin-delete-user` / `admin-set-password`                      | §5.1 / §5.6 / §5.7    |
+| Edge `admin-set-email` (لموظف / للنفس)                                                     | §5.7b / §2.7          |
 | Edge `send-notification`                                                                   | §17.3 (داخلي)         |
 | Storage (5 buckets + createSignedUrl + upload + remove)                                    | §19                   |
 | Realtime (stream notifications)                                                            | §20                   |
-| RLS + Triggers (0007→0073)                                                                 | §21 كاملاً            |
+| RLS + Triggers (0007→0076)                                                                 | §21 كاملاً            |
 
 ## ملحق ب — ما لا يحتاج backend (يبقى في التطبيق)
 

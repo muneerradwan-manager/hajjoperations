@@ -944,6 +944,12 @@ abstract class AppLocalizations {
   /// **'Reset an employee\'s password'**
   String get permEmployeesPassword;
 
+  /// No description provided for @permEmployeesEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Change an employee\'s email address'**
+  String get permEmployeesEmail;
+
   /// No description provided for @permEmployeesSuspend.
   ///
   /// In en, this message translates to:
@@ -1999,6 +2005,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only an administrator can change another administrator\'s password.'**
   String get employeePasswordAdminBlocked;
+
+  /// No description provided for @employeeEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Change email'**
+  String get employeeEmail;
+
+  /// No description provided for @employeeEmailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New email for {name}'**
+  String employeeEmailTitle(String name);
+
+  /// No description provided for @employeeEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The employee signs in with the new email from now on. Tell them yourself — no message is sent to either address.'**
+  String get employeeEmailHint;
+
+  /// No description provided for @employeeEmailNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New email'**
+  String get employeeEmailNew;
+
+  /// No description provided for @employeeEmailChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Email changed'**
+  String get employeeEmailChanged;
+
+  /// No description provided for @employeeEmailAdminBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Only an administrator can change another administrator\'s email.'**
+  String get employeeEmailAdminBlocked;
+
+  /// No description provided for @employeeEmailTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'This email is already used by another account.'**
+  String get employeeEmailTaken;
+
+  /// No description provided for @myProfileChangeEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Change email'**
+  String get myProfileChangeEmail;
+
+  /// No description provided for @myProfileNewEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'New email'**
+  String get myProfileNewEmail;
+
+  /// No description provided for @myProfileEmailChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Email changed. You sign in with the new address from now on.'**
+  String get myProfileEmailChanged;
 
   /// No description provided for @employeeEditExternalTitle.
   ///

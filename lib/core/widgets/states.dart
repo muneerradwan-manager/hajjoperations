@@ -57,7 +57,15 @@ class EmptyState extends StatelessWidget {
               ],
               if (action != null) ...[
                 const SizedBox(height: AppSpacing.xl),
-                action!,
+                // The app's buttons claim their parent's whole width by theme
+                // — right at the foot of a form, wrong here, where a lone
+                // "retry" would run the full column and read as a bar. Hug
+                // the label instead, with a floor so a short one still reads
+                // as a button.
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 200),
+                  child: IntrinsicWidth(child: action!),
+                ),
               ],
             ],
           ),

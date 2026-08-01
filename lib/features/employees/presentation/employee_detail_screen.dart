@@ -26,6 +26,7 @@ import '../../notifications/presentation/send_notification_sheet.dart';
 import '../application/employee_manage_cubit.dart';
 import '../data/employees_repository.dart';
 import 'widgets/employee_edit_sheet.dart';
+import 'widgets/employee_email_sheet.dart';
 import 'widgets/employee_password_sheet.dart';
 import 'widgets/external_edit_sheet.dart';
 
@@ -121,6 +122,24 @@ class _View extends StatelessWidget {
     showEmployeePasswordSheet(context, cubit, profile);
   }
 
+  /// Open the email sheet, with the same admin guard as the password: the
+  /// address is the login, and an administrator's login moves only under an
+  /// administrator's hand.
+  void _changeEmail(BuildContext context, {required bool viewerIsAdmin}) {
+    final cubit = context.read<EmployeeManageCubit>();
+    final profile = cubit.state.profile;
+
+    if (profile.isAdmin && !viewerIsAdmin) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(context.l10n.employeeEmailAdminBlocked)),
+        );
+      return;
+    }
+    showEmployeeEmailSheet(context, cubit, profile);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -130,6 +149,7 @@ class _View extends StatelessWidget {
     final canEdit = session.can(PermissionCodes.employeesEdit);
     final canDelete = session.can(PermissionCodes.employeesDelete);
     final canSetPassword = session.can(PermissionCodes.employeesPassword);
+    final canSetEmail = session.can(PermissionCodes.employeesEmail);
     final canSeePermissions = session.can(PermissionCodes.permissionsView);
     final canSeeParticipation = session.can(
       PermissionCodes.seasonsParticipantsView,
@@ -166,6 +186,15 @@ class _View extends StatelessWidget {
                   icon: AppIcons.password,
                   label: l.employeePassword,
                   onSelected: () => _changePassword(
+                    context,
+                    viewerIsAdmin: session.isAdmin,
+                  ),
+                ),
+              if (canSetEmail)
+                MenuAction(
+                  icon: AppIcons.email,
+                  label: l.employeeEmail,
+                  onSelected: () => _changeEmail(
                     context,
                     viewerIsAdmin: session.isAdmin,
                   ),

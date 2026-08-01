@@ -70,10 +70,18 @@ class SplashScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                FilledButton.icon(
-                  onPressed: () => context.read<SessionCubit>().reload(),
-                  icon: const Icon(Icons.refresh),
-                  label: Text(context.l10n.commonRetry),
+                // Same fight as EmptyState's action: the theme hands buttons
+                // an infinite minimum width, and with nothing between this
+                // column and the window edge, "retry" would span the monitor.
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 200),
+                  child: IntrinsicWidth(
+                    child: FilledButton.icon(
+                      onPressed: () => context.read<SessionCubit>().reload(),
+                      icon: const Icon(Icons.refresh),
+                      label: Text(context.l10n.commonRetry),
+                    ),
+                  ),
                 ),
               ] else
                 SizedBox(

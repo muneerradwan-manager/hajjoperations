@@ -15,6 +15,7 @@ import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
 import '../domain/profile.dart';
 import 'profile_completion_screen.dart';
+import 'widgets/change_email_sheet.dart';
 import 'widgets/change_password_sheet.dart';
 
 class MyProfileScreen extends StatelessWidget {
@@ -324,6 +325,16 @@ class _ActionsCard extends StatelessWidget {
             icon: AppIcons.password,
             label: l.myProfileChangePassword,
             onTap: () => showChangePasswordSheet(context),
+          ),
+          Divider(
+            height: 1,
+            indent: 60,
+            color: scheme.outlineVariant.withValues(alpha: 0.4),
+          ),
+          _ActionRow(
+            icon: AppIcons.email,
+            label: l.myProfileChangeEmail,
+            onTap: () => showChangeEmailSheet(context),
           ),
         ],
       ),

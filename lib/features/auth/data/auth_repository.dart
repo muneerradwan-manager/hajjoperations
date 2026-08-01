@@ -167,6 +167,25 @@ class AuthRepository {
     }
   }
 
+  /// Updates the signed-in user's own email address.
+  ///
+  /// Through the `admin-set-email` Edge Function rather than
+  /// `auth.updateUser(email:)`: the auth-side self-service flow mails
+  /// confirmation links to both addresses, and this mission hands accounts
+  /// out in person — nothing is mailed, the address just changes. The
+  /// function lets anyone in good standing change their own; a duplicate
+  /// comes back as `email_taken` (auth enforces uniqueness itself).
+  Future<void> updateEmail(String newEmail) async {
+    final res = await supabase.functions.invoke(
+      'admin-set-email',
+      body: {'id': supabase.auth.currentUser!.id, 'email': newEmail.trim()},
+    );
+    final data = res.data;
+    if (data is Map && data['error'] != null) {
+      throw Exception(data['error'].toString());
+    }
+  }
+
   /// Records the account that is signed in now, so it can be reopened later
   /// with a tap instead of a password.
   ///

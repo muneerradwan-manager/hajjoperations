@@ -166,6 +166,28 @@ class EmployeeManageCubit extends SafeCubit<EmployeeManageState> {
     }
   }
 
+  /// Set a new email address on this employee's account.
+  ///
+  /// Same contract as [changePassword]: true only once it is actually stored.
+  /// On success the profile is read back rather than patched — the address
+  /// shown on screen is the `profiles.email` mirror, and reading it back
+  /// confirms the trigger delivered it.
+  Future<bool> changeEmail(String email) async {
+    emit(state.copyWith(busy: true));
+    try {
+      await _employees.setEmployeeEmail(
+        profileId: state.profile.id,
+        email: email,
+      );
+      final fresh = await _employees.fetchOne(state.profile.id);
+      emit(state.copyWith(profile: fresh, busy: false));
+      return true;
+    } catch (e) {
+      emit(state.copyWith(busy: false, error: e.toString()));
+      return false;
+    }
+  }
+
   /// Remove the account. Returns true when it is gone, so the screen knows to
   /// leave — there is nothing left to show.
   Future<bool> deleteEmployee() async {

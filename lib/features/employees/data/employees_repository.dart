@@ -199,6 +199,27 @@ class EmployeesRepository {
     }
   }
 
+  /// Set a new email address on someone else's account.
+  ///
+  /// Goes through the `admin-set-email` Edge Function: the address is the
+  /// login itself and lives in the auth schema. The function checks
+  /// `employees.email`, refuses an administrator's account to anyone who is
+  /// not one, and auth refuses an address already in use (`email_taken`).
+  /// The `profiles.email` mirror follows by trigger.
+  Future<void> setEmployeeEmail({
+    required String profileId,
+    required String email,
+  }) async {
+    final res = await supabase.functions.invoke(
+      'admin-set-email',
+      body: {'id': profileId, 'email': email.trim()},
+    );
+    final data = res.data;
+    if (data is Map && data['error'] != null) {
+      throw Exception(data['error'].toString());
+    }
+  }
+
   /// Admin-only: suspend or reactivate an account.
   Future<void> setSuspended(String profileId, bool suspended) async {
     await supabase

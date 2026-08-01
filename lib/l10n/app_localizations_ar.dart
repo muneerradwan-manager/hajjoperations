@@ -451,6 +451,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get permEmployeesPassword => 'إعادة تعيين كلمة مرور موظف';
 
   @override
+  String get permEmployeesEmail => 'تغيير البريد الإلكتروني لموظف';
+
+  @override
   String get permEmployeesSuspend => 'إيقاف الحسابات وتفعيلها';
 
   @override
@@ -1025,6 +1028,42 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get employeePasswordAdminBlocked =>
       'لا يمكن تغيير كلمة مرور مدير إلا من مدير آخر.';
+
+  @override
+  String get employeeEmail => 'تغيير البريد الإلكتروني';
+
+  @override
+  String employeeEmailTitle(String name) {
+    return 'بريد إلكتروني جديد لـ $name';
+  }
+
+  @override
+  String get employeeEmailHint =>
+      'سيدخل الموظف بالبريد الإلكتروني الجديد من الآن فصاعداً. أبلغه به بنفسك — لا تُرسل رسالة إلى أي من العنوانين.';
+
+  @override
+  String get employeeEmailNew => 'البريد الإلكتروني الجديد';
+
+  @override
+  String get employeeEmailChanged => 'تم تغيير البريد الإلكتروني';
+
+  @override
+  String get employeeEmailAdminBlocked =>
+      'لا يمكن تغيير البريد الإلكتروني لمدير إلا من مدير آخر.';
+
+  @override
+  String get employeeEmailTaken =>
+      'هذا البريد الإلكتروني مستخدم من قبل حساب آخر.';
+
+  @override
+  String get myProfileChangeEmail => 'تغيير البريد الإلكتروني';
+
+  @override
+  String get myProfileNewEmail => 'البريد الإلكتروني الجديد';
+
+  @override
+  String get myProfileEmailChanged =>
+      'تم تغيير البريد الإلكتروني. ستدخل بالعنوان الجديد من الآن فصاعداً.';
 
   @override
   String get employeeEditExternalTitle => 'الصفة الخارجية';

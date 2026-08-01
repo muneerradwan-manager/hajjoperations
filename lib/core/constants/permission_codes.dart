@@ -24,6 +24,10 @@ class PermissionCodes {
   /// same trust (see migration 0072).
   static const employeesPassword = 'employees.password';
 
+  /// Changing someone else's email address — the login itself. Its own code
+  /// for the same reason the password has one (see migration 0076).
+  static const employeesEmail = 'employees.email';
+
   // -------------------------------------------------------------- approvals
   static const approvalsView = 'approvals.view';
   static const approvalsDecide = 'approvals.decide';

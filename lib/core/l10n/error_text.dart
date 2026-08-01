@@ -34,5 +34,10 @@ String friendlyErrorL(AppLocalizations l, String? raw) {
   for (final smell in networkSmells) {
     if (s.contains(smell)) return l.commonConnectionErrorTitle;
   }
+  // Codes the admin-set-email function answers with. They arrive wrapped in
+  // exception text ("FunctionException(status: 400, details: {error:
+  // email_taken}…)"), so this matches by substring like the smells above.
+  if (s.contains('email_taken')) return l.employeeEmailTaken;
+  if (s.contains('cannot_set_admin_email')) return l.employeeEmailAdminBlocked;
   return raw;
 }

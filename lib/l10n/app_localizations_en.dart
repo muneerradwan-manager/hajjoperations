@@ -452,6 +452,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permEmployeesPassword => 'Reset an employee\'s password';
 
   @override
+  String get permEmployeesEmail => 'Change an employee\'s email address';
+
+  @override
   String get permEmployeesSuspend => 'Suspend & reactivate accounts';
 
   @override
@@ -1026,6 +1029,42 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get employeePasswordAdminBlocked =>
       'Only an administrator can change another administrator\'s password.';
+
+  @override
+  String get employeeEmail => 'Change email';
+
+  @override
+  String employeeEmailTitle(String name) {
+    return 'New email for $name';
+  }
+
+  @override
+  String get employeeEmailHint =>
+      'The employee signs in with the new email from now on. Tell them yourself — no message is sent to either address.';
+
+  @override
+  String get employeeEmailNew => 'New email';
+
+  @override
+  String get employeeEmailChanged => 'Email changed';
+
+  @override
+  String get employeeEmailAdminBlocked =>
+      'Only an administrator can change another administrator\'s email.';
+
+  @override
+  String get employeeEmailTaken =>
+      'This email is already used by another account.';
+
+  @override
+  String get myProfileChangeEmail => 'Change email';
+
+  @override
+  String get myProfileNewEmail => 'New email';
+
+  @override
+  String get myProfileEmailChanged =>
+      'Email changed. You sign in with the new address from now on.';
 
   @override
   String get employeeEditExternalTitle => 'External status';
