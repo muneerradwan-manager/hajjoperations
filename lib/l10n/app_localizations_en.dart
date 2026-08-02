@@ -533,6 +533,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permNotificationsBroadcastAll => 'Notify everyone';
 
   @override
+  String get perm_audit => 'Audit log';
+
+  @override
+  String get permAuditView => 'Read the record of who did what';
+
+  @override
   String permissionRequires(String names) {
     return 'Requires: $names';
   }

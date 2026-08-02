@@ -12,6 +12,7 @@ String permissionLabel(AppLocalizations l, String code) => switch (code) {
   'reports' => l.perm_reports,
   'notifications' => l.perm_notifications,
   'permissions' => l.perm_permissions,
+  'audit' => l.perm_audit,
   // Actions
   'employees.view' => l.permEmployeesView,
   'employees.create' => l.permEmployeesCreate,
@@ -49,5 +50,6 @@ String permissionLabel(AppLocalizations l, String code) => switch (code) {
   'notifications.broadcast_all' => l.permNotificationsBroadcastAll,
   'permissions.view' => l.permPermissionsView,
   'permissions.manage' => l.permPermissionsManage,
+  'audit.view' => l.permAuditView,
   _ => code,
 };

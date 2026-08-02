@@ -182,6 +182,8 @@
   "permNotificationsSend": "إرسال إشعار لموظف",
   "permNotificationsBroadcastModule": "إرسال إشعار لأعضاء ملف",
   "permNotificationsBroadcastAll": "إرسال إشعار عام للجميع",
+  "perm_audit": "سجل الأحداث",
+  "permAuditView": "قراءة سجل من فعل ماذا",
   "permissionRequires": "يتطلب: {names}",
   "@permissionRequires": {
     "placeholders": {

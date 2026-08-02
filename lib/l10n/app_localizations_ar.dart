@@ -532,6 +532,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get permNotificationsBroadcastAll => 'إرسال إشعار عام للجميع';
 
   @override
+  String get perm_audit => 'سجل الأحداث';
+
+  @override
+  String get permAuditView => 'قراءة سجل من فعل ماذا';
+
+  @override
   String permissionRequires(String names) {
     return 'يتطلب: $names';
   }

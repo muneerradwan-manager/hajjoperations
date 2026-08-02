@@ -187,6 +187,8 @@
   "permNotificationsSend": "Notify an individual employee",
   "permNotificationsBroadcastModule": "Notify a file's members",
   "permNotificationsBroadcastAll": "Notify everyone",
+  "perm_audit": "Audit log",
+  "permAuditView": "Read the record of who did what",
   "permissionRequires": "Requires: {names}",
   "@permissionRequires": {
     "placeholders": {

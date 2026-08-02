@@ -1106,6 +1106,18 @@ abstract class AppLocalizations {
   /// **'Notify everyone'**
   String get permNotificationsBroadcastAll;
 
+  /// No description provided for @perm_audit.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit log'**
+  String get perm_audit;
+
+  /// No description provided for @permAuditView.
+  ///
+  /// In en, this message translates to:
+  /// **'Read the record of who did what'**
+  String get permAuditView;
+
   /// No description provided for @permissionRequires.
   ///
   /// In en, this message translates to:

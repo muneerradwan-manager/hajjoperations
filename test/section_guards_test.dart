@@ -40,6 +40,7 @@ void main() {
         '/approvals': PermissionCodes.approvalsView,
         '/permissions': PermissionCodes.permissionsView,
         '/reference-data': PermissionCodes.referenceView,
+        '/audit-log': PermissionCodes.auditView,
       };
 
       owners.forEach((route, code) {
@@ -108,6 +109,7 @@ void main() {
         '/approvals',
         '/permissions',
         '/reference-data',
+        '/audit-log',
       });
     });
 
