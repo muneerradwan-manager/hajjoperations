@@ -171,8 +171,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 // The credentials sit on their own pane so the
                                 // form reads as one contained task.
                                 GlassCard(
-                                  radius: AppRadius.xl,
-                                  padding: const EdgeInsets.all(AppSpacing.lg),
+                                  radius: AppRadius.lg,
+                                  padding: const EdgeInsets.all(AppSpacing.md),
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.stretch,

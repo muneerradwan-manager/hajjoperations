@@ -1639,6 +1639,31 @@ class AppLocalizationsAr extends AppLocalizations {
   String get referenceDuplicate => 'يوجد عنصر بهذا الاسم في القائمة بالفعل';
 
   @override
+  String get referenceDeleteAll => 'حذف الكل';
+
+  @override
+  String referenceDeleteAllConfirm(int count, String name) {
+    return 'سيتم حذف $count عنصراً من «$name» نهائياً. لا يمكن التراجع عن هذا.';
+  }
+
+  @override
+  String referenceDeleteAllDone(int count) {
+    return 'تم حذف $count عنصراً';
+  }
+
+  @override
+  String referenceDeleteAllPartial(int deleted, int kept) {
+    return 'تم حذف $deleted عنصراً، وبقي $kept لأنها مستخدمة في ملفات أو قوائم أخرى';
+  }
+
+  @override
+  String get referenceDeleteAllNone =>
+      'لم يُحذف أي عنصر: جميعها مستخدمة في ملفات أو قوائم أخرى';
+
+  @override
+  String get referenceDeletingAll => 'جارٍ الحذف…';
+
+  @override
   String get referenceOpenLink => 'فتح الرابط';
 
   @override
@@ -2017,4 +2042,76 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get dashboardIncomplete => 'لم يُكمل ملفه';
+
+  @override
+  String get prayerTimesTitle => 'مواقيت الصلاة';
+
+  @override
+  String get prayerFajr => 'الفجر';
+
+  @override
+  String get prayerSunrise => 'الشروق';
+
+  @override
+  String get prayerDhuhr => 'الظهر';
+
+  @override
+  String get prayerAsr => 'العصر';
+
+  @override
+  String get prayerMaghrib => 'المغرب';
+
+  @override
+  String get prayerIsha => 'العشاء';
+
+  @override
+  String get prayerNextLabel => 'الصلاة القادمة';
+
+  @override
+  String get prayerFajrEndsLabel => 'ينتهي وقت الفجر';
+
+  @override
+  String get prayerRemainingLabel => 'متبقٍ';
+
+  @override
+  String get prayerNowLabel => 'الآن';
+
+  @override
+  String get prayerAm => 'ص';
+
+  @override
+  String get prayerPm => 'م';
+
+  @override
+  String get prayerTomorrow => 'غداً';
+
+  @override
+  String get prayerSunriseGapNote => 'وقت الشروق — لا صلاة حتى الظهر';
+
+  @override
+  String get prayerLocating => 'جارٍ تحديد موقعك…';
+
+  @override
+  String get prayerApproximate => 'موقع تقريبي';
+
+  @override
+  String get prayerYourLocation => 'موقعك';
+
+  @override
+  String get prayerPlaceMakkah => 'مكة المكرمة';
+
+  @override
+  String get prayerPlaceMina => 'منى';
+
+  @override
+  String get prayerPlaceMuzdalifah => 'مزدلفة';
+
+  @override
+  String get prayerPlaceArafat => 'عرفات';
+
+  @override
+  String get prayerPlaceMadinah => 'المدينة المنورة';
+
+  @override
+  String get prayerPlaceJeddah => 'جدة';
 }

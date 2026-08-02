@@ -174,6 +174,20 @@ class AppIcons {
   // ── The record of what happened ─────────────────────────────────────────
   static const auditLog = Iconsax.activity;
 
+  // ── مواقيت الصلاة ────────────────────────────────────────────────────────
+  //
+  // Four glyphs for six marks, and the doubling is deliberate: only one of them
+  // is ever on screen at a time — the card's hero shows the coming prayer and
+  // nothing else — so الفجر and المغرب may share the low sun they both are, and
+  // الظهر and العصر the high one. Six *different* suns in a row would be six
+  // shapes a reader has to tell apart at twelve pixels, which is a puzzle, not
+  // an icon set.
+  static const prayerTimes = Iconsax.clock_1;
+  static const prayerDawn = Iconsax.sun_fog;
+  static const prayerSunrise = Iconsax.cloud_sunny;
+  static const prayerNoon = Iconsax.sun_1;
+  static const prayerNight = Iconsax.moon;
+
   // ── The season from above ───────────────────────────────────────────────
   static const dashboard = Iconsax.chart_2;
   static const trend = Iconsax.chart_success;

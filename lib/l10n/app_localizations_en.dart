@@ -1643,6 +1643,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'An entry with this name already exists in the list';
 
   @override
+  String get referenceDeleteAll => 'Delete all';
+
+  @override
+  String referenceDeleteAllConfirm(int count, String name) {
+    return 'This permanently deletes $count entries from “$name”. It cannot be undone.';
+  }
+
+  @override
+  String referenceDeleteAllDone(int count) {
+    return 'Deleted $count entries';
+  }
+
+  @override
+  String referenceDeleteAllPartial(int deleted, int kept) {
+    return 'Deleted $deleted; $kept kept because they are used by modules or other lists';
+  }
+
+  @override
+  String get referenceDeleteAllNone =>
+      'Nothing was deleted: every entry is used by a module or another list';
+
+  @override
+  String get referenceDeletingAll => 'Deleting…';
+
+  @override
   String get referenceOpenLink => 'Open link';
 
   @override
@@ -2020,4 +2045,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardIncomplete => 'Profile incomplete';
+
+  @override
+  String get prayerTimesTitle => 'Prayer times';
+
+  @override
+  String get prayerFajr => 'Fajr';
+
+  @override
+  String get prayerSunrise => 'Sunrise';
+
+  @override
+  String get prayerDhuhr => 'Dhuhr';
+
+  @override
+  String get prayerAsr => 'Asr';
+
+  @override
+  String get prayerMaghrib => 'Maghrib';
+
+  @override
+  String get prayerIsha => 'Isha';
+
+  @override
+  String get prayerNextLabel => 'Next prayer';
+
+  @override
+  String get prayerFajrEndsLabel => 'Fajr time ends';
+
+  @override
+  String get prayerRemainingLabel => 'remaining';
+
+  @override
+  String get prayerNowLabel => 'Now';
+
+  @override
+  String get prayerAm => 'AM';
+
+  @override
+  String get prayerPm => 'PM';
+
+  @override
+  String get prayerTomorrow => 'tomorrow';
+
+  @override
+  String get prayerSunriseGapNote => 'Sunrise — no prayer is due until Dhuhr';
+
+  @override
+  String get prayerLocating => 'Finding you…';
+
+  @override
+  String get prayerApproximate => 'Approximate';
+
+  @override
+  String get prayerYourLocation => 'Your location';
+
+  @override
+  String get prayerPlaceMakkah => 'Makkah';
+
+  @override
+  String get prayerPlaceMina => 'Mina';
+
+  @override
+  String get prayerPlaceMuzdalifah => 'Muzdalifah';
+
+  @override
+  String get prayerPlaceArafat => 'Arafat';
+
+  @override
+  String get prayerPlaceMadinah => 'Madinah';
+
+  @override
+  String get prayerPlaceJeddah => 'Jeddah';
 }

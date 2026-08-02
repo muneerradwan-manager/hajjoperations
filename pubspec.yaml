@@ -11,6 +11,7 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
+  adhan_dart: ^2.0.1
   bloc: ^9.2.1
   cached_network_image: ^3.4.1
   equatable: ^2.1.0
@@ -35,6 +36,7 @@ dependencies:
   url_launcher: ^6.3.2
   qr_flutter: ^4.1.0
   flutter_secure_storage: ^10.3.1
+  device_preview: ^1.3.1
 
 dev_dependencies:
   flutter_test:
@@ -74,13 +76,13 @@ flutter_launcher_icons:
 # Microsoft Store packaging (dart run msix:create --store)
 # identity_name / publisher / publisher_display_name MUST match
 # Partner Center -> your app -> Product management -> Product identity.
-msix_config:
-  display_name: Hajj Operations
-  publisher_display_name: TODO_FROM_PARTNER_CENTER # Package/Properties/PublisherDisplayName
-  identity_name: TODO_FROM_PARTNER_CENTER # Package/Identity/Name
-  publisher: TODO_FROM_PARTNER_CENTER # Package/Identity/Publisher (CN=...)
-  msix_version: 0.1.0.0
-  logo_path: assets/images/app_icon.png
-  languages: ar, en
-  capabilities: internetClient, location, webcam, microphone
-  store: true
+# msix_config:
+#   display_name: Hajj Operations
+#   publisher_display_name: TODO_FROM_PARTNER_CENTER # Package/Properties/PublisherDisplayName
+#   identity_name: TODO_FROM_PARTNER_CENTER # Package/Identity/Name
+#   publisher: TODO_FROM_PARTNER_CENTER # Package/Identity/Publisher (CN=...)
+#   msix_version: 0.1.0.0
+#   logo_path: assets/images/app_icon.png
+#   languages: ar, en
+#   capabilities: internetClient, location, webcam, microphone
+#   store: true

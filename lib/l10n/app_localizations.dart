@@ -3050,6 +3050,42 @@ abstract class AppLocalizations {
   /// **'An entry with this name already exists in the list'**
   String get referenceDuplicate;
 
+  /// No description provided for @referenceDeleteAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all'**
+  String get referenceDeleteAll;
+
+  /// No description provided for @referenceDeleteAllConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes {count} entries from “{name}”. It cannot be undone.'**
+  String referenceDeleteAllConfirm(int count, String name);
+
+  /// No description provided for @referenceDeleteAllDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {count} entries'**
+  String referenceDeleteAllDone(int count);
+
+  /// No description provided for @referenceDeleteAllPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {deleted}; {kept} kept because they are used by modules or other lists'**
+  String referenceDeleteAllPartial(int deleted, int kept);
+
+  /// No description provided for @referenceDeleteAllNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing was deleted: every entry is used by a module or another list'**
+  String get referenceDeleteAllNone;
+
+  /// No description provided for @referenceDeletingAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting…'**
+  String get referenceDeletingAll;
+
   /// No description provided for @referenceOpenLink.
   ///
   /// In en, this message translates to:
@@ -3721,6 +3757,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profile incomplete'**
   String get dashboardIncomplete;
+
+  /// No description provided for @prayerTimesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer times'**
+  String get prayerTimesTitle;
+
+  /// No description provided for @prayerFajr.
+  ///
+  /// In en, this message translates to:
+  /// **'Fajr'**
+  String get prayerFajr;
+
+  /// No description provided for @prayerSunrise.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunrise'**
+  String get prayerSunrise;
+
+  /// No description provided for @prayerDhuhr.
+  ///
+  /// In en, this message translates to:
+  /// **'Dhuhr'**
+  String get prayerDhuhr;
+
+  /// No description provided for @prayerAsr.
+  ///
+  /// In en, this message translates to:
+  /// **'Asr'**
+  String get prayerAsr;
+
+  /// No description provided for @prayerMaghrib.
+  ///
+  /// In en, this message translates to:
+  /// **'Maghrib'**
+  String get prayerMaghrib;
+
+  /// No description provided for @prayerIsha.
+  ///
+  /// In en, this message translates to:
+  /// **'Isha'**
+  String get prayerIsha;
+
+  /// No description provided for @prayerNextLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Next prayer'**
+  String get prayerNextLabel;
+
+  /// No description provided for @prayerFajrEndsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fajr time ends'**
+  String get prayerFajrEndsLabel;
+
+  /// No description provided for @prayerRemainingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'remaining'**
+  String get prayerRemainingLabel;
+
+  /// No description provided for @prayerNowLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get prayerNowLabel;
+
+  /// No description provided for @prayerAm.
+  ///
+  /// In en, this message translates to:
+  /// **'AM'**
+  String get prayerAm;
+
+  /// No description provided for @prayerPm.
+  ///
+  /// In en, this message translates to:
+  /// **'PM'**
+  String get prayerPm;
+
+  /// No description provided for @prayerTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'tomorrow'**
+  String get prayerTomorrow;
+
+  /// No description provided for @prayerSunriseGapNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunrise — no prayer is due until Dhuhr'**
+  String get prayerSunriseGapNote;
+
+  /// No description provided for @prayerLocating.
+  ///
+  /// In en, this message translates to:
+  /// **'Finding you…'**
+  String get prayerLocating;
+
+  /// No description provided for @prayerApproximate.
+  ///
+  /// In en, this message translates to:
+  /// **'Approximate'**
+  String get prayerApproximate;
+
+  /// No description provided for @prayerYourLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Your location'**
+  String get prayerYourLocation;
+
+  /// No description provided for @prayerPlaceMakkah.
+  ///
+  /// In en, this message translates to:
+  /// **'Makkah'**
+  String get prayerPlaceMakkah;
+
+  /// No description provided for @prayerPlaceMina.
+  ///
+  /// In en, this message translates to:
+  /// **'Mina'**
+  String get prayerPlaceMina;
+
+  /// No description provided for @prayerPlaceMuzdalifah.
+  ///
+  /// In en, this message translates to:
+  /// **'Muzdalifah'**
+  String get prayerPlaceMuzdalifah;
+
+  /// No description provided for @prayerPlaceArafat.
+  ///
+  /// In en, this message translates to:
+  /// **'Arafat'**
+  String get prayerPlaceArafat;
+
+  /// No description provided for @prayerPlaceMadinah.
+  ///
+  /// In en, this message translates to:
+  /// **'Madinah'**
+  String get prayerPlaceMadinah;
+
+  /// No description provided for @prayerPlaceJeddah.
+  ///
+  /// In en, this message translates to:
+  /// **'Jeddah'**
+  String get prayerPlaceJeddah;
 }
 
 class _AppLocalizationsDelegate

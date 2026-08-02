@@ -22,6 +22,25 @@ class ReferenceResult {
   bool get isOk => outcome == ReferenceOutcome.ok;
 }
 
+/// What emptying a list actually managed to do. The two numbers are reported
+/// rather than reduced to success or failure, because the interesting case is
+/// neither: most of the list goes and a handful stay because a module was built
+/// on them.
+class BulkDeleteResult {
+  const BulkDeleteResult({
+    required this.deleted,
+    required this.kept,
+    this.message,
+  });
+
+  final int deleted;
+  final int kept;
+
+  /// Set only when something other than the in-use guard refused — a dropped
+  /// connection deserves its own words, not "these entries are in use".
+  final String? message;
+}
+
 class ReferenceDataState extends Equatable {
   const ReferenceDataState({
     this.status = ReferenceDataStatus.loading,
@@ -158,6 +177,46 @@ class ReferenceDataCubit extends SafeCubit<ReferenceDataState> {
 
   Future<ReferenceResult> deleteItem(String id) =>
       _write(() => _repo.deleteReferenceItem(id));
+
+  /// Removes every entry in [ids], one row at a time.
+  ///
+  /// One statement would be a single trip, but the guard is a BEFORE DELETE
+  /// trigger that raises: one entry a module was built on would abort the whole
+  /// delete and the list would come back untouched. Row by row, what can go
+  /// goes and the rest are counted.
+  ///
+  /// Entries also point at each other — a مجموعة at its تكتل — so a row refused
+  /// on the first pass can be free once whatever pointed at it is gone. Passes
+  /// repeat while one of them still makes progress, and stop the moment a whole
+  /// pass changes nothing: what is left then is genuinely in use.
+  Future<BulkDeleteResult> deleteItems(Iterable<String> ids) async {
+    var deleted = 0;
+    String? failure;
+    var remaining = ids.toList();
+
+    while (remaining.isNotEmpty) {
+      final refused = <String>[];
+      for (final id in remaining) {
+        try {
+          await _repo.deleteReferenceItem(id);
+          deleted++;
+        } catch (e) {
+          final text = e.toString();
+          if (!text.contains('reference_item_in_use')) failure ??= text;
+          refused.add(id);
+        }
+      }
+      if (refused.length == remaining.length) break;
+      remaining = refused;
+    }
+
+    await load();
+    return BulkDeleteResult(
+      deleted: deleted,
+      kept: remaining.length,
+      message: failure,
+    );
+  }
 
   Future<ReferenceResult> _write(Future<void> Function() action) async {
     try {

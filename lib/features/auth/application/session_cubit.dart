@@ -95,6 +95,23 @@ class SessionCubit extends SafeCubit<SessionState> {
   final ProfileRepository _profiles;
   late final StreamSubscription<AuthState> _sub;
 
+  /// The account the current session state was loaded for — set the moment a
+  /// load starts, not when it finishes, so that events arriving while the first
+  /// one is still in flight can be recognised as redundant.
+  ///
+  /// Cleared when a load fails, so the next event retries rather than trusting
+  /// a resolution that never happened.
+  String? _loadedUserId;
+
+  /// The load currently running, if one is. A second caller arriving while it
+  /// is in flight waits on it instead of starting a fetch of its own — the
+  /// answer it would arrive at is the one already on its way.
+  ///
+  /// Belt to [_loadedUserId]'s braces: that one recognises the specific auth
+  /// events startup raises twice, this one holds for any two callers that
+  /// overlap, whatever asked them to.
+  Future<void>? _inFlight;
+
   /// Who is signed in, whatever state their account is in.
   ///
   /// Not on [SessionState], which carries the profile — and an account that has
@@ -105,6 +122,7 @@ class SessionCubit extends SafeCubit<SessionState> {
   Future<void> _onAuthChanged(AuthState event) async {
     final session = event.session;
     if (session == null) {
+      _loadedUserId = null;
       emit(const SessionState(status: SessionStatus.unauthenticated));
       return;
     }
@@ -117,8 +135,22 @@ class SessionCubit extends SafeCubit<SessionState> {
     // The same event announces a switch to a different account, because that is
     // what `setSession` does under it; the user id is what tells the two apart.
     if (event.event == AuthChangeEvent.tokenRefreshed &&
-        session.user.id == state.profile?.id) {
+        session.user.id == _loadedUserId) {
       await _auth.syncStoredToken();
+      return;
+    }
+
+    // Startup announces the restored session on this stream as well, and the
+    // constructor has already begun loading it — this event is the same news
+    // arriving twice. Without this the app opened with three identical profile
+    // fetches racing each other: the constructor's, this one, and the refresh
+    // that rotates the restored token on the way in.
+    //
+    // Compared against the id a load was *started* for, not the loaded profile:
+    // at the moment this arrives the first fetch is still in flight, and an
+    // account that has not filled in a profile yet never has one to compare to.
+    if (event.event == AuthChangeEvent.initialSession &&
+        session.user.id == _loadedUserId) {
       return;
     }
 
@@ -130,8 +162,17 @@ class SessionCubit extends SafeCubit<SessionState> {
   /// Never throws: at startup a failure would otherwise escape to the zone and
   /// leave the splash up forever with nothing to tap; on a later refresh the
   /// state already on screen is better than a crash, so it is kept.
-  Future<void> reload() async {
-    if (_auth.currentUser == null) {
+  ///
+  /// Callers who arrive while one is already running join it rather than adding
+  /// a second round trip for the same answer.
+  Future<void> reload() {
+    return _inFlight ??= _runReload().whenComplete(() => _inFlight = null);
+  }
+
+  Future<void> _runReload() async {
+    final uid = _auth.currentUser?.id;
+    if (uid == null) {
+      _loadedUserId = null;
       emit(const SessionState(status: SessionStatus.unauthenticated));
       return;
     }
@@ -141,9 +182,14 @@ class SessionCubit extends SafeCubit<SessionState> {
       emit(state.copyWith(loadFailed: false));
     }
 
+    // Claimed before the first await, so that the auth events this same session
+    // is about to raise can see a load is already under way for it.
+    _loadedUserId = uid;
+
     try {
       await _reload();
     } catch (_) {
+      _loadedUserId = null;
       if (state.status == SessionStatus.unknown) {
         // Startup with nothing resolved yet — surface a retryable failure.
         emit(state.copyWith(loadFailed: true));

@@ -135,14 +135,35 @@ class SettingsScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: AppSpacing.lg),
-              const _AccountsSection(),
+              // Alone on its row, but measured by the same grid as the panes
+              // above so it lands in the first column rather than across the
+              // whole monitor. An account row is a face, a name and one icon;
+              // at 1600 wide the name and the icon end up in different
+              // postcodes with a metre of glass between them.
+              const AdaptiveGrid(
+                minTileWidth: 320,
+                maxColumns: 3,
+                children: [_AccountsSection()],
+              ),
               const SizedBox(height: AppSpacing.lg),
-              OutlinedButton.icon(
-                onPressed: () => _confirmLogout(context),
-                icon: const Icon(AppIcons.logout),
-                label: Text(l.commonLogout),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Theme.of(context).colorScheme.error,
+              // A button is as wide as the words on it plus room to hit it.
+              // The cap only bites on a wide window — a phone is narrower than
+              // this, so there it still spans the column the way it always has.
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 360),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _confirmLogout(context),
+                      icon: const Icon(AppIcons.logout),
+                      label: Text(l.commonLogout),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ]),

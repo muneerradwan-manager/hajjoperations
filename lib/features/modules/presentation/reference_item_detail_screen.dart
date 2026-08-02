@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/animations/animations.dart';
+import '../../../core/constants/permission_codes.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
@@ -11,10 +12,12 @@ import '../../../core/widgets/info_section.dart';
 import '../../../core/widgets/overflow_menu.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
+import '../../auth/application/session_cubit.dart';
 import '../application/reference_data_cubit.dart';
 import '../domain/map_location.dart';
 import '../domain/module_type.dart';
 import '../domain/reference_item.dart';
+import 'widgets/reference_item_actions.dart';
 import 'widgets/reference_item_form.dart';
 
 /// One master-data entry in full: every field its set defines, plus edit and
@@ -29,47 +32,18 @@ class ReferenceItemDetailScreen extends StatelessWidget {
   final String setId;
   final String itemId;
 
+  /// The page is standing on the entry it just removed, so it leaves with it.
   Future<void> _delete(BuildContext context, ReferenceItem item) async {
-    final l = context.l10n;
-    final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
-    final cubit = context.read<ReferenceDataCubit>();
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l.commonDelete),
-        content: Text(l.referenceDeleteConfirm(item.name.of(dialogContext))),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l.commonDelete),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    final result = await cubit.deleteItem(item.id);
-    final message = switch (result.outcome) {
-      ReferenceOutcome.ok => l.referenceItemDeleted,
-      ReferenceOutcome.inUse => l.referenceInUse,
-      ReferenceOutcome.duplicate => l.referenceDuplicate,
-      ReferenceOutcome.failed => result.message ?? '',
-    };
-    messenger
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
-    if (result.isOk) navigator.pop();
+    if (await confirmDeleteReferenceItem(context, item)) navigator.pop();
   }
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
+    final session = context.watch<SessionCubit>().state;
+    final canEdit = session.can(PermissionCodes.referenceEdit);
+    final canDelete = session.can(PermissionCodes.referenceDelete);
 
     return BlocBuilder<ReferenceDataCubit, ReferenceDataState>(
       builder: (context, state) {
@@ -90,18 +64,20 @@ class ReferenceItemDetailScreen extends StatelessWidget {
             actions: [
               OverflowMenu(
                 actions: [
-                  MenuAction(
-                    icon: AppIcons.edit,
-                    label: l.commonEdit,
-                    onSelected: () =>
-                        showReferenceItemForm(context, set: set, item: item),
-                  ),
-                  MenuAction(
-                    icon: AppIcons.delete,
-                    label: l.commonDelete,
-                    isDestructive: true,
-                    onSelected: () => _delete(context, item),
-                  ),
+                  if (canEdit)
+                    MenuAction(
+                      icon: AppIcons.edit,
+                      label: l.commonEdit,
+                      onSelected: () =>
+                          showReferenceItemForm(context, set: set, item: item),
+                    ),
+                  if (canDelete)
+                    MenuAction(
+                      icon: AppIcons.delete,
+                      label: l.commonDelete,
+                      isDestructive: true,
+                      onSelected: () => _delete(context, item),
+                    ),
                 ],
               ),
             ],

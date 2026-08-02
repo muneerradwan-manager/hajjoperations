@@ -16,6 +16,9 @@ import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
 import '../../notifications/presentation/widgets/notification_bell.dart';
+import '../../prayer_times/application/prayer_times_cubit.dart';
+import '../../prayer_times/data/prayer_times_repository.dart';
+import '../../prayer_times/presentation/widgets/prayer_times_card.dart';
 import '../../seasons/data/seasons_repository.dart';
 import 'widgets/dashboard_card.dart';
 
@@ -67,6 +70,11 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _seasons = SeasonsRepository();
 
+  /// Owned by the screen rather than created inside the card, so that the
+  /// pull-to-refresh gesture — which is handled up here, above anything the
+  /// card could provide — can reach it.
+  late final _prayer = PrayerTimesCubit(PrayerTimesRepository());
+
   /// The Hijri year shown on the greeting badge. Starts from the device
   /// calendar so the panel is never blank, then settles on whichever season is
   /// actually current — an admin may have switched it to an earlier one.
@@ -76,6 +84,12 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadCurrentSeason();
+  }
+
+  @override
+  void dispose() {
+    _prayer.close();
+    super.dispose();
   }
 
   Future<void> _loadCurrentSeason() async {
@@ -93,6 +107,9 @@ class _HomeScreenState extends State<HomeScreen> {
     await Future.wait([
       context.read<SessionCubit>().reload(),
       _loadCurrentSeason(),
+      // Never prompts. A drag on a list is a request for newer numbers, not a
+      // gesture anybody would expect to raise a permission dialog.
+      _prayer.refresh(),
     ]);
   }
 
@@ -257,106 +274,127 @@ class _HomeScreenState extends State<HomeScreen> {
       // where anyone looks for it first.
     ];
 
-    return Scaffold(
-      // Content frosts as it passes under the bar instead of vanishing behind
-      // an opaque strip.
-      extendBodyBehindAppBar: true,
-      appBar: GlassAppBar(
-        title: Text(l.homeTitle),
-        automaticallyImplyLeading: false,
-        // Settings on the leading side, the bell on the trailing one: two
-        // things, at opposite ends, neither buried in a menu. Logging out moved
-        // into settings, where a confirmation can sit beside it.
-        leading: IconButton(
-          tooltip: l.commonSettings,
-          onPressed: () => context.push(Routes.settings),
-          icon: const Icon(AppIcons.settings),
+    // Provided here rather than inside the card, so that `_refresh` — which
+    // lives above anything the card could provide — can reach the same cubit.
+    return BlocProvider.value(
+      value: _prayer,
+      child: Scaffold(
+        // Content frosts as it passes under the bar instead of vanishing behind
+        // an opaque strip.
+        extendBodyBehindAppBar: true,
+        appBar: GlassAppBar(
+          title: Text(l.homeTitle),
+          automaticallyImplyLeading: false,
+          // Settings on the leading side, the bell on the trailing one: two
+          // things, at opposite ends, neither buried in a menu. Logging out moved
+          // into settings, where a confirmation can sit beside it.
+          leading: IconButton(
+            tooltip: l.commonSettings,
+            onPressed: () => context.push(Routes.settings),
+            icon: const Icon(AppIcons.settings),
+          ),
+          actions: const [NotificationBell()],
         ),
-        actions: const [NotificationBell()],
-      ),
-      body: Builder(
-        // Inside the Scaffold body, so `scrollPadding` sees the inset the
-        // Scaffold reserves for the app bar it is extending behind.
-        builder: (context) => ResponsivePage(
-          builder: (context, size) {
-            // The admin header's beat, which depends on how many tiles the
-            // cascade has already spent above it — the dashboard band included,
-            // since it arrives before the first heading does.
-            final adminBeat = _step * (3 + generalCards.length);
+        body: Builder(
+          // Inside the Scaffold body, so `scrollPadding` sees the inset the
+          // Scaffold reserves for the app bar it is extending behind.
+          builder: (context) => ResponsivePage(
+            builder: (context, size) {
+              // The admin header's beat, which depends on how many tiles the
+              // cascade has already spent above it — the dashboard band included,
+              // since it arrives before the first heading does.
+              final adminBeat = _step * (3 + generalCards.length);
 
-            // Not a tile among the tiles. Every other card on this screen is a
-            // place to go and do something; this one is about all of them at
-            // once, and standing it in a row of three as the leftmost of equals
-            // said the opposite. So it gets a row of its own, above the first
-            // heading — and where there is a panel, it goes in the panel under
-            // the greeting, which is the other thing on this screen that is
-            // about the season rather than about a task.
-            //
-            final sections = <Widget>[
-              FadeSlideIn(
-                delay: _step * 2,
-                child: SectionHeader(l.homeGeneralSection),
-              ),
-              AdaptiveGrid(children: staggered(generalCards, start: _step * 3)),
-              if (adminCards.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.lg),
+              // Not a tile among the tiles. Every other card on this screen is a
+              // place to go and do something; this one is about all of them at
+              // once, and standing it in a row of three as the leftmost of equals
+              // said the opposite. So it gets a row of its own, above the first
+              // heading — and where there is a panel, it goes in the panel under
+              // the greeting, which is the other thing on this screen that is
+              // about the season rather than about a task.
+              //
+              final sections = <Widget>[
                 FadeSlideIn(
-                  delay: adminBeat,
-                  child: SectionHeader(
-                    l.homeAdminSection,
-                    icon: AppIcons.shield,
-                  ),
+                  delay: _step * 2,
+                  child: SectionHeader(l.homeGeneralSection),
                 ),
                 AdaptiveGrid(
-                  children: staggered(adminCards, start: adminBeat + _step),
+                  children: staggered(generalCards, start: _step * 3),
                 ),
-              ],
-            ];
-
-            final greeting = _GreetingPanel(
-              name: profile?.firstName ?? '',
-              subtitle: profile?.jobTitleName?.of(context),
-              photoUrl: profile?.photoUrl,
-              isAdmin: session.isAdmin,
-              seasonYear: _seasonYear,
-              onTap: () => context.push(Routes.myProfile),
-              layout: switch (size) {
-                // Beside the tiles it is a tall, narrow card, so the face goes
-                // on top of the name rather than beside it.
-                _ when size.hasSidePanel => _GreetingLayout.column,
-                // One column, but a thousand pixels of it: the badges come up
-                // onto the name's line instead of leaving that line half empty
-                // and sitting under a divider of their own.
-                _ when size.isAtLeast(WindowSize.expanded) =>
-                  _GreetingLayout.wide,
-                _ => _GreetingLayout.stacked,
-              },
-            );
-
-            return size.hasSidePanel
-                ? TwoPaneLayout(
-                    gutter: size.gutter,
-                    panel: FadeSlideIn(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          greeting,
-                        ],
-                      ),
+                if (adminCards.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  FadeSlideIn(
+                    delay: adminBeat,
+                    child: SectionHeader(
+                      l.homeAdminSection,
+                      icon: AppIcons.shield,
                     ),
-                    onRefresh: _refresh,
-                    children: sections,
-                  )
-                : SinglePaneLayout(
-                    gutter: size.gutter,
-                    onRefresh: _refresh,
-                    children: [
-                      FadeSlideIn(child: greeting),
-                      const SizedBox(height: AppSpacing.xl),
-                      ...sections,
-                    ],
-                  );
-          },
+                  ),
+                  AdaptiveGrid(
+                    children: staggered(adminCards, start: adminBeat + _step),
+                  ),
+                ],
+              ];
+
+              final greeting = _GreetingPanel(
+                name: profile?.firstName ?? '',
+                subtitle: profile?.jobTitleName?.of(context),
+                photoUrl: profile?.photoUrl,
+                isAdmin: session.isAdmin,
+                seasonYear: _seasonYear,
+                onTap: () => context.push(Routes.myProfile),
+                layout: switch (size) {
+                  // Beside the tiles it is a tall, narrow card, so the face goes
+                  // on top of the name rather than beside it.
+                  _ when size.hasSidePanel => _GreetingLayout.column,
+                  // One column, but a thousand pixels of it: the badges come up
+                  // onto the name's line instead of leaving that line half empty
+                  // and sitting under a divider of their own.
+                  _ when size.isAtLeast(WindowSize.expanded) =>
+                    _GreetingLayout.wide,
+                  _ => _GreetingLayout.stacked,
+                },
+              );
+
+              // Under the greeting, and above the first heading, in both
+              // arrangements — because it belongs to the same half of this screen
+              // that the greeting does. Everything below a heading is a place to
+              // go; these two are facts about the moment the reader is standing
+              // in. Where there is a panel it stands in the panel for exactly
+              // that reason, beside the season badge rather than among the tiles.
+              const prayer = PrayerTimesCard();
+
+              return size.hasSidePanel
+                  ? TwoPaneLayout(
+                      gutter: size.gutter,
+                      panel: FadeSlideIn(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            greeting,
+                            const SizedBox(height: AppSpacing.md),
+                            prayer,
+                          ],
+                        ),
+                      ),
+                      onRefresh: _refresh,
+                      children: sections,
+                    )
+                  : SinglePaneLayout(
+                      gutter: size.gutter,
+                      onRefresh: _refresh,
+                      children: [
+                        FadeSlideIn(child: greeting),
+                        const SizedBox(height: AppSpacing.md),
+                        // The beat between the greeting and the first heading,
+                        // which the cascade had left empty.
+                        const FadeSlideIn(delay: _step, child: prayer),
+                        const SizedBox(height: AppSpacing.xl),
+                        ...sections,
+                      ],
+                    );
+            },
+          ),
         ),
       ),
     );
