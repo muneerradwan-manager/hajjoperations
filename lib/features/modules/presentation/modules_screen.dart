@@ -191,7 +191,15 @@ class _View extends StatelessWidget {
           final nothingLeft =
               state.active.isEmpty && state.drafts.isEmpty && state.isNarrowed;
 
+          // The same 1200 as التقارير and الشكاوى, and for the same reason: the
+          // search box sits at the start of the band, so a band that keeps
+          // growing with the monitor carries it out to the edge of the glass
+          // while the identical box on the next screen sits well inside. Three
+          // list screens that search differently teach that they search
+          // differently. At 1680 this costs the grid its fourth column, which
+          // is the cheaper of the two prices.
           return ResponsivePage(
+            maxWidth: 1200,
             builder: (context, size) => SinglePaneLayout(
               gutter: size.gutter,
               onRefresh: () => context.read<ModulesCubit>().load(),

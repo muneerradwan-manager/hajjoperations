@@ -6,9 +6,6 @@ import '../domain/complaint.dart';
 
 enum FileComplaintStatus { ready, loadingTargets, sending }
 
-/// One thing a complaint may be filed against, as the picker lists it.
-typedef ComplaintTargetOption = ({String id, String name, String? photoUrl});
-
 class FileComplaintState extends Equatable {
   const FileComplaintState({
     this.status = FileComplaintStatus.ready,
@@ -103,11 +100,7 @@ class FileComplaintCubit extends SafeCubit<FileComplaintState> {
   Future<void> loadOptions(ComplaintTarget target) async {
     emit(state.copyWith(status: FileComplaintStatus.loadingTargets, error: null));
     try {
-      final options = target == ComplaintTarget.employee
-          ? await _repo.fetchEmployeeTargets()
-          : (await _repo.fetchTargets(target))
-                .map((t) => (id: t.id, name: t.name, photoUrl: null as String?))
-                .toList();
+      final options = await _repo.fetchTargets(target);
       emit(
         state.copyWith(status: FileComplaintStatus.ready, options: options),
       );

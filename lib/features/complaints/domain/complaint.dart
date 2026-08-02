@@ -40,6 +40,10 @@ enum ComplaintTarget {
       this == ComplaintTarget.group;
 }
 
+/// One thing a complaint may be filed against, as the picker lists it: an id,
+/// a name, and a face where the kind has one.
+typedef ComplaintTargetOption = ({String id, String name, String? photoUrl});
+
 /// Who the reader is to a complaint, as the server worked it out.
 ///
 /// The server decides this, not the app: the same three words also govern what

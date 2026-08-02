@@ -229,89 +229,37 @@ class ComplaintsRepository {
 
   // ------------------------------------------------------- what may be complained about
 
-  /// The employees a complaint may name. The directory itself is behind a
-  /// permission; this is the lighter list anyone may pick from, which is the
-  /// same one the assignment screens read.
-  Future<List<({String id, String name, String? photoUrl})>>
-  fetchEmployeeTargets({String? query}) async {
-    final me = supabase.auth.currentUser?.id;
-    var request = supabase
-        .from('profiles')
-        .select('id, first_name, father_name, surname, photo_url')
-        .eq('account_status', 'approved');
-    if (me != null) request = request.neq('id', me);
-    final rows = await request.limit(listLimit);
-
-    return (rows as List).cast<Map<String, dynamic>>().map((row) {
-      final name = [
-        row['first_name'],
-        row['father_name'],
-        row['surname'],
-      ].whereType<String>().where((p) => p.trim().isNotEmpty).join(' ');
-      return (
-        id: row['id'] as String,
-        name: name,
-        photoUrl: row['photo_url'] as String?,
-      );
-    }).toList();
-  }
-
-  /// The operational files, the reports, or the master-data items of one set —
-  /// whichever kind the picker is standing on.
-  Future<List<({String id, String name})>> fetchTargets(
-    ComplaintTarget target,
-  ) async {
-    switch (target) {
-      case ComplaintTarget.module:
-        final rows = await supabase
-            .from('modules')
-            .select('id, module_types(name_ar)')
-            .limit(listLimit);
-        return (rows as List).cast<Map<String, dynamic>>().map((row) {
-          final type = row['module_types'] as Map<String, dynamic>?;
-          return (
+  /// What a complaint of this kind may be filed against — an id, a name, and a
+  /// face where there is one.
+  ///
+  /// Through an RPC rather than off the tables, and for the reason this whole
+  /// repository goes through RPCs: reading `profiles` gets an ordinary employee
+  /// the people he shares a file with and nobody else, so the form offered him
+  /// an empty list and no way to name the person he came to complain about.
+  /// Filing takes no permission, and neither does this. Three columns come
+  /// back — never the directory behind them. See migration 0082.
+  Future<List<ComplaintTargetOption>> fetchTargets(
+    ComplaintTarget target, {
+    String? query,
+  }) async {
+    if (!target.needsTarget) return const [];
+    final rows = await supabase.rpc(
+      'complaint_targets',
+      params: {
+        'p_target_type': target.name,
+        'p_query': query,
+        'p_limit': listLimit,
+      },
+    );
+    return (rows as List)
+        .cast<Map<String, dynamic>>()
+        .map(
+          (row) => (
             id: row['id'] as String,
-            name: (type?['name_ar'] as String?) ?? '',
-          );
-        }).toList();
-
-      case ComplaintTarget.report:
-        final rows = await supabase
-            .from('reports')
-            .select('id, title')
-            .order('updated_at', ascending: false)
-            .limit(listLimit);
-        return (rows as List)
-            .cast<Map<String, dynamic>>()
-            .map((row) => (
-                  id: row['id'] as String,
-                  name: (row['title'] as String?) ?? '',
-                ))
-            .toList();
-
-      case ComplaintTarget.hotel:
-      case ComplaintTarget.cluster:
-      case ComplaintTarget.group:
-        // The set's code is the enum value's own name, which is the whole
-        // reason those three are separate values rather than one 'reference'.
-        final rows = await supabase
-            .from('reference_items')
-            .select('id, name_ar, reference_sets!inner(code)')
-            .eq('reference_sets.code', '${target.name}s')
-            .eq('is_active', true)
-            .order('sort_order')
-            .limit(listLimit);
-        return (rows as List)
-            .cast<Map<String, dynamic>>()
-            .map((row) => (
-                  id: row['id'] as String,
-                  name: (row['name_ar'] as String?) ?? '',
-                ))
-            .toList();
-
-      case ComplaintTarget.employee:
-      case ComplaintTarget.other:
-        return const [];
-    }
+            name: (row['name'] as String?) ?? '',
+            photoUrl: row['photo_url'] as String?,
+          ),
+        )
+        .toList();
   }
 }

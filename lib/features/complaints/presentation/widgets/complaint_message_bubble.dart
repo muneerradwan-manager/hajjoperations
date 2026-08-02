@@ -39,6 +39,7 @@ class ComplaintMessageBubble extends StatelessWidget {
       // The complaint itself carries more weight than the answers to it, and
       // the reader should be able to tell which one they are looking at without
       // scrolling to the top to check.
+      margin: EdgeInsets.only(bottom: AppSpacing.md),
       emphasised: message.isHead,
       tint: message.isMine ? scheme.primary : null,
       padding: const EdgeInsets.all(AppSpacing.lg),

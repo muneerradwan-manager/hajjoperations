@@ -2345,6 +2345,32 @@ Best-effort في التطبيق: فشله لا يفشل الدخول. حساب �
 ⇒ `{ distinct_complainants, open_complaints, dismissed_complaints,
 is_auto_suspended, forgiven_count }` — **أرقام فقط، ولا اسم واحد**.
 
+### 24.6b `GET /complaints/targets` — ما يمكن الاشتكاء عليه
+
+**كان:** RPC `complaint_targets` (0082). **الصلاحية:** من يملك تقديم شكوى — أي
+حساب معتمد، ولا شيء غير ذلك.
+
+| Query param | النوع | المعنى |
+| --- | --- | --- |
+| `target_type` | enum | `employee \| module \| report \| hotel \| cluster \| group` |
+| `query` | string? | بحث بالاسم |
+| `limit` | int | الافتراضي 100، سقف 200 |
+
+⇒ `200` مصفوفة `{ id, name, photo_url }` — **ثلاثة أعمدة فقط**.
+
+> **ملزم:** هذا المسار **لا يفحص** `employees.view` ولا `modules.view_all` ولا
+> أي صلاحية عرض. تقديم الشكوى بلا صلاحية عمداً، فلو حجبت قائمة الأسماء خلف
+> صلاحية الدليل لصار الحق قائماً بلا وسيلة لاستعماله: يفتح الموظف النموذج فلا
+> يجد من يسمّيه. وبالمقابل **لا يُوسَّع** ما يُرجَع: اسم ومعرّف وصورة، لا هاتف
+> ولا وثيقة ولا حالة حساب — الدليل يبقى خلف صلاحيته.
+>
+> ما يظهر في كل قائمة: الموظفون المعتمدون عدا نفسه؛ الملفات **المفعّلة** فقط
+> (المسودة لم تُسلَّم لأحد)؛ التقارير المنشورة ومسوداتُه هو؛ عناصر المرجع
+> الفعّالة. و `other` بلا قائمة أصلاً.
+>
+> الاسم يأتي من `audit_record_label` نفسها التي تكتب `target_label` على الشكوى،
+> فيكون المعروض في القائمة هو المحفوظ على الشكوى — لا اسمان لشيء واحد.
+
 ### 24.7 الكتابة
 
 | Endpoint | كان | الصلاحية |
@@ -2414,13 +2440,14 @@ is_auto_suspended, forgiven_count }` — **أرقام فقط، ولا اسم و�
 | RPC `dashboard_seasons` / `dashboard_stats`                                                | §18                   |
 | RPC `audit_events` / `audit_actors` / `log_auth_event`                                     | §23                   |
 | RPC `complaints_list` / `complaints_against_me` / `complaint_thread` / `complaints_against` | §24.3 → §24.6         |
+| RPC `complaint_targets`                                                                    | §24.6b                |
 | RPC `file_complaint` / `reply_to_complaint` / `set_complaint_lock` / `set_complaint_dismissed` | §24.7              |
 | Edge `admin-create-user` / `admin-delete-user` / `admin-set-password`                      | §5.1 / §5.6 / §5.7    |
 | Edge `admin-set-email` (لموظف / للنفس)                                                     | §5.7b / §2.7          |
 | Edge `send-notification`                                                                   | §17.3 (داخلي)         |
 | Storage (6 buckets + createSignedUrl + upload + remove)                                    | §19 و §24.8           |
 | Realtime (stream notifications)                                                            | §20                   |
-| RLS + Triggers (0007→0080)                                                                 | §21 كاملاً و §24.9    |
+| RLS + Triggers (0007→0082)                                                                 | §21 كاملاً و §24.9    |
 
 ## ملحق ب — ما لا يحتاج backend (يبقى في التطبيق)
 
