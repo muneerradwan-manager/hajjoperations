@@ -6,7 +6,11 @@
 > ومن ملفات الـ migrations (`supabase/migrations/0001 → 0073`).
 >
 > **تاريخ الإعداد:** 2026-07-31 — فرع `operational-files`.
-> **آخر تحديث:** 2026-08-01 — إضافة سجل الأحداث (migration 0077): جدول
+> **آخر تحديث:** 2026-08-02 — إضافة الشكاوى (migrations 0079 و 0080): ثلاثة
+> جداول، دلو تخزين سادس، قسم صلاحيات `complaints` بخمسة أكواد، وقاعدة تُوقف
+> حساب موظف تلقائياً عند بلوغ ثلاثة مشتكين مختلفين — مع سرّية بنيوية تمنع
+> المشتكى عليه من معرفة من اشتكى. §24، والتزامات الخادم في §24.9.
+> وقبلها 2026-08-01 — إضافة سجل الأحداث (migration 0077): جدول
 > `audit_log` مع trigger عام على كل الجداول، صلاحية `audit.view`، ثلاث RPCs
 > (`audit_events`, `audit_actors`, `log_auth_event`)، وأسطر توثيق ذاتية في
 > الـ Edge Functions الأربع — §23. وقبلها إصلاحات الجولة الشاملة: حفظ التقرير
@@ -41,6 +45,7 @@
 21. [منطق الخادم الإلزامي (بديل RLS / Triggers)](#21-منطق-الخادم-الإلزامي)
 22. [قاموس الأخطاء](#22-قاموس-الأخطاء)
 23. [سجل الأحداث Audit Log](#23-سجل-الأحداث-audit-log)
+24. [الشكاوى Complaints](#24-الشكاوى-complaints)
 
 ---
 
@@ -98,10 +103,16 @@
 | الإشعارات         | `notifications.send` `notifications.broadcast_module` `notifications.broadcast_all`                                                                         |
 | الصلاحيات         | `permissions.view` `permissions.manage`                                                                                                                     |
 | سجل الأحداث       | `audit.view`                                                                                                                                                |
+| الشكاوى           | `complaints.view` `complaints.reply` `complaints.lock` `complaints.dismiss` `complaints.delete`                                                             |
+
+**تقديم شكوى ليس له كود، عمداً**: أي حساب معتمد يقدّم. سجلٌّ لما يقع خطأً لا
+يكتبه إلا بعضُ الناس ليس سجلاً لما يقع خطأً (§24).
 
 توجد **متطلبات مسبقة** بين الصلاحيات (جدول `permission_prerequisites`): لا يجوز منح
 صلاحية دون أساسها (مثال: `modules.members` تتطلب `employees.view`)، وسحب الأساس
-يسحب توابعه تلقائياً (§21.4).
+يسحب توابعه تلقائياً (§21.4). ومنها واحدة تستحق الانتباه:
+`complaints.dismiss` تتطلب `employees.suspend`، لأن رفض شكوى قد يرفع إيقافاً
+آلياً — فمن يرفض يمسك مفتاح الإيقاف سواء قالت ورقة المنح ذلك أم لا.
 
 ### 1.4 حالات الحساب
 
@@ -2143,6 +2154,13 @@ WS /ws/notifications          (Authorization عبر query أو header)
 | `duplicate_module`      | 409  | نوع مكرر في موسم (9.6)                              |
 | `rating_closed`         | 400  | تقييم خارج النافذة (13.2)                           |
 | `invalid_topic`         | 400  | اسم topic غير صالح (17.3)                           |
+| `report_once_per_season` | 409 | تقرير ثانٍ لنوع يُقدَّم مرة واحدة في الموسم (15)     |
+| `complaint_target_missing` | 400 | شكوى على نوع بلا تحديد ما هي عليه (24.1)          |
+| `complaint_target_wrong_set` | 400 | عنصر مرجعي من مجموعة غير التي أُعلنت (24.1)     |
+| `complaint_is_immutable` | 400 | محاولة تغيير هدف شكوى أو مقدِّمها بعد إنشائها (24.1) |
+| `complaint_locked`      | 400  | ردّ على نقاش أُغلق (24.7)                           |
+| `complaint_body_required` | 400 | ردّ فارغ (24.7)                                    |
+| `complaint_not_found`   | 404  | شكوى غير موجودة أو القارئ ليس طرفاً فيها (24.5)     |
 
 ---
 
@@ -2230,6 +2248,157 @@ Best-effort في التطبيق: فشله لا يفشل الدخول. حساب �
 
 ---
 
+## 24. الشكاوى Complaints
+
+> أُضيف في migrations 0079 و 0080. **هذا القسم أخطر ما في المستند**: فيه قاعدة
+> تُوقف حساباً بلا تدخّل بشري، وفيه سرّية لا يجوز للتطبيق أن يكون هو من يحرسها.
+> كل ما تحت §24.9 «التزامات الخادم» ملزم حرفياً لأي backend بديل.
+
+### 24.1 الكيان `Complaint`
+
+```json
+{
+  "id": "uuid",
+  "created_at": "2026-08-02T09:15:00Z",
+  "target_type": "employee | module | report | hotel | cluster | group | other",
+  "target_id": "uuid | null",
+  "target_label": "أحمد محمد الخطيب",
+  "complainant_id": "uuid | null",
+  "complainant_name": "string | null",
+  "complainant_photo_url": "string | null",
+  "body": "نص الشكوى",
+  "is_locked": false,
+  "is_dismissed": false,
+  "reply_count": 3,
+  "attachment_count": 2,
+  "my_role": "complainant | accused | manager"
+}
+```
+
+- `target_label` **لقطة** تُكتب وقت التقديم (كما `audit_log.actor_name`)، فتبقى
+  الشكوى مقروءة بعد حذف الفندق أو الموظف الذي قُدِّمت عليه.
+- الهدف يُخزَّن في القاعدة كأربعة مفاتيح أجنبية اختيارية تحت enum واحد
+  (`target_profile_id` / `target_module_id` / `target_report_id` /
+  `target_item_id`) مع قيد يفرض «واحد فقط ويطابق النوع». `target_id` في الـ JSON
+  هو `coalesce` عليها.
+- `hotel` و `cluster` و `group` كلها صفوف في `reference_items`، ويميّزها
+  `reference_sets.code`. الخادم **ملزم** بالتحقق أن المجموعة تطابق النوع
+  المُعلَن (`complaint_target_wrong_set`).
+- **`complainant_*` تكون `null` حين لا يجوز للقارئ أن يعرف.** انظر §24.9.
+
+### 24.2 الكيان `ComplaintMessage` (فقاعة في النقاش)
+
+```json
+{
+  "reply_id": "uuid | null",
+  "created_at": "2026-08-02T10:00:00Z",
+  "body": "نص",
+  "author_id": "uuid | null",
+  "author_name": "string | null",
+  "author_photo_url": "string | null",
+  "author_role": "complainant | accused | manager",
+  "is_mine": false,
+  "attachments": [ { "...": "Attachment" } ]
+}
+```
+
+`reply_id = null` هي الشكوى نفسها — رأس النقاش. `author_role` يعود **دائماً**
+حتى حين تُحجب الهوية، ليُسمّى الطرف بلا تسمية الشخص.
+
+### 24.3 `GET /complaints` — السجل
+
+**كان:** RPC `complaints_list`.
+**الصلاحية:** لا شيء لـ `scope=mine`؛ `complaints.view` لـ `scope=all`.
+
+| Query param | النوع | المعنى |
+| --- | --- | --- |
+| `scope` | `mine \| all` | ما قدّمتُه أنا، أو كل شيء |
+| `target_type` | enum? | تضييق بالنوع |
+| `target_id` | uuid? | شكاوى شيء بعينه (أُضيف في 0080) |
+| `include_dismissed` | bool | الافتراضي true |
+| `query` | string? | بحث عربي مطبَّع على `target_label` و `body` |
+| `limit` / `before` | int / timestamptz | ترقيم keyset، سقف 200 |
+
+⇒ `200` مصفوفة `Complaint` مرتبة `created_at desc`.
+**لا يُرجع أبداً** صفاً يكون فيه القارئ هو المشتكى عليه — ذلك عمل §24.4 وحده.
+
+### 24.4 `GET /me/complaints-against` — ما قُدِّم ضدي
+
+**كان:** RPC `complaints_against_me`. **الصلاحية:** حساب مسجَّل فقط.
+
+بلا أي معامل يحدد الشخص، عمداً: لا أحد آخر يمكن سؤالها عنه. ⇒ `200` مصفوفة
+`{ id, created_at, body, is_locked, is_dismissed, reply_count, attachments }`
+— **بلا أي عمود هوية إطلاقاً**.
+
+> **ملزم:** لا تُشترط حالة «معتمد» هنا. الإيقاف الذي تفرضه هذه الميزة يُسقط
+> `is_approved()`، ومن لا يقرأ ما أوقفه لا يستطيع الدفاع عن نفسه.
+
+### 24.5 `GET /complaints/{id}/thread` — النقاش
+
+**كان:** RPC `complaint_thread`. ⇒ `200` مصفوفة `ComplaintMessage` مرتبة زمنياً،
+رأس النقاش أولاً. `404 complaint_not_found`، `403` لمن ليس طرفاً.
+
+### 24.6 `GET /profiles/{id}/complaint-standing` — الأرقام
+
+**كان:** RPC `complaints_against`. **الصلاحية:** صاحب الملف أو `complaints.view`.
+
+⇒ `{ distinct_complainants, open_complaints, dismissed_complaints,
+is_auto_suspended, forgiven_count }` — **أرقام فقط، ولا اسم واحد**.
+
+### 24.7 الكتابة
+
+| Endpoint | كان | الصلاحية |
+| --- | --- | --- |
+| `POST /complaints` ⇒ `{id}` | RPC `file_complaint` | أي حساب معتمد |
+| `POST /complaints/{id}/replies` ⇒ `{id}` | RPC `reply_to_complaint` | طرف في النقاش، أو `complaints.reply` |
+| `PATCH /complaints/{id}/lock` | RPC `set_complaint_lock` | `complaints.lock` |
+| `PATCH /complaints/{id}/dismiss` | RPC `set_complaint_dismissed` | `complaints.dismiss` |
+| `DELETE /complaints/{id}` | RLS | `complaints.delete`، أو صاحبها ما لم يُردّ عليها |
+
+**ترتيب إلزامي للمرفقات:** إنشاء الصف ← أخذ الـ id ← رفع الملفات تحته ← تسجيل
+صفوف المرفقات. الرفع قبل وجود الصف مرفوض، لأن قاعدة التخزين تبحث عن الشكوى
+بالمجلد الأول من المسار.
+
+### 24.8 التخزين
+
+دلو خاص `complaints`. المسار:
+`{complaint_id}/{i}_{file}` و `{complaint_id}/replies/{reply_id}/{i}_{file}`
+— معرّف الردّ **يتداخل تحت** معرّف الشكوى ليكفي مسندُ قراءة واحد.
+**ولا يُوضع معرّف المشتكي في المسار أبداً.**
+
+### 24.9 التزامات الخادم (ملزمة حرفياً)
+
+1. **الإيقاف التلقائي.** إذا بلغ عدد **المشتكين المختلفين** (لا عدد الشكاوى)
+   بشكاوى غير مرفوضة على موظف واحد **3**، يُوقَف حسابه في نفس معاملة التقديم.
+   النطاق: كل التاريخ. يجب أن يُعاد الحساب أيضاً عند الحذف وعند رفع/إعادة
+   الرفض، وتحت قفل يمنع شكويين متزامنتين من قراءة «اثنان» كلتيهما.
+2. **إيقاف آلي واحد فقط يُرفع آلياً.** يُوسم الإيقاف الآلي
+   (`auto_suspended_at`)؛ ما قرّره إنسان لا تمسّه القاعدة أبداً.
+3. **الرفع اليدوي يسامح.** حين يرفع إنسانٌ إيقافاً، يُحفظ عدد المشتكين وقتها
+   (`auto_suspend_forgiven_count`) ولا تُعيد القاعدة الإيقاف إلا بتجاوز هذا
+   العدد. بدون ذلك تُعيد أولُ شكوى تالية الإيقافَ فوق قرار المدير خلال ثوانٍ.
+4. **حراسة الأعمدة.** `is_suspended` و `auto_suspended_at` و
+   `auto_suspend_forgiven_count` لا يكتبها إلا حاملُ `employees.suspend`، أو
+   القاعدةُ نفسها من داخل معاملتها. في Supabase يتحقق ذلك بعلَم معاملة **مع**
+   `pg_trigger_depth() > 1` **مع** حصر الاستثناء بعمودين — الثلاثة معاً، لأن
+   أياً منها وحده قابل للتحايل.
+5. **السرّية بنيوية لا تجميلية.** المشتكى عليه لا يُمنح قراءة الصف أصلاً؛ يقرأ
+   عبر §24.4 و §24.5 فقط. ويشمل الحجب **ردود المشتكي داخل النقاش** و **صورته**
+   كما يشمل اسمه.
+6. **المدير ليس مديراً لقضيته.** من يحمل `complaints.view` لا يرى الشكوى
+   المقدَّمة عليه هو — وإلا صارت الصلاحية باباً لكشف الهوية.
+7. **السجل لا يفشي.** تُسقَط `complainant_id` و `author_id` و `body` من
+   `audit_log`، ويُترك الفاعل فارغاً عند التقديم والردّ (الرفض والقفل والحذف
+   تُنسب لفاعلها). والإيقاف الآلي يُسجَّل بلا فاعل، وإلا سمّى المشتكي الثالث.
+8. **الرافع لا يُسمّى في التخزين.** يجب تصفير مالك الكائن في دلو `complaints`،
+   وإلا سلّم صفُّ الكائن هويةَ المشتكي لمن يقرأ المرفق.
+9. **الإشعار لا يُسمّي.** إشعار «قُدِّمت شكوى بحقك» يُكتب بمرسِل فارغ وبنص خالٍ
+   من الأسماء، وكذلك حمولة الـ push.
+10. **`complaints.dismiss` تستلزم `employees.suspend`.** الرفض يرفع إيقافاً،
+    فمن يرفض يمسك مفتاح الإيقاف؛ ورقة المنح يجب أن تقول ذلك.
+
+---
+
 ## ملحق أ — خريطة الاستبدال السريعة
 
 | Supabase الحالي                                                                            | البديل في هذا المستند |
@@ -2244,12 +2413,14 @@ Best-effort في التطبيق: فشله لا يفشل الدخول. حساب �
 | RPC `broadcast_to_module` / `broadcast_to_all`                                             | §16.6 / §16.7         |
 | RPC `dashboard_seasons` / `dashboard_stats`                                                | §18                   |
 | RPC `audit_events` / `audit_actors` / `log_auth_event`                                     | §23                   |
+| RPC `complaints_list` / `complaints_against_me` / `complaint_thread` / `complaints_against` | §24.3 → §24.6         |
+| RPC `file_complaint` / `reply_to_complaint` / `set_complaint_lock` / `set_complaint_dismissed` | §24.7              |
 | Edge `admin-create-user` / `admin-delete-user` / `admin-set-password`                      | §5.1 / §5.6 / §5.7    |
 | Edge `admin-set-email` (لموظف / للنفس)                                                     | §5.7b / §2.7          |
 | Edge `send-notification`                                                                   | §17.3 (داخلي)         |
-| Storage (5 buckets + createSignedUrl + upload + remove)                                    | §19                   |
+| Storage (6 buckets + createSignedUrl + upload + remove)                                    | §19 و §24.8           |
 | Realtime (stream notifications)                                                            | §20                   |
-| RLS + Triggers (0007→0076)                                                                 | §21 كاملاً            |
+| RLS + Triggers (0007→0080)                                                                 | §21 كاملاً و §24.9    |
 
 ## ملحق ب — ما لا يحتاج backend (يبقى في التطبيق)
 

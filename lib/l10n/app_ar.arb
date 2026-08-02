@@ -184,6 +184,12 @@
   "permNotificationsBroadcastAll": "إرسال إشعار عام للجميع",
   "perm_audit": "سجل الأحداث",
   "permAuditView": "قراءة سجل من فعل ماذا",
+  "perm_complaints": "الشكاوى",
+  "permComplaintsView": "عرض جميع الشكاوى المقدَّمة",
+  "permComplaintsReply": "المشاركة في نقاش أي شكوى",
+  "permComplaintsLock": "إغلاق الشكوى أمام الردود",
+  "permComplaintsDismiss": "رفض الشكوى باعتبارها غير صحيحة",
+  "permComplaintsDelete": "حذف الشكاوى",
   "permissionRequires": "يتطلب: {names}",
   "@permissionRequires": {
     "placeholders": {
@@ -743,5 +749,95 @@
   "prayerPlaceMuzdalifah": "مزدلفة",
   "prayerPlaceArafat": "عرفات",
   "prayerPlaceMadinah": "المدينة المنورة",
-  "prayerPlaceJeddah": "جدة"
+  "prayerPlaceJeddah": "جدة",
+
+  "navMyComplaints": "شكاواي",
+  "navMyComplaintsSubtitle": "ما قدَّمتَه، وما ردّ به عليه",
+  "navComplaints": "الشكاوى",
+  "navComplaintsSubtitle": "كل ما قُدِّم من شكاوى في البعثة",
+  "complaintsTitle": "الشكاوى",
+  "complaintsMineTitle": "شكاواي",
+  "complaintsAgainstMeTitle": "الشكاوى المقدَّمة ضدي",
+  "complaintsNew": "تقديم شكوى",
+  "complaintsEmpty": "لم تقدّم أي شكوى",
+  "complaintsEmptyAll": "لم تُقدَّم أي شكوى بعد",
+  "complaintsAgainstMeEmpty": "لم تُقدَّم أي شكوى ضدك",
+  "complaintsNoMatches": "لا شكوى تطابق هذا",
+  "complaintsSearchHint": "ابحث في الشكاوى",
+  "complaintsFilterAll": "الكل",
+  "complaintsShowDismissed": "إظهار المرفوضة",
+  "complaintTarget": "الشكوى على",
+  "complaintTargetEmployee": "موظف",
+  "complaintTargetModule": "ملف تشغيلي",
+  "complaintTargetReport": "تقرير",
+  "complaintTargetHotel": "فندق",
+  "complaintTargetCluster": "تكتل",
+  "complaintTargetGroup": "مجموعة",
+  "complaintTargetOther": "شكوى أخرى",
+  "complaintTargetPick": "اختر ما الشكوى عليه",
+  "complaintTargetPicked": "المُختار: {name}",
+  "@complaintTargetPicked": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "complaintBody": "ماذا حدث",
+  "complaintBodyHint": "اشرح ما حدث بكلماتك",
+  "complaintBodyRequired": "اكتب ما حدث",
+  "complaintTargetRequired": "اختر ما الشكوى عليه",
+  "complaintSubmit": "إرسال الشكوى",
+  "complaintSubmitted": "تم تقديم شكواك",
+  "complaintAnonymousNote": "سيقرأ الموظف المشتكى عليه نصّ الشكوى ومرفقاتها، ولن يُعرَّف بمن قدّمها.",
+  "complaintReply": "ردّ",
+  "complaintReplyHint": "اكتب ردّك",
+  "complaintReplySent": "تم إرسال الردّ",
+  "complaintReplyCount": "{count, plural, =0{لا ردود} =1{ردّ واحد} =2{ردّان} few{{count} ردود} many{{count} ردّاً} other{{count} ردّ}}",
+  "@complaintReplyCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "complaintRoleComplainant": "مقدّم الشكوى",
+  "complaintRoleAccused": "الموظف المشتكى عليه",
+  "complaintRoleManager": "الرقابة",
+  "complaintLocked": "أُغلقت هذه الشكوى أمام الردود",
+  "complaintLock": "إغلاق الردود",
+  "complaintUnlock": "إعادة فتح الردود",
+  "complaintDismissed": "مرفوضة",
+  "complaintDismiss": "رفض الشكوى",
+  "complaintUndismiss": "إعادة الشكوى",
+  "complaintDismissReason": "سبب الرفض (اختياري)",
+  "complaintDismissConfirm": "الشكوى المرفوضة لا تُحتسب في الإيقاف التلقائي، وقد يُرفع بها إيقاف قائم. هل تُرفض؟",
+  "complaintDelete": "حذف الشكوى",
+  "complaintDeleteConfirm": "حذف هذه الشكوى وكل ما أُرفق بها؟ لا رجعة في ذلك.",
+  "complaintDeleted": "حُذفت الشكوى",
+  "complaintWithdraw": "سحب الشكوى",
+  "complaintMissing": "لم تعد هذه الشكوى موجودة",
+  "complaintFiledOn": "قُدِّمت {date}",
+  "@complaintFiledOn": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "complaintsSectionAgainst": "الشكاوى على هذا الموظف",
+  "complaintsAgainstCount": "{count, plural, =0{لا شيء} =1{شكوى واحدة} =2{شكويان} few{{count} شكاوى} many{{count} شكوى} other{{count} شكوى}}",
+  "@complaintsAgainstCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "complaintsDistinctComplainants": "{count, plural, =0{لا أحد} =1{شخص واحد} =2{شخصان} few{{count} أشخاص} many{{count} شخصاً} other{{count} شخص}}",
+  "@complaintsDistinctComplainants": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "complaintsAutoSuspended": "موقوف تلقائياً بسبب الشكاوى",
+  "complaintsAutoSuspendNear": "مشتكٍ واحد آخر يوقف هذا الحساب تلقائياً",
+  "complaintsDismissedCount": "{count} مرفوضة",
+  "@complaintsDismissedCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
 }

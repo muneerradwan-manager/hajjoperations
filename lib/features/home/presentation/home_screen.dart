@@ -225,6 +225,16 @@ class _HomeScreenState extends State<HomeScreen> {
           subtitle: l.navAuditLogSubtitle,
           onTap: () => context.push(Routes.auditLog),
         ),
+      // The whole register, which is oversight and belongs here. Filing one and
+      // reading your own are not — those are everybody's, and stand below under
+      // العام beside the rest of a person's own work.
+      if (session.can(PermissionCodes.complaintsView))
+        (
+          icon: AppIcons.complaints,
+          title: l.navComplaints,
+          subtitle: l.navComplaintsSubtitle,
+          onTap: () => context.push(Routes.complaintsManage),
+        ),
     ];
 
     // Two tiles to a colour, by POSITION in the list the reader actually gets.
@@ -268,6 +278,18 @@ class _HomeScreenState extends State<HomeScreen> {
         subtitle: l.navReportsSubtitle,
         color: _work.of(context),
         onTap: () => context.push(Routes.reports),
+      ),
+      // Gated by nothing, and that is the point: complaining is not a
+      // permission somebody grants. This card is what a person filed and the
+      // way to file another. What was filed ABOUT them is not here — that lives
+      // on their own profile, which is where a man looks for what is being said
+      // about him, and is the one door that hands it over without a name on it.
+      DashboardCard(
+        icon: AppIcons.complaints,
+        title: l.navMyComplaints,
+        subtitle: l.navMyComplaintsSubtitle,
+        color: _work.of(context),
+        onTap: () => context.push(Routes.complaints),
       ),
       // No tile for the profile: the greeting panel above already carries the
       // user's face and name, and tapping a card with your own name on it is

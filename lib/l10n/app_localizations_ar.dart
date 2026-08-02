@@ -538,6 +538,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get permAuditView => 'قراءة سجل من فعل ماذا';
 
   @override
+  String get perm_complaints => 'الشكاوى';
+
+  @override
+  String get permComplaintsView => 'عرض جميع الشكاوى المقدَّمة';
+
+  @override
+  String get permComplaintsReply => 'المشاركة في نقاش أي شكوى';
+
+  @override
+  String get permComplaintsLock => 'إغلاق الشكوى أمام الردود';
+
+  @override
+  String get permComplaintsDismiss => 'رفض الشكوى باعتبارها غير صحيحة';
+
+  @override
+  String get permComplaintsDelete => 'حذف الشكاوى';
+
+  @override
   String permissionRequires(String names) {
     return 'يتطلب: $names';
   }
@@ -2120,4 +2138,227 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get prayerPlaceJeddah => 'جدة';
+
+  @override
+  String get navMyComplaints => 'شكاواي';
+
+  @override
+  String get navMyComplaintsSubtitle => 'ما قدَّمتَه، وما ردّ به عليه';
+
+  @override
+  String get navComplaints => 'الشكاوى';
+
+  @override
+  String get navComplaintsSubtitle => 'كل ما قُدِّم من شكاوى في البعثة';
+
+  @override
+  String get complaintsTitle => 'الشكاوى';
+
+  @override
+  String get complaintsMineTitle => 'شكاواي';
+
+  @override
+  String get complaintsAgainstMeTitle => 'الشكاوى المقدَّمة ضدي';
+
+  @override
+  String get complaintsNew => 'تقديم شكوى';
+
+  @override
+  String get complaintsEmpty => 'لم تقدّم أي شكوى';
+
+  @override
+  String get complaintsEmptyAll => 'لم تُقدَّم أي شكوى بعد';
+
+  @override
+  String get complaintsAgainstMeEmpty => 'لم تُقدَّم أي شكوى ضدك';
+
+  @override
+  String get complaintsNoMatches => 'لا شكوى تطابق هذا';
+
+  @override
+  String get complaintsSearchHint => 'ابحث في الشكاوى';
+
+  @override
+  String get complaintsFilterAll => 'الكل';
+
+  @override
+  String get complaintsShowDismissed => 'إظهار المرفوضة';
+
+  @override
+  String get complaintTarget => 'الشكوى على';
+
+  @override
+  String get complaintTargetEmployee => 'موظف';
+
+  @override
+  String get complaintTargetModule => 'ملف تشغيلي';
+
+  @override
+  String get complaintTargetReport => 'تقرير';
+
+  @override
+  String get complaintTargetHotel => 'فندق';
+
+  @override
+  String get complaintTargetCluster => 'تكتل';
+
+  @override
+  String get complaintTargetGroup => 'مجموعة';
+
+  @override
+  String get complaintTargetOther => 'شكوى أخرى';
+
+  @override
+  String get complaintTargetPick => 'اختر ما الشكوى عليه';
+
+  @override
+  String complaintTargetPicked(String name) {
+    return 'المُختار: $name';
+  }
+
+  @override
+  String get complaintBody => 'ماذا حدث';
+
+  @override
+  String get complaintBodyHint => 'اشرح ما حدث بكلماتك';
+
+  @override
+  String get complaintBodyRequired => 'اكتب ما حدث';
+
+  @override
+  String get complaintTargetRequired => 'اختر ما الشكوى عليه';
+
+  @override
+  String get complaintSubmit => 'إرسال الشكوى';
+
+  @override
+  String get complaintSubmitted => 'تم تقديم شكواك';
+
+  @override
+  String get complaintAnonymousNote =>
+      'سيقرأ الموظف المشتكى عليه نصّ الشكوى ومرفقاتها، ولن يُعرَّف بمن قدّمها.';
+
+  @override
+  String get complaintReply => 'ردّ';
+
+  @override
+  String get complaintReplyHint => 'اكتب ردّك';
+
+  @override
+  String get complaintReplySent => 'تم إرسال الردّ';
+
+  @override
+  String complaintReplyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ردّ',
+      many: '$count ردّاً',
+      few: '$count ردود',
+      two: 'ردّان',
+      one: 'ردّ واحد',
+      zero: 'لا ردود',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get complaintRoleComplainant => 'مقدّم الشكوى';
+
+  @override
+  String get complaintRoleAccused => 'الموظف المشتكى عليه';
+
+  @override
+  String get complaintRoleManager => 'الرقابة';
+
+  @override
+  String get complaintLocked => 'أُغلقت هذه الشكوى أمام الردود';
+
+  @override
+  String get complaintLock => 'إغلاق الردود';
+
+  @override
+  String get complaintUnlock => 'إعادة فتح الردود';
+
+  @override
+  String get complaintDismissed => 'مرفوضة';
+
+  @override
+  String get complaintDismiss => 'رفض الشكوى';
+
+  @override
+  String get complaintUndismiss => 'إعادة الشكوى';
+
+  @override
+  String get complaintDismissReason => 'سبب الرفض (اختياري)';
+
+  @override
+  String get complaintDismissConfirm =>
+      'الشكوى المرفوضة لا تُحتسب في الإيقاف التلقائي، وقد يُرفع بها إيقاف قائم. هل تُرفض؟';
+
+  @override
+  String get complaintDelete => 'حذف الشكوى';
+
+  @override
+  String get complaintDeleteConfirm =>
+      'حذف هذه الشكوى وكل ما أُرفق بها؟ لا رجعة في ذلك.';
+
+  @override
+  String get complaintDeleted => 'حُذفت الشكوى';
+
+  @override
+  String get complaintWithdraw => 'سحب الشكوى';
+
+  @override
+  String get complaintMissing => 'لم تعد هذه الشكوى موجودة';
+
+  @override
+  String complaintFiledOn(String date) {
+    return 'قُدِّمت $date';
+  }
+
+  @override
+  String get complaintsSectionAgainst => 'الشكاوى على هذا الموظف';
+
+  @override
+  String complaintsAgainstCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count شكوى',
+      many: '$count شكوى',
+      few: '$count شكاوى',
+      two: 'شكويان',
+      one: 'شكوى واحدة',
+      zero: 'لا شيء',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String complaintsDistinctComplainants(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count شخص',
+      many: '$count شخصاً',
+      few: '$count أشخاص',
+      two: 'شخصان',
+      one: 'شخص واحد',
+      zero: 'لا أحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get complaintsAutoSuspended => 'موقوف تلقائياً بسبب الشكاوى';
+
+  @override
+  String get complaintsAutoSuspendNear =>
+      'مشتكٍ واحد آخر يوقف هذا الحساب تلقائياً';
+
+  @override
+  String complaintsDismissedCount(int count) {
+    return '$count مرفوضة';
+  }
 }

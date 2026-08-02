@@ -89,4 +89,25 @@ class PermissionCodes {
   /// Reading the record of who did what. Reading only — the log has no write
   /// permission at all: rows are written by the database's own triggers.
   static const auditView = 'audit.view';
+
+  // ------------------------------------------------------------- complaints
+  /// Filing one is deliberately absent from this list. Anybody with a working
+  /// account may complain; a record of what went wrong that only some people
+  /// may write is not a record of what went wrong.
+
+  /// Reading the whole register — everyone's complaints, not just your own.
+  static const complaintsView = 'complaints.view';
+
+  /// Taking part in a thread you are neither side of.
+  static const complaintsReply = 'complaints.reply';
+
+  /// Ending the conversation. The complaint stands; nobody may add to it.
+  static const complaintsLock = 'complaints.lock';
+
+  /// Calling a complaint unfounded, which takes it out of the count that
+  /// suspends an account — and so can lift a suspension. That is why the DB
+  /// makes it require [employeesSuspend] (see migration 0079).
+  static const complaintsDismiss = 'complaints.dismiss';
+
+  static const complaintsDelete = 'complaints.delete';
 }

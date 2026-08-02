@@ -5,6 +5,8 @@ import '../../features/approval/presentation/approval_queue_screen.dart';
 import '../../features/audit/presentation/audit_log_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
+import '../../features/complaints/application/complaints_cubit.dart';
+import '../../features/complaints/presentation/complaints_screen.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../features/reports/presentation/reports_screen.dart';
 import '../../features/reports/presentation/reports_manage_screen.dart';
@@ -51,6 +53,8 @@ abstract class Routes {
   static const settings = '/settings';
   static const dashboard = '/dashboard';
   static const auditLog = '/audit-log';
+  static const complaints = '/complaints';
+  static const complaintsManage = '/complaints/manage';
 }
 
 /// What each administered section asks of whoever tries to open it.
@@ -67,7 +71,7 @@ abstract class Routes {
 /// so the page is pushed rather than routed, and closing the directory does not
 /// close the person.
 ///
-/// Three sections are deliberately absent:
+/// Four sections are deliberately absent:
 ///   * `/modules` and `/reports` — the first is everyone's own assigned work,
 ///     the second is what the whole mission may read. What belongs to somebody
 ///     is the paperwork behind them, and that is `/modules/manage` and
@@ -75,6 +79,9 @@ abstract class Routes {
 ///   * `/dashboard` — not one screen but a row of sections, each one answered
 ///     for separately by `dashboard_stats` on the server. Anyone with any of
 ///     them may open it, and sees only the ones they have.
+///   * `/complaints` — what this person filed. Complaining is not a permission
+///     and neither is reading your own; the register of EVERYONE's is
+///     `/complaints/manage`, and that one is listed here.
 final sectionGuards = <String, bool Function(SessionState)>{
   Routes.seasons: (s) => s.canSeeSeasons,
   Routes.modulesManage: (s) => s.can(PermissionCodes.modulesViewAll),
@@ -84,6 +91,7 @@ final sectionGuards = <String, bool Function(SessionState)>{
   Routes.permissions: (s) => s.can(PermissionCodes.permissionsView),
   Routes.referenceData: (s) => s.can(PermissionCodes.referenceView),
   Routes.auditLog: (s) => s.can(PermissionCodes.auditView),
+  Routes.complaintsManage: (s) => s.can(PermissionCodes.complaintsView),
 };
 
 GoRouter buildRouter(SessionCubit session) {
@@ -284,6 +292,20 @@ GoRouter buildRouter(SessionCubit session) {
         path: Routes.myProfile,
         pageBuilder: (c, s) =>
             fadeThroughPage(key: s.pageKey, child: const MyProfileScreen()),
+      ),
+      // The same screen asked the other question, as with files and reports:
+      // one is what this person filed, the other is the whole register.
+      GoRoute(
+        path: Routes.complaints,
+        pageBuilder: (c, s) =>
+            fadeThroughPage(key: s.pageKey, child: const ComplaintsScreen()),
+      ),
+      GoRoute(
+        path: Routes.complaintsManage,
+        pageBuilder: (c, s) => fadeThroughPage(
+          key: s.pageKey,
+          child: const ComplaintsScreen(scope: ComplaintsScope.all),
+        ),
       ),
     ],
   );

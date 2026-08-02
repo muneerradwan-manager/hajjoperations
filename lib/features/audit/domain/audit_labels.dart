@@ -85,6 +85,11 @@ class AuditLabels {
       tables: ['notifications', 'notification_attachments'],
     ),
     AuditEntityGroup(
+      key: 'complaints',
+      name: LocalizedName(ar: 'الشكاوى', en: 'Complaints'),
+      tables: ['complaints', 'complaint_replies', 'complaint_attachments'],
+    ),
+    AuditEntityGroup(
       key: 'storage',
       name: LocalizedName(ar: 'الملفات المرفوعة', en: 'Uploaded files'),
       tables: ['storage'],
@@ -173,6 +178,12 @@ class AuditLabels {
       ar: 'مرفق إشعار',
       en: 'Notification attachment',
     ),
+    'complaints': LocalizedName(ar: 'شكوى', en: 'Complaint'),
+    'complaint_replies': LocalizedName(ar: 'ردّ على شكوى', en: 'Complaint reply'),
+    'complaint_attachments': LocalizedName(
+      ar: 'مرفق شكوى',
+      en: 'Complaint attachment',
+    ),
     'storage': LocalizedName(ar: 'ملف مرفوع', en: 'Uploaded file'),
   };
 
@@ -209,6 +220,14 @@ class AuditLabels {
     'account_status': LocalizedName(ar: 'حالة الحساب', en: 'Account status'),
     'rejection_reason': LocalizedName(ar: 'سبب الرفض', en: 'Rejection reason'),
     'is_suspended': LocalizedName(ar: 'موقوف', en: 'Suspended'),
+    'auto_suspended_at': LocalizedName(
+      ar: 'وقت الإيقاف التلقائي',
+      en: 'Auto-suspended at',
+    ),
+    'auto_suspend_forgiven_count': LocalizedName(
+      ar: 'الشكاوى المسامَح بها',
+      en: 'Forgiven complainants',
+    ),
     'is_admin': LocalizedName(ar: 'مدير النظام', en: 'Administrator'),
     'is_external': LocalizedName(ar: 'من جهة خارجية', en: 'External'),
     'external_organization': LocalizedName(
@@ -276,6 +295,22 @@ class AuditLabels {
     'recipient_id': LocalizedName(ar: 'المستلم', en: 'Recipient'),
     'sender_id': LocalizedName(ar: 'المرسل', en: 'Sender'),
     'group_id': LocalizedName(ar: 'المجموعة', en: 'Group'),
+    // Complaints. `complainant_id`, `author_id` and `body` are absent on
+    // purpose: the trigger in 0079 strips them before the row is written, so a
+    // label for them would be a label for something the log never carries.
+    'complaint_id': LocalizedName(ar: 'الشكوى', en: 'Complaint'),
+    'reply_id': LocalizedName(ar: 'الردّ', en: 'Reply'),
+    'target_type': LocalizedName(ar: 'نوع المشتكى عليه', en: 'Target kind'),
+    'target_label': LocalizedName(ar: 'المشتكى عليه', en: 'Target'),
+    'target_profile_id': LocalizedName(ar: 'الموظف المشتكى عليه', en: 'Employee'),
+    'target_module_id': LocalizedName(ar: 'الملف المشتكى عليه', en: 'File'),
+    'target_report_id': LocalizedName(ar: 'التقرير المشتكى عليه', en: 'Report'),
+    'target_item_id': LocalizedName(ar: 'العنصر المشتكى عليه', en: 'Item'),
+    'locked_at': LocalizedName(ar: 'وقت إغلاق الردود', en: 'Locked at'),
+    'locked_by': LocalizedName(ar: 'أغلق الردود', en: 'Locked by'),
+    'dismissed_at': LocalizedName(ar: 'وقت الرفض', en: 'Dismissed at'),
+    'dismissed_by': LocalizedName(ar: 'رفضها', en: 'Dismissed by'),
+    'dismiss_reason': LocalizedName(ar: 'سبب الرفض', en: 'Dismiss reason'),
     'allows_multiple': LocalizedName(
       ar: 'يسمح بأكثر من شخص',
       en: 'Allows multiple',

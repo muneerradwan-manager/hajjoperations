@@ -1,0 +1,280 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../core/animations/animations.dart';
+import '../../../core/l10n/error_text.dart';
+import '../../../core/l10n/l10n_extension.dart';
+import '../../../core/theme/app_icons.dart';
+import '../../../core/theme/glass_tokens.dart';
+import '../../../core/widgets/glass.dart';
+import '../../../core/widgets/responsive.dart';
+import '../../../core/widgets/states.dart';
+import '../application/complaints_cubit.dart';
+import '../data/complaints_repository.dart';
+import '../domain/complaint.dart';
+import 'complaint_thread_screen.dart';
+import 'file_complaint_screen.dart';
+import 'widgets/complaint_card.dart';
+import 'widgets/complaint_labels.dart';
+
+/// The register, asked one of two ways.
+///
+/// [ComplaintsScope.mine] is عام ← شكاواي and is everybody's: it lists what this
+/// person filed, and carries the button that files another. [ComplaintsScope.all]
+/// is الإدارة ← الشكاوى and asks for `complaints.view`; the server refuses the
+/// wider question to anyone who may not ask it, so the screen does not have to
+/// be trusted to hide it.
+///
+/// What was filed ABOUT this person is not here. That list is on their own
+/// profile, because it is the one place a man looks for what is being said about
+/// him — and because it is read through the one function that redacts.
+class ComplaintsScreen extends StatelessWidget {
+  const ComplaintsScreen({super.key, this.scope = ComplaintsScope.mine});
+
+  final ComplaintsScope scope;
+
+  @override
+  Widget build(BuildContext context) => BlocProvider(
+    create: (_) => ComplaintsCubit(ComplaintsRepository(), scope: scope),
+    child: _View(scope: scope),
+  );
+}
+
+class _View extends StatelessWidget {
+  const _View({required this.scope});
+  final ComplaintsScope scope;
+
+  Future<void> _file(BuildContext context) async {
+    final cubit = context.read<ComplaintsCubit>();
+    final filed = await Navigator.of(context).push<bool>(
+      fadeThroughRoute((_) => const FileComplaintScreen()),
+    );
+    if (filed == true) await cubit.load();
+  }
+
+  Future<void> _open(BuildContext context, Complaint complaint) async {
+    final cubit = context.read<ComplaintsCubit>();
+    final changed = await Navigator.of(context).push<bool>(
+      fadeThroughRoute(
+        (_) => ComplaintThreadScreen(
+          complaintId: complaint.id,
+          known: complaint,
+        ),
+      ),
+    );
+    if (changed == true) await cubit.load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final mine = scope == ComplaintsScope.mine;
+
+    return Scaffold(
+      appBar: GlassAppBar(
+        title: Text(mine ? l.complaintsMineTitle : l.complaintsTitle),
+      ),
+      // Only on شكاواي: الإدارة is where complaints are read and settled, not
+      // where they are started. A manager who wants to file one files it as
+      // anybody does.
+      floatingActionButton: mine
+          ? FloatingActionButton.extended(
+              onPressed: () => _file(context),
+              icon: const Icon(AppIcons.add),
+              label: Text(l.complaintsNew),
+            )
+          : null,
+      body: SafeArea(
+        child: BlocBuilder<ComplaintsCubit, ComplaintsState>(
+          builder: (context, state) {
+            final cubit = context.read<ComplaintsCubit>();
+
+            if (state.status == ComplaintsStatus.loading) {
+              return ResponsivePage(
+                maxWidth: 1200,
+                builder: (context, size) => SkeletonList(
+                  minTileWidth: 380,
+                  maxColumns: 2,
+                  height: 132,
+                  padding: context.scrollPadding(
+                    horizontal: size.gutter,
+                    bottom: AppSpacing.xl,
+                  ),
+                ),
+              );
+            }
+            if (state.status == ComplaintsStatus.error) {
+              return EmptyState(
+                icon: AppIcons.complaints,
+                title: friendlyError(context, state.error),
+                action: FilledButton(
+                  onPressed: cubit.load,
+                  child: Text(l.commonRetry),
+                ),
+              );
+            }
+
+            final visible = state.visible;
+            return Column(
+              children: [
+                _FilterBar(state: state),
+                Expanded(
+                  child: visible.isEmpty
+                      ? EmptyState(
+                          icon: AppIcons.complaints,
+                          title: state.isNarrowed
+                              ? l.complaintsNoMatches
+                              : (mine
+                                    ? l.complaintsEmpty
+                                    : l.complaintsEmptyAll),
+                          action: mine && !state.isNarrowed
+                              ? FilledButton.icon(
+                                  onPressed: () => _file(context),
+                                  icon: const Icon(AppIcons.add),
+                                  label: Text(l.complaintsNew),
+                                )
+                              : null,
+                        )
+                      : ResponsivePage(
+                          maxWidth: 1200,
+                          builder: (context, size) => AdaptiveGridView(
+                            padding: EdgeInsets.fromLTRB(
+                              size.gutter,
+                              AppSpacing.sm,
+                              size.gutter,
+                              // Room for the button that sits over the list.
+                              AppSpacing.xxl * 2 +
+                                  MediaQuery.viewPaddingOf(context).bottom,
+                            ),
+                            onRefresh: cubit.load,
+                            minTileWidth: 380,
+                            maxColumns: 2,
+                            spacing: AppSpacing.md,
+                            itemCount: visible.length,
+                            itemBuilder: (context, i) => FadeSlideIn(
+                              delay: Duration(
+                                milliseconds: 25 * (i < 8 ? i : 8),
+                              ),
+                              child: ComplaintCard(
+                                complaint: visible[i],
+                                onOpen: () => _open(context, visible[i]),
+                              ),
+                            ),
+                          ),
+                        ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterBar extends StatefulWidget {
+  const _FilterBar({required this.state});
+  final ComplaintsState state;
+
+  @override
+  State<_FilterBar> createState() => _FilterBarState();
+}
+
+class _FilterBarState extends State<_FilterBar> {
+  late final _controller = TextEditingController(text: widget.state.query);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final cubit = context.read<ComplaintsCubit>();
+    final s = widget.state;
+
+    // Only the kinds actually present. Offering all seven over a list of two
+    // complaints is a menu of dead ends.
+    final kinds = <ComplaintTarget>{for (final c in s.complaints) c.target};
+
+    return ResponsivePage(
+      maxWidth: 1200,
+      builder: (context, size) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          size.gutter,
+          AppSpacing.sm,
+          size.gutter,
+          AppSpacing.sm,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 460),
+              child: TextField(
+                controller: _controller,
+                textInputAction: TextInputAction.search,
+                onChanged: cubit.search,
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: l.complaintsSearchHint,
+                  prefixIcon: const Icon(AppIcons.search, size: 20),
+                  suffixIcon: s.query.isEmpty
+                      ? null
+                      : IconButton(
+                          icon: const Icon(AppIcons.reject, size: 18),
+                          onPressed: () {
+                            _controller.clear();
+                            cubit.search('');
+                          },
+                        ),
+                ),
+              ),
+            ),
+            if (kinds.length > 1 || s.isNarrowed) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.xs,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  ChoiceChip(
+                    label: Text(l.complaintsFilterAll),
+                    selected: s.target == null,
+                    visualDensity: VisualDensity.compact,
+                    onSelected: (_) => cubit.setTarget(null),
+                  ),
+                  for (final kind in ComplaintTarget.values)
+                    if (kinds.contains(kind))
+                      ChoiceChip(
+                        label: Text(complaintTargetLabel(l, kind)),
+                        selected: s.target == kind,
+                        visualDensity: VisualDensity.compact,
+                        onSelected: (_) => cubit.setTarget(kind),
+                      ),
+                  FilterChip(
+                    label: Text(l.complaintsShowDismissed),
+                    selected: s.includeDismissed,
+                    visualDensity: VisualDensity.compact,
+                    onSelected: cubit.setIncludeDismissed,
+                  ),
+                  if (s.isNarrowed)
+                    TextButton.icon(
+                      onPressed: () {
+                        _controller.clear();
+                        cubit.clearFilters();
+                      },
+                      icon: const Icon(AppIcons.reject, size: 16),
+                      label: Text(l.moduleRosterClear),
+                    ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}

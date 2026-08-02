@@ -174,6 +174,17 @@ class AppIcons {
   // ── The record of what happened ─────────────────────────────────────────
   static const auditLog = Iconsax.activity;
 
+  // ── الشكاوى ──────────────────────────────────────────────────────────────
+  //
+  // A speech bubble with a question in it, not a warning triangle: a complaint
+  // is something a person said, and most of them turn out to be a matter to
+  // settle rather than an alarm to sound. The register is drawn with the same
+  // glyph as one complaint — it is the same thing, counted.
+  static const complaints = Iconsax.message_question;
+  static const complaintLocked = Iconsax.lock_1;
+  static const complaintUnlock = Iconsax.unlock;
+  static const complaintDismissed = Iconsax.slash;
+
   // ── مواقيت الصلاة ────────────────────────────────────────────────────────
   //
   // Four glyphs for six marks, and the doubling is deliberate: only one of them

@@ -43,5 +43,16 @@ String friendlyErrorL(AppLocalizations l, String? raw) {
   // editor blocks this before saving, so this is the belt behind the braces —
   // a stale list, or two people entering the same document at once.
   if (s.contains('report_once_per_season')) return l.reportOncePerSeason;
+  // The complaints migration (0079). The form blocks the first three before
+  // sending, so these are the belt behind the braces; `complaint_locked` is the
+  // one that genuinely reaches a person, when somebody closed the thread while
+  // they were typing into it.
+  if (s.contains('complaint_locked')) return l.complaintLocked;
+  if (s.contains('complaint_body_required')) return l.complaintBodyRequired;
+  if (s.contains('complaint_target_missing') ||
+      s.contains('complaint_target_wrong_set')) {
+    return l.complaintTargetRequired;
+  }
+  if (s.contains('complaint_not_found')) return l.complaintMissing;
   return raw;
 }

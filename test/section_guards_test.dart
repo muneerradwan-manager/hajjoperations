@@ -41,6 +41,7 @@ void main() {
         '/permissions': PermissionCodes.permissionsView,
         '/reference-data': PermissionCodes.referenceView,
         '/audit-log': PermissionCodes.auditView,
+        '/complaints/manage': PermissionCodes.complaintsView,
       };
 
       owners.forEach((route, code) {
@@ -110,6 +111,7 @@ void main() {
         '/permissions',
         '/reference-data',
         '/audit-log',
+        '/complaints/manage',
       });
     });
 
@@ -118,7 +120,16 @@ void main() {
       // whole mission reads — guarding either would lock ordinary members out
       // of their own files. /dashboard answers for itself section by section
       // on the server, so anyone holding any part of it may open it.
-      for (final open in ['/modules', '/reports', '/dashboard', '/']) {
+      // /complaints is a person's own: filing one is not a permission and
+      // neither is reading what you filed. Closing it would mean an ordinary
+      // member could complain and then never see the answer.
+      for (final open in [
+        '/modules',
+        '/reports',
+        '/dashboard',
+        '/complaints',
+        '/',
+      ]) {
         expect(
           sectionGuards.containsKey(open),
           isFalse,

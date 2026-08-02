@@ -15,6 +15,7 @@ import '../../../core/widgets/overflow_menu.dart';
 import '../../../core/widgets/profile_hero.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../auth/application/session_cubit.dart';
+import '../../complaints/presentation/widgets/complaints_against_section.dart';
 import '../../modules/data/modules_repository.dart';
 import '../../permissions/data/permissions_repository.dart';
 import '../../permissions/domain/permission.dart';
@@ -161,6 +162,7 @@ class _View extends StatelessWidget {
     final canSeeModules =
         session.can(PermissionCodes.modulesViewAll) ||
         session.can(PermissionCodes.modulesMembers);
+    final canSeeComplaints = session.can(PermissionCodes.complaintsView);
     final showManagement = canSuspend || canExternal || canManageParticipants;
 
     return Scaffold(
@@ -385,6 +387,15 @@ class _View extends StatelessWidget {
                   ],
                 ),
               ],
+              // Last, and only for whoever keeps the register. What is being
+              // said about a person belongs at the foot of their page rather
+              // than in the middle of it — and the complainants' names are not
+              // in it either way, because the counts are all the server sends.
+              const SizedBox(height: AppSpacing.lg),
+              ComplaintsAgainstSection(
+                profileId: p.id,
+                canReadRegister: canSeeComplaints,
+              ),
             ];
 
             final bottom =

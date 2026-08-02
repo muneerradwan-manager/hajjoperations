@@ -539,6 +539,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permAuditView => 'Read the record of who did what';
 
   @override
+  String get perm_complaints => 'Complaints';
+
+  @override
+  String get permComplaintsView => 'View every complaint filed';
+
+  @override
+  String get permComplaintsReply => 'Take part in any complaint thread';
+
+  @override
+  String get permComplaintsLock => 'Close a complaint to further replies';
+
+  @override
+  String get permComplaintsDismiss => 'Dismiss a complaint as unfounded';
+
+  @override
+  String get permComplaintsDelete => 'Delete a complaint';
+
+  @override
   String permissionRequires(String names) {
     return 'Requires: $names';
   }
@@ -2123,4 +2141,219 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get prayerPlaceJeddah => 'Jeddah';
+
+  @override
+  String get navMyComplaints => 'My complaints';
+
+  @override
+  String get navMyComplaintsSubtitle => 'What you filed, and what came back';
+
+  @override
+  String get navComplaints => 'Complaints';
+
+  @override
+  String get navComplaintsSubtitle =>
+      'Every complaint filed across the mission';
+
+  @override
+  String get complaintsTitle => 'Complaints';
+
+  @override
+  String get complaintsMineTitle => 'My complaints';
+
+  @override
+  String get complaintsAgainstMeTitle => 'Complaints about me';
+
+  @override
+  String get complaintsNew => 'File a complaint';
+
+  @override
+  String get complaintsEmpty => 'No complaints filed';
+
+  @override
+  String get complaintsEmptyAll => 'Nothing has been filed yet';
+
+  @override
+  String get complaintsAgainstMeEmpty => 'Nothing has been filed about you';
+
+  @override
+  String get complaintsNoMatches => 'No complaint matches this';
+
+  @override
+  String get complaintsSearchHint => 'Search complaints';
+
+  @override
+  String get complaintsFilterAll => 'All';
+
+  @override
+  String get complaintsShowDismissed => 'Include dismissed';
+
+  @override
+  String get complaintTarget => 'About';
+
+  @override
+  String get complaintTargetEmployee => 'An employee';
+
+  @override
+  String get complaintTargetModule => 'An operational file';
+
+  @override
+  String get complaintTargetReport => 'A report';
+
+  @override
+  String get complaintTargetHotel => 'A hotel';
+
+  @override
+  String get complaintTargetCluster => 'A cluster';
+
+  @override
+  String get complaintTargetGroup => 'A group';
+
+  @override
+  String get complaintTargetOther => 'Something else';
+
+  @override
+  String get complaintTargetPick => 'Choose what this is about';
+
+  @override
+  String complaintTargetPicked(String name) {
+    return 'Selected: $name';
+  }
+
+  @override
+  String get complaintBody => 'What happened';
+
+  @override
+  String get complaintBodyHint => 'Describe it in your own words';
+
+  @override
+  String get complaintBodyRequired => 'Write what happened';
+
+  @override
+  String get complaintTargetRequired => 'Choose what the complaint is about';
+
+  @override
+  String get complaintSubmit => 'Send the complaint';
+
+  @override
+  String get complaintSubmitted => 'Your complaint was filed';
+
+  @override
+  String get complaintAnonymousNote =>
+      'The person you are complaining about will read this, but will not be told who filed it.';
+
+  @override
+  String get complaintReply => 'Reply';
+
+  @override
+  String get complaintReplyHint => 'Write a reply';
+
+  @override
+  String get complaintReplySent => 'Reply sent';
+
+  @override
+  String complaintReplyCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count replies',
+      one: '1 reply',
+      zero: 'No replies',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get complaintRoleComplainant => 'The complainant';
+
+  @override
+  String get complaintRoleAccused => 'The employee complained about';
+
+  @override
+  String get complaintRoleManager => 'Oversight';
+
+  @override
+  String get complaintLocked => 'This complaint is closed to replies';
+
+  @override
+  String get complaintLock => 'Close to replies';
+
+  @override
+  String get complaintUnlock => 'Reopen for replies';
+
+  @override
+  String get complaintDismissed => 'Dismissed';
+
+  @override
+  String get complaintDismiss => 'Dismiss as unfounded';
+
+  @override
+  String get complaintUndismiss => 'Reinstate';
+
+  @override
+  String get complaintDismissReason => 'Why it is being dismissed (optional)';
+
+  @override
+  String get complaintDismissConfirm =>
+      'A dismissed complaint no longer counts toward an automatic suspension, and may lift one already in force. Dismiss it?';
+
+  @override
+  String get complaintDelete => 'Delete the complaint';
+
+  @override
+  String get complaintDeleteConfirm =>
+      'Delete this complaint and everything attached to it? This cannot be undone.';
+
+  @override
+  String get complaintDeleted => 'Complaint deleted';
+
+  @override
+  String get complaintWithdraw => 'Withdraw';
+
+  @override
+  String get complaintMissing => 'This complaint is no longer there';
+
+  @override
+  String complaintFiledOn(String date) {
+    return 'Filed $date';
+  }
+
+  @override
+  String get complaintsSectionAgainst => 'Complaints about this employee';
+
+  @override
+  String complaintsAgainstCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count complaints',
+      one: '1 complaint',
+      zero: 'None',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String complaintsDistinctComplainants(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count different people',
+      one: '1 person',
+      zero: 'no one',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get complaintsAutoSuspended => 'Suspended automatically by complaints';
+
+  @override
+  String get complaintsAutoSuspendNear =>
+      'One more complainant suspends this account automatically';
+
+  @override
+  String complaintsDismissedCount(int count) {
+    return '$count dismissed';
+  }
 }

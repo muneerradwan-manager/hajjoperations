@@ -1118,6 +1118,42 @@ abstract class AppLocalizations {
   /// **'Read the record of who did what'**
   String get permAuditView;
 
+  /// No description provided for @perm_complaints.
+  ///
+  /// In en, this message translates to:
+  /// **'Complaints'**
+  String get perm_complaints;
+
+  /// No description provided for @permComplaintsView.
+  ///
+  /// In en, this message translates to:
+  /// **'View every complaint filed'**
+  String get permComplaintsView;
+
+  /// No description provided for @permComplaintsReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Take part in any complaint thread'**
+  String get permComplaintsReply;
+
+  /// No description provided for @permComplaintsLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Close a complaint to further replies'**
+  String get permComplaintsLock;
+
+  /// No description provided for @permComplaintsDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss a complaint as unfounded'**
+  String get permComplaintsDismiss;
+
+  /// No description provided for @permComplaintsDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete a complaint'**
+  String get permComplaintsDelete;
+
   /// No description provided for @permissionRequires.
   ///
   /// In en, this message translates to:
@@ -3913,6 +3949,360 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Jeddah'**
   String get prayerPlaceJeddah;
+
+  /// No description provided for @navMyComplaints.
+  ///
+  /// In en, this message translates to:
+  /// **'My complaints'**
+  String get navMyComplaints;
+
+  /// No description provided for @navMyComplaintsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What you filed, and what came back'**
+  String get navMyComplaintsSubtitle;
+
+  /// No description provided for @navComplaints.
+  ///
+  /// In en, this message translates to:
+  /// **'Complaints'**
+  String get navComplaints;
+
+  /// No description provided for @navComplaintsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Every complaint filed across the mission'**
+  String get navComplaintsSubtitle;
+
+  /// No description provided for @complaintsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complaints'**
+  String get complaintsTitle;
+
+  /// No description provided for @complaintsMineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My complaints'**
+  String get complaintsMineTitle;
+
+  /// No description provided for @complaintsAgainstMeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complaints about me'**
+  String get complaintsAgainstMeTitle;
+
+  /// No description provided for @complaintsNew.
+  ///
+  /// In en, this message translates to:
+  /// **'File a complaint'**
+  String get complaintsNew;
+
+  /// No description provided for @complaintsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No complaints filed'**
+  String get complaintsEmpty;
+
+  /// No description provided for @complaintsEmptyAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing has been filed yet'**
+  String get complaintsEmptyAll;
+
+  /// No description provided for @complaintsAgainstMeEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing has been filed about you'**
+  String get complaintsAgainstMeEmpty;
+
+  /// No description provided for @complaintsNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No complaint matches this'**
+  String get complaintsNoMatches;
+
+  /// No description provided for @complaintsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search complaints'**
+  String get complaintsSearchHint;
+
+  /// No description provided for @complaintsFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get complaintsFilterAll;
+
+  /// No description provided for @complaintsShowDismissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Include dismissed'**
+  String get complaintsShowDismissed;
+
+  /// No description provided for @complaintTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get complaintTarget;
+
+  /// No description provided for @complaintTargetEmployee.
+  ///
+  /// In en, this message translates to:
+  /// **'An employee'**
+  String get complaintTargetEmployee;
+
+  /// No description provided for @complaintTargetModule.
+  ///
+  /// In en, this message translates to:
+  /// **'An operational file'**
+  String get complaintTargetModule;
+
+  /// No description provided for @complaintTargetReport.
+  ///
+  /// In en, this message translates to:
+  /// **'A report'**
+  String get complaintTargetReport;
+
+  /// No description provided for @complaintTargetHotel.
+  ///
+  /// In en, this message translates to:
+  /// **'A hotel'**
+  String get complaintTargetHotel;
+
+  /// No description provided for @complaintTargetCluster.
+  ///
+  /// In en, this message translates to:
+  /// **'A cluster'**
+  String get complaintTargetCluster;
+
+  /// No description provided for @complaintTargetGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'A group'**
+  String get complaintTargetGroup;
+
+  /// No description provided for @complaintTargetOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Something else'**
+  String get complaintTargetOther;
+
+  /// No description provided for @complaintTargetPick.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose what this is about'**
+  String get complaintTargetPick;
+
+  /// No description provided for @complaintTargetPicked.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected: {name}'**
+  String complaintTargetPicked(String name);
+
+  /// No description provided for @complaintBody.
+  ///
+  /// In en, this message translates to:
+  /// **'What happened'**
+  String get complaintBody;
+
+  /// No description provided for @complaintBodyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe it in your own words'**
+  String get complaintBodyHint;
+
+  /// No description provided for @complaintBodyRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Write what happened'**
+  String get complaintBodyRequired;
+
+  /// No description provided for @complaintTargetRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose what the complaint is about'**
+  String get complaintTargetRequired;
+
+  /// No description provided for @complaintSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Send the complaint'**
+  String get complaintSubmit;
+
+  /// No description provided for @complaintSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Your complaint was filed'**
+  String get complaintSubmitted;
+
+  /// No description provided for @complaintAnonymousNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The person you are complaining about will read this, but will not be told who filed it.'**
+  String get complaintAnonymousNote;
+
+  /// No description provided for @complaintReply.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply'**
+  String get complaintReply;
+
+  /// No description provided for @complaintReplyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write a reply'**
+  String get complaintReplyHint;
+
+  /// No description provided for @complaintReplySent.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply sent'**
+  String get complaintReplySent;
+
+  /// No description provided for @complaintReplyCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No replies} =1{1 reply} other{{count} replies}}'**
+  String complaintReplyCount(int count);
+
+  /// No description provided for @complaintRoleComplainant.
+  ///
+  /// In en, this message translates to:
+  /// **'The complainant'**
+  String get complaintRoleComplainant;
+
+  /// No description provided for @complaintRoleAccused.
+  ///
+  /// In en, this message translates to:
+  /// **'The employee complained about'**
+  String get complaintRoleAccused;
+
+  /// No description provided for @complaintRoleManager.
+  ///
+  /// In en, this message translates to:
+  /// **'Oversight'**
+  String get complaintRoleManager;
+
+  /// No description provided for @complaintLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'This complaint is closed to replies'**
+  String get complaintLocked;
+
+  /// No description provided for @complaintLock.
+  ///
+  /// In en, this message translates to:
+  /// **'Close to replies'**
+  String get complaintLock;
+
+  /// No description provided for @complaintUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen for replies'**
+  String get complaintUnlock;
+
+  /// No description provided for @complaintDismissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismissed'**
+  String get complaintDismissed;
+
+  /// No description provided for @complaintDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss as unfounded'**
+  String get complaintDismiss;
+
+  /// No description provided for @complaintUndismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Reinstate'**
+  String get complaintUndismiss;
+
+  /// No description provided for @complaintDismissReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Why it is being dismissed (optional)'**
+  String get complaintDismissReason;
+
+  /// No description provided for @complaintDismissConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'A dismissed complaint no longer counts toward an automatic suspension, and may lift one already in force. Dismiss it?'**
+  String get complaintDismissConfirm;
+
+  /// No description provided for @complaintDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the complaint'**
+  String get complaintDelete;
+
+  /// No description provided for @complaintDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this complaint and everything attached to it? This cannot be undone.'**
+  String get complaintDeleteConfirm;
+
+  /// No description provided for @complaintDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Complaint deleted'**
+  String get complaintDeleted;
+
+  /// No description provided for @complaintWithdraw.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw'**
+  String get complaintWithdraw;
+
+  /// No description provided for @complaintMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'This complaint is no longer there'**
+  String get complaintMissing;
+
+  /// No description provided for @complaintFiledOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Filed {date}'**
+  String complaintFiledOn(String date);
+
+  /// No description provided for @complaintsSectionAgainst.
+  ///
+  /// In en, this message translates to:
+  /// **'Complaints about this employee'**
+  String get complaintsSectionAgainst;
+
+  /// No description provided for @complaintsAgainstCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{None} =1{1 complaint} other{{count} complaints}}'**
+  String complaintsAgainstCount(int count);
+
+  /// No description provided for @complaintsDistinctComplainants.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{no one} =1{1 person} other{{count} different people}}'**
+  String complaintsDistinctComplainants(int count);
+
+  /// No description provided for @complaintsAutoSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended automatically by complaints'**
+  String get complaintsAutoSuspended;
+
+  /// No description provided for @complaintsAutoSuspendNear.
+  ///
+  /// In en, this message translates to:
+  /// **'One more complainant suspends this account automatically'**
+  String get complaintsAutoSuspendNear;
+
+  /// No description provided for @complaintsDismissedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} dismissed'**
+  String complaintsDismissedCount(int count);
 }
 
 class _AppLocalizationsDelegate

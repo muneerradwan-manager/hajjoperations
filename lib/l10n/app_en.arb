@@ -189,6 +189,12 @@
   "permNotificationsBroadcastAll": "Notify everyone",
   "perm_audit": "Audit log",
   "permAuditView": "Read the record of who did what",
+  "perm_complaints": "Complaints",
+  "permComplaintsView": "View every complaint filed",
+  "permComplaintsReply": "Take part in any complaint thread",
+  "permComplaintsLock": "Close a complaint to further replies",
+  "permComplaintsDismiss": "Dismiss a complaint as unfounded",
+  "permComplaintsDelete": "Delete a complaint",
   "permissionRequires": "Requires: {names}",
   "@permissionRequires": {
     "placeholders": {
@@ -751,5 +757,95 @@
   "prayerPlaceMuzdalifah": "Muzdalifah",
   "prayerPlaceArafat": "Arafat",
   "prayerPlaceMadinah": "Madinah",
-  "prayerPlaceJeddah": "Jeddah"
+  "prayerPlaceJeddah": "Jeddah",
+
+  "navMyComplaints": "My complaints",
+  "navMyComplaintsSubtitle": "What you filed, and what came back",
+  "navComplaints": "Complaints",
+  "navComplaintsSubtitle": "Every complaint filed across the mission",
+  "complaintsTitle": "Complaints",
+  "complaintsMineTitle": "My complaints",
+  "complaintsAgainstMeTitle": "Complaints about me",
+  "complaintsNew": "File a complaint",
+  "complaintsEmpty": "No complaints filed",
+  "complaintsEmptyAll": "Nothing has been filed yet",
+  "complaintsAgainstMeEmpty": "Nothing has been filed about you",
+  "complaintsNoMatches": "No complaint matches this",
+  "complaintsSearchHint": "Search complaints",
+  "complaintsFilterAll": "All",
+  "complaintsShowDismissed": "Include dismissed",
+  "complaintTarget": "About",
+  "complaintTargetEmployee": "An employee",
+  "complaintTargetModule": "An operational file",
+  "complaintTargetReport": "A report",
+  "complaintTargetHotel": "A hotel",
+  "complaintTargetCluster": "A cluster",
+  "complaintTargetGroup": "A group",
+  "complaintTargetOther": "Something else",
+  "complaintTargetPick": "Choose what this is about",
+  "complaintTargetPicked": "Selected: {name}",
+  "@complaintTargetPicked": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "complaintBody": "What happened",
+  "complaintBodyHint": "Describe it in your own words",
+  "complaintBodyRequired": "Write what happened",
+  "complaintTargetRequired": "Choose what the complaint is about",
+  "complaintSubmit": "Send the complaint",
+  "complaintSubmitted": "Your complaint was filed",
+  "complaintAnonymousNote": "The person you are complaining about will read this, but will not be told who filed it.",
+  "complaintReply": "Reply",
+  "complaintReplyHint": "Write a reply",
+  "complaintReplySent": "Reply sent",
+  "complaintReplyCount": "{count, plural, =0{No replies} =1{1 reply} other{{count} replies}}",
+  "@complaintReplyCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "complaintRoleComplainant": "The complainant",
+  "complaintRoleAccused": "The employee complained about",
+  "complaintRoleManager": "Oversight",
+  "complaintLocked": "This complaint is closed to replies",
+  "complaintLock": "Close to replies",
+  "complaintUnlock": "Reopen for replies",
+  "complaintDismissed": "Dismissed",
+  "complaintDismiss": "Dismiss as unfounded",
+  "complaintUndismiss": "Reinstate",
+  "complaintDismissReason": "Why it is being dismissed (optional)",
+  "complaintDismissConfirm": "A dismissed complaint no longer counts toward an automatic suspension, and may lift one already in force. Dismiss it?",
+  "complaintDelete": "Delete the complaint",
+  "complaintDeleteConfirm": "Delete this complaint and everything attached to it? This cannot be undone.",
+  "complaintDeleted": "Complaint deleted",
+  "complaintWithdraw": "Withdraw",
+  "complaintMissing": "This complaint is no longer there",
+  "complaintFiledOn": "Filed {date}",
+  "@complaintFiledOn": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "complaintsSectionAgainst": "Complaints about this employee",
+  "complaintsAgainstCount": "{count, plural, =0{None} =1{1 complaint} other{{count} complaints}}",
+  "@complaintsAgainstCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "complaintsDistinctComplainants": "{count, plural, =0{no one} =1{1 person} other{{count} different people}}",
+  "@complaintsDistinctComplainants": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "complaintsAutoSuspended": "Suspended automatically by complaints",
+  "complaintsAutoSuspendNear": "One more complainant suspends this account automatically",
+  "complaintsDismissedCount": "{count} dismissed",
+  "@complaintsDismissedCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
 }

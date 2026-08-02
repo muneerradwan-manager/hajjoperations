@@ -13,6 +13,7 @@ import '../../../core/widgets/profile_hero.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
+import '../../complaints/presentation/widgets/complaints_against_section.dart';
 import '../domain/profile.dart';
 import 'profile_completion_screen.dart';
 import 'widgets/change_email_sheet.dart';
@@ -124,6 +125,12 @@ class MyProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.lg),
               _PermissionsCard(session: context.watch<SessionCubit>().state),
+              // What is being said about him, at the foot of his own page — the
+              // words and the files and the way to answer them, and never the
+              // name of whoever filed it. This is the only door in the app that
+              // hands a man his own case.
+              const SizedBox(height: AppSpacing.lg),
+              const ComplaintsAgainstSection(),
             ];
 
             Future<void> refresh() => context.read<SessionCubit>().reload();
