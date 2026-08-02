@@ -8,6 +8,7 @@ import '../data/prayer_times_repository.dart';
 import '../domain/prayer_day.dart';
 import '../domain/prayer_fix.dart';
 import '../domain/prayer_place.dart';
+import 'prayer_scheduler.dart';
 
 class PrayerTimesState extends Equatable {
   const PrayerTimesState({
@@ -186,6 +187,14 @@ class PrayerTimesCubit extends SafeCubit<PrayerTimesState> {
       locating: false,
       outcome: result.outcome,
     );
+
+    // The times just moved, which means every alarm laid down for the next week
+    // is for the wrong place — by minutes after a walk across Makkah, by half
+    // an hour after a flight. The scheduler reads the new fix back off disk
+    // (the repository has already written it there) and re-lays both the alarms
+    // and the home-screen widget. Unawaited: nothing on this screen waits for
+    // it, and it is guarded against its own failures.
+    unawaited(PrayerScheduler.instance.refresh());
     return result.outcome;
   }
 

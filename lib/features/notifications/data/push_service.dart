@@ -9,6 +9,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/logging/app_logger.dart';
+import '../../../core/notifications/local_notifications.dart';
 import '../../../core/supabase/supabase_client.dart';
 import 'notifications_repository.dart';
 
@@ -32,7 +33,10 @@ class PushService {
   PushService._();
   static final instance = PushService._();
 
-  final _local = FlutterLocalNotificationsPlugin();
+  /// Shared with the prayer alarms. See [LocalNotifications] for why this is
+  /// not a plugin instance of its own — there is no such thing.
+  final _local = LocalNotifications.instance;
+
   bool _started = false;
   Future<void>? _starting;
 
@@ -118,19 +122,17 @@ class PushService {
   Future<void> _initialize() async {
     await FirebaseMessaging.instance.requestPermission();
 
-    await _local.initialize(
-      settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-      ),
-      // The notification raised while the app is in front is a LOCAL one, shown
-      // by this service rather than by the system, so Firebase never hears it
-      // being tapped. Without this it was the one notification in the app that
-      // did nothing at all when pressed.
-      onDidReceiveNotificationResponse: (response) => _tappedLocal(
-        response.payload,
-      ),
-    );
-    await _local
+    // The notification raised while the app is in front is a LOCAL one, shown
+    // by this service rather than by the system, so Firebase never hears it
+    // being tapped. Without this it was the one notification in the app that
+    // did nothing at all when pressed.
+    //
+    // Registered BEFORE `ensureReady` so that a cold start from a tap finds
+    // this handler already in the chain — see [LocalNotifications.onTap].
+    _local.onTap(_claimTap);
+    await _local.ensureReady();
+
+    await _local.plugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >()
@@ -153,12 +155,9 @@ class PushService {
     if (launch != null) _tapped(launch.data);
     //   * the app was not running at all and a LOCAL notification's tap
     //     started it — one this service showed while foregrounded, tapped
-    //     after the app was later killed. Firebase never heard of it, so it is
-    //     the local plugin that has to be asked.
-    final localLaunch = await _local.getNotificationAppLaunchDetails();
-    if (localLaunch?.didNotificationLaunchApp ?? false) {
-      _tappedLocal(localLaunch!.notificationResponse?.payload);
-    }
+    //     after the app was later killed. Firebase never heard of it, and it is
+    //     [LocalNotifications] that holds that payload until the handler
+    //     registered above claims it, which happens inside `ensureReady`.
 
     // Only now, with everything above it done: a failure anywhere before this
     // line leaves the service unstarted, so the next `start()` tries again.
@@ -168,15 +167,22 @@ class PushService {
     await syncTopics();
   }
 
-  /// A tap on a notification this service itself showed, whatever route it
-  /// arrived by: pressed while the app lived, or the tap that launched it.
-  void _tappedLocal(String? payload) {
-    if (payload == null || payload.isEmpty) return;
+  /// A tap on a local notification, offered to this service first.
+  ///
+  /// Only the ones this service wrote are claimed, and it knows them by their
+  /// shape: a push payload is `jsonEncode(message.data)`, always a JSON object.
+  /// Anything else belongs to somebody else — the prayer alarms write a bare
+  /// marker string — and declining it is what lets that tap reach its owner
+  /// instead of dumping the reader in an inbox that has nothing to do with it.
+  bool _claimTap(String? payload) {
+    if (payload == null || payload.isEmpty) return false;
     try {
-      _tapped(jsonDecode(payload) as Map<String, dynamic>);
+      final data = jsonDecode(payload);
+      if (data is! Map<String, dynamic>) return false;
+      _tapped(data);
+      return true;
     } catch (_) {
-      // A payload we did not write. Opening the inbox is still right.
-      _tapped(const {});
+      return false;
     }
   }
 
@@ -293,7 +299,7 @@ class PushService {
   void _showForeground(RemoteMessage message) {
     final n = message.notification;
     if (n == null) return;
-    _local.show(
+    _local.plugin.show(
       id: n.hashCode,
       title: n.title,
       body: n.body,

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The home-screen widget's palette, on a light home screen.
+
+    These are the app's own brand values copied out of lib/core/theme —
+    AppColors and the Accent pairs — because the widget is drawn by Android and
+    cannot read a Dart file. The names below are the Flutter names, so that the
+    two can be compared line by line when the palette changes:
+
+        bg      AppColors.paperTop
+        ink     AppColors.ink
+        muted   AppColors.hintStrong
+        green   Accent.green.onLight
+        gold    Accent.gold.onLight
+-->
+<resources>
+    <color name="prayer_widget_bg">#F3F0EB</color>
+    <color name="prayer_widget_ink">#001614</color>
+    <color name="prayer_widget_muted">#5E5E5E</color>
+    <color name="prayer_widget_green">#1C7068</color>
+    <color name="prayer_widget_gold">#6D6445</color>
+    <!-- The wash behind the prayer whose time is open. -->
+    <color name="prayer_widget_green_wash">#241C7068</color>
+</resources>

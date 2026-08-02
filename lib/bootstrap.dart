@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -13,6 +15,7 @@ import 'core/logging/logging_http_client.dart';
 import 'core/logging/error_reporting.dart';
 import 'core/supabase/secure_session_storage.dart';
 import 'features/notifications/data/push_service.dart';
+import 'features/prayer_times/application/prayer_scheduler.dart';
 import 'firebase_options.dart';
 
 /// Result of app initialization, passed into the widget tree.
@@ -115,6 +118,13 @@ Future<AppDependencies> bootstrap() async {
   PushService.firebaseInit = _initFirebaseIfConfigured();
 
   final prefs = await prefsFuture;
+
+  // Unawaited, and after the last thing the first frame depends on. The prayer
+  // alarms sitting in Android's scheduler run out after a week and the times on
+  // the home-screen widget go with them, so every start-up re-lays both —
+  // which is a platform-channel round trip and a few dozen astronomy
+  // calculations, and there is no reason for a splash screen to wait on it.
+  unawaited(PrayerScheduler.instance.refresh());
 
   return AppDependencies(prefs: prefs);
 }

@@ -10,6 +10,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../core/supabase/supabase_client.dart';
 import '../../notifications/data/push_service.dart';
+import '../../prayer_times/application/prayer_scheduler.dart';
 import '../domain/saved_account.dart';
 import 'saved_accounts_store.dart';
 
@@ -309,6 +310,11 @@ class AuthRepository {
       const Duration(seconds: 4),
       onTimeout: () {},
     );
+    // The prayer alarms are local and would otherwise outlive the account that
+    // asked for them: seventy of them, laid down in Android's own scheduler,
+    // going off for a week in a phone that has been handed to somebody else.
+    // The times on the widget stay — they are astronomy, not anybody's data.
+    await PrayerScheduler.instance.stop();
     if (uid != null) await _accounts.forget(uid);
 
     try {

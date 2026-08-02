@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/bloc/safe_cubit.dart';
 import '../../features/notifications/data/push_service.dart';
+import '../../features/prayer_times/application/prayer_scheduler.dart';
 
 class SettingsState extends Equatable {
   const SettingsState({
@@ -52,7 +53,12 @@ class SettingsCubit extends SafeCubit<SettingsState> {
   final SharedPreferences _prefs;
 
   static const _kTheme = 'settings.themeMode';
-  static const _kLocale = 'settings.locale';
+
+  /// Public because the prayer scheduler reads it too: a notification raised
+  /// while the app is closed has no cubit to ask what language to speak, and
+  /// the choice made here is the one it must honour.
+  static const localeKey = 'settings.locale';
+
   static const _kNotifications = 'settings.notifications';
 
   static ThemeMode _readThemeMode(SharedPreferences p) =>
@@ -63,7 +69,7 @@ class SettingsCubit extends SafeCubit<SettingsState> {
       };
 
   static Locale? _readLocale(SharedPreferences p) {
-    final code = p.getString(_kLocale);
+    final code = p.getString(localeKey);
     return code == null ? null : Locale(code);
   }
 
@@ -87,9 +93,15 @@ class SettingsCubit extends SafeCubit<SettingsState> {
   Future<void> setLocale(Locale? locale) async {
     emit(state.copyWith(locale: locale, clearLocale: locale == null));
     if (locale == null) {
-      await _prefs.remove(_kLocale);
+      await _prefs.remove(localeKey);
     } else {
-      await _prefs.setString(_kLocale, locale.languageCode);
+      await _prefs.setString(localeKey, locale.languageCode);
     }
+    // The screen re-renders itself; the two things OUTSIDE it do not. A week of
+    // prayer alarms and the home-screen widget both carry finished sentences,
+    // written in whichever language was chosen when they were laid down, and
+    // they would go on saying "Fajr is now due" in an app that had been Arabic
+    // for a month. So they are written again, in the new language.
+    await PrayerScheduler.instance.refresh();
   }
 }

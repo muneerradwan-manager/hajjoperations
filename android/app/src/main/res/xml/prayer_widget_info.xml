@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    updatePeriodMillis is 0 on purpose. Android's own widget refresh cannot be
+    asked for anything under thirty minutes, and it wakes the device to deliver
+    it — which for this widget would be both too coarse and too expensive: the
+    countdown is a Chronometer, so it runs on its own with no process alive at
+    all, and the only moments the rest of the face has to change are the six
+    marks of the day. The provider sets an alarm for exactly those. See
+    PrayerWidgetProvider.scheduleBoundary.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="250dp"
+    android:minHeight="110dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
+    android:minResizeWidth="180dp"
+    android:minResizeHeight="80dp"
+    android:resizeMode="horizontal|vertical"
+    android:widgetCategory="home_screen"
+    android:initialLayout="@layout/prayer_widget"
+    android:previewLayout="@layout/prayer_widget"
+    android:description="@string/prayer_widget_description"
+    android:updatePeriodMillis="0" />

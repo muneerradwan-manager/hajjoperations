@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    مواقيت الصلاة on the home screen, laid out left to right.
+
+    There is a second copy of this file, prayer_widget_rtl.xml, identical but
+    for android:layoutDirection on the two containers. That duplication is
+    deliberate. A widget is drawn by the LAUNCHER's process, in the LAUNCHER's
+    locale, and this app's language is its own choice — somebody running it in
+    Arabic on an English phone must not get the strip built backwards. The
+    direction is not something RemoteViews can set at runtime
+    (View.setLayoutDirection is not a remotable method), so it is baked into two
+    layouts and the provider picks one. Any change here belongs in both.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/prayer_widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layoutDirection="ltr"
+    android:orientation="vertical"
+    android:background="@drawable/prayer_widget_bg"
+    android:padding="14dp">
+
+    <!-- What is being counted down to, and where the times are for. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/prayer_widget_label"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textSize="11sp"
+            android:textColor="@color/prayer_widget_muted" />
+
+        <TextView
+            android:id="@+id/prayer_widget_place"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textSize="11sp"
+            android:textColor="@color/prayer_widget_green" />
+    </LinearLayout>
+
+    <!-- The coming prayer, and how long is left of the one that is open. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/prayer_widget_next"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="@color/prayer_widget_ink" />
+
+        <Chronometer
+            android:id="@+id/prayer_widget_countdown"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:fontFeatureSettings="tnum"
+            android:textColor="@color/prayer_widget_gold" />
+    </LinearLayout>
+
+    <!-- The six marks of the day. Filled by the provider, one child per mark. -->
+    <LinearLayout
+        android:id="@+id/prayer_widget_strip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layoutDirection="ltr"
+        android:orientation="horizontal" />
+
+    <!-- Only ever visible when there is something to admit: no prayer is due,
+         or the times on this widget have run out. -->
+    <TextView
+        android:id="@+id/prayer_widget_notice"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:textSize="11sp"
+        android:textColor="@color/prayer_widget_muted"
+        android:visibility="gone" />
+</LinearLayout>

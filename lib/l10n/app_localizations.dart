@@ -3950,6 +3950,150 @@ abstract class AppLocalizations {
   /// **'Jeddah'**
   String get prayerPlaceJeddah;
 
+  /// No description provided for @prayerAlertsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer alerts'**
+  String get prayerAlertsTitle;
+
+  /// No description provided for @prayerAlertsEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Announce the prayers'**
+  String get prayerAlertsEnable;
+
+  /// No description provided for @prayerAlertsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone alone. Times are worked out on the device from where it is standing — nothing is sent from a server.'**
+  String get prayerAlertsHint;
+
+  /// No description provided for @prayerAlertsWhich.
+  ///
+  /// In en, this message translates to:
+  /// **'Which prayers'**
+  String get prayerAlertsWhich;
+
+  /// No description provided for @prayerAlertsBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning before the call'**
+  String get prayerAlertsBefore;
+
+  /// No description provided for @prayerAlertsBeforeOff.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get prayerAlertsBeforeOff;
+
+  /// No description provided for @prayerAlertsMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min'**
+  String prayerAlertsMinutes(int count);
+
+  /// No description provided for @prayerAlertsSilent.
+  ///
+  /// In en, this message translates to:
+  /// **'Without a sound'**
+  String get prayerAlertsSilent;
+
+  /// No description provided for @prayerAlertsSilentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'It still appears and still vibrates.'**
+  String get prayerAlertsSilentHint;
+
+  /// No description provided for @prayerAlertsBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are switched off for this app in the system settings.'**
+  String get prayerAlertsBlocked;
+
+  /// No description provided for @prayerAlertsInexact.
+  ///
+  /// In en, this message translates to:
+  /// **'Android may hold these back by several minutes. Allow exact alarms so each call arrives on the minute.'**
+  String get prayerAlertsInexact;
+
+  /// No description provided for @prayerAlertsGrantExact.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow exact alarms'**
+  String get prayerAlertsGrantExact;
+
+  /// No description provided for @prayerAlertsNeedLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your location on the prayer card first — nothing is announced from an approximate position.'**
+  String get prayerAlertsNeedLocation;
+
+  /// No description provided for @prayerAlertsUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer alerts are an Android feature.'**
+  String get prayerAlertsUnsupported;
+
+  /// No description provided for @prayerAlertNow.
+  ///
+  /// In en, this message translates to:
+  /// **'{prayer} is now due'**
+  String prayerAlertNow(String prayer);
+
+  /// No description provided for @prayerAlertNowBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The call is at {clock}'**
+  String prayerAlertNowBody(String clock);
+
+  /// No description provided for @prayerAlertBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'{prayer} in {count} minutes'**
+  String prayerAlertBefore(String prayer, int count);
+
+  /// No description provided for @prayerAlertBeforeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The call is at {clock}'**
+  String prayerAlertBeforeBody(String clock);
+
+  /// No description provided for @prayerWidgetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Home screen'**
+  String get prayerWidgetTitle;
+
+  /// No description provided for @prayerWidgetHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The next prayer and its countdown, on the phone\'s home screen — without opening the app.'**
+  String get prayerWidgetHint;
+
+  /// No description provided for @prayerWidgetAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to home screen'**
+  String get prayerWidgetAdd;
+
+  /// No description provided for @prayerWidgetAddManually.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press an empty spot on the home screen, choose Widgets, and pick this app.'**
+  String get prayerWidgetAddManually;
+
+  /// No description provided for @prayerWidgetInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Not added yet} =1{Added} other{Added, {count} copies}}'**
+  String prayerWidgetInstalled(int count);
+
+  /// No description provided for @prayerWidgetStale.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the app to refresh the times'**
+  String get prayerWidgetStale;
+
   /// No description provided for @navMyComplaints.
   ///
   /// In en, this message translates to:

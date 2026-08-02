@@ -115,6 +115,11 @@ class AppIcons {
   // Notifications
   static const notifications = Iconsax.notification;
 
+  /// Something the reader has to do before a thing they switched on will work
+  /// — a permission ungranted, a position unknown. Not an error: nothing has
+  /// gone wrong, and the sentence beside this icon always says what fixes it.
+  static const warning = Iconsax.danger;
+
   // Seasons
   static const seasons = Iconsax.calendar_1;
   static const participants = Iconsax.people;

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    One mark in the strip: its name and its time.
+
+    Added to the strip one at a time by the provider rather than written six
+    times into the parent layout — RemoteViews.addView gives each cell its own
+    view hierarchy, so all six can share these ids without colliding, and the
+    strip is free to hold five, six or none.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/prayer_widget_cell"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:paddingTop="5dp"
+    android:paddingBottom="5dp"
+    android:layout_marginStart="1dp"
+    android:layout_marginEnd="1dp">
+
+    <TextView
+        android:id="@+id/prayer_widget_cell_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textSize="10sp"
+        android:textColor="@color/prayer_widget_muted" />
+
+    <TextView
+        android:id="@+id/prayer_widget_cell_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:maxLines="1"
+        android:textSize="12sp"
+        android:fontFeatureSettings="tnum"
+        android:textColor="@color/prayer_widget_ink" />
+</LinearLayout>

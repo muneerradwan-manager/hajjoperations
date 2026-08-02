@@ -16,6 +16,7 @@ import '../../../core/widgets/selection_indicator.dart';
 import '../../auth/data/auth_repository.dart';
 import '../../auth/domain/saved_account.dart';
 import '../../auth/presentation/widgets/saved_accounts_list.dart';
+import '../../prayer_times/presentation/widgets/prayer_alerts_section.dart';
 
 /// Everything about this device rather than about the mission: which language
 /// it speaks, how it looks, whether it makes a noise, and the way out.
@@ -112,27 +113,24 @@ class SettingsScreen extends StatelessWidget {
                     title: l.navNotifications,
                     icon: AppIcons.notifications,
                     children: [
-                      SwitchListTile(
+                      _NotificationsSwitch(
                         value: state.notificationsEnabled,
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(l.settingsNotifications),
-                        // Said plainly, because the switch does less than it
-                        // looks like it does: the message still arrives, the
-                        // phone just stays quiet about it.
-                        subtitle: Text(
-                          l.settingsNotificationsHint,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                        ),
                         onChanged: settings.setNotificationsEnabled,
                       ),
                     ],
                   ),
                 ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              // The prayer panes, in the same first column as the accounts
+              // below them. They are a column of their own rather than two more
+              // cells of the grid above because the second one only makes sense
+              // under the first, and a grid is free to put them on separate
+              // rows a screen apart.
+              const AdaptiveGrid(
+                minTileWidth: 320,
+                maxColumns: 3,
+                children: [PrayerAlertsSections()],
               ),
               const SizedBox(height: AppSpacing.lg),
               // Alone on its row, but measured by the same grid as the panes
@@ -282,6 +280,60 @@ class _AccountsSectionState extends State<_AccountsSection> {
 
 /// One option in a group. Language and theme each take a single answer, so the
 /// indicator is round and only one of them is ever filled.
+/// The notifications switch, written as a plain row rather than as a
+/// [SwitchListTile].
+///
+/// A ListTile measures its title and subtitle at the tile's FULL width and then
+/// lays them out at the width the trailing switch leaves over — so the hint
+/// wraps to one more line than the measurement allowed for. Inside the settings
+/// grid, where the three panes are given a shared height taken from exactly that
+/// measurement, the pane then overflows by those few pixels. Here the switch is
+/// an inflexible child of the row, so both passes see the same text width.
+class _NotificationsSwitch extends StatelessWidget {
+  const _NotificationsSwitch({required this.value, required this.onChanged});
+
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final theme = Theme.of(context);
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppRadius.sm),
+      onTap: () => onChanged(!value),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l.settingsNotifications, style: theme.textTheme.bodyLarge),
+                  const SizedBox(height: 3),
+                  // Said plainly, because the switch does less than it looks
+                  // like it does: the message still arrives, the phone just
+                  // stays quiet about it.
+                  Text(
+                    l.settingsNotificationsHint,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Switch(value: value, onChanged: onChanged),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _Choice extends StatelessWidget {
   const _Choice({
     required this.label,

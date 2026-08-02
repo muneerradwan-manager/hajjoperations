@@ -2143,6 +2143,103 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prayerPlaceJeddah => 'Jeddah';
 
   @override
+  String get prayerAlertsTitle => 'Prayer alerts';
+
+  @override
+  String get prayerAlertsEnable => 'Announce the prayers';
+
+  @override
+  String get prayerAlertsHint =>
+      'This phone alone. Times are worked out on the device from where it is standing — nothing is sent from a server.';
+
+  @override
+  String get prayerAlertsWhich => 'Which prayers';
+
+  @override
+  String get prayerAlertsBefore => 'Warning before the call';
+
+  @override
+  String get prayerAlertsBeforeOff => 'None';
+
+  @override
+  String prayerAlertsMinutes(int count) {
+    return '$count min';
+  }
+
+  @override
+  String get prayerAlertsSilent => 'Without a sound';
+
+  @override
+  String get prayerAlertsSilentHint => 'It still appears and still vibrates.';
+
+  @override
+  String get prayerAlertsBlocked =>
+      'Notifications are switched off for this app in the system settings.';
+
+  @override
+  String get prayerAlertsInexact =>
+      'Android may hold these back by several minutes. Allow exact alarms so each call arrives on the minute.';
+
+  @override
+  String get prayerAlertsGrantExact => 'Allow exact alarms';
+
+  @override
+  String get prayerAlertsNeedLocation =>
+      'Set your location on the prayer card first — nothing is announced from an approximate position.';
+
+  @override
+  String get prayerAlertsUnsupported => 'Prayer alerts are an Android feature.';
+
+  @override
+  String prayerAlertNow(String prayer) {
+    return '$prayer is now due';
+  }
+
+  @override
+  String prayerAlertNowBody(String clock) {
+    return 'The call is at $clock';
+  }
+
+  @override
+  String prayerAlertBefore(String prayer, int count) {
+    return '$prayer in $count minutes';
+  }
+
+  @override
+  String prayerAlertBeforeBody(String clock) {
+    return 'The call is at $clock';
+  }
+
+  @override
+  String get prayerWidgetTitle => 'Home screen';
+
+  @override
+  String get prayerWidgetHint =>
+      'The next prayer and its countdown, on the phone\'s home screen — without opening the app.';
+
+  @override
+  String get prayerWidgetAdd => 'Add to home screen';
+
+  @override
+  String get prayerWidgetAddManually =>
+      'Long-press an empty spot on the home screen, choose Widgets, and pick this app.';
+
+  @override
+  String prayerWidgetInstalled(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Added, $count copies',
+      one: 'Added',
+      zero: 'Not added yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get prayerWidgetStale => 'Open the app to refresh the times';
+
+  @override
   String get navMyComplaints => 'My complaints';
 
   @override

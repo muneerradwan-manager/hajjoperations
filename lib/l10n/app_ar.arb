@@ -751,6 +751,62 @@
   "prayerPlaceMadinah": "المدينة المنورة",
   "prayerPlaceJeddah": "جدة",
 
+  "prayerAlertsTitle": "تنبيهات الصلاة",
+  "prayerAlertsEnable": "التنبيه لأوقات الصلاة",
+  "prayerAlertsHint": "على هذا الجهاز وحده. تُحسب المواقيت داخل الجهاز من موقعه، ولا يُرسل شيء من الخادم.",
+  "prayerAlertsWhich": "الصلوات المُنبَّه لها",
+  "prayerAlertsBefore": "تنبيه قبل الأذان",
+  "prayerAlertsBeforeOff": "بدون",
+  "prayerAlertsMinutes": "{count} دقيقة",
+  "@prayerAlertsMinutes": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "prayerAlertsSilent": "بلا صوت",
+  "prayerAlertsSilentHint": "يظهر التنبيه ويهتز الجهاز كالمعتاد.",
+  "prayerAlertsBlocked": "الإشعارات موقوفة لهذا التطبيق في إعدادات النظام.",
+  "prayerAlertsInexact": "قد يؤخّر أندرويد التنبيه دقائق. اسمح بالمنبّهات الدقيقة ليصل كل أذان في وقته.",
+  "prayerAlertsGrantExact": "السماح بالمنبّهات الدقيقة",
+  "prayerAlertsNeedLocation": "حدِّد موقعك من بطاقة المواقيت أولاً — لا يُنبَّه لموقع تقريبي.",
+  "prayerAlertsUnsupported": "تنبيهات الصلاة متاحة على أندرويد.",
+  "prayerAlertNow": "حان الآن وقت {prayer}",
+  "@prayerAlertNow": {
+    "placeholders": {
+      "prayer": { "type": "String" }
+    }
+  },
+  "prayerAlertNowBody": "الأذان الساعة {clock}",
+  "@prayerAlertNowBody": {
+    "placeholders": {
+      "clock": { "type": "String" }
+    }
+  },
+  "prayerAlertBefore": "{prayer} بعد {count} دقيقة",
+  "@prayerAlertBefore": {
+    "placeholders": {
+      "prayer": { "type": "String" },
+      "count": { "type": "int" }
+    }
+  },
+  "prayerAlertBeforeBody": "الأذان الساعة {clock}",
+  "@prayerAlertBeforeBody": {
+    "placeholders": {
+      "clock": { "type": "String" }
+    }
+  },
+  "prayerWidgetTitle": "الشاشة الرئيسية",
+  "prayerWidgetHint": "الصلاة القادمة والوقت المتبقي لها على شاشة الهاتف الرئيسية، دون فتح التطبيق.",
+  "prayerWidgetAdd": "إضافة إلى الشاشة الرئيسية",
+  "prayerWidgetAddManually": "اضغط مطوّلاً على مكان فارغ في الشاشة الرئيسية، ثم «الأدوات»، ثم اختر هذا التطبيق.",
+  "prayerWidgetInstalled": "{count, plural, =0{لم تُضَف بعد} =1{مُضافة} other{مُضافة، {count} نسخ}}",
+  "@prayerWidgetInstalled": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "prayerWidgetStale": "افتح التطبيق لتحديث المواقيت",
+
   "navMyComplaints": "شكاواي",
   "navMyComplaintsSubtitle": "ما قدَّمتَه، وما ردّ به عليه",
   "navComplaints": "الشكاوى",

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The same widget on a dark home screen. See values/colors.xml for what each
+    name is in the Flutter palette; this file is the `onDark` half of every
+    pair:
+
+        bg      AppColors.nightMid
+        ink     AppColors.inkInverse
+        muted   AppColors.hint
+        green   Accent.green.onDark   (AppColors.lightGreen)
+        gold    Accent.gold.onDark    (AppColors.darkGold)
+-->
+<resources>
+    <color name="prayer_widget_bg">#001613</color>
+    <color name="prayer_widget_ink">#F6F3F0</color>
+    <color name="prayer_widget_muted">#8A8A8A</color>
+    <color name="prayer_widget_green">#289E92</color>
+    <color name="prayer_widget_gold">#AD9E6E</color>
+    <color name="prayer_widget_green_wash">#33289E92</color>
+</resources>

@@ -2140,6 +2140,103 @@ class AppLocalizationsAr extends AppLocalizations {
   String get prayerPlaceJeddah => 'جدة';
 
   @override
+  String get prayerAlertsTitle => 'تنبيهات الصلاة';
+
+  @override
+  String get prayerAlertsEnable => 'التنبيه لأوقات الصلاة';
+
+  @override
+  String get prayerAlertsHint =>
+      'على هذا الجهاز وحده. تُحسب المواقيت داخل الجهاز من موقعه، ولا يُرسل شيء من الخادم.';
+
+  @override
+  String get prayerAlertsWhich => 'الصلوات المُنبَّه لها';
+
+  @override
+  String get prayerAlertsBefore => 'تنبيه قبل الأذان';
+
+  @override
+  String get prayerAlertsBeforeOff => 'بدون';
+
+  @override
+  String prayerAlertsMinutes(int count) {
+    return '$count دقيقة';
+  }
+
+  @override
+  String get prayerAlertsSilent => 'بلا صوت';
+
+  @override
+  String get prayerAlertsSilentHint => 'يظهر التنبيه ويهتز الجهاز كالمعتاد.';
+
+  @override
+  String get prayerAlertsBlocked =>
+      'الإشعارات موقوفة لهذا التطبيق في إعدادات النظام.';
+
+  @override
+  String get prayerAlertsInexact =>
+      'قد يؤخّر أندرويد التنبيه دقائق. اسمح بالمنبّهات الدقيقة ليصل كل أذان في وقته.';
+
+  @override
+  String get prayerAlertsGrantExact => 'السماح بالمنبّهات الدقيقة';
+
+  @override
+  String get prayerAlertsNeedLocation =>
+      'حدِّد موقعك من بطاقة المواقيت أولاً — لا يُنبَّه لموقع تقريبي.';
+
+  @override
+  String get prayerAlertsUnsupported => 'تنبيهات الصلاة متاحة على أندرويد.';
+
+  @override
+  String prayerAlertNow(String prayer) {
+    return 'حان الآن وقت $prayer';
+  }
+
+  @override
+  String prayerAlertNowBody(String clock) {
+    return 'الأذان الساعة $clock';
+  }
+
+  @override
+  String prayerAlertBefore(String prayer, int count) {
+    return '$prayer بعد $count دقيقة';
+  }
+
+  @override
+  String prayerAlertBeforeBody(String clock) {
+    return 'الأذان الساعة $clock';
+  }
+
+  @override
+  String get prayerWidgetTitle => 'الشاشة الرئيسية';
+
+  @override
+  String get prayerWidgetHint =>
+      'الصلاة القادمة والوقت المتبقي لها على شاشة الهاتف الرئيسية، دون فتح التطبيق.';
+
+  @override
+  String get prayerWidgetAdd => 'إضافة إلى الشاشة الرئيسية';
+
+  @override
+  String get prayerWidgetAddManually =>
+      'اضغط مطوّلاً على مكان فارغ في الشاشة الرئيسية، ثم «الأدوات»، ثم اختر هذا التطبيق.';
+
+  @override
+  String prayerWidgetInstalled(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'مُضافة، $count نسخ',
+      one: 'مُضافة',
+      zero: 'لم تُضَف بعد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get prayerWidgetStale => 'افتح التطبيق لتحديث المواقيت';
+
+  @override
   String get navMyComplaints => 'شكاواي';
 
   @override
