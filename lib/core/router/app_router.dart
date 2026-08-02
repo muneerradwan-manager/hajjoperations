@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/application/session_cubit.dart';
 import '../../features/approval/presentation/approval_queue_screen.dart';
+import '../../features/audit/presentation/audit_log_screen.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/dashboard/presentation/dashboard_screen.dart';
@@ -49,6 +50,7 @@ abstract class Routes {
   static const referenceData = '/reference-data';
   static const settings = '/settings';
   static const dashboard = '/dashboard';
+  static const auditLog = '/audit-log';
 }
 
 /// What each administered section asks of whoever tries to open it.
@@ -81,6 +83,7 @@ final sectionGuards = <String, bool Function(SessionState)>{
   Routes.approvals: (s) => s.can(PermissionCodes.approvalsView),
   Routes.permissions: (s) => s.can(PermissionCodes.permissionsView),
   Routes.referenceData: (s) => s.can(PermissionCodes.referenceView),
+  Routes.auditLog: (s) => s.can(PermissionCodes.auditView),
 };
 
 GoRouter buildRouter(SessionCubit session) {
@@ -271,6 +274,11 @@ GoRouter buildRouter(SessionCubit session) {
         path: Routes.referenceData,
         pageBuilder: (c, s) =>
             fadeThroughPage(key: s.pageKey, child: const ReferenceDataScreen()),
+      ),
+      GoRoute(
+        path: Routes.auditLog,
+        pageBuilder: (c, s) =>
+            fadeThroughPage(key: s.pageKey, child: const AuditLogScreen()),
       ),
       GoRoute(
         path: Routes.myProfile,

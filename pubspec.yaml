@@ -41,6 +41,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
+  msix: ^3.16.12
 
 flutter:
   uses-material-design: true
@@ -69,3 +70,17 @@ flutter_launcher_icons:
     generate: true
     image_path: assets/images/app_icon.png
     icon_size: 256
+
+# Microsoft Store packaging (dart run msix:create --store)
+# identity_name / publisher / publisher_display_name MUST match
+# Partner Center -> your app -> Product management -> Product identity.
+msix_config:
+  display_name: Hajj Operations
+  publisher_display_name: TODO_FROM_PARTNER_CENTER # Package/Properties/PublisherDisplayName
+  identity_name: TODO_FROM_PARTNER_CENTER # Package/Identity/Name
+  publisher: TODO_FROM_PARTNER_CENTER # Package/Identity/Publisher (CN=...)
+  msix_version: 0.1.0.0
+  logo_path: assets/images/app_icon.png
+  languages: ar, en
+  capabilities: internetClient, location, webcam, microphone
+  store: true

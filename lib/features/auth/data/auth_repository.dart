@@ -88,6 +88,7 @@ class AuthRepository {
         email: email.trim(),
         password: password,
       );
+      unawaited(_logAuthEvent('login'));
     } on AuthException catch (e) {
       throw AuthFailure(e.message);
     }
@@ -113,6 +114,7 @@ class AuthRepository {
         provider: OAuthProvider.google,
         idToken: idToken,
       );
+      unawaited(_logAuthEvent('login'));
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
         throw AuthFailure('cancelled');
@@ -186,6 +188,21 @@ class AuthRepository {
     }
   }
 
+  /// Writes a sign-in or sign-out line into the audit log.
+  ///
+  /// Sessions live in the auth schema, where the database's own audit
+  /// triggers cannot see them, so the app reports these two events itself.
+  /// Best-effort by construction: failing to log must never fail the door.
+  Future<void> _logAuthEvent(String event) async {
+    try {
+      await supabase
+          .rpc('log_auth_event', params: {'p_event': event})
+          .timeout(const Duration(seconds: 5));
+    } catch (_) {
+      // The event is lost, the sign-in/out is not.
+    }
+  }
+
   /// Records the account that is signed in now, so it can be reopened later
   /// with a tap instead of a password.
   ///
@@ -248,6 +265,7 @@ class AuthRepository {
 
     try {
       await supabase.auth.setSession(account.refreshToken);
+      unawaited(_logAuthEvent('login'));
     } on AuthException catch (e) {
       await _accounts.forget(account.userId);
       unawaited(PushService.instance.start());
@@ -282,6 +300,10 @@ class AuthRepository {
   /// password uses "switch account", which revokes nothing.
   Future<void> signOut() async {
     final uid = currentUser?.id;
+
+    // While the session still exists to sign the line. Awaited but bounded:
+    // it carries its own timeout, and a log must never hold the door shut.
+    await _logAuthEvent('logout');
 
     await PushService.instance.mute().timeout(
       const Duration(seconds: 4),

@@ -28,6 +28,14 @@ class AppIcons {
     matchTextDirection: true,
   );
 
+  /// Iconsax.login — the mirror of [logout], mirrored for the same reason.
+  static const login = IconData(
+    0xed37,
+    fontFamily: _iconsaxFont,
+    fontPackage: _iconsaxPackage,
+    matchTextDirection: true,
+  );
+
   /// Iconsax.send_2
   static const send = IconData(
     0xef3d,
@@ -162,6 +170,9 @@ class AppIcons {
 
   // Brand
   static const brand = Iconsax.moon;
+
+  // ── The record of what happened ─────────────────────────────────────────
+  static const auditLog = Iconsax.activity;
 
   // ── The season from above ───────────────────────────────────────────────
   static const dashboard = Iconsax.chart_2;

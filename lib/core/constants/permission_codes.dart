@@ -84,4 +84,9 @@ class PermissionCodes {
   // ------------------------------------------------------------ permissions
   static const permissionsView = 'permissions.view';
   static const permissionsManage = 'permissions.manage';
+
+  // ------------------------------------------------------------------ audit
+  /// Reading the record of who did what. Reading only — the log has no write
+  /// permission at all: rows are written by the database's own triggers.
+  static const auditView = 'audit.view';
 }

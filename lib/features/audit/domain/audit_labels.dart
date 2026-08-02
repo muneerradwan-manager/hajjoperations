@@ -1,0 +1,324 @@
+import '../../../core/l10n/localized_name.dart';
+
+/// The Arabic (and English) the log speaks.
+///
+/// Table and column names are code, not content: they live in neither the ARB
+/// files (they are not app chrome) nor the database (they ARE the database).
+/// So the dictionary that turns `module_node_members.profile_id` into
+/// "عضو قطاع — الموظف" lives here, beside the feature that reads it, as
+/// [LocalizedName]s resolved against the active locale.
+///
+/// Unknown names fall back to themselves: a table added by a future migration
+/// shows up raw rather than invisibly, which is the reminder to add its label.
+class AuditLabels {
+  const AuditLabels._();
+
+  /// The filter's idea of a section: one label over the handful of tables the
+  /// reader thinks of as one thing. Order is display order.
+  static const groups = <AuditEntityGroup>[
+    AuditEntityGroup(
+      key: 'accounts',
+      name: LocalizedName(ar: 'الحسابات والدخول', en: 'Accounts & sign-ins'),
+      tables: ['auth'],
+    ),
+    AuditEntityGroup(
+      key: 'employees',
+      name: LocalizedName(ar: 'الموظفون', en: 'Employees'),
+      tables: ['profiles', 'job_titles'],
+    ),
+    AuditEntityGroup(
+      key: 'permissions',
+      name: LocalizedName(ar: 'الصلاحيات', en: 'Permissions'),
+      tables: ['user_permissions', 'permissions', 'permission_prerequisites'],
+    ),
+    AuditEntityGroup(
+      key: 'seasons',
+      name: LocalizedName(ar: 'المواسم', en: 'Seasons'),
+      tables: ['seasons', 'season_participants'],
+    ),
+    AuditEntityGroup(
+      key: 'modules',
+      name: LocalizedName(ar: 'الملفات التشغيلية', en: 'Operational files'),
+      tables: [
+        'modules',
+        'module_members',
+        'module_nodes',
+        'module_node_members',
+        'module_assigned_tasks',
+        'module_ratings',
+      ],
+    ),
+    AuditEntityGroup(
+      key: 'module_reports',
+      name: LocalizedName(ar: 'تقارير الملفات', en: 'File reports'),
+      tables: ['module_reports', 'module_report_attachments'],
+    ),
+    AuditEntityGroup(
+      key: 'reference',
+      name: LocalizedName(ar: 'البيانات المرجعية', en: 'Master data'),
+      tables: [
+        'reference_sets',
+        'reference_set_fields',
+        'reference_items',
+        'module_types',
+        'module_type_fields',
+        'module_type_roles',
+        'module_type_tasks',
+        'module_type_levels',
+        'module_type_task_groups',
+      ],
+    ),
+    AuditEntityGroup(
+      key: 'reports',
+      name: LocalizedName(ar: 'التقارير المركزية', en: 'Reports'),
+      tables: [
+        'reports',
+        'report_types',
+        'report_type_fields',
+        'report_type_columns',
+        'report_attachments',
+      ],
+    ),
+    AuditEntityGroup(
+      key: 'notifications',
+      name: LocalizedName(ar: 'الإشعارات', en: 'Notifications'),
+      tables: ['notifications', 'notification_attachments'],
+    ),
+    AuditEntityGroup(
+      key: 'storage',
+      name: LocalizedName(ar: 'الملفات المرفوعة', en: 'Uploaded files'),
+      tables: ['storage'],
+    ),
+  ];
+
+  /// What one row of each table IS, in the singular the card's subtitle needs.
+  static const _tables = <String, LocalizedName>{
+    'auth': LocalizedName(ar: 'الحساب والدخول', en: 'Account & sign-in'),
+    'profiles': LocalizedName(ar: 'موظف', en: 'Employee'),
+    'job_titles': LocalizedName(ar: 'مسمى وظيفي', en: 'Job title'),
+    'permissions': LocalizedName(ar: 'تعريف صلاحية', en: 'Permission'),
+    'user_permissions': LocalizedName(
+      ar: 'صلاحية ممنوحة',
+      en: 'Granted permission',
+    ),
+    'permission_prerequisites': LocalizedName(
+      ar: 'متطلب صلاحية',
+      en: 'Permission prerequisite',
+    ),
+    'seasons': LocalizedName(ar: 'موسم', en: 'Season'),
+    'season_participants': LocalizedName(
+      ar: 'مشارك في الموسم',
+      en: 'Season participant',
+    ),
+    'modules': LocalizedName(ar: 'ملف تشغيلي', en: 'Operational file'),
+    'module_members': LocalizedName(ar: 'عضو ملف', en: 'File member'),
+    'module_nodes': LocalizedName(
+      ar: 'عنصر في شجرة الملف',
+      en: 'File tree item',
+    ),
+    'module_node_members': LocalizedName(
+      ar: 'إسناد على قطاع',
+      en: 'Sector assignment',
+    ),
+    'module_assigned_tasks': LocalizedName(
+      ar: 'مهمة مسندة',
+      en: 'Assigned task',
+    ),
+    'module_ratings': LocalizedName(ar: 'تقييم', en: 'Rating'),
+    'module_reports': LocalizedName(ar: 'تقرير ملف', en: 'File report'),
+    'module_report_attachments': LocalizedName(
+      ar: 'مرفق تقرير ملف',
+      en: 'File report attachment',
+    ),
+    'reference_sets': LocalizedName(
+      ar: 'مجموعة بيانات مرجعية',
+      en: 'Master data set',
+    ),
+    'reference_set_fields': LocalizedName(
+      ar: 'حقل بيانات مرجعية',
+      en: 'Master data field',
+    ),
+    'reference_items': LocalizedName(
+      ar: 'عنصر بيانات مرجعية',
+      en: 'Master data item',
+    ),
+    'module_types': LocalizedName(ar: 'نوع ملف تشغيلي', en: 'File type'),
+    'module_type_fields': LocalizedName(
+      ar: 'حقل نوع ملف',
+      en: 'File type field',
+    ),
+    'module_type_roles': LocalizedName(ar: 'دور نوع ملف', en: 'File type role'),
+    'module_type_tasks': LocalizedName(ar: 'مهمة دور', en: 'Role task'),
+    'module_type_levels': LocalizedName(
+      ar: 'مستوى نوع ملف',
+      en: 'File type level',
+    ),
+    'module_type_task_groups': LocalizedName(
+      ar: 'مجموعة مهام',
+      en: 'Task group',
+    ),
+    'reports': LocalizedName(ar: 'تقرير مركزي', en: 'Report'),
+    'report_types': LocalizedName(ar: 'نوع تقرير', en: 'Report type'),
+    'report_type_fields': LocalizedName(
+      ar: 'حقل نوع تقرير',
+      en: 'Report type field',
+    ),
+    'report_type_columns': LocalizedName(
+      ar: 'عمود نوع تقرير',
+      en: 'Report type column',
+    ),
+    'report_attachments': LocalizedName(ar: 'مرفق تقرير', en: 'Report attachment'),
+    'notifications': LocalizedName(ar: 'إشعار', en: 'Notification'),
+    'notification_attachments': LocalizedName(
+      ar: 'مرفق إشعار',
+      en: 'Notification attachment',
+    ),
+    'storage': LocalizedName(ar: 'ملف مرفوع', en: 'Uploaded file'),
+  };
+
+  /// The account acts the Edge Functions and the auth RPC file under `auth`.
+  static const _authOps = <String, LocalizedName>{
+    'create_user': LocalizedName(ar: 'إنشاء حساب', en: 'Account created'),
+    'delete_user': LocalizedName(ar: 'حذف حساب', en: 'Account deleted'),
+    'set_password': LocalizedName(
+      ar: 'إعادة تعيين كلمة المرور',
+      en: 'Password reset',
+    ),
+    'set_email': LocalizedName(
+      ar: 'تغيير البريد الإلكتروني',
+      en: 'Email changed',
+    ),
+  };
+
+  /// Column labels, shared across tables: `name_ar` means the same thing on a
+  /// module type as on a master-data item, so one dictionary serves them all.
+  static const _fields = <String, LocalizedName>{
+    // People
+    'first_name': LocalizedName(ar: 'الاسم الأول', en: 'First name'),
+    'father_name': LocalizedName(ar: 'اسم الأب', en: "Father's name"),
+    'surname': LocalizedName(ar: 'الكنية', en: 'Surname'),
+    'gender': LocalizedName(ar: 'الجنس', en: 'Gender'),
+    'mission_type': LocalizedName(ar: 'نوع البعثة', en: 'Mission'),
+    'job_title_id': LocalizedName(ar: 'المسمى الوظيفي', en: 'Job title'),
+    'phone_sy': LocalizedName(ar: 'هاتف سوريا', en: 'Syrian phone'),
+    'phone_sa': LocalizedName(ar: 'هاتف السعودية', en: 'Saudi phone'),
+    'date_of_birth': LocalizedName(ar: 'تاريخ الميلاد', en: 'Date of birth'),
+    'photo_url': LocalizedName(ar: 'الصورة الشخصية', en: 'Photo'),
+    'email': LocalizedName(ar: 'البريد الإلكتروني', en: 'Email'),
+    'city_id': LocalizedName(ar: 'المدينة', en: 'City'),
+    'account_status': LocalizedName(ar: 'حالة الحساب', en: 'Account status'),
+    'rejection_reason': LocalizedName(ar: 'سبب الرفض', en: 'Rejection reason'),
+    'is_suspended': LocalizedName(ar: 'موقوف', en: 'Suspended'),
+    'is_admin': LocalizedName(ar: 'مدير النظام', en: 'Administrator'),
+    'is_external': LocalizedName(ar: 'من جهة خارجية', en: 'External'),
+    'external_organization': LocalizedName(
+      ar: 'الجهة الخارجية',
+      en: 'Organization',
+    ),
+    'external_title': LocalizedName(ar: 'الصفة الخارجية', en: 'External title'),
+    // Naming
+    'name': LocalizedName(ar: 'الاسم', en: 'Name'),
+    'name_ar': LocalizedName(ar: 'الاسم بالعربية', en: 'Arabic name'),
+    'name_en': LocalizedName(ar: 'الاسم بالإنكليزية', en: 'English name'),
+    'title': LocalizedName(ar: 'العنوان', en: 'Title'),
+    'body': LocalizedName(ar: 'النص', en: 'Body'),
+    'label': LocalizedName(ar: 'التسمية', en: 'Label'),
+    'code': LocalizedName(ar: 'الرمز', en: 'Code'),
+    'description': LocalizedName(ar: 'الوصف', en: 'Description'),
+    'number': LocalizedName(ar: 'الرقم', en: 'Number'),
+    // Structure
+    'sort_order': LocalizedName(ar: 'الترتيب', en: 'Order'),
+    'is_active': LocalizedName(ar: 'مفعّل', en: 'Active'),
+    'is_current': LocalizedName(ar: 'الموسم الحالي', en: 'Current season'),
+    'is_published': LocalizedName(ar: 'منشور', en: 'Published'),
+    'hijri_year': LocalizedName(ar: 'السنة الهجرية', en: 'Hijri year'),
+    'gregorian_label': LocalizedName(
+      ar: 'التسمية الميلادية',
+      en: 'Gregorian label',
+    ),
+    'starts_on': LocalizedName(ar: 'تاريخ البداية', en: 'Starts on'),
+    'ends_on': LocalizedName(ar: 'تاريخ النهاية', en: 'Ends on'),
+    'period_start': LocalizedName(ar: 'بداية الفترة', en: 'Period start'),
+    'period_end': LocalizedName(ar: 'نهاية الفترة', en: 'Period end'),
+    'decision': LocalizedName(ar: 'القرار', en: 'Decision'),
+    'capacity': LocalizedName(ar: 'السعة', en: 'Capacity'),
+    'status': LocalizedName(ar: 'الحالة', en: 'Status'),
+    'kind': LocalizedName(ar: 'النوع', en: 'Kind'),
+    'data': LocalizedName(ar: 'البيانات', en: 'Data'),
+    'content': LocalizedName(ar: 'المحتوى', en: 'Content'),
+    'stars': LocalizedName(ar: 'النجوم', en: 'Stars'),
+    // Relations
+    'season_id': LocalizedName(ar: 'الموسم', en: 'Season'),
+    'module_id': LocalizedName(ar: 'الملف التشغيلي', en: 'File'),
+    'module_type_id': LocalizedName(ar: 'نوع الملف', en: 'File type'),
+    'profile_id': LocalizedName(ar: 'الموظف', en: 'Employee'),
+    'user_id': LocalizedName(ar: 'الموظف', en: 'Employee'),
+    'permission_id': LocalizedName(ar: 'الصلاحية', en: 'Permission'),
+    'requires_id': LocalizedName(ar: 'تتطلب', en: 'Requires'),
+    'granted_by': LocalizedName(ar: 'مُنحت من', en: 'Granted by'),
+    'assigned_by': LocalizedName(ar: 'أُسندت من', en: 'Assigned by'),
+    'node_id': LocalizedName(ar: 'القطاع/العنصر', en: 'Node'),
+    'role_id': LocalizedName(ar: 'الدور', en: 'Role'),
+    'task_id': LocalizedName(ar: 'المهمة', en: 'Task'),
+    'level_id': LocalizedName(ar: 'المستوى', en: 'Level'),
+    'parent_id': LocalizedName(ar: 'العنصر الأب', en: 'Parent'),
+    'set_id': LocalizedName(ar: 'المجموعة', en: 'Set'),
+    'reference_set_id': LocalizedName(
+      ar: 'المجموعة المرجعية',
+      en: 'Reference set',
+    ),
+    'report_id': LocalizedName(ar: 'التقرير', en: 'Report'),
+    'report_type_id': LocalizedName(ar: 'نوع التقرير', en: 'Report type'),
+    'author_id': LocalizedName(ar: 'الكاتب', en: 'Author'),
+    'created_by': LocalizedName(ar: 'أُنشئ من', en: 'Created by'),
+    'rater_id': LocalizedName(ar: 'المُقيِّم', en: 'Rater'),
+    'ratee_id': LocalizedName(ar: 'المُقيَّم', en: 'Rated'),
+    'recipient_id': LocalizedName(ar: 'المستلم', en: 'Recipient'),
+    'sender_id': LocalizedName(ar: 'المرسل', en: 'Sender'),
+    'group_id': LocalizedName(ar: 'المجموعة', en: 'Group'),
+    'allows_multiple': LocalizedName(
+      ar: 'يسمح بأكثر من شخص',
+      en: 'Allows multiple',
+    ),
+    // Files
+    'path': LocalizedName(ar: 'المسار', en: 'Path'),
+    'bucket': LocalizedName(ar: 'الحاوية', en: 'Bucket'),
+    'mime_type': LocalizedName(ar: 'نوع الملف', en: 'File type'),
+    'size_bytes': LocalizedName(ar: 'الحجم (بايت)', en: 'Size (bytes)'),
+    'recipients': LocalizedName(ar: 'عدد المستلمين', en: 'Recipients'),
+    // Bookkeeping
+    'created_at': LocalizedName(ar: 'تاريخ الإنشاء', en: 'Created at'),
+    'updated_at': LocalizedName(ar: 'آخر تحديث', en: 'Updated at'),
+    'read_at': LocalizedName(ar: 'وقت القراءة', en: 'Read at'),
+    'is_season_scoped': LocalizedName(
+      ar: 'مرتبطة بالموسم',
+      en: 'Season scoped',
+    ),
+    'pinned_for_hijri_year': LocalizedName(
+      ar: 'مثبّت لسنة هجرية',
+      en: 'Pinned for Hijri year',
+    ),
+    'op': LocalizedName(ar: 'العملية', en: 'Operation'),
+  };
+
+  static LocalizedName table(String name) =>
+      _tables[name] ?? LocalizedName(ar: name);
+
+  static LocalizedName field(String name) =>
+      _fields[name] ?? LocalizedName(ar: name);
+
+  static LocalizedName? authOp(String? op) => op == null ? null : _authOps[op];
+}
+
+/// One entry of the entity filter: a label and the tables it stands for.
+class AuditEntityGroup {
+  const AuditEntityGroup({
+    required this.key,
+    required this.name,
+    required this.tables,
+  });
+
+  final String key;
+  final LocalizedName name;
+  final List<String> tables;
+}

@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
     // `employees.password` granted explicitly.
     const { data: me } = await admin
       .from('profiles')
-      .select('is_admin, account_status, is_suspended')
+      .select('is_admin, account_status, is_suspended, first_name, father_name, surname')
       .eq('id', callerId)
       .maybeSingle();
     const inGoodStanding =
@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
 
     const { data: target } = await admin
       .from('profiles')
-      .select('id, is_admin')
+      .select('id, is_admin, first_name, father_name, surname, email')
       .eq('id', targetId)
       .maybeSingle();
     if (!target) return json({ error: 'not_found' }, 404);
@@ -107,6 +107,27 @@ Deno.serve(async (req) => {
       { password },
     );
     if (updateErr) return json({ error: updateErr.message }, 400);
+
+    // The password lives in the auth schema, out of the audit trigger's
+    // reach. The FACT of the reset is recorded — never the password.
+    // Best-effort: the log must never undo the act it describes.
+    try {
+      const name = (p: Record<string, unknown> | null) =>
+        [p?.first_name, p?.father_name, p?.surname]
+          .filter(Boolean)
+          .join(' ') || null;
+      await admin.from('audit_log').insert({
+        actor_id: callerId,
+        actor_name: name(me),
+        action: 'update',
+        table_name: 'auth',
+        record_id: targetId,
+        record_label: name(target) ?? target.email,
+        new_data: { op: 'set_password' },
+      });
+    } catch (_) {
+      // Logged nowhere better; the reset itself succeeded.
+    }
 
     return json({ id: targetId });
   } catch (e) {

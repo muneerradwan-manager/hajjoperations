@@ -39,5 +39,9 @@ String friendlyErrorL(AppLocalizations l, String? raw) {
   // email_taken}…)"), so this matches by substring like the smells above.
   if (s.contains('email_taken')) return l.employeeEmailTaken;
   if (s.contains('cannot_set_admin_email')) return l.employeeEmailAdminBlocked;
+  // The reports trigger (0078) refusing a second once-per-season report. The
+  // editor blocks this before saving, so this is the belt behind the braces —
+  // a stale list, or two people entering the same document at once.
+  if (s.contains('report_once_per_season')) return l.reportOncePerSeason;
   return raw;
 }

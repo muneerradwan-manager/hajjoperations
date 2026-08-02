@@ -767,6 +767,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'General reports stay true whichever season is running';
 
   @override
+  String get reportOncePerSeason =>
+      'This kind of report is created only once per season, and it already exists — edit the existing one instead of creating another';
+
+  @override
   String get reportPublished => 'Published';
 
   @override
@@ -1706,6 +1710,83 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get navAuditLog => 'Activity log';
+
+  @override
+  String get navAuditLogSubtitle => 'Who did what, and when';
+
+  @override
+  String get auditEmptyTitle => 'No events yet';
+
+  @override
+  String get auditEmptyBody => 'Every change made in the app is recorded here.';
+
+  @override
+  String get auditSearchHint => 'Search by person or record…';
+
+  @override
+  String get auditActionInsert => 'Added';
+
+  @override
+  String get auditActionUpdate => 'Edited';
+
+  @override
+  String get auditActionDelete => 'Deleted';
+
+  @override
+  String get auditActionLogin => 'Signed in';
+
+  @override
+  String get auditActionLogout => 'Signed out';
+
+  @override
+  String get auditFilterAction => 'Action';
+
+  @override
+  String get auditFilterEntity => 'Section';
+
+  @override
+  String get auditFilterActor => 'Person';
+
+  @override
+  String get auditFilterDate => 'Period';
+
+  @override
+  String get auditClearFilters => 'Clear filters';
+
+  @override
+  String get auditSystem => 'System';
+
+  @override
+  String get auditDetails => 'Event details';
+
+  @override
+  String get auditActor => 'Done by';
+
+  @override
+  String get auditChanges => 'What changed';
+
+  @override
+  String get auditRecordData => 'Record data';
+
+  @override
+  String get auditDeletedData => 'Deleted record';
+
+  @override
+  String auditRecipients(int count) {
+    return '$count recipients';
+  }
+
+  @override
+  String get auditYes => 'Yes';
+
+  @override
+  String get auditNo => 'No';
+
+  @override
+  String get auditNoDetails => 'This event carries no further details.';
 
   @override
   String get navDashboard => 'Dashboard';

@@ -767,6 +767,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'التقرير العام يبقى سارياً مهما كان الموسم الجاري';
 
   @override
+  String get reportOncePerSeason =>
+      'هذا النوع من التقارير يُنشأ مرة واحدة فقط خلال الموسم، وهو منشأ من قبل — عدّل التقرير الموجود بدلاً من إنشاء آخر';
+
+  @override
   String get reportPublished => 'منشور';
 
   @override
@@ -1704,6 +1708,83 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get navAuditLog => 'سجل الأحداث';
+
+  @override
+  String get navAuditLogSubtitle => 'من فعل ماذا ومتى';
+
+  @override
+  String get auditEmptyTitle => 'لا أحداث بعد';
+
+  @override
+  String get auditEmptyBody => 'كل تغيير يجري في التطبيق يُسجَّل هنا.';
+
+  @override
+  String get auditSearchHint => 'بحث باسم الشخص أو السجل…';
+
+  @override
+  String get auditActionInsert => 'إضافة';
+
+  @override
+  String get auditActionUpdate => 'تعديل';
+
+  @override
+  String get auditActionDelete => 'حذف';
+
+  @override
+  String get auditActionLogin => 'تسجيل دخول';
+
+  @override
+  String get auditActionLogout => 'تسجيل خروج';
+
+  @override
+  String get auditFilterAction => 'العملية';
+
+  @override
+  String get auditFilterEntity => 'القسم';
+
+  @override
+  String get auditFilterActor => 'الشخص';
+
+  @override
+  String get auditFilterDate => 'الفترة';
+
+  @override
+  String get auditClearFilters => 'مسح الفلاتر';
+
+  @override
+  String get auditSystem => 'النظام';
+
+  @override
+  String get auditDetails => 'تفاصيل الحدث';
+
+  @override
+  String get auditActor => 'قام به';
+
+  @override
+  String get auditChanges => 'ما الذي تغيّر';
+
+  @override
+  String get auditRecordData => 'بيانات السجل';
+
+  @override
+  String get auditDeletedData => 'السجل المحذوف';
+
+  @override
+  String auditRecipients(int count) {
+    return '$count مستلم';
+  }
+
+  @override
+  String get auditYes => 'نعم';
+
+  @override
+  String get auditNo => 'لا';
+
+  @override
+  String get auditNoDetails => 'لا تفاصيل إضافية لهذا الحدث.';
 
   @override
   String get navDashboard => 'لوحة المؤشرات';

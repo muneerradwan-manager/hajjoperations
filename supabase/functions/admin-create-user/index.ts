@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
     // 2. Ensure the caller is an approved, non-suspended admin.
     const { data: callerProfile } = await admin
       .from('profiles')
-      .select('is_admin, account_status, is_suspended')
+      .select('is_admin, account_status, is_suspended, first_name, father_name, surname')
       .eq('id', callerId)
       .single();
     const isAdmin =
@@ -117,6 +117,33 @@ Deno.serve(async (req) => {
       })
       .eq('id', newId);
     if (updateErr) return json({ error: updateErr.message }, 400);
+
+    // Creation ran under the service role, which the audit trigger records as
+    // nobody. This is the line that names the admin who created the account.
+    // Best-effort: the log must never undo the act it describes.
+    try {
+      const callerName =
+        [
+          callerProfile?.first_name,
+          callerProfile?.father_name,
+          callerProfile?.surname,
+        ]
+          .filter(Boolean)
+          .join(' ') || null;
+      const newName =
+        [first_name, father_name, surname].filter(Boolean).join(' ') || null;
+      await admin.from('audit_log').insert({
+        actor_id: callerId,
+        actor_name: callerName,
+        action: 'insert',
+        table_name: 'auth',
+        record_id: newId,
+        record_label: newName ?? email,
+        new_data: { op: 'create_user', email },
+      });
+    } catch (_) {
+      // Logged nowhere better; the account itself was created.
+    }
 
     return json({ id: newId });
   } catch (e) {

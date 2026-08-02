@@ -6,8 +6,11 @@
 > ومن ملفات الـ migrations (`supabase/migrations/0001 → 0073`).
 >
 > **تاريخ الإعداد:** 2026-07-31 — فرع `operational-files`.
-> **آخر تحديث:** 2026-08-01 — بعد إصلاحات الجولة الشاملة: حفظ التقرير صار
-> RPC واحدة (`save_report`, migration 0074)، سقف لقائمتي الوارد (100)
+> **آخر تحديث:** 2026-08-01 — إضافة سجل الأحداث (migration 0077): جدول
+> `audit_log` مع trigger عام على كل الجداول، صلاحية `audit.view`، ثلاث RPCs
+> (`audit_events`, `audit_actors`, `log_auth_event`)، وأسطر توثيق ذاتية في
+> الـ Edge Functions الأربع — §23. وقبلها إصلاحات الجولة الشاملة: حفظ التقرير
+> صار RPC واحدة (`save_report`, migration 0074)، سقف لقائمتي الوارد (100)
 > والتقارير (200) مع إسقاط `data` من قائمة التقارير، تحقق الخادم من صيغة
 > الـ topic ووجود الملف، واشتقاق `gregorian_label` من امتداد السنة الهجرية.
 
@@ -37,6 +40,7 @@
 20. [البث اللحظي Realtime](#20-البث-اللحظي-realtime)
 21. [منطق الخادم الإلزامي (بديل RLS / Triggers)](#21-منطق-الخادم-الإلزامي)
 22. [قاموس الأخطاء](#22-قاموس-الأخطاء)
+23. [سجل الأحداث Audit Log](#23-سجل-الأحداث-audit-log)
 
 ---
 
@@ -93,6 +97,7 @@
 | التقارير          | `reports.view_all` `reports.create` `reports.edit` `reports.delete` `reports.publish`                                                                       |
 | الإشعارات         | `notifications.send` `notifications.broadcast_module` `notifications.broadcast_all`                                                                         |
 | الصلاحيات         | `permissions.view` `permissions.manage`                                                                                                                     |
+| سجل الأحداث       | `audit.view`                                                                                                                                                |
 
 توجد **متطلبات مسبقة** بين الصلاحيات (جدول `permission_prerequisites`): لا يجوز منح
 صلاحية دون أساسها (مثال: `modules.members` تتطلب `employees.view`)، وسحب الأساس
@@ -1447,6 +1452,7 @@ GET /report-types
     "code": "meals_daily",
     "name_ar": "تقرير الوجبات",
     "name_en": null,
+    "once_per_season": false,
     "sort_order": 1,
     "fields": [
       {
@@ -1476,6 +1482,10 @@ GET /report-types
 
 > `is_computed`: عمود يجمع الأعمدة `is_expanded` — **القيمة تُخزَّن مع الصف**
 > (يعيد التطبيق حسابها عند التحرير)، فالخادم لا يحسب شيئاً.
+
+> `once_per_season` (migration `0078`): نوعٌ يُنشأ **مرة واحدة خلال الموسم** —
+> أنواع الوجبات الثلاثة (`mashaaer_meal_distribution`, `mashaaer_meal_timing`,
+> `mashaaer_meal_components`) عليها `true`. القاعدة في §15.5.
 
 ### 15.3 قائمة التقارير
 
@@ -1580,6 +1590,14 @@ POST /reports
 
 **Response 201:** `{ "id": "uuid" }` — الخادم يسجل `created_by`.
 **يجب أن تكون العملية transaction واحدة** (رأس + صفوف + كتل).
+
+**قاعدة "مرة واحدة خلال الموسم" (إلزامية على الخادم):** إذا كان النوع
+`once_per_season = true` ووُجد تقرير آخر بنفس `report_type_id` ونفس
+`season_id` (والـ `null` — العام — سلة قائمة بذاتها تخضع للقاعدة نفسها)،
+يُرفض الطلب — **409** ورسالة تحمل الرمز `report_once_per_season` (التطبيق
+يطابق عليه نصياً ويعرضه مترجماً). حالياً trigger على `reports`
+(migration `0078`) يرفض الإدراج والتعديل معاً؛ التطبيق يمنعها في المحرر
+قبل الإرسال، والخادم هو الضامن عند السباق أو القائمة القديمة.
 
 > **مطابقة التطبيق الحالي:** منذ migration `0074` يستدعي التطبيق دالة واحدة
 > `save_report(p_report_id, …, p_rows, p_blocks)` تنفّذ الرأس والصفوف والكتل
@@ -2123,6 +2141,90 @@ WS /ws/notifications          (Authorization عبر query أو header)
 
 ---
 
+## 23. سجل الأحداث Audit Log
+
+> أُضيف في migration 0077. **مصدر الكتابة الوحيد هو الخادم**: في Supabase الحالي
+> يكتب trigger عام (`audit_row_change`) على كل جداول القاعدة التشغيلية سطراً لكل
+> INSERT/UPDATE/DELETE مع صورة الصف قبل وبعد وقائمة الحقول المتغيّرة. أي backend
+> بديل **ملزم** بنفس المبدأ: التسجيل في طبقة البيانات لا في التطبيق، ولا يوجد أي
+> مسار كتابة من العميل.
+
+### 23.1 الكيان `AuditEvent`
+
+```json
+{
+  "id": 12345,
+  "occurred_at": "2026-08-01T09:15:00Z",
+  "actor_id": "uuid | null",
+  "actor_name": "أحمد محمد الخطيب",
+  "actor_photo_url": "https://... | null",
+  "action": "insert | update | delete | login | logout",
+  "table_name": "profiles",
+  "record_id": "uuid | null",
+  "record_label": "أحمد محمد الخطيب",
+  "old_data": { "...": "الصف كاملاً قبل — للتعديل والحذف" },
+  "new_data": { "...": "الصف كاملاً بعد — للإضافة والتعديل" },
+  "changed_fields": ["phone_sa", "job_title_id"]
+}
+```
+
+- `actor_name` لقطة تُحفَظ وقت الحدث وتبقى بعد حذف الحساب؛ عند العرض يُفضَّل
+  الاسم الحالي إن كان الحساب ما يزال موجوداً.
+- `record_label` تسمية بشرية للسجل تُحسب وقت الكتابة (اسم الموظف، نوع الملف،
+  عنوان التقرير…) لتبقى بعد حذف السجل نفسه.
+- `table_name` تحمل قيمتين زائفتين إضافيتين: `auth` (الدخول/الخروج وأفعال
+  الحسابات) و `storage` (رفع/حذف الملفات).
+- تعديل تقرير عبر `save_report` يظهر سطراً واحداً على `reports` مع
+  `changed_fields: ["content"]` عندما لا يتغير غير الصفوف/البلوكات
+  (لا تُسجَّل `report_rows`/`report_blocks` صفاً صفاً). البث الإشعاري يظهر
+  سطراً واحداً مع `new_data.recipients` = عدد المستلمين. `device_tokens`
+  لا تُسجَّل إطلاقاً.
+
+### 23.2 `GET /audit-events` — قراءة السجل
+
+**كان:** RPC `audit_events`. **الصلاحية:** `audit.view` (أو أدمن).
+
+| Query param | النوع        | المعنى                                            |
+| ----------- | ------------ | ------------------------------------------------- |
+| `limit`     | int (≤200)   | حجم الصفحة، افتراضي 50                            |
+| `before_id` | bigint       | keyset pagination: أعد ما هو أقدم من هذا المعرّف |
+| `actor_id`  | uuid         | حسب الفاعل                                        |
+| `actions`   | csv          | `insert,update,...`                               |
+| `tables`    | csv          | أسماء جداول (يُرسل التطبيق مجموعة القسم المختار)  |
+| `from`,`to` | ISO-8601     | حدود زمنية (`to` حصرية)                           |
+| `q`         | string       | بحث مطوَّع عربياً في `record_label` و `actor_name` |
+
+⇒ `200` مصفوفة `AuditEvent` مرتبة `id desc`.
+
+### 23.3 `GET /audit-actors` — قائمة الفاعلين
+
+**كان:** RPC `audit_actors`. **الصلاحية:** `audit.view`.
+⇒ `[{ "actor_id": "uuid", "actor_name": "...", "photo_url": "... | null" }]`
+مميّزة ومرتبة بالاسم — خيارات فلتر "الشخص".
+
+### 23.4 `POST /audit-events/auth` — دخول/خروج
+
+**كان:** RPC `log_auth_event(p_event)`. يستدعيه التطبيق بعد كل دخول ناجح
+(بكلمة السر، Google، تبديل حساب) وقبل الخروج. الجسم: `{ "event": "login" | "logout" }`.
+Best-effort في التطبيق: فشله لا يفشل الدخول. حساب جديد لم يُكمل ملفه بعد
+يُسجَّل بالبريد الإلكتروني بدل الاسم.
+
+### 23.5 التزامات الخادم (بديل Triggers 0077)
+
+1. **سطر لكل كتابة** على كل الجداول التشغيلية أياً كان مسارها، مع استثناءات
+   §23.1 (الإشعارات سطر واحد للبث، صفوف التقارير عبر رأس التقرير،
+   `device_tokens` مستثناة، تعديلات `updated_at` وحدها لا تُسجَّل).
+2. **أفعال الحسابات الإدارية** (إنشاء/حذف حساب، إعادة تعيين كلمة سر، تغيير
+   بريد — §5.1/5.6/5.7/5.7b) تكتب سطرها بنفسها ناسبةً الفعل لمستدعيه، لأنها
+   تجري بصلاحيات النظام؛ `new_data.op` تحمل:
+   `create_user | delete_user | set_password | set_email`
+   (كلمة السر لا تُسجَّل أبداً — الفعل فقط).
+3. **رفع/حذف الملفات** في التخزين يُسجَّل بسطر `table_name: "storage"` يحمل
+   `bucket` و `path`.
+4. السجل **قراءة فقط** للعميل، ولا يُعدَّل ولا يُحذف منه شيء عبر أي API.
+
+---
+
 ## ملحق أ — خريطة الاستبدال السريعة
 
 | Supabase الحالي                                                                            | البديل في هذا المستند |
@@ -2136,6 +2238,7 @@ WS /ws/notifications          (Authorization عبر query أو header)
 | RPC `copy_reference_items` / `copy_module_sectors`                                         | §14.2 / §14.3         |
 | RPC `broadcast_to_module` / `broadcast_to_all`                                             | §16.6 / §16.7         |
 | RPC `dashboard_seasons` / `dashboard_stats`                                                | §18                   |
+| RPC `audit_events` / `audit_actors` / `log_auth_event`                                     | §23                   |
 | Edge `admin-create-user` / `admin-delete-user` / `admin-set-password`                      | §5.1 / §5.6 / §5.7    |
 | Edge `admin-set-email` (لموظف / للنفس)                                                     | §5.7b / §2.7          |
 | Edge `send-notification`                                                                   | §17.3 (داخلي)         |

@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
     // explicitly.
     const { data: me } = await admin
       .from('profiles')
-      .select('is_admin, account_status, is_suspended')
+      .select('is_admin, account_status, is_suspended, first_name, father_name, surname')
       .eq('id', callerId)
       .maybeSingle();
     const inGoodStanding =
@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
 
     const { data: target } = await admin
       .from('profiles')
-      .select('id, is_admin')
+      .select('id, is_admin, first_name, father_name, surname, email')
       .eq('id', targetId)
       .maybeSingle();
     if (!target) return json({ error: 'not_found' }, 404);
@@ -134,6 +134,29 @@ Deno.serve(async (req) => {
           ? err.message
           : (err.code ?? 'update_failed');
       return json({ error: taken ? 'email_taken' : label }, 400);
+    }
+
+    // The address changed in the auth schema under the service role; the
+    // profiles.email mirror will move under the same anonymous hand. This is
+    // the line that names the caller and both addresses. Best-effort: the log
+    // must never undo the act it describes.
+    try {
+      const name = (p: Record<string, unknown> | null) =>
+        [p?.first_name, p?.father_name, p?.surname]
+          .filter(Boolean)
+          .join(' ') || null;
+      await admin.from('audit_log').insert({
+        actor_id: callerId,
+        actor_name: name(me),
+        action: 'update',
+        table_name: 'auth',
+        record_id: targetId,
+        record_label: name(target) ?? target.email,
+        old_data: { op: 'set_email', email: target.email },
+        new_data: { op: 'set_email', email },
+      });
+    } catch (_) {
+      // Logged nowhere better; the change itself succeeded.
     }
 
     return json({ id: targetId, email });

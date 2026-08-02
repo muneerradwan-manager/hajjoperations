@@ -1538,6 +1538,12 @@ abstract class AppLocalizations {
   /// **'General reports stay true whichever season is running'**
   String get reportScopeHint;
 
+  /// No description provided for @reportOncePerSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'This kind of report is created only once per season, and it already exists — edit the existing one instead of creating another'**
+  String get reportOncePerSeason;
+
   /// No description provided for @reportPublished.
   ///
   /// In en, this message translates to:
@@ -3163,6 +3169,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{one permission} other{{count} permissions}}'**
   String profilePermissionsCount(int count);
+
+  /// No description provided for @navAuditLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity log'**
+  String get navAuditLog;
+
+  /// No description provided for @navAuditLogSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who did what, and when'**
+  String get navAuditLogSubtitle;
+
+  /// No description provided for @auditEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No events yet'**
+  String get auditEmptyTitle;
+
+  /// No description provided for @auditEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every change made in the app is recorded here.'**
+  String get auditEmptyBody;
+
+  /// No description provided for @auditSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by person or record…'**
+  String get auditSearchHint;
+
+  /// No description provided for @auditActionInsert.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get auditActionInsert;
+
+  /// No description provided for @auditActionUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Edited'**
+  String get auditActionUpdate;
+
+  /// No description provided for @auditActionDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted'**
+  String get auditActionDelete;
+
+  /// No description provided for @auditActionLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in'**
+  String get auditActionLogin;
+
+  /// No description provided for @auditActionLogout.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed out'**
+  String get auditActionLogout;
+
+  /// No description provided for @auditFilterAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Action'**
+  String get auditFilterAction;
+
+  /// No description provided for @auditFilterEntity.
+  ///
+  /// In en, this message translates to:
+  /// **'Section'**
+  String get auditFilterEntity;
+
+  /// No description provided for @auditFilterActor.
+  ///
+  /// In en, this message translates to:
+  /// **'Person'**
+  String get auditFilterActor;
+
+  /// No description provided for @auditFilterDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Period'**
+  String get auditFilterDate;
+
+  /// No description provided for @auditClearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get auditClearFilters;
+
+  /// No description provided for @auditSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get auditSystem;
+
+  /// No description provided for @auditDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Event details'**
+  String get auditDetails;
+
+  /// No description provided for @auditActor.
+  ///
+  /// In en, this message translates to:
+  /// **'Done by'**
+  String get auditActor;
+
+  /// No description provided for @auditChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'What changed'**
+  String get auditChanges;
+
+  /// No description provided for @auditRecordData.
+  ///
+  /// In en, this message translates to:
+  /// **'Record data'**
+  String get auditRecordData;
+
+  /// No description provided for @auditDeletedData.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted record'**
+  String get auditDeletedData;
+
+  /// No description provided for @auditRecipients.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} recipients'**
+  String auditRecipients(int count);
+
+  /// No description provided for @auditYes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get auditYes;
+
+  /// No description provided for @auditNo.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get auditNo;
+
+  /// No description provided for @auditNoDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'This event carries no further details.'**
+  String get auditNoDetails;
 
   /// No description provided for @navDashboard.
   ///

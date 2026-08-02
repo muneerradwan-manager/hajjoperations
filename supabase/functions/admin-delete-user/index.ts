@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
     // `employees.delete` granted explicitly.
     const { data: me } = await admin
       .from('profiles')
-      .select('is_admin, account_status, is_suspended')
+      .select('is_admin, account_status, is_suspended, first_name, father_name, surname')
       .eq('id', callerId)
       .maybeSingle();
     const inGoodStanding =
@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
 
     const { data: target } = await admin
       .from('profiles')
-      .select('id, is_admin')
+      .select('id, is_admin, first_name, father_name, surname, email')
       .eq('id', targetId)
       .maybeSingle();
     if (!target) return json({ error: 'not_found' }, 404);
@@ -99,6 +99,27 @@ Deno.serve(async (req) => {
     // 4. Delete. The profile, and everything referencing it, cascades.
     const { error: delErr } = await admin.auth.admin.deleteUser(targetId);
     if (delErr) return json({ error: delErr.message }, 400);
+
+    // The cascade runs under the service role, which the audit trigger records
+    // as nobody. This is the line that names the hand — written here,
+    // best-effort: the log must never undo the act it describes.
+    try {
+      const name = (p: Record<string, unknown> | null) =>
+        [p?.first_name, p?.father_name, p?.surname]
+          .filter(Boolean)
+          .join(' ') || null;
+      await admin.from('audit_log').insert({
+        actor_id: callerId,
+        actor_name: name(me),
+        action: 'delete',
+        table_name: 'auth',
+        record_id: targetId,
+        record_label: name(target) ?? target.email,
+        old_data: { op: 'delete_user', email: target.email },
+      });
+    } catch (_) {
+      // Logged nowhere better; the deletion itself succeeded.
+    }
 
     return json({ id: targetId });
   } catch (e) {

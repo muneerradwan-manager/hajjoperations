@@ -236,6 +236,18 @@ class _IdentityState extends State<_Identity> {
             ],
             onChanged: widget.cubit.setSeason,
           ),
+          // The save button obeys canSave; this is the sentence that says why
+          // it went dark. Under the season chooser because moving the report
+          // to another season — or to the general shelf — is the way out.
+          if (s.onceConflict) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              l.reportOncePerSeason,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
+          ],
           // Publishing carries its own permission: an editor without it keeps
           // the switch in sight — the report's state is a fact of the page —
           // but cannot throw it.

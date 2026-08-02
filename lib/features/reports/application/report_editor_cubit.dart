@@ -50,6 +50,7 @@ class ReportEditorState extends Equatable {
     this.types = const [],
     this.seasons = const [],
     this.referenceSets = const [],
+    this.otherReports = const [],
     this.typeId,
     this.title = '',
     this.number = '',
@@ -65,6 +66,11 @@ class ReportEditorState extends Equatable {
   final List<ReportType> types;
   final List<Season> seasons;
   final List<ReferenceSet> referenceSets;
+
+  /// Every report except the one being edited, in the list projection. Held so
+  /// the form can refuse a second تقرير of a once-per-season kind before the
+  /// database has to.
+  final List<Report> otherReports;
 
   final String? typeId;
   final String title;
@@ -118,13 +124,26 @@ class ReportEditorState extends Equatable {
     return out;
   }
 
-  bool get canSave => title.trim().isNotEmpty && typeId != null;
+  /// Whether the chosen kind is entered once per season and that season
+  /// already has its report. The season includes the GENERAL bucket: one
+  /// document there too, not many.
+  bool get onceConflict {
+    final t = type;
+    if (t == null || !t.oncePerSeason) return false;
+    return otherReports.any(
+      (r) => r.reportTypeId == t.id && r.seasonId == seasonId,
+    );
+  }
+
+  bool get canSave =>
+      title.trim().isNotEmpty && typeId != null && !onceConflict;
 
   ReportEditorState copyWith({
     EditorStatus? status,
     List<ReportType>? types,
     List<Season>? seasons,
     List<ReferenceSet>? referenceSets,
+    List<Report>? otherReports,
     Object? typeId = _unset,
     String? title,
     String? number,
@@ -139,6 +158,7 @@ class ReportEditorState extends Equatable {
     types: types ?? this.types,
     seasons: seasons ?? this.seasons,
     referenceSets: referenceSets ?? this.referenceSets,
+    otherReports: otherReports ?? this.otherReports,
     typeId: typeId == _unset ? this.typeId : typeId as String?,
     title: title ?? this.title,
     number: number ?? this.number,
@@ -157,6 +177,7 @@ class ReportEditorState extends Equatable {
     types,
     seasons,
     referenceSets,
+    otherReports,
     typeId,
     title,
     number,
@@ -194,6 +215,9 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
       final types = await _repo.fetchTypes();
       final seasons = await _seasons.fetchSeasons();
       final sets = await _modules.fetchReferenceSets(activeOnly: false);
+      // All seasons, not the current one: the editor lets a report be filed
+      // under any season, and the once-per-season check must know each.
+      final reports = await _repo.fetchReports();
       final e = existing;
       emit(
         ReportEditorState(
@@ -201,6 +225,10 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
           types: types,
           seasons: seasons,
           referenceSets: sets,
+          otherReports: [
+            for (final r in reports)
+              if (r.id != e?.id) r,
+          ],
           typeId: e?.reportTypeId,
           title: e?.title ?? '',
           number: e?.number ?? '',

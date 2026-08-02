@@ -11,6 +11,7 @@ void main() {
   group('mirrored icons still point at the glyph they claim', () {
     const cases = <String, (IconData, IconData)>{
       'logout': (AppIcons.logout, Iconsax.logout),
+      'login': (AppIcons.login, Iconsax.login),
       'send': (AppIcons.send, Iconsax.send_2),
       'upload': (AppIcons.upload, Iconsax.export_1),
     };

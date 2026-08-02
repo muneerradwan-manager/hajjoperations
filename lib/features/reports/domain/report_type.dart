@@ -88,6 +88,7 @@ class ReportType {
     this.fields = const [],
     this.columns = const [],
     this.isActive = true,
+    this.oncePerSeason = false,
     this.sortOrder = 0,
   });
 
@@ -103,6 +104,11 @@ class ReportType {
   final List<ReportColumn> columns;
 
   final bool isActive;
+
+  /// Entered once for the whole season — the three meal documents. A second
+  /// one of the same season is refused, here and by the database.
+  final bool oncePerSeason;
+
   final int sortOrder;
 
   bool get hasTable => columns.isNotEmpty;
@@ -130,6 +136,7 @@ class ReportType {
       fields: sorted('report_type_fields').map(ModuleField.fromMap).toList(),
       columns: sorted('report_type_columns').map(ReportColumn.fromMap).toList(),
       isActive: (map['is_active'] as bool?) ?? true,
+      oncePerSeason: (map['once_per_season'] as bool?) ?? false,
       sortOrder: (map['sort_order'] as int?) ?? 0,
     );
   }

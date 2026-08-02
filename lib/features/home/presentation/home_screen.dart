@@ -198,6 +198,16 @@ class _HomeScreenState extends State<HomeScreen> {
           subtitle: l.navDashboardSubtitle,
           onTap: () => context.push(Routes.dashboard),
         ),
+      // The dashboard's pair, and the pairing is the meaning: one is the
+      // season from above, the other is the season act by act. Together they
+      // are the oversight colour.
+      if (session.can(PermissionCodes.auditView))
+        (
+          icon: AppIcons.auditLog,
+          title: l.navAuditLog,
+          subtitle: l.navAuditLogSubtitle,
+          onTap: () => context.push(Routes.auditLog),
+        ),
     ];
 
     // Two tiles to a colour, by POSITION in the list the reader actually gets.
