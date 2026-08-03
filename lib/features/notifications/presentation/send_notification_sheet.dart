@@ -5,6 +5,7 @@ import '../../../core/attachments/attachment_picker.dart';
 import '../../../core/constants/permission_codes.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
+import '../../../core/widgets/app_sheet.dart';
 import '../../auth/application/session_cubit.dart';
 import '../../modules/data/modules_repository.dart';
 import '../../modules/domain/operational_module.dart';
@@ -27,16 +28,10 @@ Future<void> showSendNotificationSheet(
   String? recipientId,
   String? moduleId,
 }) {
-  return showModalBottomSheet<void>(
+  return showAppSheet<void>(
     context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    builder: (sheetContext) => Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
-      ),
-      child: _Form(recipientId: recipientId, moduleId: moduleId),
-    ),
+    builder: (sheetContext) =>
+        _Form(recipientId: recipientId, moduleId: moduleId),
   );
 }
 
@@ -177,98 +172,99 @@ class _FormState extends State<_Form> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-            Text(
-              l.notificationSend,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            if (_asksAudience) ...[
-              _AudienceField(
-                audience: _audience,
-                allowed: _allowed,
-                onChanged: (v) => setState(() => _audience = v),
+              Text(
+                l.notificationSend,
+                style: Theme.of(context).textTheme.titleLarge,
               ),
-              if (_audience == SendAudience.module) ...[
-                const SizedBox(height: 12),
-                FutureBuilder<List<OperationalModule>>(
-                  future: _modules,
-                  builder: (context, snapshot) {
-                    final modules = snapshot.data ?? const <OperationalModule>[];
-                    return DropdownButtonFormField<String>(
-                      initialValue: _moduleId,
-                      isExpanded: true,
-                      decoration: InputDecoration(
-                        labelText: l.notificationChooseModule,
-                        prefixIcon: const Icon(AppIcons.modules),
-                        helperText: l.notificationBroadcastHint,
-                      ),
-                      items: [
-                        for (final m in modules)
-                          DropdownMenuItem(
-                            value: m.id,
-                            child: Text(
-                              m.moduleTypeName?.of(context) ?? '—',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                      ],
-                      validator: (v) => v == null ? l.commonRequired : null,
-                      onChanged: (v) => setState(() => _moduleId = v),
-                    );
-                  },
+              const SizedBox(height: 16),
+              if (_asksAudience) ...[
+                _AudienceField(
+                  audience: _audience,
+                  allowed: _allowed,
+                  onChanged: (v) => setState(() => _audience = v),
                 ),
+                if (_audience == SendAudience.module) ...[
+                  const SizedBox(height: 12),
+                  FutureBuilder<List<OperationalModule>>(
+                    future: _modules,
+                    builder: (context, snapshot) {
+                      final modules =
+                          snapshot.data ?? const <OperationalModule>[];
+                      return DropdownButtonFormField<String>(
+                        initialValue: _moduleId,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          labelText: l.notificationChooseModule,
+                          prefixIcon: const Icon(AppIcons.modules),
+                          helperText: l.notificationBroadcastHint,
+                        ),
+                        items: [
+                          for (final m in modules)
+                            DropdownMenuItem(
+                              value: m.id,
+                              child: Text(
+                                m.moduleTypeName?.of(context) ?? '—',
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                        ],
+                        validator: (v) => v == null ? l.commonRequired : null,
+                        onChanged: (v) => setState(() => _moduleId = v),
+                      );
+                    },
+                  ),
+                ],
+                const SizedBox(height: 12),
               ],
+              TextFormField(
+                controller: _title,
+                decoration: InputDecoration(
+                  labelText: l.notificationTitleField,
+                  prefixIcon: const Icon(AppIcons.notifications),
+                ),
+                validator: (v) =>
+                    (v ?? '').trim().isEmpty ? l.commonRequired : null,
+              ),
               const SizedBox(height: 12),
-            ],
-            TextFormField(
-              controller: _title,
-              decoration: InputDecoration(
-                labelText: l.notificationTitleField,
-                prefixIcon: const Icon(AppIcons.notifications),
+              TextFormField(
+                controller: _body,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  labelText: l.notificationBodyField,
+                  alignLabelWithHint: true,
+                ),
               ),
-              validator: (v) =>
-                  (v ?? '').trim().isEmpty ? l.commonRequired : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _body,
-              maxLines: 4,
-              decoration: InputDecoration(
-                labelText: l.notificationBodyField,
-                alignLabelWithHint: true,
+              const SizedBox(height: 12),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton.icon(
+                  onPressed: _busy ? null : _attach,
+                  icon: const Icon(AppIcons.attach, size: 18),
+                  label: Text(l.notificationAttach),
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: TextButton.icon(
-                onPressed: _busy ? null : _attach,
-                icon: const Icon(AppIcons.attach, size: 18),
-                label: Text(l.notificationAttach),
+              for (var i = 0; i < _attachments.length; i++)
+                PendingAttachmentRow(
+                  attachment: _attachments[i],
+                  onRemove: _busy
+                      ? null
+                      : () => setState(() => _attachments.removeAt(i)),
+                ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: _busy ? null : _send,
+                icon: _busy
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(AppIcons.send),
+                label: Text(l.notificationSend),
               ),
-            ),
-            for (var i = 0; i < _attachments.length; i++)
-              PendingAttachmentRow(
-                attachment: _attachments[i],
-                onRemove: _busy
-                    ? null
-                    : () => setState(() => _attachments.removeAt(i)),
-              ),
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              onPressed: _busy ? null : _send,
-              icon: _busy
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(AppIcons.send),
-              label: Text(l.notificationSend),
-            ),
             ],
           ),
         ),

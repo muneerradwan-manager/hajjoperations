@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-/// A widget that fades + slides its child in when first built.
-/// Used to stagger form fields and list items on entry.
-class FadeSlideIn extends StatefulWidget {
+/// Pass-through. Once faded + slid its child in on first build; now renders it
+/// directly.
+///
+/// The entry animation was wrong for the place it ended up being used most: a
+/// list builds its rows lazily, as they scroll into view, so "on first build"
+/// meant every row animated in *under the user's thumb* rather than once when
+/// the screen arrived. Scrolling read as the list assembling itself item by
+/// item instead of moving with the finger.
+///
+/// Kept as a no-op widget rather than deleted so the ~30 call sites that lean
+/// on it — including `const` ones — keep compiling; the parameters are retained
+/// and ignored for the same reason.
+class FadeSlideIn extends StatelessWidget {
   const FadeSlideIn({
     super.key,
     required this.child,
@@ -18,69 +28,17 @@ class FadeSlideIn extends StatefulWidget {
   final Offset offset;
 
   @override
-  State<FadeSlideIn> createState() => _FadeSlideInState();
+  Widget build(BuildContext context) => child;
 }
 
-class _FadeSlideInState extends State<FadeSlideIn>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(
-    vsync: this,
-    duration: widget.duration,
-  );
-  late final Animation<double> _fade = CurvedAnimation(
-    parent: _c,
-    curve: Curves.easeOutCubic,
-  );
-  late final Animation<Offset> _slide = Tween<Offset>(
-    begin: widget.offset,
-    end: Offset.zero,
-  ).animate(CurvedAnimation(parent: _c, curve: Curves.easeOutCubic));
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.delay == Duration.zero) {
-      _c.forward();
-    } else {
-      Future.delayed(widget.delay, () {
-        if (mounted) _c.forward();
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _fade,
-      child: SlideTransition(position: _slide, child: widget.child),
-    );
-  }
-}
-
-/// Wraps [children] with an incrementally increasing entry delay.
-///
-/// The delay stops growing after [maxSteps]: on a long list the ramp stops
-/// reading as a cascade and starts reading as the screen being slow.
+/// Pass-through. Once wrapped [children] with an incrementally increasing entry
+/// delay; now returns them untouched — see [FadeSlideIn] for why.
 List<Widget> staggered(
   List<Widget> children, {
   Duration step = const Duration(milliseconds: 70),
   Duration start = Duration.zero,
   int maxSteps = 8,
-}) {
-  return [
-    for (var i = 0; i < children.length; i++)
-      FadeSlideIn(
-        delay: start + step * (i < maxSteps ? i : maxSteps),
-        child: children[i],
-      ),
-  ];
-}
+}) => children;
 
 const _transitionDuration = Duration(milliseconds: 400);
 const _reverseTransitionDuration = Duration(milliseconds: 300);

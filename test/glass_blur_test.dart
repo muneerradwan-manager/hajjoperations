@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hajjoperations/core/widgets/glass.dart';
 
-/// A [BackdropFilter] re-reads and re-blurs everything behind it on every
-/// frame, and in this app what is behind it is an aurora that repaints on every
-/// frame too. One is affordable — the app bar. A screenful is not: the home
+/// A [BackdropFilter] re-reads and re-blurs everything behind it on every frame
+/// the pane moves — which, inside a scrolling list, is every frame of the
+/// scroll. One is affordable — the app bar. A screenful is not: the home
 /// dashboard and the employee page each stacked half a dozen inside a scrolling
 /// list, and both crawled until [GlassCard] stopped blurring by default.
 ///

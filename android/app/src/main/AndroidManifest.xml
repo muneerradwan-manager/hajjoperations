@@ -84,6 +84,10 @@
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
                 <!-- The widget's own re-draw, set for the next mark of the day. -->
                 <action android:name="com.shud.hajjoperations.PRAYER_BOUNDARY"/>
+                <!-- Fired by Android once the reader confirms the launcher's
+                     "add this widget" dialog — and never if they back out. See
+                     PrayerWidgetProvider.requestPin. -->
+                <action android:name="com.shud.hajjoperations.PRAYER_PINNED"/>
                 <!-- A reboot clears that alarm; an update replaces the code that
                      set it. Both need the widget drawn and the alarm re-armed. -->
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>

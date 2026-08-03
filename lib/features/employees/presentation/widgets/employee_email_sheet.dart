@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/l10n/l10n_extension.dart';
 import '../../../../core/theme/glass_tokens.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/widgets/app_sheet.dart';
 import '../../../profile/domain/profile.dart';
 import '../../application/employee_manage_cubit.dart';
 
@@ -16,16 +17,9 @@ Future<void> showEmployeeEmailSheet(
   EmployeeManageCubit cubit,
   Profile profile,
 ) {
-  return showModalBottomSheet<void>(
+  return showAppSheet<void>(
     context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    builder: (sheetContext) => Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
-      ),
-      child: _EmailForm(cubit: cubit, profile: profile),
-    ),
+    builder: (sheetContext) => _EmailForm(cubit: cubit, profile: profile),
   );
 }
 

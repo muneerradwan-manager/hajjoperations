@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The app's own face, for the launcher to draw with.
+
+    Every word inside this app is set in itfQomra — see AppTheme._fontFamily —
+    and a widget in the launcher's default font is the one difference a reader
+    notices before any other, because it is the one that makes the pane look
+    like it belongs to somebody else's app. Flutter's copy of this font lives in
+    assets/ and is loaded by the engine; nothing here is running an engine, so
+    the two weights the widget uses are carried again as Android resources.
+
+    Only 400 and 700. The Light face is never asked for on the widget's face,
+    and a third weight is 55KB for nothing.
+
+    Honoured from API 26. On 24 and 25 the framework reads android:fontFamily as
+    a family NAME rather than a resource, fails to match, and falls back to the
+    system font — the widget is then plain but perfectly legible, which is the
+    right way for this to degrade.
+-->
+<font-family xmlns:android="http://schemas.android.com/apk/res/android">
+    <font
+        android:font="@font/itf_qomra_regular"
+        android:fontStyle="normal"
+        android:fontWeight="400" />
+    <font
+        android:font="@font/itf_qomra_bold"
+        android:fontStyle="normal"
+        android:fontWeight="700" />
+</font-family>

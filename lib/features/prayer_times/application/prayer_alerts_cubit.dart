@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
+import 'package:flutter/widgets.dart';
 
 import '../../../core/bloc/safe_cubit.dart';
 import '../data/prayer_alerts_store.dart';
@@ -21,8 +24,13 @@ class PrayerAlertsState extends Equatable {
   final PrayerAlerts alerts;
 
   /// What the system will actually let through — see [PrayerAlertReadiness].
-  /// Only meaningful while [PrayerAlerts.enabled]; nothing is asked of the
-  /// system until the reader has said they want this.
+  ///
+  /// The granted/blocked/inexact answers are only meaningful while
+  /// [PrayerAlerts.enabled], because nothing is asked of the system until the
+  /// reader has said they want this. [PrayerAlertReadiness.unsupported] is the
+  /// exception and is settled on the way in: it is a property of the platform
+  /// rather than an answer from it, costs nothing to determine, and has to be
+  /// known before the switch is drawn.
   final PrayerAlertReadiness readiness;
 
   /// Whether this device has ever known where it is.
@@ -67,10 +75,30 @@ class PrayerAlertsState extends Equatable {
 class PrayerAlertsCubit extends SafeCubit<PrayerAlertsState> {
   PrayerAlertsCubit() : super(const PrayerAlertsState()) {
     _load();
+    // Two ways to hear that a widget has appeared, because there are two ways
+    // for one to appear. The first is the reader pressing the button in this
+    // pane, which Android answers on the stream below. The second is them
+    // putting one there from the launcher's own tray, with this app in the
+    // background or closed — nothing tells us about that at all, so the next
+    // resume goes and looks.
+    _pinned = PrayerWidgetBridge.instance.pinned.listen(
+      (_) => refreshWidgetCount(),
+    );
+    _lifecycle = AppLifecycleListener(onResume: refreshWidgetCount);
   }
 
   final _store = const PrayerAlertsStore();
   final _repository = PrayerTimesRepository();
+
+  late final StreamSubscription<void> _pinned;
+  late final AppLifecycleListener _lifecycle;
+
+  @override
+  Future<void> close() {
+    _pinned.cancel();
+    _lifecycle.dispose();
+    return super.close();
+  }
 
   Future<void> _load() async {
     final alerts = await _store.read();
@@ -83,8 +111,20 @@ class PrayerAlertsCubit extends SafeCubit<PrayerAlertsState> {
         widgets: await PrayerWidgetBridge.instance.installedCount(),
       ),
     );
-    if (alerts.enabled) {
-      emit(state.copyWith(readiness: await PrayerNotifications.instance.readiness()));
+    // A platform that cannot announce anything at all has to be known BEFORE
+    // the reader presses anything. [readiness] defaults to `ready` and was only
+    // ever asked for once the switch was already on — so on Windows the switch
+    // looked live, and pressing it ran the whole request only to drop straight
+    // back to off with nothing said about why. This branch costs no system
+    // call; see [PrayerNotifications.supported].
+    if (!PrayerNotifications.supported) {
+      emit(state.copyWith(readiness: PrayerAlertReadiness.unsupported));
+    } else if (alerts.enabled) {
+      emit(
+        state.copyWith(
+          readiness: await PrayerNotifications.instance.readiness(),
+        ),
+      );
     }
   }
 
@@ -138,14 +178,18 @@ class PrayerAlertsCubit extends SafeCubit<PrayerAlertsState> {
   ///
   /// Returns false where the launcher has none, which the page turns into an
   /// instruction rather than a button that appears to do nothing.
-  Future<bool> addWidget() async {
-    final pinned = await PrayerWidgetBridge.instance.requestPin();
-    if (pinned) await refreshWidgetCount();
-    return pinned;
-  }
+  ///
+  /// True means the DIALOG OPENED — nothing more. It used to re-read the count
+  /// here on the strength of that, which is a count taken while the question is
+  /// still on screen: the answer was always the old one, so the pane went on
+  /// saying "not added yet" underneath a widget the reader had just watched
+  /// themselves add. The count is now left to [PrayerWidgetBridge.pinned],
+  /// which Android fires after the yes.
+  Future<bool> addWidget() => PrayerWidgetBridge.instance.requestPin();
 
-  Future<void> refreshWidgetCount() async =>
-      emit(state.copyWith(widgets: await PrayerWidgetBridge.instance.installedCount()));
+  Future<void> refreshWidgetCount() async => emit(
+    state.copyWith(widgets: await PrayerWidgetBridge.instance.installedCount()),
+  );
 
   Future<void> _apply(PrayerAlerts alerts) async {
     emit(state.copyWith(alerts: alerts));

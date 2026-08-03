@@ -1306,12 +1306,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cadenceOnce => 'Once';
 
   @override
-  String get moduleRatingSection => 'Rating';
-
-  @override
-  String get moduleRatingMine => 'My rating in this file';
-
-  @override
   String get moduleRatingNone => 'Nobody has rated you in this file yet';
 
   @override
@@ -1324,9 +1318,6 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$average of 5 · $_temp0';
   }
-
-  @override
-  String get moduleRatingRate => 'Rate your colleagues in this file';
 
   @override
   String get moduleRatingAnonymous =>

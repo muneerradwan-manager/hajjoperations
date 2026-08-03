@@ -60,111 +60,139 @@ class SettingsScreen extends StatelessWidget {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: GlassAppBar(title: Text(l.commonSettings)),
-      body: Builder(
-        builder: (context) => ResponsivePage(
-          builder: (context, size) => SinglePaneLayout(
-            gutter: size.gutter,
-            children: staggered([
-              // Three independent settings, none of which needs to be read
-              // before another — so on a wide window they stand side by side
-              // rather than in a queue the length of the screen.
-              AdaptiveGrid(
-                minTileWidth: 320,
-                maxColumns: 3,
-                children: [
-                  InfoSection(
-                    title: l.settingsLanguage,
-                    icon: AppIcons.language,
-                    children: [
-                      _Choice(
-                        label: l.languageArabic,
-                        selected: state.locale?.languageCode == 'ar',
-                        onTap: () => settings.setLocale(const Locale('ar')),
-                      ),
-                      _Choice(
-                        label: l.languageEnglish,
-                        selected: state.locale?.languageCode == 'en',
-                        onTap: () => settings.setLocale(const Locale('en')),
-                      ),
-                      _Choice(
-                        label: l.settingsLanguageSystem,
-                        selected: state.locale == null,
-                        onTap: () => settings.setLocale(null),
-                      ),
-                    ],
-                  ),
-                  InfoSection(
-                    title: l.settingsTheme,
-                    icon: AppIcons.theme,
-                    children: [
-                      for (final (mode, label) in <(ThemeMode, String)>[
-                        (ThemeMode.system, l.themeSystem),
-                        (ThemeMode.light, l.themeLight),
-                        (ThemeMode.dark, l.themeDark),
-                      ])
+      // Over the whole page rather than around the grid: the two prayer panes
+      // are now separate cells of it, and they are two views of one state.
+      body: PrayerAlertsScope(
+        child: Builder(
+          builder: (context) => ResponsivePage(
+            builder: (context, size) => SinglePaneLayout(
+              gutter: size.gutter,
+              children: staggered([
+                // Three independent settings, none of which needs to be read
+                // before another — so on a wide window they stand side by side
+                // rather than in a queue the length of the screen.
+                AdaptiveGrid(
+                  minTileWidth: 320,
+                  maxColumns: 3,
+                  children: [
+                    InfoSection(
+                      title: l.settingsLanguage,
+                      icon: AppIcons.language,
+                      children: [
                         _Choice(
-                          label: label,
-                          selected: state.themeMode == mode,
-                          onTap: () => settings.setThemeMode(mode),
+                          label: l.languageArabic,
+                          selected: state.locale?.languageCode == 'ar',
+                          onTap: () => settings.setLocale(const Locale('ar')),
                         ),
-                    ],
-                  ),
-                  InfoSection(
-                    title: l.navNotifications,
-                    icon: AppIcons.notifications,
-                    children: [
-                      _NotificationsSwitch(
-                        value: state.notificationsEnabled,
-                        onChanged: settings.setNotificationsEnabled,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              // The prayer panes, in the same first column as the accounts
-              // below them. They are a column of their own rather than two more
-              // cells of the grid above because the second one only makes sense
-              // under the first, and a grid is free to put them on separate
-              // rows a screen apart.
-              const AdaptiveGrid(
-                minTileWidth: 320,
-                maxColumns: 3,
-                children: [PrayerAlertsSections()],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              // Alone on its row, but measured by the same grid as the panes
-              // above so it lands in the first column rather than across the
-              // whole monitor. An account row is a face, a name and one icon;
-              // at 1600 wide the name and the icon end up in different
-              // postcodes with a metre of glass between them.
-              const AdaptiveGrid(
-                minTileWidth: 320,
-                maxColumns: 3,
-                children: [_AccountsSection()],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              // A button is as wide as the words on it plus room to hit it.
-              // The cap only bites on a wide window — a phone is narrower than
-              // this, so there it still spans the column the way it always has.
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 360),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () => _confirmLogout(context),
-                      icon: const Icon(AppIcons.logout),
-                      label: Text(l.commonLogout),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Theme.of(context).colorScheme.error,
+                        _Choice(
+                          label: l.languageEnglish,
+                          selected: state.locale?.languageCode == 'en',
+                          onTap: () => settings.setLocale(const Locale('en')),
+                        ),
+                        _Choice(
+                          label: l.settingsLanguageSystem,
+                          selected: state.locale == null,
+                          onTap: () => settings.setLocale(null),
+                        ),
+                      ],
+                    ),
+                    InfoSection(
+                      title: l.settingsTheme,
+                      icon: AppIcons.theme,
+                      children: [
+                        for (final (mode, label) in <(ThemeMode, String)>[
+                          (ThemeMode.system, l.themeSystem),
+                          (ThemeMode.light, l.themeLight),
+                          (ThemeMode.dark, l.themeDark),
+                        ])
+                          _Choice(
+                            label: label,
+                            selected: state.themeMode == mode,
+                            onTap: () => settings.setThemeMode(mode),
+                          ),
+                      ],
+                    ),
+                    InfoSection(
+                      title: l.navNotifications,
+                      icon: AppIcons.notifications,
+                      children: [
+                        _NotificationsSwitch(
+                          value: state.notificationsEnabled,
+                          onChanged: settings.setNotificationsEnabled,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                // The second row, measured by the same grid as the first so the
+                // two line up in the same columns.
+                //
+                // These were three panes in three separate one-child grids,
+                // stacked. A one-child grid still counts its columns: each pane
+                // took the FIRST of them and left the other two empty, so the
+                // whole lower half of the page came out as a narrow ribbon down
+                // one edge — the RIGHT edge in Arabic, where the first column is
+                // — with two thirds of a monitor blank beside it. Handed to one
+                // grid they fill the row instead.
+                //
+                // Still capped at three columns and 320 wide, which is the reason
+                // they were kept out of the full width in the first place: an
+                // account row is a face, a name and one icon, and at 1600 wide
+                // the name and the icon end up in different postcodes.
+                //
+                // The order matters and survives every width: the widget pane
+                // reads as a footnote to the alerts pane, and three cells in a
+                // three-column grid can never fall far enough apart to break
+                // that — at two columns they share a row, at one they are
+                // adjacent.
+                AdaptiveGrid(
+                  minTileWidth: 320,
+                  maxColumns: 3,
+                  children: [
+                    // Both prayer panes are dropped from the LIST on a platform
+                    // that cannot run them, rather than hidden inside
+                    // themselves: a pane that returned an empty box would still
+                    // hold its column and put a hole in the row. On Windows
+                    // this row is the accounts pane alone, which is the honest
+                    // answer — the whole of what a desktop can be told here.
+                    if (PrayerAlertsSection.available)
+                      const PrayerAlertsSection(),
+                    if (PrayerWidgetSection.available)
+                      const PrayerWidgetSection(),
+                    const _AccountsSection(),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                // A button is as wide as the words on it plus room to hit it.
+                //
+                // Which takes saying twice, because the app's buttons claim
+                // their parent's whole width by theme — `minimumSize` is a
+                // `Size.fromHeight`, and that is an infinite minimum WIDTH. A
+                // maximum alone could not answer it: capping the box at 360
+                // only moved the far edge, and the button still ran out to meet
+                // it, coming out the width of the panes above rather than the
+                // width of "تسجيل الخروج". So the label is measured
+                // ([IntrinsicWidth]) and given a floor, which is what
+                // [EmptyState] does with its action for the same reason.
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minWidth: 200),
+                    child: IntrinsicWidth(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _confirmLogout(context),
+                        icon: const Icon(AppIcons.logout),
+                        label: Text(l.commonLogout),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Theme.of(context).colorScheme.error,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ]),
+              ]),
+            ),
           ),
         ),
       ),
@@ -253,6 +281,12 @@ class _AccountsSectionState extends State<_AccountsSection> {
         // a name and an address, and three of them side by side is a contact
         // list nobody asked for.
         maxColumns: 1,
+        // No rules. There are three children here — the list, a spacer, and
+        // the button — so both of the hairlines this pane drew landed on either
+        // side of the spacer: two lines eight pixels apart, fencing off a gap.
+        // The list is one block and the button is an action on it; neither
+        // wants to be ruled off from the other.
+        separated: false,
         children: [
           SavedAccountsList(
             accounts: accounts,
@@ -311,7 +345,10 @@ class _NotificationsSwitch extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(l.settingsNotifications, style: theme.textTheme.bodyLarge),
+                  Text(
+                    l.settingsNotifications,
+                    style: theme.textTheme.bodyLarge,
+                  ),
                   const SizedBox(height: 3),
                   // Said plainly, because the switch does less than it looks
                   // like it does: the message still arrives, the phone just

@@ -70,7 +70,7 @@ class PrayerTimesCard extends StatelessWidget {
 
         return GlassCard(
           radius: AppRadius.xl,
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             // As tall as what is in it, and no taller. In the ListView a phone
             // gets, a Column's default `max` costs nothing; in the fixed-height

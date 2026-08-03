@@ -64,6 +64,14 @@ class PrayerNotifications {
   /// reader into a notification list that has nothing to do with الفجر.
   static const tapPayload = 'prayer-alert';
 
+  /// Whether this platform can show a local notification at all.
+  ///
+  /// Pure: it touches neither the plugin nor the system, which is what makes it
+  /// safe to ask on the way in, before the reader has opted into anything.
+  /// [readiness] cannot answer this — it initializes the plugin first, and
+  /// nothing may be asked of the system until the switch has been pressed.
+  static bool get supported => LocalNotifications.supported;
+
   /// The alarms currently laid down, so that [apply] can tell what has to be
   /// cancelled without cancelling and re-adding the whole week each time.
   ///
@@ -260,7 +268,8 @@ class PrayerNotifications {
   // and no way to correct either. Neutral words, once.
   static const _callName = 'Prayer times';
   static const _quietName = 'Prayer times (silent)';
-  static const _channelDescription = 'The call to each prayer, and the '
+  static const _channelDescription =
+      'The call to each prayer, and the '
       'reminder before it.';
 
   AndroidFlutterLocalNotificationsPlugin? get _android => LocalNotifications

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../../core/theme/glass_tokens.dart';
-
 /// Five stars — to read, or to set.
 ///
 /// Given [onRated] it is a control: tapping the third star says three, and
@@ -106,32 +104,9 @@ class _FractionClipper extends CustomClipper<Rect> {
       old.fraction != fraction || old.rtl != rtl;
 }
 
-/// A person's own result in a finished file: the stars, the number, and how
-/// many people said it. Never who.
-class RatingSummaryLine extends StatelessWidget {
-  const RatingSummaryLine({
-    super.key,
-    required this.average,
-    required this.ratings,
-    required this.label,
-  });
-
-  final double average;
-  final int ratings;
-
-  /// "4.2 من 5 · 5 تقييمات", already worded by the caller.
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        StarRating(value: average, size: 20),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
-        ),
-      ],
-    );
-  }
-}
+// RatingSummaryLine used to live here: a person's own result — stars, number
+// and how many said it — laid out as one row for the card that headed the
+// rating section. That card is gone; the same three facts now sit under the
+// reader's own name in the roster, where [_Rating] draws them from the same
+// StarRating above. Nothing was lost with it, and a shared widget with one
+// caller was never carrying its keep.

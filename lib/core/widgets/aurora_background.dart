@@ -4,74 +4,30 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 
-/// The living backdrop the whole app sits on: a slow mesh of drifting colour
-/// orbs over a deep gradient, finished with a fine grain so the glass panes
-/// above it have something with texture to refract.
+/// The backdrop the whole app sits on: a mesh of colour orbs over a deep
+/// gradient, finished with a fine grain so the glass panes above it have
+/// something with texture to refract.
 ///
 /// Mounted once in [MaterialApp.builder], so every route inherits it and route
 /// transitions never flash a flat background.
-class AuroraBackground extends StatefulWidget {
+///
+/// The orbs used to drift on a 32-second loop. They no longer move: a backdrop
+/// that is never the thing being looked at was repainting the entire viewport
+/// at refresh rate for the app's whole life, which is a frame budget that
+/// belongs to whatever the user is actually scrolling. The field is held on
+/// [_stillFrame] — the same still frame the OS "reduce motion" switch used to
+/// pin it to — so the colour and depth are unchanged and only the motion is
+/// gone. That also makes the widget stateless: no ticker, and nothing to stop
+/// and restart across app lifecycle changes.
+class AuroraBackground extends StatelessWidget {
   const AuroraBackground({super.key, required this.child});
 
   final Widget child;
 
-  @override
-  State<AuroraBackground> createState() => _AuroraBackgroundState();
-}
-
-class _AuroraBackgroundState extends State<AuroraBackground>
-    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  late final AnimationController _c = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 32),
-  );
-
-  bool _motionEnabled = true;
-  bool _appVisible = true;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Honour the OS "reduce motion" switch: hold the field on a still frame
-    // rather than animating it.
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    _motionEnabled = !reduceMotion;
-    _applyMotion();
-  }
-
-  /// This painter repaints the whole viewport at refresh rate for the app's
-  /// entire life. That is a fine price for a living backdrop somebody is
-  /// looking at, and pure battery drain for one they have left: the ticker
-  /// stops the moment the app is backgrounded and picks the drift back up on
-  /// return.
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    _appVisible = state == AppLifecycleState.resumed;
-    _applyMotion();
-  }
-
-  void _applyMotion() {
-    final shouldAnimate = _motionEnabled && _appVisible;
-    if (shouldAnimate && !_c.isAnimating) {
-      _c.repeat();
-    } else if (!shouldAnimate && _c.isAnimating) {
-      _c.stop();
-      if (!_motionEnabled) _c.value = 0.18;
-    }
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _c.dispose();
-    super.dispose();
-  }
+  /// Where in the old drift loop the field is frozen. Nothing is special about
+  /// the value beyond it being a pleasant arrangement of the orbs — it is the
+  /// one the reduce-motion path already chose.
+  static const _stillFrame = 0.18;
 
   @override
   Widget build(BuildContext context) {
@@ -83,14 +39,10 @@ class _AuroraBackgroundState extends State<AuroraBackground>
           child: RepaintBoundary(
             child: DecoratedBox(
               decoration: BoxDecoration(gradient: _baseGradient(isDark)),
-              child: AnimatedBuilder(
-                animation: _c,
-                builder: (context, _) => CustomPaint(
-                  painter: _AuroraPainter(t: _c.value, isDark: isDark),
-                  isComplex: true,
-                  willChange: true,
-                  child: const SizedBox.expand(),
-                ),
+              child: CustomPaint(
+                painter: _AuroraPainter(t: _stillFrame, isDark: isDark),
+                isComplex: true,
+                child: const SizedBox.expand(),
               ),
             ),
           ),
@@ -100,7 +52,7 @@ class _AuroraBackgroundState extends State<AuroraBackground>
             child: CustomPaint(painter: _GrainPainter(isDark: isDark)),
           ),
         ),
-        Positioned.fill(child: widget.child),
+        Positioned.fill(child: child),
       ],
     );
   }

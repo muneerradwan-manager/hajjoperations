@@ -2522,18 +2522,6 @@ abstract class AppLocalizations {
   /// **'Once'**
   String get cadenceOnce;
 
-  /// No description provided for @moduleRatingSection.
-  ///
-  /// In en, this message translates to:
-  /// **'Rating'**
-  String get moduleRatingSection;
-
-  /// No description provided for @moduleRatingMine.
-  ///
-  /// In en, this message translates to:
-  /// **'My rating in this file'**
-  String get moduleRatingMine;
-
   /// No description provided for @moduleRatingNone.
   ///
   /// In en, this message translates to:
@@ -2545,12 +2533,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{average} of 5 · {count, plural, =1{1 rating} other{{count} ratings}}'**
   String moduleRatingValue(String average, int count);
-
-  /// No description provided for @moduleRatingRate.
-  ///
-  /// In en, this message translates to:
-  /// **'Rate your colleagues in this file'**
-  String get moduleRatingRate;
 
   /// No description provided for @moduleRatingAnonymous.
   ///

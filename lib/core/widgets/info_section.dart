@@ -9,7 +9,8 @@ import 'glass.dart';
 import 'responsive.dart';
 
 /// A titled glass pane grouping a set of [InfoRow]s, with hairline separators
-/// between rows so long detail screens stay scannable.
+/// between rows so long detail screens stay scannable — or without them, for a
+/// pane holding a form rather than a list of fields. See [separated].
 ///
 /// The fields fill the pane's width in as many columns as fit. A value here is
 /// a name, a city or a date — a dozen characters, most of them — so one field
@@ -29,11 +30,30 @@ class InfoSection extends StatelessWidget {
     this.icon,
     this.minFieldWidth = 280,
     this.maxColumns = 3,
+    this.separated = true,
   });
 
   final String title;
   final List<Widget> children;
   final IconData? icon;
+
+  /// Whether to rule a hairline between the rows.
+  ///
+  /// True is right for what this widget was built for: a list of [InfoRow]s,
+  /// where every child is one labelled value and the rules are what keep a long
+  /// column of them scannable.
+  ///
+  /// It is wrong for a pane holding a FORM. The separator is placed between
+  /// children, and a form's children are not peers — a label belongs to the
+  /// control under it, a master switch governs everything below it, and a
+  /// [SizedBox] used as a spacer is not a row at all but still gets ruled off
+  /// on both sides, which draws two lines around eight pixels of nothing. The
+  /// settings page's own panes had seven of these and the accounts pane two;
+  /// see `PrayerAlertsSection` and `_AccountsSection`, which is where this flag
+  /// came from.
+  ///
+  /// Only turn it off. A caller wanting SOME of the rules wants a second pane.
+  final bool separated;
 
   /// The narrowest a field may get before the pane drops a column. Its default
   /// is set so that a pane inside the old 600-wide cap stays in one column —
@@ -63,10 +83,10 @@ class InfoSection extends StatelessWidget {
 
     return GlassCard(
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.lg,
-        AppSpacing.lg,
-        AppSpacing.sm,
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.md,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,7 +132,7 @@ class InfoSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (var i = 0; i < rows.length; i++) ...[
-          if (i > 0)
+          if (i > 0 && separated)
             Divider(
               height: 1,
               color: scheme.outlineVariant.withValues(alpha: 0.4),

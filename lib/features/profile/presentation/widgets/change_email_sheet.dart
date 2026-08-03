@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/l10n/error_text.dart';
 import '../../../../core/l10n/l10n_extension.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/widgets/app_sheet.dart';
 import '../../../auth/application/session_cubit.dart';
 import '../../../auth/data/auth_repository.dart';
 
@@ -14,16 +15,9 @@ import '../../../auth/data/auth_repository.dart';
 Future<void> showChangeEmailSheet(BuildContext context) {
   final repo = context.read<AuthRepository>();
   final session = context.read<SessionCubit>();
-  return showModalBottomSheet<void>(
+  return showAppSheet<void>(
     context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    builder: (sheetContext) => Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
-      ),
-      child: _ChangeEmailForm(repo: repo, session: session),
-    ),
+    builder: (sheetContext) => _ChangeEmailForm(repo: repo, session: session),
   );
 }
 

@@ -183,11 +183,11 @@ class GlassCard extends StatefulWidget {
   /// panes come several to a screen.
   ///
   /// Each blur is a save-layer that re-reads and re-blurs everything behind it
-  /// on every frame, and behind it is an aurora that repaints on every frame
-  /// too. One is affordable; the home dashboard had seven and the employee page
-  /// six, stacked inside a scrolling list, which is what made those two screens
-  /// crawl while the files list — the one screen that had already turned this
-  /// off — stayed smooth.
+  /// on every frame the pane moves — which, inside a scrolling list, is every
+  /// frame of the scroll. One is affordable; the home dashboard had seven and
+  /// the employee page six, stacked inside a scrolling list, which is what made
+  /// those two screens crawl while the files list — the one screen that had
+  /// already turned this off — stayed smooth.
   ///
   /// Nothing is really lost: the aurora is low-frequency, so the translucent
   /// fill, the hairline and the shadow carry the glass on their own. Pass true

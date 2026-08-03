@@ -7,14 +7,51 @@
     all, and the only moments the rest of the face has to change are the six
     marks of the day. The provider sets an alarm for exactly those. See
     PrayerWidgetProvider.scheduleBoundary.
+
+    The heights below were raised when the pane was rebuilt to the card's own
+    proportions, and they were raised because they had become a lie. Added up
+    from the layout, at the app's own spacing scale:
+
+         24   the pane's own padding, top and bottom
+         34   the head
+         60   a 16 gap and the 44 disc under it
+         17   a 16 gap and the rule
+         58   a 12 gap and a strip cell
+        ===
+        193   everything but the note
+        +44   a 12 gap, 16 of padding and a line of text
+        ===
+        237   in the sunrise gap
+
+    The old 110dp was honest for the old face, which was three lines of text.
+    It is not honest for this one, and a launcher takes minHeight at its word —
+    at 110 it handed the pane two cells, the vertical LinearLayout ran out of
+    room at the last child, and the strip was measured to nothing. Six times
+    silently missing, which is the one thing this widget exists to show.
+
+    minHeight is 195 and not 237, and the difference is the whole of what
+    NOTE_NEEDS_DP is for: the face this widget must ALWAYS be able to draw is
+    the one without the note, and that is 193. Asking for the taller number
+    would be asking for room this pane only sometimes needs.
+
+    It is also not a free number to raise. A launcher that cannot satisfy a
+    grown minHeight on an already-placed copy does not resize it — Samsung's
+    drops it off the home screen, and the reader loses a widget by installing an
+    update. 195 clears the 193 it has to and stays under the ~198dp two cells
+    come to on a common phone, so an existing copy survives. targetCellHeight
+    asks for the third cell for NEW copies, where nothing is lost by asking.
+
+    minResizeHeight is 180 rather than the old 80: below about that the strip
+    starts losing its descenders, and a widget squeezed until the times are
+    clipped is one whose only job has failed quietly.
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="250dp"
-    android:minHeight="110dp"
+    android:minHeight="195dp"
     android:targetCellWidth="4"
-    android:targetCellHeight="2"
+    android:targetCellHeight="3"
     android:minResizeWidth="180dp"
-    android:minResizeHeight="80dp"
+    android:minResizeHeight="180dp"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
     android:initialLayout="@layout/prayer_widget"

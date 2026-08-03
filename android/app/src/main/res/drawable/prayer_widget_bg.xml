@@ -1,13 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    The widget's pane. The app draws frosted glass; a launcher cannot blur what
-    is behind it, so this is the same shape rendered solid.
+    The widget's pane — PrayerTimesCard's GlassCard, rendered where there is no
+    compositor to frost with.
+
+    A launcher cannot blur what is behind it, so the two things that make glass
+    read as glass in the app are spent differently here:
+
+      * the FILL is the card's translucent white already blended against the
+        app's own backdrop (see values/colors.xml), rather than an alpha the
+        launcher would resolve against a wallpaper nobody can predict — a pane
+        at 80% over a photograph is not a pane, it is a photograph;
+      * the SHEEN survives intact, as the 315° fall from pane_start to pane_end.
+        It is worth keeping: it is the whole difference between a card and a
+        flat swatch, and it costs one gradient.
+
+    Radius is AppRadius.xl, which is what PrayerTimesCard asks its GlassCard for.
+    It was 22dp — a value on no scale this app has.
+
+    The hairline is a NEUTRAL at low alpha, not the brand green it used to be.
+    GlassTokens.light gives the reason at length: a pane may be washed with a
+    tone, this one is washed green whenever a prayer is open, and an edge with a
+    hue of its own argues with the wash across one millimetre.
 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
-    <solid android:color="@color/prayer_widget_bg" />
-    <corners android:radius="22dp" />
+    <gradient
+        android:angle="315"
+        android:startColor="@color/prayer_widget_pane_start"
+        android:endColor="@color/prayer_widget_pane_end"
+        android:type="linear" />
+    <corners android:radius="32dp" />
     <stroke
         android:width="1dp"
-        android:color="@color/prayer_widget_green_wash" />
+        android:color="@color/prayer_widget_stroke" />
 </shape>

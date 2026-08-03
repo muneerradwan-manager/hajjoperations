@@ -6,6 +6,24 @@
     times into the parent layout — RemoteViews.addView gives each cell its own
     view hierarchy, so all six can share these ids without colliding, and the
     strip is free to hold five, six or none.
+
+    The sizes are _Cell's COMPACT pair (10 and 11 rather than 11 and 12.5).
+    That is not a guess: the card steps down at _comfortableCellWidth, 60dp, and
+    six cells inside even a wide widget are nowhere near it — a 4x2 at its 250dp
+    minimum leaves about 37dp each. The card at that width would have broken the
+    strip into two rows of three; the widget cannot, so it takes the smaller
+    type instead and lets the names stay whole.
+
+    Weight is the one thing not settled here. The card sets the name w600 when
+    plain and w700 when marked, and the time w500/w700 — but res/font carries
+    only 400 and 700, so the name is bold either way and is fixed in this file,
+    while the time's two weights are applied by the provider with a StyleSpan.
+    Spans survive the RemoteViews parcel, which is what makes one layout enough
+    where two would otherwise be needed.
+
+    The background is left to the provider: plain, open, or next. It is never
+    absent — see prayer_widget_cell_plain.xml for why a transparent edge is not
+    the same as no edge.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/prayer_widget_cell"
@@ -14,10 +32,11 @@
     android:layout_weight="1"
     android:orientation="vertical"
     android:gravity="center_horizontal"
-    android:paddingTop="5dp"
-    android:paddingBottom="5dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp"
     android:layout_marginStart="1dp"
-    android:layout_marginEnd="1dp">
+    android:layout_marginEnd="1dp"
+    android:background="@drawable/prayer_widget_cell_plain">
 
     <TextView
         android:id="@+id/prayer_widget_cell_name"
@@ -26,15 +45,19 @@
         android:maxLines="1"
         android:ellipsize="end"
         android:textSize="10sp"
+        android:textStyle="bold"
+        android:fontFamily="@font/itf_qomra"
         android:textColor="@color/prayer_widget_muted" />
 
     <TextView
         android:id="@+id/prayer_widget_cell_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
+        android:layout_marginTop="3dp"
         android:maxLines="1"
-        android:textSize="12sp"
+        android:textDirection="ltr"
+        android:textSize="11sp"
+        android:fontFamily="@font/itf_qomra"
         android:fontFeatureSettings="tnum"
         android:textColor="@color/prayer_widget_ink" />
 </LinearLayout>

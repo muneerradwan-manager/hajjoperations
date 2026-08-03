@@ -41,6 +41,31 @@ void main() {
     test('latin is lowercased, so one call serves a mixed list', () {
       expect(foldArabic('Ahmad'), foldArabic('ahmad'));
     });
+
+    test('a عبد name folds the same with the space and without', () {
+      expect(foldArabic('عبدالله'), foldArabic('عبد الله'));
+      expect(foldArabic('عبدالرحمن'), foldArabic('عبد الرحمن'));
+      expect(foldArabic('عبدالعزيز'), foldArabic('عبد العزيز'));
+      // And in the middle of a full name, not only at the start of one.
+      expect(
+        foldArabic('محمد عبد الله الأحمد'),
+        foldArabic('محمد عبدالله الاحمد'),
+      );
+    });
+
+    test('only a STANDALONE عبد closes, never three letters inside a word', () {
+      // عابد and معبد are not عبد, and their space is a real one.
+      expect(foldArabic('عابد الحسن'), contains(' '));
+      expect(foldArabic('معبد الله'), contains(' '));
+      // A عبد with nothing after it has no space to close.
+      expect(foldArabic('محمد عبد'), foldArabic('محمد عبد'));
+      expect(foldArabic('محمد عبد'), endsWith('عبد'));
+    });
+
+    test('tashkeel inside عبد does not stop it closing', () {
+      // The marks are gone by the time the space is looked at.
+      expect(foldArabic('عَبْد الله'), foldArabic('عبدالله'));
+    });
   });
 
   group('arabicMatchesAll', () {
@@ -83,6 +108,25 @@ void main() {
       // The record is filed one way and searched the other.
       expect(arabicMatchesAll(['حسن نقاوه'], 'نقاوة'), isTrue);
       expect(arabicMatchesAll(['حسن نقاوة'], 'نقاوه'), isTrue);
+    });
+
+    test('a عبد name is found whichever way either side spelled it', () {
+      // The four combinations, because the file and the searcher disagree in
+      // both directions and neither of them is wrong.
+      expect(arabicMatchesAll(['عبد الله فتحي'], 'عبدالله'), isTrue);
+      expect(arabicMatchesAll(['عبدالله فتحي'], 'عبد الله'), isTrue);
+      expect(arabicMatchesAll(['عبد الرحمن سالم'], 'عبدالرحمن سالم'), isTrue);
+      expect(arabicMatchesAll(['عبدالرحمن سالم'], 'عبد الرحمن سالم'), isTrue);
+    });
+
+    test('عبد alone still narrows rather than matching the whole family', () {
+      // It is a prefix of every one of these names, so it finds them all —
+      // which is what a searcher who typed three letters asked for.
+      expect(arabicMatchesAll(['عبد الله فتحي'], 'عبد'), isTrue);
+      expect(arabicMatchesAll(['عبدالرحمن سالم'], 'عبد'), isTrue);
+      // But the second half is not thrown away: عبدالله is not عبدالرحمن.
+      expect(arabicMatchesAll(['عبد الرحمن سالم'], 'عبدالله'), isFalse);
+      expect(arabicMatchesAll(['عبدالله فتحي'], 'عبد الرحمن'), isFalse);
     });
   });
 }

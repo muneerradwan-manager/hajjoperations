@@ -102,9 +102,8 @@ class PrayerTimesState extends Equatable {
 ///
 /// "Current" is the whole job, and it is not the same as "ticking". A card that
 /// rebuilt itself every second to move a countdown would repaint a glass pane,
-/// its hairline and its shadow sixty times a minute for the sake of two digits
-/// — on a screen that already carries an aurora repainting behind it. So the
-/// division is:
+/// its hairline and its shadow sixty times a minute for the sake of two digits.
+/// So the division is:
 ///
 ///   * this cubit emits on EVENTS — a fix arrived, the window changed, the day
 ///     turned over — and sleeps in between on a single timer set for the exact

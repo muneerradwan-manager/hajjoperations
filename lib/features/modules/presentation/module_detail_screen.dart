@@ -13,6 +13,7 @@ import '../../../core/theme/app_accents.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/utils/arabic_search.dart';
+import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/info_section.dart';
 import '../../../core/widgets/overflow_menu.dart';
@@ -498,19 +499,43 @@ class _BodyState extends State<_Body> {
         SectionHeader(l.moduleReports, icon: AppIcons.tasks),
         _ReportsCard(module: module, reports: state.reports),
       ],
-      // What a finished file is for. Only its own people, only once it is
-      // over, and only ever their own result back.
-      if (state.canRate) ...[
-        const SizedBox(height: AppSpacing.lg),
-        SectionHeader(l.moduleRatingSection, icon: AppIcons.approvals),
-        _RatingCard(state: state),
-      ],
-
       const SizedBox(height: AppSpacing.lg),
       SectionHeader(
         l.moduleMembersCount(state.peopleCount),
         icon: AppIcons.participants,
       ),
+
+      // What a finished file is for. The stars themselves are under each name
+      // in the roster below — see [_Rating] — and this is the one thing that
+      // could not go with them: the promise of anonymity is made ONCE, to the
+      // page, and it has to be made BEFORE the first star rather than repeated
+      // under thirty of them. Somebody about to rate a colleague is entitled to
+      // know who will see it, and to know it without having pressed anything.
+      if (state.canRate) ...[
+        GlassCard(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Row(
+            children: [
+              Icon(
+                AppIcons.approvals,
+                size: 17,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  l.moduleRatingAnonymous,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+      ],
 
       // Writing to everyone in the file, from the page that lists them. The
       // audience is not asked for — standing here IS the answer, and a sheet
@@ -818,23 +843,23 @@ class _RosterFilterBarState extends State<_RosterFilterBar> {
   }
 }
 
-/// The narrowest a member may get before a roster drops a column.
+/// The narrowest a member tile may get before a roster drops a column.
 ///
 /// A member is a face, a name under it and up to three dialable numbers in a
-/// row. Below this the numbers start wrapping one to a line, and the card grows
+/// row. Below this the numbers start wrapping one to a line, and the tile grows
 /// taller than the column it just saved — which is the opposite of the point.
-const _kMemberWidth = 340.0;
-
-/// The same, for a roster nested inside a node's card.
 ///
-/// A grid measures the box it is given, and inside the card that box is already
-/// two paddings narrower than the one the file-level rosters get. Asked for the
-/// full [_kMemberWidth] it therefore drops a column before they do — at 1200,
-/// where the side panel first appears and the content pane is at its narrowest,
-/// مخيمات عرفات would stand in one column while the team beside it stood in
-/// two. Giving back a gutter's width is what keeps the tree columning in step
-/// with everything else on the screen.
-const _kNestedMemberWidth = _kMemberWidth - AppSpacing.lg;
+/// Measured INSIDE a card, because that is where every roster on this screen
+/// now sits: a grid measures the box it is given, and within a card that box is
+/// already a padding narrower than the page's. So the figure is the 340 a tile
+/// actually wants, less the gutter it does not get.
+///
+/// There were two of these — one for the rosters that stood loose on the page
+/// and one for the tree nested in a node's card — and at 1200, where the side
+/// panel first appears and the content pane is at its narrowest, the difference
+/// was a column. The loose rosters have moved into cards, so the distinction
+/// they encoded is gone and one number serves all three.
+const _kNestedMemberWidth = 340.0 - AppSpacing.lg;
 
 /// One team of a file with no tree: everyone on it, and under each of them the
 /// duties he was actually handed.
@@ -869,34 +894,33 @@ class _RoleRosterCard extends StatelessWidget {
       children: [
         const SizedBox(height: AppSpacing.sm),
         SectionHeader(role.name.of(context), icon: AppIcons.roles),
-        // The same width every other roster on this screen uses.
+        // ONE card for the team, with its people as tiles inside it — the same
+        // shape a برج has always had, and now the shape every roster on this
+        // screen has. It used to be a card per person, which put a hairline and
+        // a fill around each of thirty faces, and read as a different kind of
+        // object from the identical man standing in a برج two sections down.
         //
-        // It asked for 400 once, so that a duty title would fit on one line.
-        // It bought the opposite: 400 columns one step later than 340, so at
-        // the widths people actually work at — a 1280 laptop, a half-screen
-        // window — a FILE-LEVEL team stood in a single column while the tree
-        // beside it stood in two. Two files in three carry such a team, so most
-        // of the catalog read as though it were laid out differently from
-        // مخيمات عرفات, which happens to have none.
-        //
-        // And the line it was protecting does not exist: a duty is a sentence,
-        // it wraps at 400 as readily as at 340. A column was traded for a wrap
-        // that happened anyway.
-        AdaptiveGrid(
-          minTileWidth: _kMemberWidth,
-          children: [
-            for (final member in members)
-              GlassCard(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Column(
+        // The nested width, for the reason [_kNestedMemberWidth] gives: this
+        // grid now measures the box INSIDE a card, two paddings narrower than
+        // the one it used to get, and asking for the full width here would drop
+        // a column exactly where the tree beside it keeps one.
+        GlassCard(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: AdaptiveGrid(
+            minTileWidth: _kNestedMemberWidth,
+            spacing: AppSpacing.lg,
+            equalHeights: false,
+            children: [
+              for (final member in members)
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _MemberTile(member: member, dense: true),
+                    _MemberTile(member: member),
                     ..._duties(context, member.taskIds),
                   ],
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
       ],
@@ -985,8 +1009,21 @@ class _SectorCard extends StatelessWidget {
           sector.label ?? level.name.of(context),
           icon: AppIcons.roles,
         ),
+        // The قطاع's own staff, in one card of their own — the same card every
+        // other group of people on this screen sits in. They were loose tiles
+        // here, each carrying its own card, which made the sector's supervisors
+        // look like a different class of thing from the برج full of people
+        // directly beneath them.
         if (supervisors.isNotEmpty) ...[
-          AdaptiveGrid(minTileWidth: _kMemberWidth, children: supervisors),
+          GlassCard(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: AdaptiveGrid(
+              minTileWidth: _kNestedMemberWidth,
+              spacing: AppSpacing.lg,
+              equalHeights: false,
+              children: supervisors,
+            ),
+          ),
           const SizedBox(height: AppSpacing.md),
         ],
         if (towerLevel != null)
@@ -1040,11 +1077,7 @@ class _TowerCard extends StatelessWidget {
       for (final role in level.roles)
         for (final member in tower.membersOf(role.id))
           if (filter.keeps(member, role))
-            _MemberTile(
-              member: member,
-              roleName: role.name.of(context),
-              dense: true,
-            ),
+            _MemberTile(member: member, roleName: role.name.of(context)),
     ];
 
     // The برج itself is only shown while it still has somebody the reader is
@@ -1054,8 +1087,11 @@ class _TowerCard extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      // md, matching the roster cards. This one nests — member tiles sit
+      // inside it, each a card with its own padding — so at lg the people in a
+      // برج were inset twice over and the tower read as a frame around a frame.
       child: GlassCard(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1414,17 +1450,13 @@ class _TaskLine extends StatelessWidget {
 /// tap: coordinating between a tower and its sector is the everyday use of
 /// this screen, and it is why members can see each other at all.
 class _MemberTile extends StatelessWidget {
-  const _MemberTile({required this.member, this.roleName, this.dense = false});
+  const _MemberTile({required this.member, this.roleName});
 
   final ModuleMember member;
 
   /// Shown as a badge — inside a tower the same card carries a supervisor, his
   /// deputies and the mission members, so the role has to be on the row.
   final String? roleName;
-
-  /// Towers nest their members inside the tower card, which already has a
-  /// border of its own.
-  final bool dense;
 
   @override
   Widget build(BuildContext context) {
@@ -1464,7 +1496,7 @@ class _MemberTile extends StatelessWidget {
             ProfileAvatar(
               photoUrl: profile.photoUrl,
               name: profile.fullName,
-              radius: dense ? 19 : 23,
+              radius: 19,
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -1476,7 +1508,7 @@ class _MemberTile extends StatelessWidget {
                       Flexible(
                         child: Text(
                           profile.fullName.isEmpty ? '—' : profile.fullName,
-                          style: dense ? text.titleSmall : text.titleMedium,
+                          style: text.titleSmall,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -1509,6 +1541,17 @@ class _MemberTile extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                  // Directly under the name, which is the whole point of it
+                  // being here: the stars used to live in a section of their
+                  // own that listed every one of these people a second time,
+                  // by name, in the same order, so a file of thirty was thirty
+                  // rows read twice. Rating somebody is a thing you do TO a
+                  // person, and the person is already on the screen.
+                  //
+                  // Draws nothing at all until the file has ended — see
+                  // [_Rating], which is also where the watch lives, so that a
+                  // tapped star rebuilds five stars and not the whole tile.
+                  _Rating(member: member),
                 ],
               ),
             ),
@@ -1547,26 +1590,27 @@ class _MemberTile extends StatelessWidget {
     //
     // The profile travels with the tap rather than being fetched again: the
     // roster query already embeds it whole, and the detail screen takes one.
-    void open() => Navigator.of(context).push(
-      fadeThroughRoute((_) => EmployeeDetailScreen(profile: profile)),
-    );
+    void open() => Navigator.of(
+      context,
+    ).push(fadeThroughRoute((_) => EmployeeDetailScreen(profile: profile)));
 
-    if (dense) {
-      // No card of its own here, so the tap needs a shape to land in — and a
-      // little padding, so the ripple does not stop at the text's edge.
-      return InkWell(
-        onTap: open,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xs),
-          child: body,
-        ),
-      );
-    }
-    return GlassCard(
+    // Never a card of its own. A person on this screen always sits INSIDE the
+    // card of the thing he is on it for — his role, his قطاع, his برج — and the
+    // tile is the same shape in all three.
+    //
+    // It was not always: a برج drew its people as rows in the tower's card
+    // while a file-level team drew each of its own as a card, so the same man
+    // in the same file looked like two different kinds of object depending on
+    // where he happened to be assigned. The flag that chose between them is
+    // gone rather than defaulted, because a default is a thing the next caller
+    // can quietly set back.
+    //
+    // No card here means the tap needs a shape of its own to land in, and a
+    // little padding so the ripple does not stop at the text's edge.
+    return InkWell(
       onTap: open,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: body,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: Padding(padding: const EdgeInsets.all(AppSpacing.sm), child: body),
     );
   }
 }
@@ -1591,35 +1635,41 @@ String displayFieldValue(
   _ => value?.toString() ?? '',
 };
 
-/// The rating of a finished file: what the viewer received, and a star row per
-/// colleague for what he thinks of them.
+/// The five stars that sit under a name in the roster.
 ///
-/// Everyone in the file appears once, wherever they sit in it — a tower member
-/// may rate the supervisor of his sector, because they carried the same file.
-/// The viewer is not in his own list.
-class _RatingCard extends StatelessWidget {
-  const _RatingCard({required this.state});
+/// One widget for two different things, which is the reason it reads as one
+/// row either way — a reader glancing down a file sees stars under every name
+/// and does not have to learn two shapes:
+///
+///   * under a COLLEAGUE it is a CONTROL. Tapping the third star says three;
+///     tapping the star the rating already ends on withdraws it. Anyone in the
+///     file may rate anyone else in it, wherever they each sit — a tower member
+///     may rate the supervisor of his sector, because they carried the same
+///     file.
+///   * under the VIEWER'S OWN name it is a RESULT, and not a control: the
+///     average others gave him and how many gave it. Never who. That line used
+///     to head a card of its own titled "تقييمي في هذا الملف"; the title is not
+///     needed when the line is sitting under his own face.
+///
+/// Nothing is drawn at all until the file has ended and the viewer is one of
+/// its people — [ModuleDetailState.canRate] — so on a live file this costs one
+/// empty box per member and no layout.
+///
+/// The watch lives HERE rather than in [_MemberTile] so that a tapped star
+/// rebuilds five stars instead of a card carrying an avatar, a role badge and
+/// three contact chips.
+class _Rating extends StatelessWidget {
+  const _Rating({required this.member});
 
-  final ModuleDetailState state;
+  final ModuleMember member;
 
-  /// Everyone in the file but the viewer, each appearing once however many
-  /// roles they hold in it.
-  List<ModuleMember> _colleagues(String me) {
-    final seen = <String>{me};
-    final out = <ModuleMember>[];
-    for (final m in [
-      ...state.members,
-      for (final n in state.nodes) ...n.members,
-    ]) {
-      if (seen.add(m.profileId)) out.add(m);
-    }
-    return out;
-  }
-
-  Future<void> _rate(BuildContext context, String rateeId, int? stars) async {
+  Future<void> _rate(BuildContext context, int? stars) async {
     final l = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
-    final error = await context.read<ModuleDetailCubit>().rate(rateeId, stars);
+    final error = await context.read<ModuleDetailCubit>().rate(
+      member.profileId,
+      stars,
+    );
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -1634,87 +1684,59 @@ class _RatingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final state = context.watch<ModuleDetailCubit>().state;
+    if (!state.canRate) return const SizedBox.shrink();
+
     final l = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final me = supabase.auth.currentUser?.id;
     if (me == null) return const SizedBox.shrink();
-    final summary = state.myRatingSummary;
-    final colleagues = _colleagues(me);
 
-    return GlassCard(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(l.moduleRatingMine, style: text.titleSmall),
-          const SizedBox(height: AppSpacing.sm),
-          if (summary.isRated)
-            RatingSummaryLine(
-              average: summary.average,
-              ratings: summary.ratings,
-              label: l.moduleRatingValue(
-                summary.average.toStringAsFixed(1),
-                summary.ratings,
-              ),
-            )
-          else
-            Text(
-              l.moduleRatingNone,
-              style: text.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(l.moduleRatingRate, style: text.titleSmall),
-          const SizedBox(height: 2),
-          // Said out loud, and said BEFORE the stars: somebody about to rate a
-          // colleague is entitled to know who will see it.
-          Text(
-            l.moduleRatingAnonymous,
-            style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+    final mine = member.profileId == me;
+    final summary = state.myRatingSummary;
+
+    // His own result, and the one case where the stars cannot be pressed. An
+    // unrated file says so in words rather than showing five empty stars, which
+    // a reader would try to fill in.
+    if (mine && !summary.isRated) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Text(
+          l.moduleRatingNone,
+          style: text.bodySmall?.copyWith(
+            color: scheme.onSurfaceVariant,
+            fontStyle: FontStyle.italic,
           ),
-          if (colleagues.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.md),
-              // A name and five stars need less room than a member card does, so
-              // this one columns earlier — a file of thirty people is otherwise
-              // thirty rows of stars against a mostly empty card.
-              child: AdaptiveGrid(
-                minTileWidth: 300,
-                spacing: AppSpacing.lg,
-                equalHeights: false,
-                children: [
-                  for (final colleague in colleagues)
-                    Row(
-                      children: [
-                        ProfileAvatar(
-                          photoUrl: colleague.profile?.photoUrl,
-                          name: colleague.profile?.fullName ?? '',
-                          radius: 16,
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Expanded(
-                          child: Text(
-                            colleague.profile?.fullName ?? '—',
-                            style: text.bodyMedium,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        StarRating(
-                          value: (state.myRatings[colleague.profileId] ?? 0)
-                              .toDouble(),
-                          size: 20,
-                          onRated: (stars) =>
-                              _rate(context, colleague.profileId, stars),
-                        ),
-                      ],
-                    ),
-                ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        children: [
+          StarRating(
+            value: mine
+                ? summary.average
+                : (state.myRatings[member.profileId] ?? 0).toDouble(),
+            size: 18,
+            onRated: mine ? null : (stars) => _rate(context, stars),
+          ),
+          if (mine) ...[
+            const SizedBox(width: AppSpacing.sm),
+            Flexible(
+              child: Text(
+                l.moduleRatingValue(
+                  summary.average.toStringAsFixed(1),
+                  summary.ratings,
+                ),
+                style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
+          ],
         ],
       ),
     );
@@ -1738,18 +1760,11 @@ class _ReportsCard extends StatelessWidget {
     final cubit = context.read<ModuleDetailCubit>();
     final messenger = ScaffoldMessenger.of(context);
 
-    final filed = await showModalBottomSheet<bool>(
+    final filed = await showAppSheet<bool>(
       context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
       builder: (sheetContext) => BlocProvider.value(
         value: cubit,
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
-          ),
-          child: _ReportSheet(existing: cubit.state.myReportForThisPeriod),
-        ),
+        child: _ReportSheet(existing: cubit.state.myReportForThisPeriod),
       ),
     );
     if (filed != true) return;

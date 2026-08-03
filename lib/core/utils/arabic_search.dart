@@ -14,6 +14,7 @@
 ///   tashkeel   ->  dropped
 ///   ـ (tatweel)->  dropped
 ///   ٠١٢…       ->  0 1 2  Arabic-Indic digits match ASCII ones
+///   عبد الله   ->  عبدالله  the space inside a عبد- name is optional
 ///
 /// Latin text is lowercased by the same call, so one function serves a list
 /// that holds both.
@@ -42,6 +43,25 @@ String? _digit(int c) {
   return null;
 }
 
+/// A standalone عبد and the space after it.
+///
+/// عبدالله and عبد الله are the same name, and the same man is filed under
+/// both — often in the same list, because whoever typed him in on Tuesday put
+/// the space in and whoever typed him in on Thursday did not. The same goes for
+/// عبدالرحمن, عبدالعزيز, عبدالكريم and every other name built this way: عبد is
+/// not a word on its own here, it is the first half of one.
+///
+/// So the space is closed and both spellings fold to one. Joining rather than
+/// splitting, because [arabicMatchesAll] cuts a query into words on whitespace
+/// — leave the space in and "عبد الله" becomes two words, of which عبد alone
+/// then matches every عبدالرحمن and عبدالمجيد in the file.
+///
+/// Anchored to the start of a word so it cannot fire inside one: عابد الحسن
+/// keeps its space, and so does anything merely ending in the three letters.
+/// A trailing عبد with nothing after it — "محمد عبد" — has no space to close
+/// and is left exactly as it is.
+final _compoundAbd = RegExp(r'(^|\s)عبد\s+');
+
 /// The comparable form of [input] — fold it on both sides of a search.
 String foldArabic(String? input) {
   if (input == null || input.isEmpty) return '';
@@ -60,7 +80,14 @@ String foldArabic(String? input) {
     }
     out.writeCharCode(rune);
   }
-  return out.toString().toLowerCase();
+  // Last, and on the folded text rather than the raw: the letters of عبد are
+  // untouched by any rule above, but the tashkeel and tatweel that may be
+  // sitting inside it are gone by now, so عَبْد ٱلله reaches this as عبد الله
+  // and closes like the rest.
+  return out
+      .toString()
+      .replaceAllMapped(_compoundAbd, (m) => '${m[1]}عبد')
+      .toLowerCase();
 }
 
 /// Whether [haystack] contains [needle], both folded.

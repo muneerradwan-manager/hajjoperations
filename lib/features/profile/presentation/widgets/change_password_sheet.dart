@@ -2,21 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/l10n/l10n_extension.dart';
+import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/widgets/password_field.dart';
 import '../../../auth/data/auth_repository.dart';
 
 Future<void> showChangePasswordSheet(BuildContext context) {
   final repo = context.read<AuthRepository>();
-  return showModalBottomSheet<void>(
+  return showAppSheet<void>(
     context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    builder: (sheetContext) => Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
-      ),
-      child: _ChangePasswordForm(repo: repo),
-    ),
+    builder: (sheetContext) => _ChangePasswordForm(repo: repo),
   );
 }
 

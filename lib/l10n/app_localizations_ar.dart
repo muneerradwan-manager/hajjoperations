@@ -1299,12 +1299,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cadenceOnce => 'تقرير لمرة واحدة';
 
   @override
-  String get moduleRatingSection => 'التقييم';
-
-  @override
-  String get moduleRatingMine => 'تقييمي في هذا الملف';
-
-  @override
   String get moduleRatingNone => 'لم يقيّمك أحد في هذا الملف بعد';
 
   @override
@@ -1319,9 +1313,6 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$average من 5 · $_temp0';
   }
-
-  @override
-  String get moduleRatingRate => 'قيّم زملاءك في هذا الملف';
 
   @override
   String get moduleRatingAnonymous =>

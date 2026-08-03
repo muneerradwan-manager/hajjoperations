@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The four cells that are neither open nor next.
+
+    A transparent 1dp edge rather than no background at all, and the card says
+    why in as many words: "Transparent rather than absent on a plain cell, so
+    all six keep the same inner height and their times sit on one line across
+    the strip." Drop this and the two marked cells stand a pixel taller than the
+    four around them, which is visible precisely because the six times are meant
+    to read as one row.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@android:color/transparent" />
+    <corners android:radius="12dp" />
+    <stroke
+        android:width="1dp"
+        android:color="@android:color/transparent" />
+</shape>
