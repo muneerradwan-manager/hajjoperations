@@ -334,13 +334,25 @@ class ModuleType {
   /// [tasks] split into the stages of the work, in order. Duties belonging to
   /// no stage come first under no heading, and empty stages are dropped — a
   /// heading with nothing under it says only that something is missing.
-  List<(TaskGroup?, List<RoleTask>)> byStage(List<RoleTask> tasks) {
+  List<(TaskGroup?, List<RoleTask>)> byStage(List<RoleTask> tasks) =>
+      groupByStage(tasks, (t) => t.groupId);
+
+  /// The same, for anything else that carries a stage id.
+  ///
+  /// Generic because two different things are laid out this way now: a
+  /// [RoleTask] read off the catalog, and a line of the task board, which joins
+  /// a duty to how it is going. They are different objects and the stages of
+  /// the work are the type's either way.
+  List<(TaskGroup?, List<T>)> groupByStage<T>(
+    List<T> items,
+    String? Function(T) groupOf,
+  ) {
     if (taskGroups.isEmpty) {
-      return tasks.isEmpty ? const [] : [(null, tasks)];
+      return items.isEmpty ? const [] : [(null, items)];
     }
     return [
       for (final stage in <TaskGroup?>[null, ...taskGroups])
-        if (tasks.where((t) => t.groupId == stage?.id).toList()
+        if (items.where((t) => groupOf(t) == stage?.id).toList()
             case final inStage when inStage.isNotEmpty)
           (stage, inStage),
     ];

@@ -4,6 +4,7 @@ import '../../../core/bloc/safe_cubit.dart';
 import '../../../core/l10n/localized_name.dart';
 import '../../../core/supabase/supabase_client.dart';
 import '../data/modules_repository.dart';
+import '../domain/module_task.dart';
 import '../domain/module_type.dart';
 import '../domain/operational_module.dart';
 import '../domain/reference_item.dart';
@@ -44,6 +45,8 @@ class ModuleDetailState extends Equatable {
     this.reports = const [],
     this.myRatings = const {},
     this.myRatingSummary = RatingSummary.none,
+    this.board = ModuleTaskBoard.empty,
+    this.showAllTasks = false,
     this.viewAsProfileId,
     this.error,
   });
@@ -70,6 +73,16 @@ class ModuleDetailState extends Equatable {
 
   /// And what the viewer received here — an average and a count, never names.
   final RatingSummary myRatingSummary;
+
+  /// The duties in force here for [focusProfileId] — the file's, then those of
+  /// every post he holds, then whatever was written for him by name. Assembled
+  /// by the database (`module_task_board`, 0083); see [ModuleTaskBoard].
+  final ModuleTaskBoard board;
+
+  /// Whether the board was asked for the WHOLE file rather than one man's share
+  /// of it. Only whoever runs the file gets anything extra for it — the widened
+  /// query is still read through the same RLS as the narrow one.
+  final bool showAllTasks;
 
   /// Whether this file is finished and open for its people to rate each other.
   /// A file with no end date is never open, even switched off: nobody has
@@ -159,6 +172,41 @@ class ModuleDetailState extends Equatable {
     return null;
   }
 
+  /// The name of anyone posted anywhere in this file. Read off the roster
+  /// already in hand — a personal duty names a man the reader is looking at
+  /// either way, so there is nothing to fetch.
+  String? nameOf(String? profileId) {
+    if (profileId == null) return null;
+    for (final m in [...members, for (final n in nodes) ...n.members]) {
+      if (m.profileId == profileId) return m.profile?.fullName;
+    }
+    return null;
+  }
+
+  ModuleRole? roleById(String? id) => id == null ? null : type?.roleById(id);
+
+  /// Where a duty is owed — "البرج/الفندق: فندق الصفوة". Null for a post held
+  /// on the file itself: there the file IS the place, and naming it again under
+  /// every duty would say nothing.
+  LocalizedName? placeOf(String? nodeId) {
+    if (nodeId == null) return null;
+    final node = nodes.where((n) => n.id == nodeId).firstOrNull;
+    if (node == null) return null;
+    final level = type?.levelById(node.levelId);
+    // A hotel is master data and carries both languages; a sector was named by
+    // hand and carries only the one it was typed in, and falls back to it.
+    final name =
+        referenceItem(level?.referenceSetId, node.referenceItemId)?.name ??
+        (node.label == null ? null : LocalizedName(ar: node.label!));
+    if (name == null) return null;
+    String join(String? level, String node) =>
+        [level, node].nonNulls.where((s) => s.isNotEmpty).join(': ');
+    return LocalizedName(
+      ar: join(level?.name.ar, name.ar),
+      en: join(level?.name.en, name.en ?? name.ar),
+    );
+  }
+
   /// The roles [focusProfileId] holds anywhere in this file, and where. A
   /// person may hold two — a sector supervisor who also runs one of its towers
   /// — so this is a list, and each role carries the places it is held in.
@@ -227,6 +275,8 @@ class ModuleDetailState extends Equatable {
     reports,
     myRatings,
     myRatingSummary,
+    board,
+    showAllTasks,
     viewAsProfileId,
     error,
   ];
@@ -267,6 +317,153 @@ class ModuleDetailCubit extends SafeCubit<ModuleDetailState> {
     }
   }
 
+  // ------------------------------------------------------------------ duties
+
+  Future<ModuleTaskBoard> _fetchBoard() async => ModuleTaskBoard(
+    lines: await _repo.fetchTaskBoard(
+      moduleId: moduleId,
+      profileId: viewAsProfileId,
+      all: state.showAllTasks,
+    ),
+  );
+
+  /// Re-reads the duties alone. The rest of the page — the tree, the roster,
+  /// the reports — cannot have moved because somebody ticked a duty, and
+  /// reloading it would blink the whole screen for one line of it.
+  Future<void> _reloadBoard() async {
+    emit(_copyWith(board: await _fetchBoard()));
+  }
+
+  ModuleDetailState _copyWith({
+    ModuleTaskBoard? board,
+    bool? showAllTasks,
+    Map<String, int>? myRatings,
+  }) => ModuleDetailState(
+    status: state.status,
+    module: state.module,
+    type: state.type,
+    nodes: state.nodes,
+    members: state.members,
+    referenceSets: state.referenceSets,
+    reports: state.reports,
+    myRatings: myRatings ?? state.myRatings,
+    myRatingSummary: state.myRatingSummary,
+    board: board ?? state.board,
+    showAllTasks: showAllTasks ?? state.showAllTasks,
+    viewAsProfileId: state.viewAsProfileId,
+    error: state.error,
+  );
+
+  /// Switches between "my duties here" and every duty in the file. Only ever
+  /// offered to whoever runs it; the database narrows the answer again for
+  /// anyone else who asks.
+  Future<void> setShowAllTasks(bool all) async {
+    if (all == state.showAllTasks) return;
+    emit(_copyWith(showAllTasks: all));
+    emit(_copyWith(board: await _fetchBoard()));
+  }
+
+  /// Moves one duty along, with whatever note and evidence came with it.
+  /// Returns null on success, else what went wrong.
+  Future<String?> setTaskState(
+    ModuleTaskLine line,
+    TaskState newState, {
+    String? note,
+    List<PendingAttachment> attachments = const [],
+    List<StoredAttachment> removed = const [],
+  }) async {
+    try {
+      // The state row first: the evidence is stored under its id, and storage
+      // will not accept a file until it exists.
+      final statusId = await _repo.setTaskState(
+        moduleId: moduleId,
+        state: newState,
+        typeTaskId: line.typeTaskId,
+        moduleTaskId: line.moduleTaskId,
+        nodeId: line.nodeId,
+        profileId: line.profileId,
+        note: note,
+      );
+      if (attachments.isNotEmpty || removed.isNotEmpty) {
+        await _repo.setTaskAttachments(
+          moduleId: moduleId,
+          statusId: statusId,
+          attachments: attachments,
+          removed: removed,
+        );
+      }
+      await _reloadBoard();
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  /// Writes a duty onto this file — the third scope, and the two exceptional
+  /// halves of the other two. Returns null on success, else the failure.
+  Future<String?> createTask({
+    required TaskScope scope,
+    required String titleAr,
+    String? titleEn,
+    String? descriptionAr,
+    String? roleId,
+    String? profileId,
+    String? groupId,
+    DateTime? dueOn,
+  }) async {
+    try {
+      await _repo.createFileTask(
+        moduleId: moduleId,
+        scope: scope,
+        titleAr: titleAr,
+        titleEn: titleEn,
+        descriptionAr: descriptionAr,
+        roleId: roleId,
+        profileId: profileId,
+        groupId: groupId,
+        dueOn: dueOn,
+      );
+      await _reloadBoard();
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<String?> updateTask({
+    required String id,
+    required String titleAr,
+    String? titleEn,
+    String? descriptionAr,
+    String? groupId,
+    DateTime? dueOn,
+  }) async {
+    try {
+      await _repo.updateFileTask(
+        id: id,
+        titleAr: titleAr,
+        titleEn: titleEn,
+        descriptionAr: descriptionAr,
+        groupId: groupId,
+        dueOn: dueOn,
+      );
+      await _reloadBoard();
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  Future<String?> deleteTask(String id) async {
+    try {
+      await _repo.deleteFileTask(id);
+      await _reloadBoard();
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
   Future<void> load() async {
     try {
       final module = await _repo.fetchModule(moduleId);
@@ -296,6 +493,9 @@ class ModuleDetailCubit extends SafeCubit<ModuleDetailState> {
       final summary = module.hasEnded
           ? await _repo.fetchMyRatingSummary(moduleId)
           : RatingSummary.none;
+      // The duties of the file, of the posts held in it, and of the man — one
+      // call, because only the database can work out the middle one.
+      final board = await _fetchBoard();
 
       emit(
         ModuleDetailState(
@@ -308,6 +508,8 @@ class ModuleDetailCubit extends SafeCubit<ModuleDetailState> {
           reports: reports,
           myRatings: ratings,
           myRatingSummary: summary,
+          board: board,
+          showAllTasks: state.showAllTasks,
           viewAsProfileId: viewAsProfileId,
         ),
       );
@@ -344,20 +546,7 @@ class ModuleDetailCubit extends SafeCubit<ModuleDetailState> {
       // Only what the viewer gave is re-read. His own result cannot have
       // changed — nobody rates himself — and re-reading it would suggest the
       // two are connected.
-      emit(
-        ModuleDetailState(
-          status: state.status,
-          module: state.module,
-          type: state.type,
-          nodes: state.nodes,
-          members: state.members,
-          referenceSets: state.referenceSets,
-          reports: state.reports,
-          myRatings: await _repo.fetchMyRatings(module.id),
-          myRatingSummary: state.myRatingSummary,
-          viewAsProfileId: state.viewAsProfileId,
-        ),
-      );
+      emit(_copyWith(myRatings: await _repo.fetchMyRatings(module.id)));
       return null;
     } catch (e) {
       return e.toString();

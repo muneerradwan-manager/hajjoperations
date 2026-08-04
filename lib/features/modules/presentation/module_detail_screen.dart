@@ -33,6 +33,7 @@ import '../domain/operational_module.dart';
 import 'module_editor_screen.dart';
 import 'widgets/cadence_label.dart';
 import 'widgets/location_button.dart';
+import 'widgets/module_tasks.dart';
 import 'widgets/star_rating.dart';
 
 /// Everything an operational file holds, for whoever is allowed to see it: when
@@ -375,11 +376,17 @@ class _BodyState extends State<_Body> {
     // to the office door only. Reached from عام the file is something being
     // read, and a broadcast button on a reading page is administration leaking
     // into the general section, permission or no permission.
+    final session = context.watch<SessionCubit>().state;
     final canNotify =
         widget.fromOffice &&
-        context.watch<SessionCubit>().state.can(
-          PermissionCodes.notificationsBroadcastModule,
-        );
+        session.can(PermissionCodes.notificationsBroadcastModule);
+
+    // Writing duties onto the file, and reading the whole file's board rather
+    // than one man's share of it. NOT gated on `fromOffice`: handing a سائق a
+    // duty is the daily work of running a file, not paperwork about it, and the
+    // supervisor doing it is standing in the file he is serving in. What it IS
+    // gated on is the grant — and the database refuses it either way.
+    final canManageTasks = session.can(PermissionCodes.modulesTasks);
     final (rolesPresent, roleCounts) = _rolesPresent();
     final showing = _showing();
     final type = state.type;
@@ -480,19 +487,27 @@ class _BodyState extends State<_Body> {
     // is divided. All of it changes, all of it is read against the facts above,
     // and it is the part with a scrollbar.
     final work = <Widget>[
+      // The posting itself: which post, where, and what the Administration says
+      // it is. Not its duties — those are the board below, where they carry a
+      // state and are read per place rather than per man.
       if (roles.isNotEmpty) ...[
         const SizedBox(height: AppSpacing.lg),
         SectionHeader(
           focusName == null
               ? l.moduleSectionTasks
               : l.moduleSectionTasksOf(focusName),
-          icon: AppIcons.tasks,
+          icon: AppIcons.roles,
         ),
         for (final held in roles) ...[
           _TaskCard(type: type!, held: held),
           const SizedBox(height: AppSpacing.md),
         ],
       ],
+
+      // The duties, in the three levels the work is organised in: the file's,
+      // then each post's at each place, then whatever was written for one man
+      // by name. See `moduleTaskSections`.
+      ...moduleTaskSections(context, state, canManage: canManageTasks),
 
       if (module.reportCadence.asksForReports) ...[
         const SizedBox(height: AppSpacing.lg),
@@ -1331,13 +1346,18 @@ class _TaskCard extends StatelessWidget {
               ).textTheme.bodyMedium?.copyWith(height: 1.6),
             ),
           ],
-          const SizedBox(height: AppSpacing.md),
-          if (tasks.isEmpty)
-            // Two different silences. A role whose duties are handed out one by
-            // one and has handed this person none says so — it is a fact about
-            // him, not about the role. A role with a description and no extra
-            // duties needs no apology at all.
-            if (role.tasksAreAssigned)
+          // The standing duties of the post are NOT here any more. Since 0083
+          // they belong to the post rather than to the man holding it, and they
+          // are read — with their state, and once per place he holds it — off
+          // the board below (see `moduleTaskSections`). Repeating them here as
+          // a flat list with no state would be the old screen printed twice.
+          //
+          // What stays is the one list the board cannot carry: a role whose
+          // duties are a MENU (`tasks_are_assigned`, 0027), where what is his
+          // is what he was handed rather than what the post owes.
+          if (role.tasksAreAssigned) ...[
+            const SizedBox(height: AppSpacing.md),
+            if (tasks.isEmpty)
               Text(
                 l.moduleNoAssignedTasksMine,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -1345,18 +1365,7 @@ class _TaskCard extends StatelessWidget {
                   fontStyle: FontStyle.italic,
                 ),
               )
-            else if (role.description == null)
-              Text(
-                l.moduleNoTasks,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  fontStyle: FontStyle.italic,
-                ),
-              )
-            else
-              const SizedBox.shrink()
-          else ...[
-            if (role.tasksAreAssigned) ...[
+            else ...[
               Text(
                 l.moduleAssignedTasks,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -1364,8 +1373,8 @@ class _TaskCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
+              ...stagedTasks(context, type, tasks),
             ],
-            ...stagedTasks(context, type, tasks),
           ],
         ],
       ),

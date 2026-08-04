@@ -36,6 +36,7 @@ String permissionLabel(AppLocalizations l, String code) => switch (code) {
   'modules.delete' => l.permModulesDelete,
   'modules.activate' => l.permModulesActivate,
   'modules.members' => l.permModulesMembers,
+  'modules.tasks' => l.permModulesTasks,
   'modules.reports' => l.permModulesReports,
   'reference.view' => l.permReferenceView,
   'reference.edit' => l.permReferenceEdit,

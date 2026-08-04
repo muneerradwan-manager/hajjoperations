@@ -6,6 +6,7 @@ import '../../../core/supabase/storage_key.dart';
 import '../../../core/supabase/supabase_client.dart';
 import '../../profile/domain/profile.dart';
 import '../domain/assignable_employee.dart';
+import '../domain/module_task.dart';
 import '../domain/module_type.dart';
 import '../domain/operational_module.dart';
 import '../domain/reference_item.dart';
@@ -270,6 +271,224 @@ class ModulesRepository {
       });
     }
     await supabase.from('module_report_attachments').insert(rows);
+  }
+
+  // ----------------------------------------------------------------- duties
+
+  /// The board one person should see in a file: the file's duties, then the
+  /// duties of every post he holds — once per place he holds it — then whatever
+  /// was written for him by name. In that order, decided in the database.
+  ///
+  /// [profileId] reads somebody else's board, for the same reason the detail
+  /// screen takes a `viewAsProfileId`: opened from a man's page, the question
+  /// is what HE owes. Null is the caller.
+  ///
+  /// [all] widens it to every post at every place and everyone's personal
+  /// duties — the whole file at once, for whoever runs it. RLS is unchanged by
+  /// it: asking for everything gets a member exactly what he could see anyway.
+  Future<List<ModuleTaskLine>> fetchTaskBoard({
+    required String moduleId,
+    String? profileId,
+    bool all = false,
+  }) async {
+    final rows = await supabase.rpc(
+      'module_task_board',
+      params: {
+        'p_module_id': moduleId,
+        'p_profile_id': profileId,
+        'p_all': all,
+      },
+    );
+    final lines = ((rows as List?) ?? const [])
+        .cast<Map<String, dynamic>>()
+        .map(ModuleTaskLine.fromMap)
+        .toList();
+
+    // The evidence, in one round trip for the whole board. Only lines that
+    // somebody has already touched can carry any — the rest have no state row
+    // for an attachment to hang off.
+    final statusIds = [
+      for (final line in lines)
+        if (line.statusId != null) line.statusId!,
+    ];
+    if (statusIds.isEmpty) return lines;
+
+    final files = await supabase
+        .from('module_task_attachments')
+        .select()
+        .inFilter('status_id', statusIds)
+        .order('sort_order');
+    if ((files as List).isEmpty) return lines;
+
+    final byStatus = <String, List<StoredAttachment>>{};
+    for (final row in files.cast<Map<String, dynamic>>()) {
+      (byStatus[row['status_id'] as String] ??= []).add(
+        StoredAttachment.fromMap(row),
+      );
+    }
+    return [
+      for (final line in lines)
+        if (byStatus[line.statusId] case final attachments?)
+          line.withAttachments(attachments)
+        else
+          line,
+    ];
+  }
+
+  /// Moves one duty along, and returns the id of the row that holds its state
+  /// — which is also where its evidence is stored, so the caller cannot upload
+  /// anything until the row exists.
+  ///
+  /// Through an RPC rather than a plain upsert because who may do this is three
+  /// rules, one per scope, and only one of them is a permission: a member of
+  /// the file may move a file duty, the holder of a post may move his post's,
+  /// and a man may move his own. The function checks all three (0083).
+  Future<String> setTaskState({
+    required String moduleId,
+    required TaskState state,
+    String? typeTaskId,
+    String? moduleTaskId,
+    String? nodeId,
+    String? profileId,
+    String? note,
+  }) async {
+    final id = await supabase.rpc(
+      'set_module_task_state',
+      params: {
+        'p_module_id': moduleId,
+        'p_state': state.dbName,
+        'p_type_task_id': typeTaskId,
+        'p_module_task_id': moduleTaskId,
+        'p_node_id': nodeId,
+        'p_profile_id': profileId,
+        'p_note': note,
+      },
+    );
+    return id as String;
+  }
+
+  /// Files evidence against a duty whose state row already exists, and takes
+  /// back whatever was removed. [statusId] comes from [setTaskState].
+  Future<void> setTaskAttachments({
+    required String moduleId,
+    required String statusId,
+    List<PendingAttachment> attachments = const [],
+    List<StoredAttachment> removed = const [],
+  }) async {
+    for (final attachment in removed) {
+      await supabase
+          .from('module_task_attachments')
+          .delete()
+          .eq('id', attachment.id);
+      await supabase.storage.from(_bucket).remove([attachment.path]);
+    }
+    if (attachments.isEmpty) return;
+
+    // Where the next one starts, so filing twice does not overwrite what is
+    // already there — two photos off one camera roll can share a name.
+    final existing = await supabase
+        .from('module_task_attachments')
+        .select('sort_order')
+        .eq('status_id', statusId)
+        .order('sort_order', ascending: false)
+        .limit(1);
+    var next =
+        ((existing as List).firstOrNull as Map<String, dynamic>?)?['sort_order']
+                as int? ??
+            -1;
+
+    final rows = <Map<String, dynamic>>[];
+    for (final attachment in attachments) {
+      next++;
+      final path =
+          '$moduleId/tasks/$statusId/${next}_'
+          '${storageKey(attachment.name, fallback: '$next')}';
+      await supabase.storage
+          .from(_bucket)
+          .upload(
+            path,
+            attachment.file,
+            fileOptions: FileOptions(
+              upsert: true,
+              contentType: attachment.mimeType,
+            ),
+          );
+      rows.add({
+        'status_id': statusId,
+        'kind': attachment.kind.name,
+        'path': path,
+        'name': attachment.name,
+        'mime_type': attachment.mimeType,
+        'size_bytes': attachment.file.lengthSync(),
+        'sort_order': next,
+      });
+    }
+    await supabase.from('module_task_attachments').insert(rows);
+  }
+
+  /// Writes a duty onto ONE file of ONE season — the exception the standing
+  /// catalog did not foresee. [scope] decides what the rest of the arguments
+  /// mean: a role duty names a post, a personal one names a man, a file duty
+  /// names neither.
+  Future<void> createFileTask({
+    required String moduleId,
+    required TaskScope scope,
+    required String titleAr,
+    String? titleEn,
+    String? descriptionAr,
+    String? roleId,
+    String? profileId,
+    String? groupId,
+    DateTime? dueOn,
+  }) async {
+    await supabase.from('module_tasks').insert({
+      'module_id': moduleId,
+      'scope': scope.dbName,
+      'role_id': scope == TaskScope.role ? roleId : null,
+      'profile_id': scope == TaskScope.personal ? profileId : null,
+      'group_id': groupId,
+      'title_ar': titleAr,
+      'title_en': (titleEn == null || titleEn.isEmpty) ? null : titleEn,
+      'description_ar': (descriptionAr == null || descriptionAr.isEmpty)
+          ? null
+          : descriptionAr,
+      'due_on': dueOn == null ? null : _asDate(dueOn),
+      'created_by': supabase.auth.currentUser?.id,
+    });
+  }
+
+  /// Corrects a duty written on this file. Its scope is not among the arguments
+  /// on purpose: moving a duty from one man to the whole file is not an edit,
+  /// it is a different duty, and the state already recorded against it was
+  /// recorded about something else.
+  Future<void> updateFileTask({
+    required String id,
+    required String titleAr,
+    String? titleEn,
+    String? descriptionAr,
+    String? groupId,
+    DateTime? dueOn,
+  }) async {
+    await supabase
+        .from('module_tasks')
+        .update({
+          'title_ar': titleAr,
+          'title_en': (titleEn == null || titleEn.isEmpty) ? null : titleEn,
+          'description_ar': (descriptionAr == null || descriptionAr.isEmpty)
+              ? null
+              : descriptionAr,
+          'group_id': groupId,
+          'due_on': dueOn == null ? null : _asDate(dueOn),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        })
+        .eq('id', id);
+  }
+
+  /// Removes a duty written on this file, and every state recorded against it
+  /// (`on delete cascade`). Catalog duties cannot be reached from here: they
+  /// belong to the type, and to every season of it.
+  Future<void> deleteFileTask(String id) async {
+    await supabase.from('module_tasks').delete().eq('id', id);
   }
 
   // --------------------------------------------------------------- ratings

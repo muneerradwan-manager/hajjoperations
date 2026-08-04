@@ -53,6 +53,12 @@ class PermissionCodes {
   /// send, not a correction.
   static const modulesActivate = 'modules.activate';
   static const modulesMembers = 'modules.members';
+
+  /// Writing duties onto a file, and setting the state of any duty anywhere in
+  /// it. NOT what an ordinary member needs to move his own work along — that is
+  /// membership, not a grant, and the database decides it per scope (0083).
+  static const modulesTasks = 'modules.tasks';
+
   static const modulesReports = 'modules.reports';
 
   // -------------------------------------------------------------- reference

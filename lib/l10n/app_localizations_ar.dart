@@ -1191,6 +1191,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get permModulesMembers => 'إسناد الأعضاء والمهام';
 
   @override
+  String get permModulesTasks => 'كتابة مهام الملف وتحديث أي حالة';
+
+  @override
   String get permModulesReports => 'عرض تقارير أعضاء الملفات';
 
   @override
@@ -1480,6 +1483,176 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get moduleNoAssignedTasksMine =>
       'لم تُسند إليك مهام من قائمة هذا الدور بعد';
+
+  @override
+  String get moduleTasksSection => 'المهام';
+
+  @override
+  String get moduleTasksFile => 'مهام الملف';
+
+  @override
+  String get moduleTasksFileHint => 'تخصّ الملف كاملاً، ويراها كل أعضائه';
+
+  @override
+  String get moduleTasksRole => 'مهام دوري';
+
+  @override
+  String moduleTasksRoleOf(String name) {
+    return 'مهام $name';
+  }
+
+  @override
+  String get moduleTasksRoleHint =>
+      'مرتبطة بالدور لا بالشخص — تبقى كما هي إذا تغيّر من يشغله';
+
+  @override
+  String get moduleTasksPersonal => 'مهامي الشخصية';
+
+  @override
+  String moduleTasksPersonalOf(String name) {
+    return 'مهام $name الشخصية';
+  }
+
+  @override
+  String get moduleTasksPersonalHint =>
+      'مهام استثنائية لا يراها إلا صاحبها ومن يدير الملف';
+
+  @override
+  String get moduleTasksNone => 'لا توجد مهام في هذا الملف بعد';
+
+  @override
+  String get moduleTasksNoneMine => 'لا توجد مهام تخصّك في هذا الملف';
+
+  @override
+  String moduleTasksProgress(int done, int total) {
+    return '$done/$total';
+  }
+
+  @override
+  String get moduleTasksMine => 'مهامي';
+
+  @override
+  String get moduleTasksAll => 'كل المهام';
+
+  @override
+  String get taskStateNotStarted => 'لم تبدأ';
+
+  @override
+  String get taskStateInProgress => 'قيد التنفيذ';
+
+  @override
+  String get taskStateDone => 'منجزة';
+
+  @override
+  String get moduleTaskUpdate => 'تحديث الحالة';
+
+  @override
+  String get moduleTaskState => 'الحالة';
+
+  @override
+  String get moduleTaskNote => 'ملاحظة';
+
+  @override
+  String get moduleTaskNoteHint => 'ما الذي يستحق أن يُقال عنها؟';
+
+  @override
+  String get moduleTaskEvidence => 'دليل الإنجاز';
+
+  @override
+  String moduleTaskUpdatedBy(String name, String date) {
+    return '$name · $date';
+  }
+
+  @override
+  String moduleTaskDue(String date) {
+    return 'الاستحقاق: $date';
+  }
+
+  @override
+  String get moduleTaskStateSaved => 'تم تحديث الحالة';
+
+  @override
+  String get moduleTaskReadOnly => 'لا تملك صلاحية تحديث هذه المهمة';
+
+  @override
+  String get moduleTaskAdd => 'إضافة مهمة';
+
+  @override
+  String get moduleTaskEdit => 'تعديل المهمة';
+
+  @override
+  String get moduleTaskDelete => 'حذف المهمة';
+
+  @override
+  String get moduleTaskDeleteConfirm =>
+      'حذف هذه المهمة؟ ستُحذف حالتها وما أُرفق بها معها.';
+
+  @override
+  String get moduleTaskDeleted => 'تم حذف المهمة';
+
+  @override
+  String get moduleTaskCreated => 'تمت إضافة المهمة';
+
+  @override
+  String get moduleTaskSaved => 'تم حفظ المهمة';
+
+  @override
+  String get moduleTaskScope => 'نطاق المهمة';
+
+  @override
+  String get moduleTaskScopeFile => 'مهمة ملف';
+
+  @override
+  String get moduleTaskScopeFileHint => 'يراها جميع أعضاء الملف';
+
+  @override
+  String get moduleTaskScopeRole => 'مهمة دور';
+
+  @override
+  String get moduleTaskScopeRoleHint => 'يراها كل من يشغل هذا الدور';
+
+  @override
+  String get moduleTaskScopePersonal => 'مهمة شخصية';
+
+  @override
+  String get moduleTaskScopePersonalHint => 'يراها موظف واحد فقط';
+
+  @override
+  String get moduleTaskRoleLabel => 'الدور';
+
+  @override
+  String get moduleTaskPersonLabel => 'الموظف';
+
+  @override
+  String get moduleTaskTitleLabel => 'عنوان المهمة';
+
+  @override
+  String get moduleTaskTitleEnLabel => 'العنوان بالإنكليزية';
+
+  @override
+  String get moduleTaskDescriptionLabel => 'الوصف';
+
+  @override
+  String get moduleTaskStageLabel => 'المرحلة';
+
+  @override
+  String get moduleTaskNoStage => 'بلا مرحلة';
+
+  @override
+  String get moduleTaskDueLabel => 'تاريخ الاستحقاق';
+
+  @override
+  String get moduleTaskNoDue => 'بلا تاريخ';
+
+  @override
+  String get moduleTaskPickRole => 'اختر الدور';
+
+  @override
+  String get moduleTaskPickPerson => 'اختر الموظف';
+
+  @override
+  String get moduleTaskCatalogNote =>
+      'مهمة معرّفة في نوع الملف — تُعدَّل من البيانات المرجعية';
 
   @override
   String get moduleTeamPick => 'اختيار الأعضاء';
