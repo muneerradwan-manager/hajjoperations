@@ -82,18 +82,100 @@ class DashboardCard extends StatelessWidget {
   }
 }
 
+/// The same door, drawn small enough that four of them fit where one
+/// [DashboardCard] stood: medallion above, name under it, nothing else.
+///
+/// For الإدارة, where a reader with every permission is handed twelve of these.
+/// Twelve full-width rows is four screens of scrolling, and a manager looking
+/// for الصلاحيات was reading twelve explanations to find one word — so in that
+/// section the explanation comes OFF the tile and goes onto the group heading
+/// above it, and the tiles pack two and three to a row. The subtitle is not
+/// thrown away: it is the tooltip, which is what a pointer asks for and what a
+/// screen reader is handed.
+///
+/// Not for العام, which is three or four tiles and can afford to explain
+/// itself.
+class CompactDashboardCard extends StatelessWidget {
+  const CompactDashboardCard({
+    super.key,
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    required this.color,
+    this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+
+  /// Not drawn. Carried for the tooltip and for anything reading the tree
+  /// aloud — see the class comment.
+  final String? subtitle;
+
+  final Color color;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+
+    final card = GlassCard(
+      onTap: onTap,
+      tint: color,
+      // Tighter than [DashboardCard]'s, and the medallion below is smaller for
+      // the same reason: stacking the icon ABOVE the name instead of beside it
+      // buys the second column but spends height doing it, and twelve tiles two
+      // to a row have to come out shorter than twelve rows of one or the whole
+      // exchange was for nothing.
+      padding: const EdgeInsets.symmetric(
+        vertical: AppSpacing.md,
+        horizontal: AppSpacing.md,
+      ),
+      child: Column(
+        // The tile is as tall as the longest name in its row — two lines for
+        // "إدارة الملفات التشغيلية", one for "المواسم" — and the medallions
+        // have to land on the same line across that row regardless. So the
+        // column takes the height it is given and pins the icon to the top.
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _IconMedallion(icon: icon, color: color, size: 44),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            title,
+            style: text.labelLarge,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+
+    return subtitle == null ? card : Tooltip(message: subtitle!, child: card);
+  }
+}
+
 /// Rounded-square icon holder with an outward glow in the card's accent.
 class _IconMedallion extends StatelessWidget {
-  const _IconMedallion({required this.icon, required this.color});
+  const _IconMedallion({
+    required this.icon,
+    required this.color,
+    this.size = 50,
+  });
 
   final IconData icon;
   final Color color;
 
+  /// Smaller on the compact tile, where the medallion is stacked above the name
+  /// rather than set beside it and every pixel of it is height.
+  final double size;
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 50,
-      height: 50,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppRadius.sm),
         gradient: LinearGradient(

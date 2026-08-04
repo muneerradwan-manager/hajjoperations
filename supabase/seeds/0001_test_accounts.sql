@@ -138,9 +138,19 @@ update profiles p
        surname     = 'الدائم',
        gender      = 'male',
        date_of_birth = date '1990-03-12',
-       mission_type  = 'administrative',
+       mission_type_id = (
+         select ri.id from reference_items ri
+           join reference_sets rs on rs.id = ri.set_id
+          where rs.code = 'mission_types' and ri.is_active
+          order by ri.sort_order limit 1
+       ),
        phone_sy      = '0999000111',
-       job_title_id  = (select id from job_titles where is_active order by name limit 1),
+       job_title_id  = (
+         select ri.id from reference_items ri
+           join reference_sets rs on rs.id = ri.set_id
+          where rs.code = 'job_titles' and ri.is_active
+          order by ri.name_ar limit 1
+       ),
        account_status = 'approved',
        is_suspended  = false,
        is_external   = false,
@@ -156,11 +166,20 @@ update profiles p
        surname     = 'رضوان',
        gender      = 'male',
        date_of_birth = coalesce(p.date_of_birth, date '1988-06-05'),
-       mission_type  = coalesce(p.mission_type, 'administrative'),
+       mission_type_id = coalesce(
+         p.mission_type_id,
+         (select ri.id from reference_items ri
+            join reference_sets rs on rs.id = ri.set_id
+           where rs.code = 'mission_types' and ri.is_active
+           order by ri.sort_order limit 1)
+       ),
        phone_sy      = coalesce(p.phone_sy, '0999000222'),
        job_title_id  = coalesce(
          p.job_title_id,
-         (select id from job_titles where is_active order by name limit 1)
+         (select ri.id from reference_items ri
+            join reference_sets rs on rs.id = ri.set_id
+           where rs.code = 'job_titles' and ri.is_active
+           order by ri.name_ar limit 1)
        ),
        account_status = 'approved',
        is_suspended  = false,

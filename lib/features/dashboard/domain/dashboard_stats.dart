@@ -32,9 +32,9 @@ class CountedLabel extends Equatable {
   List<Object?> get props => [labelAr, labelEn, count, secondary];
 }
 
-/// A key the app knows the meaning of — `male`, `administrative`, `unknown` —
-/// counted. Unlike [CountedLabel] the name is not in the database at all; it is
-/// an enum, and the app owns its wording.
+/// A key the app knows the meaning of — `male`, `unknown`, a permission section
+/// code — counted. Unlike [CountedLabel] the name is not in the database at all;
+/// it is an enum, and the app owns its wording.
 class CountedKey extends Equatable {
   const CountedKey({required this.key, required this.count});
 
@@ -66,7 +66,10 @@ class PeopleStats extends Equatable {
   final int withdrawn;
   final int internal;
   final int external;
-  final List<CountedKey> byMission;
+  /// Named by the database, not by the app: نوع البعثة is master data since
+  /// 0085 and the wording lives in the row.
+  final List<CountedLabel> byMission;
+
   final List<CountedKey> byGender;
   final List<CountedLabel> byJobTitle;
 
@@ -75,7 +78,7 @@ class PeopleStats extends Equatable {
     withdrawn: m['withdrawn'] as int? ?? 0,
     internal: m['internal'] as int? ?? 0,
     external: m['external'] as int? ?? 0,
-    byMission: _keys(m['by_mission']),
+    byMission: _labels(m['by_mission']),
     byGender: _keys(m['by_gender']),
     byJobTitle: _labels(m['by_job_title']),
   );

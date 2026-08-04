@@ -1,4 +1,5 @@
 import '../../../core/supabase/supabase_client.dart';
+import '../../profile/data/profile_repository.dart' show profileEmbeds;
 import '../../profile/domain/profile.dart';
 import '../domain/permission.dart';
 
@@ -7,7 +8,7 @@ class PermissionsRepository {
   Future<List<Profile>> fetchEmployees() async {
     final rows = await supabase
         .from('profiles')
-        .select('*, job_titles(name, name_en)')
+        .select(profileEmbeds)
         .eq('account_status', 'approved')
         .eq('is_admin', false)
         .order('first_name');

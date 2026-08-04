@@ -120,6 +120,19 @@ class AppIcons {
   /// gone wrong, and the sentence beside this icon always says what fixes it.
   static const warning = Iconsax.danger;
 
+  // ── Today, in both calendars ────────────────────────────────────────────
+  //
+  // Side by side on the greeting card, so the two badges have to be told apart
+  // at a glance rather than read. A crescent is the Hijri calendar's own
+  // instrument — it is how the month is declared — and a grid of days is the
+  // other one's.
+
+  /// التاريخ الهجري.
+  static const hijriDate = Iconsax.moon;
+
+  /// التاريخ الميلادي.
+  static const gregorianDate = Iconsax.calendar;
+
   // Seasons
   static const seasons = Iconsax.calendar_1;
   static const participants = Iconsax.people;
@@ -189,6 +202,31 @@ class AppIcons {
   static const complaintLocked = Iconsax.lock_1;
   static const complaintUnlock = Iconsax.unlock;
   static const complaintDismissed = Iconsax.slash;
+
+  // ── التقييم ──────────────────────────────────────────────────────────────
+  //
+  // A clipboard with a tick, and deliberately NOT [rating]'s star: the star is
+  // the anonymous five-point verdict colleagues give each other inside a
+  // finished file (migration 0059), and these are a different thing entirely —
+  // a form the office wrote, filled by one named person, adding up to a mark
+  // out of a total. Two features called تقييم in Arabic; one glyph between them
+  // would be the app agreeing they are the same.
+  static const evaluations = Iconsax.clipboard_tick;
+
+  /// The paper itself, in الإدارة — what is being edited is the questions, not
+  /// anybody's marks.
+  static const evaluationForms = Iconsax.task_square;
+
+  /// One مرحلة of a sheet, in the stepper along its top.
+  static const evaluationStage = Iconsax.hierarchy_square_2;
+
+  /// A question that is answered by choosing, and one that is answered by
+  /// writing — the two kinds, told apart in the editor's menu.
+  static const evaluationChoice = Iconsax.tick_square;
+  static const evaluationWritten = Iconsax.edit;
+
+  /// A mark, wherever a number out of a total is shown.
+  static const evaluationScore = Iconsax.medal_star;
 
   // ── مواقيت الصلاة ────────────────────────────────────────────────────────
   //

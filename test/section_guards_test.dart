@@ -42,6 +42,7 @@ void main() {
         '/reference-data': PermissionCodes.referenceView,
         '/audit-log': PermissionCodes.auditView,
         '/complaints/manage': PermissionCodes.complaintsView,
+        '/evaluations/manage': PermissionCodes.evaluationsView,
       };
 
       owners.forEach((route, code) {
@@ -65,6 +66,44 @@ void main() {
           reason: '$route opened for a permission that does not own it',
         );
       });
+    });
+
+    test('إدارة التقييم opens for either of its two codes', () {
+      // The one door in the table that takes two, and deliberately. It is where
+      // a form is written AND where an evaluation is opened on one — the
+      // register issues nothing — so closing it to `evaluations.assign` would
+      // leave that permission with no way to be exercised at all.
+      //
+      // Which is exactly why it cannot sit in the one-owner map above, and why
+      // it needs this test instead: the half that matters is still that
+      // everything ELSE is refused.
+      final guard = sectionGuards['/evaluations/forms']!;
+
+      for (final code in [
+        PermissionCodes.evaluationsTemplates,
+        PermissionCodes.evaluationsAssign,
+      ]) {
+        expect(
+          guard(_holding({code})),
+          isTrue,
+          reason: '/evaluations/forms refused $code',
+        );
+      }
+
+      // Reading the register is not writing the paper and not issuing the
+      // errand. Holding view alone — which both of the two above require as a
+      // prerequisite, so it is the likeliest thing to be held on its own —
+      // opens nothing here.
+      expect(
+        guard(_holding({
+          PermissionCodes.evaluationsView,
+          PermissionCodes.evaluationsDelete,
+          PermissionCodes.complaintsView,
+          PermissionCodes.employeesView,
+        })),
+        isFalse,
+        reason: '/evaluations/forms opened for a permission that does not own it',
+      );
     });
 
     test('the seasons door opens for seasons.view alone', () {
@@ -112,6 +151,8 @@ void main() {
         '/reference-data',
         '/audit-log',
         '/complaints/manage',
+        '/evaluations/manage',
+        '/evaluations/forms',
       });
     });
 
@@ -123,11 +164,16 @@ void main() {
       // /complaints is a person's own: filing one is not a permission and
       // neither is reading what you filed. Closing it would mean an ordinary
       // member could complain and then never see the answer.
+      // /evaluations is the same shape for the same reason: an evaluation
+      // reaches its evaluator by NAME, so there is no permission to fill one
+      // and nothing to guard the list of your own errands with. Closing it
+      // would mean somebody could be assigned work they could not open.
       for (final open in [
         '/modules',
         '/reports',
         '/dashboard',
         '/complaints',
+        '/evaluations',
         '/',
       ]) {
         expect(

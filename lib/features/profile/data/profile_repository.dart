@@ -3,10 +3,17 @@ import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/supabase/supabase_client.dart';
-import '../domain/city.dart';
-import '../domain/job_title.dart';
 import '../domain/profile.dart';
 import '../domain/profile_enums.dart';
+import '../domain/reference_choice.dart';
+
+/// Every list a profile is described by, in the one shape they now share. Each
+/// embed is aliased by the column it comes through: three of them land in
+/// `reference_items` and the query has to say which is which.
+const profileEmbeds =
+    '*, job_title:job_title_id(name_ar, name_en), '
+    'city:city_id(name_ar, name_en), '
+    'mission_type:mission_type_id(name_ar, name_en)';
 
 class ProfileRepository {
   /// The signed-in user's own profile, or null if the row is not readable yet.
@@ -15,37 +22,39 @@ class ProfileRepository {
     if (uid == null) return null;
     final row = await supabase
         .from('profiles')
-        .select('*, job_titles(name, name_en), reference_items(name_ar, name_en)')
+        .select(profileEmbeds)
         .eq('id', uid)
         .maybeSingle();
     return row == null ? null : Profile.fromMap(row);
   }
 
-  /// The Syrian cities an employee may say they are from — the admin-managed
-  /// `syrian_cities` list, which a signed-in account can read before it is
-  /// approved because the registration form itself needs it.
-  Future<List<City>> fetchSyrianCities() async {
+  /// The entries of one admin-managed list, active ones only, in the order the
+  /// admin put them in.
+  ///
+  /// The three the profile form asks for — the cities, the posts, the missions —
+  /// are readable by a signed-in account before it is approved, because the
+  /// registration form itself needs them.
+  Future<List<ReferenceChoice>> fetchChoices(String setCode) async {
     final rows = await supabase
         .from('reference_items')
         .select('id, name_ar, name_en, reference_sets!inner(code)')
-        .eq('reference_sets.code', 'syrian_cities')
+        .eq('reference_sets.code', setCode)
         .eq('is_active', true)
-        .order('sort_order');
+        .order('sort_order')
+        .order('name_ar');
     return (rows as List)
-        .map((r) => City.fromMap(r as Map<String, dynamic>))
+        .map((r) => ReferenceChoice.fromMap(r as Map<String, dynamic>))
         .toList();
   }
 
-  Future<List<JobTitle>> fetchActiveJobTitles() async {
-    final rows = await supabase
-        .from('job_titles')
-        .select()
-        .eq('is_active', true)
-        .order('name');
-    return (rows as List)
-        .map((r) => JobTitle.fromMap(r as Map<String, dynamic>))
-        .toList();
-  }
+  Future<List<ReferenceChoice>> fetchSyrianCities() =>
+      fetchChoices(ReferenceSetCodes.syrianCities);
+
+  Future<List<ReferenceChoice>> fetchActiveJobTitles() =>
+      fetchChoices(ReferenceSetCodes.jobTitles);
+
+  Future<List<ReferenceChoice>> fetchMissionTypes() =>
+      fetchChoices(ReferenceSetCodes.missionTypes);
 
   /// Uploads a local file to [bucket] under `{uid}/{name}` and returns a URL.
   /// For the public `avatars` bucket a public URL; for private `documents`,
@@ -75,7 +84,7 @@ class ProfileRepository {
     required String jobTitleId,
     required Gender gender,
     required DateTime dateOfBirth,
-    required MissionType missionType,
+    required String missionTypeId,
     required String phoneSy,
     String? phoneSa,
     String? cityId,
@@ -92,7 +101,7 @@ class ProfileRepository {
       'job_title_id': jobTitleId,
       'gender': gender.db,
       'date_of_birth': dateOfBirth.toIso8601String().split('T').first,
-      'mission_type': missionType.db,
+      'mission_type_id': missionTypeId,
       'phone_sy': phoneSy,
       'phone_sa': phoneSa,
       'city_id': cityId,
@@ -116,7 +125,7 @@ class ProfileRepository {
     required String jobTitleId,
     required Gender gender,
     required DateTime dateOfBirth,
-    required MissionType missionType,
+    required String missionTypeId,
     required String phoneSy,
     String? phoneSa,
     String? cityId,
@@ -135,7 +144,7 @@ class ProfileRepository {
           'job_title_id': jobTitleId,
           'gender': gender.db,
           'date_of_birth': dateOfBirth.toIso8601String().split('T').first,
-          'mission_type': missionType.db,
+          'mission_type_id': missionTypeId,
           'phone_sy': phoneSy,
           'phone_sa': phoneSa,
           'city_id': cityId,

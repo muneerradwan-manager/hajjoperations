@@ -2,8 +2,8 @@ import 'package:equatable/equatable.dart';
 
 import '../../../core/bloc/safe_cubit.dart';
 import '../../profile/data/profile_repository.dart';
-import '../../profile/domain/job_title.dart';
 import '../../profile/domain/profile_enums.dart';
+import '../../profile/domain/reference_choice.dart';
 import '../data/employees_repository.dart';
 
 enum CreateEmployeeStatus { loading, ready, submitting, created, error }
@@ -12,27 +12,31 @@ class CreateEmployeeState extends Equatable {
   const CreateEmployeeState({
     this.status = CreateEmployeeStatus.loading,
     this.jobTitles = const [],
+    this.missionTypes = const [],
     this.error,
   });
 
   final CreateEmployeeStatus status;
-  final List<JobTitle> jobTitles;
+  final List<ReferenceChoice> jobTitles;
+  final List<ReferenceChoice> missionTypes;
   final String? error;
 
   CreateEmployeeState copyWith({
     CreateEmployeeStatus? status,
-    List<JobTitle>? jobTitles,
+    List<ReferenceChoice>? jobTitles,
+    List<ReferenceChoice>? missionTypes,
     String? error,
   }) {
     return CreateEmployeeState(
       status: status ?? this.status,
       jobTitles: jobTitles ?? this.jobTitles,
+      missionTypes: missionTypes ?? this.missionTypes,
       error: error,
     );
   }
 
   @override
-  List<Object?> get props => [status, jobTitles, error];
+  List<Object?> get props => [status, jobTitles, missionTypes, error];
 }
 
 class CreateEmployeeCubit extends SafeCubit<CreateEmployeeState> {
@@ -48,8 +52,13 @@ class CreateEmployeeCubit extends SafeCubit<CreateEmployeeState> {
     emit(state.copyWith(status: CreateEmployeeStatus.loading));
     try {
       final titles = await _profiles.fetchActiveJobTitles();
+      final missions = await _profiles.fetchMissionTypes();
       emit(
-        state.copyWith(status: CreateEmployeeStatus.ready, jobTitles: titles),
+        state.copyWith(
+          status: CreateEmployeeStatus.ready,
+          jobTitles: titles,
+          missionTypes: missions,
+        ),
       );
     } catch (e) {
       emit(
@@ -67,7 +76,7 @@ class CreateEmployeeCubit extends SafeCubit<CreateEmployeeState> {
     required String jobTitleId,
     required Gender gender,
     required DateTime dateOfBirth,
-    required MissionType missionType,
+    required String missionTypeId,
     required String phoneSy,
     String? phoneSa,
     bool isExternal = false,
@@ -85,7 +94,7 @@ class CreateEmployeeCubit extends SafeCubit<CreateEmployeeState> {
         jobTitleId: jobTitleId,
         gender: gender,
         dateOfBirth: dateOfBirth,
-        missionType: missionType,
+        missionTypeId: missionTypeId,
         phoneSy: phoneSy,
         phoneSa: phoneSa,
         isExternal: isExternal,

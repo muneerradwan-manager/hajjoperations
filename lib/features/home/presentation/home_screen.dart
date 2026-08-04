@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/animations/animations.dart';
 import '../../../core/constants/permission_codes.dart';
@@ -14,48 +15,107 @@ import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/profile_avatar.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../auth/application/session_cubit.dart';
 import '../../notifications/presentation/widgets/notification_bell.dart';
 import '../../prayer_times/application/prayer_times_cubit.dart';
 import '../../prayer_times/data/prayer_times_repository.dart';
 import '../../prayer_times/presentation/widgets/prayer_times_card.dart';
-import '../../seasons/data/seasons_repository.dart';
 import 'widgets/dashboard_card.dart';
 
-/// Accent per destination, so a returning user recognises a tile by its colour
-/// before they finish reading the label — which only works if no two tiles
-/// share one. Three of them did: the files, their office and the employees were
-/// all the same green, and the colour told you nothing.
-///
-/// Eight destinations, eight of the nine brand colours, and the families carry
-/// the meaning:
-///
-///   * GREEN — the mission's own work and its people. It stays the app's
-///     primary; it is the backdrop, the theme and three of these seven.
-///   * GOLD — the calendar and the reference material: the season, and the
-///     lists everything else is built from.
-///   * RED — the two screens that decide about people, and — in the deepest of
-///     the reds, the one colour that had never been given a legible pair — the
-///     dashboard, which decides nothing and is about all of it.
-///
-/// Each is an [Accent] rather than a raw brand colour, because a print palette
-/// does not divide evenly across a night mode and a paper one: every red is
-/// unreadable on the dark backdrop and every gold on the light. See
-/// app_accents.dart for the measurements.
-const _work = Accent.green;
+// Accent per destination, so a returning user recognises a tile by its colour
+// before they finish reading the label — which only works if the colours are
+// spread. They were not: green held nine of the thirteen tiles, on a green
+// backdrop, under a green app bar, beside a green greeting ring. A colour that
+// covers three quarters of a screen is not an accent, it is the paper.
+//
+// The families carry the meaning, and all three are now actually spent:
+//
+//   * GREEN — the mission's own work. It stays the app's primary — it is the
+//     backdrop, the theme and the app bar — which is exactly why it now takes
+//     three of these thirteen rather than nine. A tile is green here when it is
+//     the work itself, not merely when it is ours.
+//   * GOLD — the calendar and the reference material: the season, the lists
+//     everything else is built from, and the times published to the whole
+//     mission.
+//   * RED — people, and what is said and decided about them: the employees,
+//     the approvals, a person's own complaints, and — in the deepest of the
+//     reds — the record that keeps all of it.
+//
+// Each is an [Accent] rather than a raw brand colour, because a print palette
+// does not divide evenly across a night mode and a paper one: every red is
+// unreadable on the dark backdrop and every gold on the light. See
+// app_accents.dart for the measurements.
 
-/// The الإدارة tiles, two to a colour.
+/// The العام tiles, one colour each, by the same families the الإدارة grid
+/// uses below.
 ///
-/// Grouped rather than one-per-tile: eight different colours in one grid is a
-/// swatch card, not a menu. A pair shares a colour because the two of them are
-/// one kind of thing — the paperwork, the people, the year and its lists, and
-/// oversight — so the colour says something rather than merely differing.
-const _adminPalette = <Accent>[
-  Accent.greenDeep,
-  Accent.greenDark,
-  Accent.gold,
-  Accent.redDeep,
+/// These three were one green block, which was the largest single run of one
+/// colour on the screen — and it sat directly under a green backdrop, a green
+/// theme and a green greeting ring, so the section read as a wash rather than
+/// as three doors. The families already say what each one is: the files are the
+/// mission's own work, مواعيد الوجبات is published reference material, and a
+/// complaint is a thing said about a person.
+const _generalPalette = <Accent>[
+  Accent.green,
+  Accent.goldSoft,
+  Accent.red,
+  // The fourth: an evaluation somebody was asked to write. Red again, because
+  // what a mark is about is a person or a thing being judged — one step deeper
+  // than the complaint beside it, which is the only other tile here that is
+  // about a judgement rather than about work.
+  Accent.plum,
 ];
+
+/// A shelf in الإدارة: a name, a colour, and the tiles that belong under it.
+///
+/// A reader holding every permission is handed TWELVE tiles here, and twelve
+/// doors in one undivided grid is not a menu, it is a wall. He knows what he
+/// came for; what he cannot do is find it, because nothing on the page says
+/// where that kind of thing is kept. So the section is shelved, and each shelf
+/// is named and coloured — the name does the finding, and the colour is what he
+/// remembers the second time.
+///
+/// The shelf is DECLARED by each entry rather than derived from its position,
+/// which is the other half of the fix and the less visible one. The colour used
+/// to be assigned by index — two tiles to a colour, counting down the filtered
+/// list — so a reader without `approvals.view` shifted every pair below the gap
+/// onto a different colour, and two people describing this screen to each other
+/// were describing different screens. It also had to grow a sixth entry the
+/// moment a twelfth tile appeared, or the list wrapped and started the colours
+/// again. A shelf is a property of what the tile IS; it survives the filter,
+/// and nothing has to be counted.
+///
+/// Four shelves, four families — see the note at the head of this file. Adding
+/// a tile means naming its shelf and nothing else.
+enum _AdminGroup {
+  /// The paperwork itself: the season's files, the reports drawn from them, and
+  /// the blank forms the office writes. Green, the mission's own work.
+  files(Accent.greenDeep),
+
+  /// Everybody with an account, and what each of them may do. Red, which is
+  /// what red is for here.
+  people(Accent.red),
+
+  /// The year, and the lists everything else is built from.
+  season(Accent.gold),
+
+  /// Looking at all of it, and what it left behind: the numbers from above, the
+  /// acts in order, the complaints, the marks. The deepest red there is, for
+  /// the shelf that only ever looks back.
+  oversight(Accent.plum);
+
+  const _AdminGroup(this.accent);
+
+  final Accent accent;
+
+  String title(AppLocalizations l) => switch (this) {
+    files => l.homeAdminGroupFiles,
+    people => l.homeAdminGroupPeople,
+    season => l.homeAdminGroupSeason,
+    oversight => l.homeAdminGroupOversight,
+  };
+}
 
 /// One beat of the entry cascade.
 const _step = Duration(milliseconds: 70);
@@ -68,23 +128,15 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _seasons = SeasonsRepository();
-
   /// Owned by the screen rather than created inside the card, so that the
   /// pull-to-refresh gesture — which is handled up here, above anything the
   /// card could provide — can reach it.
   late final _prayer = PrayerTimesCubit(PrayerTimesRepository());
 
-  /// The Hijri year shown on the greeting badge. Starts from the device
-  /// calendar so the panel is never blank, then settles on whichever season is
-  /// actually current — an admin may have switched it to an earlier one.
-  int _seasonYear = HijriUtils.currentYear();
-
-  @override
-  void initState() {
-    super.initState();
-    _loadCurrentSeason();
-  }
+  // No season is fetched here any more. This screen used to ask the server for
+  // the current season on every open and every pull, to print one Hijri year on
+  // a badge; the badge now shows today's date, which the device knows, and the
+  // request went with it.
 
   @override
   void dispose() {
@@ -92,31 +144,13 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  Future<void> _loadCurrentSeason() async {
-    try {
-      final season = await _seasons.fetchCurrentSeason();
-      if (season != null && mounted) {
-        setState(() => _seasonYear = season.hijriYear);
-      }
-    } catch (_) {
-      // Keep the calendar-derived fallback.
-    }
-  }
-
   Future<void> _refresh() async {
     await Future.wait([
       context.read<SessionCubit>().reload(),
-      _loadCurrentSeason(),
       // Never prompts. A drag on a list is a request for newer numbers, not a
       // gesture anybody would expect to raise a permission dialog.
       _prayer.refresh(),
     ]);
-  }
-
-  Future<void> _openSeasons() async {
-    await context.push(Routes.seasons);
-    // The current season may have been switched while in there.
-    await _loadCurrentSeason();
   }
 
   @override
@@ -150,111 +184,157 @@ class _HomeScreenState extends State<HomeScreen> {
     // postings to one man and the season's whole paperwork to another,
     // depending on what he held. Authority lives here; the work lives below.
     //
-    // Declared as entries rather than built as widgets, because the COLOUR is
-    // not a property of the entry — it is a property of where the entry lands
-    // once the reader's permissions have been applied. See [_adminPalette].
-    final admin = <({IconData icon, String title, String subtitle, VoidCallback onTap})>[
-      // Paired by meaning as well as by position: the paperwork, the people,
-      // the year and its lists, then oversight. Two to a colour, in this order.
-      if (canManageModules)
-        (
-          icon: AppIcons.modules,
-          title: l.navModulesManage,
-          subtitle: l.navModulesManageSubtitle,
-          onTap: () => context.push(Routes.modulesManage),
-        ),
-      if (canManageReports)
-        (
-          icon: AppIcons.reports,
-          title: l.navReportsManage,
-          subtitle: l.navReportsManageSubtitle,
-          onTap: () => context.push(Routes.reportsManage),
-        ),
-      if (canViewEmployees)
-        (
-          icon: AppIcons.employees,
-          title: l.navEmployees,
-          subtitle: l.navEmployeesSubtitle,
-          onTap: () => context.push(Routes.employees),
-        ),
-      if (canApprove)
-        (
-          icon: AppIcons.approvals,
-          title: l.navApprovals,
-          subtitle: l.navApprovalsSubtitle,
-          onTap: () => context.push(Routes.approvals),
-        ),
-      if (canSeeSeasons)
-        (
-          icon: AppIcons.seasons,
-          title: l.navSeasons,
-          subtitle: l.navSeasonsSubtitle,
-          onTap: _openSeasons,
-        ),
-      if (canManageReferenceData)
-        (
-          icon: AppIcons.referenceData,
-          title: l.navReferenceData,
-          subtitle: l.navReferenceDataSubtitle,
-          onTap: () => context.push(Routes.referenceData),
-        ),
-      if (canManagePermissions)
-        (
-          icon: AppIcons.permissions,
-          title: l.navPermissions,
-          subtitle: l.navPermissionsSubtitle,
-          onTap: () => context.push(Routes.permissions),
-        ),
-      // No longer standing apart beside the greeting. It is one of these — the
-      // season from above — and eight tiles in a list read better than seven
-      // and an orphan.
-      if (canSeeDashboard)
-        (
-          icon: AppIcons.dashboard,
-          title: l.navDashboard,
-          subtitle: l.navDashboardSubtitle,
-          onTap: () => context.push(Routes.dashboard),
-        ),
-      // The dashboard's pair, and the pairing is the meaning: one is the
-      // season from above, the other is the season act by act. Together they
-      // are the oversight colour.
-      if (session.can(PermissionCodes.auditView))
-        (
-          icon: AppIcons.auditLog,
-          title: l.navAuditLog,
-          subtitle: l.navAuditLogSubtitle,
-          onTap: () => context.push(Routes.auditLog),
-        ),
-      // The whole register, which is oversight and belongs here. Filing one and
-      // reading your own are not — those are everybody's, and stand below under
-      // العام beside the rest of a person's own work.
-      if (session.can(PermissionCodes.complaintsView))
-        (
-          icon: AppIcons.complaints,
-          title: l.navComplaints,
-          subtitle: l.navComplaintsSubtitle,
-          onTap: () => context.push(Routes.complaintsManage),
-        ),
-    ];
+    // Declared as entries rather than built as widgets, because they have to be
+    // sorted onto their shelves — see [_AdminGroup] — after the reader's
+    // permissions have decided which of them exist at all.
+    final admin =
+        <({
+          _AdminGroup group,
+          IconData icon,
+          String title,
+          String subtitle,
+          VoidCallback onTap,
+        })>[
+          if (canManageModules)
+            (
+              group: _AdminGroup.files,
+              icon: AppIcons.modules,
+              title: l.navModulesManage,
+              subtitle: l.navModulesManageSubtitle,
+              onTap: () => context.push(Routes.modulesManage),
+            ),
+          if (canManageReports)
+            (
+              group: _AdminGroup.files,
+              icon: AppIcons.reports,
+              title: l.navReportsManage,
+              subtitle: l.navReportsManageSubtitle,
+              onTap: () => context.push(Routes.reportsManage),
+            ),
+          if (canViewEmployees)
+            (
+              group: _AdminGroup.people,
+              icon: AppIcons.employees,
+              title: l.navEmployees,
+              subtitle: l.navEmployeesSubtitle,
+              onTap: () => context.push(Routes.employees),
+            ),
+          if (canApprove)
+            (
+              group: _AdminGroup.people,
+              icon: AppIcons.approvals,
+              title: l.navApprovals,
+              subtitle: l.navApprovalsSubtitle,
+              onTap: () => context.push(Routes.approvals),
+            ),
+          // With the people rather than on a shelf of its own: what a man may
+          // do is a fact about the man, and somebody who came here to change it
+          // came looking for HIM.
+          if (canManagePermissions)
+            (
+              group: _AdminGroup.people,
+              icon: AppIcons.permissions,
+              title: l.navPermissions,
+              subtitle: l.navPermissionsSubtitle,
+              onTap: () => context.push(Routes.permissions),
+            ),
+          if (canSeeSeasons)
+            (
+              group: _AdminGroup.season,
+              icon: AppIcons.seasons,
+              title: l.navSeasons,
+              subtitle: l.navSeasonsSubtitle,
+              onTap: () => context.push(Routes.seasons),
+            ),
+          if (canManageReferenceData)
+            (
+              group: _AdminGroup.season,
+              icon: AppIcons.referenceData,
+              title: l.navReferenceData,
+              subtitle: l.navReferenceDataSubtitle,
+              onTap: () => context.push(Routes.referenceData),
+            ),
+          // No longer standing apart beside the greeting. It is one of these —
+          // the season from above — and it heads the shelf of things that look
+          // at the season rather than do anything to it.
+          if (canSeeDashboard)
+            (
+              group: _AdminGroup.oversight,
+              icon: AppIcons.dashboard,
+              title: l.navDashboard,
+              subtitle: l.navDashboardSubtitle,
+              onTap: () => context.push(Routes.dashboard),
+            ),
+          // Beside the dashboard, and the pairing is the meaning: one is the
+          // season from above, the other is the season act by act.
+          if (session.can(PermissionCodes.auditView))
+            (
+              group: _AdminGroup.oversight,
+              icon: AppIcons.auditLog,
+              title: l.navAuditLog,
+              subtitle: l.navAuditLogSubtitle,
+              onTap: () => context.push(Routes.auditLog),
+            ),
+          // The whole register, which is oversight and belongs here. Filing one
+          // and reading your own are not — those are everybody's, and stand
+          // below under العام beside the rest of a person's own work.
+          if (session.can(PermissionCodes.complaintsView))
+            (
+              group: _AdminGroup.oversight,
+              icon: AppIcons.complaints,
+              title: l.navComplaints,
+              subtitle: l.navComplaintsSubtitle,
+              onTap: () => context.push(Routes.complaintsManage),
+            ),
+          // The two halves of التقييم, and they are deliberately two tiles
+          // rather than one section with a switch. The paper and the marks are
+          // different trusts: whoever writes the questions need not read
+          // anybody's answers. Which is also why they land on different
+          // shelves — the register is oversight, and the blank form is the
+          // office's own stationery, filed with the rest of the paperwork.
+          // Filling one is neither; that is an errand, and it stands below
+          // under العام with the rest of a person's own work.
+          if (session.can(PermissionCodes.evaluationsView))
+            (
+              group: _AdminGroup.oversight,
+              icon: AppIcons.evaluations,
+              title: l.navEvaluationsManage,
+              subtitle: l.navEvaluationsManageSubtitle,
+              onTap: () => context.push(Routes.evaluationsManage),
+            ),
+          if (session.can(PermissionCodes.evaluationsTemplates))
+            (
+              group: _AdminGroup.files,
+              icon: AppIcons.evaluationForms,
+              title: l.navEvaluationForms,
+              subtitle: l.navEvaluationFormsSubtitle,
+              onTap: () => context.push(Routes.evaluationForms),
+            ),
+        ];
 
-    // Two tiles to a colour, by POSITION in the list the reader actually gets.
+    // One shelf per group that has anything on it, in the enum's own order.
     //
-    // Which is why the colour could not be written beside each entry: a reader
-    // without `approvals.decide` is shown seven tiles, not eight, and every
-    // pair after the missing one shifts. Assigning here — after the list is
-    // filtered — is what keeps the pairs paired.
-    //
-    // The rule reads the same in both arrangements the page uses: side by side
-    // on two columns, one above the other on one.
-    final adminCards = <Widget>[
-      for (var i = 0; i < admin.length; i++)
-        DashboardCard(
-          icon: admin[i].icon,
-          title: admin[i].title,
-          subtitle: admin[i].subtitle,
-          color: _adminPalette[(i ~/ 2) % _adminPalette.length].of(context),
-          onTap: admin[i].onTap,
-        ),
+    // A group with nothing under it produces no heading — a reader who may see
+    // the seasons but not the reference lists gets الموسم والمراجع with one
+    // tile under it, and a reader who may see neither is never told the shelf
+    // exists.
+    final adminShelves = <(_AdminGroup, List<Widget>)>[
+      for (final group in _AdminGroup.values)
+        if (admin.any((entry) => entry.group == group))
+          (
+            group,
+            [
+              for (final entry in admin)
+                if (entry.group == group)
+                  CompactDashboardCard(
+                    icon: entry.icon,
+                    title: entry.title,
+                    subtitle: entry.subtitle,
+                    color: group.accent.of(context),
+                    onTap: entry.onTap,
+                  ),
+            ],
+          ),
     ];
 
     // The work, and it is everybody's: a file reaches its members through
@@ -266,7 +346,7 @@ class _HomeScreenState extends State<HomeScreen> {
         icon: AppIcons.modules,
         title: l.navModules,
         subtitle: l.navModulesSubtitle,
-        color: _work.of(context),
+        color: _generalPalette[0].of(context),
         onTap: () => context.push(Routes.modules),
       ),
       // Published to everybody, and gated by nothing: مواعيد الوجبات is not
@@ -276,7 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
         icon: AppIcons.reports,
         title: l.navReports,
         subtitle: l.navReportsSubtitle,
-        color: _work.of(context),
+        color: _generalPalette[1].of(context),
         onTap: () => context.push(Routes.reports),
       ),
       // Gated by nothing, and that is the point: complaining is not a
@@ -288,8 +368,22 @@ class _HomeScreenState extends State<HomeScreen> {
         icon: AppIcons.complaints,
         title: l.navMyComplaints,
         subtitle: l.navMyComplaintsSubtitle,
-        color: _work.of(context),
+        color: _generalPalette[2].of(context),
         onTap: () => context.push(Routes.complaints),
+      ),
+      // Gated by nothing, like the three above it, and for a reason of its
+      // own: an evaluation reaches its evaluator by NAME. There is no
+      // permission to fill one, so there is nothing to hide this card behind —
+      // and a person with no errands opens it to an empty list, which is the
+      // true answer rather than a missing door. What was written ABOUT them is
+      // not here either; that lives on their own profile, which is the one door
+      // that hands over the marks with no name on them.
+      DashboardCard(
+        icon: AppIcons.evaluations,
+        title: l.navEvaluations,
+        subtitle: l.navEvaluationsSubtitle,
+        color: _generalPalette[3].of(context),
+        onTap: () => context.push(Routes.evaluations),
       ),
       // No tile for the profile: the greeting panel above already carries the
       // user's face and name, and tapping a card with your own name on it is
@@ -343,7 +437,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 AdaptiveGrid(
                   children: staggered(generalCards, start: _step * 3),
                 ),
-                if (adminCards.isNotEmpty) ...[
+                if (adminShelves.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.lg),
                   FadeSlideIn(
                     delay: adminBeat,
@@ -352,9 +446,23 @@ class _HomeScreenState extends State<HomeScreen> {
                       icon: AppIcons.shield,
                     ),
                   ),
-                  AdaptiveGrid(
-                    children: staggered(adminCards, start: adminBeat + _step),
-                  ),
+                  for (final (group, tiles) in adminShelves) ...[
+                    _ShelfHeader(
+                      title: group.title(l),
+                      color: group.accent.of(context),
+                    ),
+                    AdaptiveGrid(
+                      // Small tiles, so the grid is told to pack them: at 340
+                      // — the width a tile with a subtitle and a chevron needs
+                      // — a phone gets one column and the whole point of the
+                      // compact card is lost. At 150 a phone gets two, a
+                      // tablet three or four, and a monitor the four it is
+                      // capped at.
+                      minTileWidth: 150,
+                      children: tiles,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
                 ],
               ];
 
@@ -363,7 +471,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 subtitle: profile?.jobTitleName?.of(context),
                 photoUrl: profile?.photoUrl,
                 isAdmin: session.isAdmin,
-                seasonYear: _seasonYear,
                 onTap: () => context.push(Routes.myProfile),
                 layout: switch (size) {
                   // Beside the tiles it is a tall, narrow card, so the face goes
@@ -423,6 +530,64 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+/// The name of one shelf inside الإدارة, in that shelf's colour.
+///
+/// Deliberately NOT a [SectionHeader]: that one names عام and الإدارة, the two
+/// halves of the page, and a heading that looks the same as those would say
+/// these four shelves are its equals rather than its contents. Smaller, in the
+/// group's own accent rather than the page's grey, with a rule running off to
+/// the edge to tie the tiles under it into one band.
+///
+/// The colour is the point of the rule. It is the same colour as the four
+/// medallions below it, so the band reads as one thing at arm's length, before
+/// a single word of it has been read.
+class _ShelfHeader extends StatelessWidget {
+  const _ShelfHeader({required this.title, required this.color});
+
+  final String title;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: AppSpacing.sm,
+        bottom: AppSpacing.md,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 3,
+            height: 14,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            title,
+            style: text.labelMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.3,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Container(
+              height: 1,
+              color: color.withValues(alpha: 0.22),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// How much room the greeting has, which decides whether the face sits beside
 /// the name or above it, and where the badges go.
 enum _GreetingLayout {
@@ -451,7 +616,6 @@ class _GreetingPanel extends StatelessWidget {
     required this.subtitle,
     required this.photoUrl,
     required this.isAdmin,
-    required this.seasonYear,
     required this.onTap,
     required this.layout,
   });
@@ -459,10 +623,10 @@ class _GreetingPanel extends StatelessWidget {
   final String name;
   final String? subtitle;
   final String? photoUrl;
-  final bool isAdmin;
 
-  /// Hijri year of the season the Administration is currently working through.
-  final int seasonYear;
+  /// Whether this person runs the Administration — written into the job title
+  /// line rather than worn as a badge of its own. See [_Identity].
+  final bool isAdmin;
 
   final VoidCallback onTap;
 
@@ -493,11 +657,15 @@ class _GreetingPanel extends StatelessWidget {
             _Ring(photoUrl: photoUrl, name: name, radius: 28),
             const SizedBox(width: AppSpacing.lg),
             Expanded(
-              child: _Identity(name: name, subtitle: subtitle),
+              child: _Identity(
+                name: name,
+                subtitle: subtitle,
+                isAdmin: isAdmin,
+              ),
             ),
             if (inlineBadges) ...[
               const SizedBox(width: AppSpacing.lg),
-              _Badges(isAdmin: isAdmin, seasonYear: seasonYear),
+              const _Badges(),
               const SizedBox(width: AppSpacing.lg),
             ] else
               const SizedBox(width: AppSpacing.sm),
@@ -511,16 +679,14 @@ class _GreetingPanel extends StatelessWidget {
             color: scheme.outlineVariant.withValues(alpha: 0.4),
           ),
           const SizedBox(height: AppSpacing.md),
-          _Badges(isAdmin: isAdmin, seasonYear: seasonYear),
+          const _Badges(),
         ],
       ],
     );
   }
 
   Widget _column(BuildContext context) {
-    final l = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -532,29 +698,14 @@ class _GreetingPanel extends StatelessWidget {
         _Identity(
           name: name,
           subtitle: subtitle,
+          isAdmin: isAdmin,
           align: CrossAxisAlignment.center,
         ),
         const SizedBox(height: AppSpacing.lg),
         Divider(height: 1, color: scheme.outlineVariant.withValues(alpha: 0.4)),
         const SizedBox(height: AppSpacing.md),
-        _Badges(
-          isAdmin: isAdmin,
-          seasonYear: seasonYear,
-          alignment: WrapAlignment.center,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        // The chevron cannot sit at the end of a row that no longer exists, so
-        // the way in is spelled out along the card's bottom edge instead.
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              l.navMyProfile,
-              style: text.labelSmall?.copyWith(color: scheme.primary),
-            ),
-            NavChevron(color: scheme.primary),
-          ],
-        ),
+        const _Badges(alignment: WrapAlignment.center),
+        
       ],
     );
   }
@@ -597,11 +748,21 @@ class _Identity extends StatelessWidget {
   const _Identity({
     required this.name,
     required this.subtitle,
+    required this.isAdmin,
     this.align = CrossAxisAlignment.start,
   });
 
   final String name;
   final String? subtitle;
+
+  /// Whether this person runs the Administration.
+  ///
+  /// It used to be a badge of its own, standing beside the season's on the row
+  /// below. It reads better in parentheses after the job title, because that is
+  /// what it IS — a second thing this person is called, not a fact about the
+  /// day — and it left the badge row to the two dates alone.
+  final bool isAdmin;
+
   final CrossAxisAlignment align;
 
   @override
@@ -611,6 +772,26 @@ class _Identity extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final centred = align == CrossAxisAlignment.center;
     final textAlign = centred ? TextAlign.center : TextAlign.start;
+
+    final job = subtitle != null && subtitle!.isNotEmpty ? subtitle : null;
+
+    // The job title in the grey the rest of this line is written in, and the
+    // rank after it in a colour of its own — "مشرف ميداني (مدير)", where only
+    // the bracketed half is coloured. Two spans rather than two widgets so the
+    // pair ellipsises as one line and wraps as one line.
+    //
+    // Red, from the family this palette gives to people and to what they are
+    // answerable for. Neither the green on the Gregorian badge below nor the
+    // gold on the Hijri one: a rank that borrows a date's colour reads as
+    // belonging to the date.
+    //
+    // An admin with no job title on file gets "مدير" with no brackets — a lone
+    // "(مدير)" is punctuation with nothing to qualify.
+    final rank = !isAdmin
+        ? null
+        : job == null
+        ? l.profileBadgeAdmin
+        : l.profileTitleBadgeSuffix(l.profileBadgeAdmin);
 
     return Column(
       crossAxisAlignment: align,
@@ -622,10 +803,22 @@ class _Identity extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-        if (subtitle != null && subtitle!.isNotEmpty) ...[
+        if (job != null || rank != null) ...[
           const SizedBox(height: 3),
-          Text(
-            subtitle!,
+          Text.rich(
+            TextSpan(
+              children: [
+                if (job != null) TextSpan(text: rank == null ? job : '$job '),
+                if (rank != null)
+                  TextSpan(
+                    text: rank,
+                    style: TextStyle(
+                      color: Accent.red.of(context),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+              ],
+            ),
             style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
             textAlign: textAlign,
             maxLines: centred ? 2 : 1,
@@ -644,17 +837,26 @@ class _Identity extends StatelessWidget {
   }
 }
 
-/// The season the Administration is working through, and whether this person
-/// runs it.
+/// Today's date, in both calendars, side by side.
+///
+/// Two badges rather than one line, because they are two answers to the same
+/// question and a reader wants whichever one they think in — the mission runs
+/// on the Hijri date and the rest of the world writes the other on a form.
+/// Neither is a subtitle of the other, so neither is set below the other.
+///
+/// The pair replaced the season's Hijri YEAR, which used to stand here and was
+/// a different kind of fact: which year the Administration is working through
+/// is a setting, not the day it is, and a bare "1447 هـ" beside a man's name
+/// read as today's date to everyone who saw it. The season lives on its own
+/// screen, where it can be changed — and this card no longer asks the server
+/// for it on every open.
+///
+/// Gold and green rather than two of a kind: the calendar is the gold family
+/// everywhere else in this app, and the two badges still have to be told apart
+/// when the words in them run to the same length.
 class _Badges extends StatelessWidget {
-  const _Badges({
-    required this.isAdmin,
-    required this.seasonYear,
-    this.alignment = WrapAlignment.start,
-  });
+  const _Badges({this.alignment = WrapAlignment.start});
 
-  final bool isAdmin;
-  final int seasonYear;
   final WrapAlignment alignment;
 
   @override
@@ -662,22 +864,37 @@ class _Badges extends StatelessWidget {
     final l = context.l10n;
     final scheme = Theme.of(context).colorScheme;
 
+    // The language the reader chose, not the device's: the app carries its own
+    // locale setting, and a phone set to English with the app set to Arabic
+    // must not print half the card in each.
+    final language = Localizations.localeOf(context).languageCode;
+
+    // Read at build time rather than held in state. A greeting card is rebuilt
+    // on every session change, every refresh and every theme flip; a date that
+    // was captured once in initState would be the day the app was opened, which
+    // for a phone left running on a bedside table in Mina is yesterday.
+    final now = DateTime.now();
+
     return Wrap(
       alignment: alignment,
       spacing: AppSpacing.sm,
       runSpacing: AppSpacing.sm,
       children: [
         GlassBadge(
-          label: l.seasonHijriYear(seasonYear),
+          label: l.homeHijriDate(HijriUtils.todayInWords(language)),
           color: scheme.secondary,
-          icon: AppIcons.seasons,
+          icon: AppIcons.hijriDate,
         ),
-        if (isAdmin)
-          GlassBadge(
-            label: l.profileBadgeAdmin,
-            color: scheme.primary,
-            icon: AppIcons.shield,
+        GlassBadge(
+          // `d MMMM y`, not the numeric form: the badge beside it spells its
+          // month out, and "صفر" against "2026-08-04" is two different habits
+          // of writing on one card.
+          label: l.homeGregorianDate(
+            DateFormat('d MMMM y', language).format(now),
           ),
+          color: scheme.primary,
+          icon: AppIcons.gregorianDate,
+        ),
       ],
     );
   }

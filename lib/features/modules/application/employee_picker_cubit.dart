@@ -4,8 +4,7 @@ import 'package:equatable/equatable.dart';
 
 import '../../../core/bloc/safe_cubit.dart';
 import '../../profile/data/profile_repository.dart';
-import '../../profile/domain/city.dart';
-import '../../profile/domain/job_title.dart';
+import '../../profile/domain/reference_choice.dart';
 import '../data/modules_repository.dart';
 import '../domain/assignable_employee.dart';
 
@@ -34,6 +33,7 @@ class EmployeePickerState extends Equatable {
     this.status = PickerStatus.loading,
     this.people = const [],
     this.selected = const {},
+    this.known = const {},
     this.query = '',
     this.filter = ParticipantFilter.all,
     this.jobTitleId,
@@ -54,6 +54,16 @@ class EmployeePickerState extends Equatable {
   /// must not lose the three.
   final Set<String> selected;
 
+  /// Everyone this page has shown, across every page and every search.
+  ///
+  /// [selected] is ids, and ids are all a file needs — it re-reads its members.
+  /// A caller who is merely NAMING people has nowhere to look those ids up
+  /// again, and the three it chose may have scrolled out of [people] two
+  /// searches ago. Somebody can only be selected by being tapped, and being
+  /// tapped means having been shown, so this map can always answer for the
+  /// whole selection.
+  final Map<String, AssignableEmployee> known;
+
   final String query;
   final ParticipantFilter filter;
 
@@ -64,8 +74,8 @@ class EmployeePickerState extends Equatable {
   final bool onlyFree;
 
   /// What the two dropdowns may offer. Loaded once beside the first page.
-  final List<JobTitle> jobTitles;
-  final List<City> cities;
+  final List<ReferenceChoice> jobTitles;
+  final List<ReferenceChoice> cities;
 
   /// Whether anything beyond the plain list is being asked for — what the
   /// "clear" button appears for.
@@ -87,13 +97,14 @@ class EmployeePickerState extends Equatable {
     PickerStatus? status,
     List<AssignableEmployee>? people,
     Set<String>? selected,
+    Map<String, AssignableEmployee>? known,
     String? query,
     ParticipantFilter? filter,
     Object? jobTitleId = _unset,
     Object? cityId = _unset,
     bool? onlyFree,
-    List<JobTitle>? jobTitles,
-    List<City>? cities,
+    List<ReferenceChoice>? jobTitles,
+    List<ReferenceChoice>? cities,
     bool? loadingMore,
     bool? hasMore,
     String? error,
@@ -102,6 +113,7 @@ class EmployeePickerState extends Equatable {
       status: status ?? this.status,
       people: people ?? this.people,
       selected: selected ?? this.selected,
+      known: known ?? this.known,
       query: query ?? this.query,
       filter: filter ?? this.filter,
       // Sentinels: null is a real value for these two — it is what "any post"
@@ -122,6 +134,7 @@ class EmployeePickerState extends Equatable {
     status,
     people,
     selected,
+    known,
     query,
     filter,
     jobTitleId,
@@ -248,6 +261,22 @@ class EmployeePickerCubit extends SafeCubit<EmployeePickerState> {
   void selectOnly(String profileId) =>
       emit(state.copyWith(selected: {profileId}));
 
+  /// The chosen people, resolved. Everything in [EmployeePickerState.selected]
+  /// that this page has actually shown; an id handed in by the caller and never
+  /// scrolled past is the caller's own to remember.
+  List<AssignableEmployee> get selectedPeople => [
+    for (final id in state.selected)
+      if (state.known[id] != null) state.known[id]!,
+  ];
+
+  static Map<String, AssignableEmployee> _remember(
+    EmployeePickerState state,
+    List<AssignableEmployee> arrivals,
+  ) => {
+    ...state.known,
+    for (final person in arrivals) person.profile.id: person,
+  };
+
   Future<void> refresh() => _fetch();
 
   Future<void> _fetch() async {
@@ -268,6 +297,7 @@ class EmployeePickerCubit extends SafeCubit<EmployeePickerState> {
         state.copyWith(
           status: PickerStatus.ready,
           people: people,
+          known: {..._remember(state, people)},
           hasMore: people.length == _pageSize,
         ),
       );
@@ -305,6 +335,7 @@ class EmployeePickerCubit extends SafeCubit<EmployeePickerState> {
       emit(
         state.copyWith(
           people: [...state.people, ...more],
+          known: {..._remember(state, more)},
           hasMore: more.length == _pageSize,
           loadingMore: false,
         ),

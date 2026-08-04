@@ -103,7 +103,9 @@ class AuditLabels {
   static const _tables = <String, LocalizedName>{
     'auth': LocalizedName(ar: 'الحساب والدخول', en: 'Account & sign-in'),
     'profiles': LocalizedName(ar: 'موظف', en: 'Employee'),
-    'job_titles': LocalizedName(ar: 'مسمى وظيفي', en: 'Job title'),
+    // The table the job descriptions lived in until 0085 moved them into the
+    // catalog. Named here for the entries written while it existed.
+    'job_titles': LocalizedName(ar: 'وصف وظيفي', en: 'Job description'),
     'permissions': LocalizedName(ar: 'تعريف صلاحية', en: 'Permission'),
     'user_permissions': LocalizedName(
       ar: 'صلاحية ممنوحة',
@@ -221,8 +223,11 @@ class AuditLabels {
     'father_name': LocalizedName(ar: 'اسم الأب', en: "Father's name"),
     'surname': LocalizedName(ar: 'الكنية', en: 'Surname'),
     'gender': LocalizedName(ar: 'الجنس', en: 'Gender'),
+    // `mission_type` was the enum column, dropped in 0085. Kept because the log
+    // is a record of what happened, and entries older than that name it.
     'mission_type': LocalizedName(ar: 'نوع البعثة', en: 'Mission'),
-    'job_title_id': LocalizedName(ar: 'المسمى الوظيفي', en: 'Job title'),
+    'mission_type_id': LocalizedName(ar: 'نوع البعثة', en: 'Mission'),
+    'job_title_id': LocalizedName(ar: 'الوصف الوظيفي', en: 'Job description'),
     'phone_sy': LocalizedName(ar: 'هاتف سوريا', en: 'Syrian phone'),
     'phone_sa': LocalizedName(ar: 'هاتف السعودية', en: 'Saudi phone'),
     'date_of_birth': LocalizedName(ar: 'تاريخ الميلاد', en: 'Date of birth'),

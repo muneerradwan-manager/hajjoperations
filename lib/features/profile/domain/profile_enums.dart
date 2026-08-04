@@ -31,22 +31,6 @@ enum Gender {
   String get arabicLabel => this == Gender.male ? 'ذكر' : 'أنثى';
 }
 
-enum MissionType {
-  administrative,
-  religious,
-  medical;
-
-  static MissionType? fromDb(String? value) => switch (value) {
-    'administrative' => MissionType.administrative,
-    'religious' => MissionType.religious,
-    'medical' => MissionType.medical,
-    _ => null,
-  };
-
-  String get db => name;
-  String get arabicLabel => switch (this) {
-    MissionType.administrative => 'البعثة الإدارية',
-    MissionType.religious => 'البعثة الدينية',
-    MissionType.medical => 'البعثة الطبية',
-  };
-}
+// نوع البعثة was here, as an enum of three. It is master data now (0085): the
+// office adds a mission the way it adds a hotel, and the app reads the name off
+// the row instead of owning the wording. See [ReferenceChoice].

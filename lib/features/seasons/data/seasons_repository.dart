@@ -1,4 +1,5 @@
 import '../../../core/supabase/supabase_client.dart';
+import '../../profile/data/profile_repository.dart' show profileEmbeds;
 import '../../profile/domain/profile.dart';
 import '../domain/season.dart';
 
@@ -81,7 +82,7 @@ class SeasonsRepository {
   Future<List<Profile>> fetchParticipants(String seasonId) async {
     final rows = await supabase
         .from('season_participants')
-        .select('profiles!inner(*, job_titles(name, name_en))')
+        .select('profiles!inner($profileEmbeds)')
         .eq('season_id', seasonId)
         .eq('status', 'active');
     return (rows as List)
@@ -126,7 +127,7 @@ class SeasonsRepository {
   Future<List<Profile>> fetchAssignableEmployees() async {
     final rows = await supabase
         .from('profiles')
-        .select('*, job_titles(name, name_en)')
+        .select(profileEmbeds)
         .eq('account_status', 'approved')
         .order('first_name');
     return (rows as List)

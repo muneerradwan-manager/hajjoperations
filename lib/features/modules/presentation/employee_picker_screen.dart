@@ -46,6 +46,63 @@ Future<Set<String>?> showEmployeePicker(
   );
 }
 
+/// The same page, asked for one person and answered with the PERSON.
+///
+/// A second door rather than a flag on the first, because the two callers want
+/// genuinely different things back. Filling a role needs ids and nothing else:
+/// the file already holds its members and will re-read them. A caller who is
+/// merely naming somebody — the evaluations feature, choosing who fills a sheet
+/// — has nowhere to look the name up afterwards, and handing back an id it
+/// cannot render would send it off to fetch a name this page already had in its
+/// hands.
+///
+/// Single-holder only, which is what "name somebody" means. Pops null when
+/// backed out of, and also when the person already chosen is tapped again —
+/// that is how this page has always cleared a single-holder role.
+Future<AssignableEmployee?> showSingleEmployeePicker(
+  BuildContext context, {
+  required String title,
+  required String seasonId,
+  String? selected,
+}) {
+  return Navigator.of(context).push<AssignableEmployee>(
+    fadeThroughRoute(
+      (_) => EmployeePickerScreen(
+        title: title,
+        seasonId: seasonId,
+        selected: selected == null ? const {} : {selected},
+        multiple: false,
+        returnsPerson: true,
+      ),
+      opaque: true,
+    ),
+  );
+}
+
+/// The same page, asked for SEVERAL people and answered with the people.
+///
+/// The plural of [showSingleEmployeePicker], and it exists for the same reason:
+/// a caller that is naming people rather than filling a role has nothing to
+/// look ids up against afterwards.
+Future<List<AssignableEmployee>?> showMultiEmployeePicker(
+  BuildContext context, {
+  required String title,
+  required String seasonId,
+  required List<AssignableEmployee> selected,
+}) {
+  return Navigator.of(context).push<List<AssignableEmployee>>(
+    fadeThroughRoute(
+      (_) => EmployeePickerScreen(
+        title: title,
+        seasonId: seasonId,
+        selected: {for (final p in selected) p.profile.id},
+        returnsPerson: true,
+      ),
+      opaque: true,
+    ),
+  );
+}
+
 class EmployeePickerScreen extends StatelessWidget {
   const EmployeePickerScreen({
     super.key,
@@ -53,6 +110,7 @@ class EmployeePickerScreen extends StatelessWidget {
     required this.seasonId,
     required this.selected,
     this.multiple = true,
+    this.returnsPerson = false,
   });
 
   /// The role being filled — the only thing that says what this page is for.
@@ -65,6 +123,10 @@ class EmployeePickerScreen extends StatelessWidget {
   /// takes the tap as the answer and leaves.
   final bool multiple;
 
+  /// Pop the chosen [AssignableEmployee] instead of a set of ids. See
+  /// [showSingleEmployeePicker]; meaningless unless [multiple] is false.
+  final bool returnsPerson;
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -73,16 +135,25 @@ class EmployeePickerScreen extends StatelessWidget {
         seasonId: seasonId,
         selected: selected,
       ),
-      child: _View(title: title, multiple: multiple),
+      child: _View(
+        title: title,
+        multiple: multiple,
+        returnsPerson: returnsPerson,
+      ),
     );
   }
 }
 
 class _View extends StatefulWidget {
-  const _View({required this.title, required this.multiple});
+  const _View({
+    required this.title,
+    required this.multiple,
+    this.returnsPerson = false,
+  });
 
   final String title;
   final bool multiple;
+  final bool returnsPerson;
 
   @override
   State<_View> createState() => _ViewState();
@@ -113,8 +184,16 @@ class _ViewState extends State<_View> {
     }
   }
 
-  void _tap(String profileId) {
+  /// What this page answers with: the people when it was asked for people, the
+  /// ids when it was asked to fill a role.
+  Object _result(BuildContext context) {
     final cubit = context.read<EmployeePickerCubit>();
+    return widget.returnsPerson ? cubit.selectedPeople : cubit.state.selected;
+  }
+
+  void _tap(AssignableEmployee person) {
+    final cubit = context.read<EmployeePickerCubit>();
+    final profileId = person.profile.id;
     if (widget.multiple) {
       cubit.toggle(profileId);
       return;
@@ -122,6 +201,10 @@ class _ViewState extends State<_View> {
     // One holder: the tap IS the answer. Tapping the person already chosen
     // clears the role instead.
     final wasSelected = cubit.state.selected.contains(profileId);
+    if (widget.returnsPerson) {
+      Navigator.of(context).pop(wasSelected ? null : person);
+      return;
+    }
     Navigator.of(context).pop(wasSelected ? <String>{} : {profileId});
   }
 
@@ -140,7 +223,7 @@ class _ViewState extends State<_View> {
             actions: [
               if (widget.multiple)
                 TextButton(
-                  onPressed: () => Navigator.of(context).pop(state.selected),
+                  onPressed: () => Navigator.of(context).pop(_result(context)),
                   child: Text(l.commonSave),
                 ),
             ],
@@ -203,7 +286,7 @@ class _ViewState extends State<_View> {
                           isSelected: state.selected.contains(
                             person.profile.id,
                           ),
-                          onTap: () => _tap(person.profile.id),
+                          onTap: () => _tap(person),
                         );
                       },
                     ),
@@ -223,7 +306,7 @@ class _ViewState extends State<_View> {
                       padding: const EdgeInsets.all(AppSpacing.lg),
                       child: FilledButton.icon(
                         onPressed: () =>
-                            Navigator.of(context).pop(state.selected),
+                            Navigator.of(context).pop(_result(context)),
                         icon: const Icon(AppIcons.approve),
                         label: Text(
                           l.modulePickerConfirm(state.selected.length),

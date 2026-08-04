@@ -1,4 +1,5 @@
 import '../../../core/supabase/supabase_client.dart';
+import '../../profile/data/profile_repository.dart' show profileEmbeds;
 import '../../profile/domain/profile.dart';
 import '../../profile/domain/profile_enums.dart';
 
@@ -7,7 +8,7 @@ class ApprovalRepository {
   Future<List<Profile>> fetchPending() async {
     final rows = await supabase
         .from('profiles')
-        .select('*, job_titles(name, name_en), reference_items(name_ar, name_en)')
+        .select(profileEmbeds)
         .eq('account_status', AccountStatus.pending.db)
         .order('updated_at', ascending: false);
     return (rows as List)

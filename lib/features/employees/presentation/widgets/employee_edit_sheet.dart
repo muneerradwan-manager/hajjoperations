@@ -6,10 +6,9 @@ import '../../../../core/theme/glass_tokens.dart';
 import '../../../../core/widgets/app_sheet.dart';
 import '../../../../core/widgets/info_section.dart';
 import '../../../profile/data/profile_repository.dart';
-import '../../../profile/domain/city.dart';
-import '../../../profile/domain/job_title.dart';
 import '../../../profile/domain/profile.dart';
 import '../../../profile/domain/profile_enums.dart';
+import '../../../profile/domain/reference_choice.dart';
 import '../../application/employee_manage_cubit.dart';
 
 /// Bottom sheet for correcting an employee's record.
@@ -52,11 +51,12 @@ class _EmployeeEditFormState extends State<_EmployeeEditForm> {
   late String? _jobTitleId = widget.profile.jobTitleId;
   late String? _cityId = widget.profile.cityId;
   late Gender? _gender = widget.profile.gender;
-  late MissionType? _mission = widget.profile.missionType;
+  late String? _missionTypeId = widget.profile.missionTypeId;
   late DateTime? _dob = widget.profile.dateOfBirth;
 
-  List<JobTitle> _titles = const [];
-  List<City> _cities = const [];
+  List<ReferenceChoice> _titles = const [];
+  List<ReferenceChoice> _cities = const [];
+  List<ReferenceChoice> _missions = const [];
   bool _loading = true;
 
   @override
@@ -69,10 +69,12 @@ class _EmployeeEditFormState extends State<_EmployeeEditForm> {
     try {
       final titles = await _profiles.fetchActiveJobTitles();
       final cities = await _profiles.fetchSyrianCities();
+      final missions = await _profiles.fetchMissionTypes();
       if (!mounted) return;
       setState(() {
         _titles = titles;
         _cities = cities;
+        _missions = missions;
         // A job title that has since been deactivated is still this person's
         // title. Dropping it from the list would silently clear it on save.
         if (_jobTitleId != null && !titles.any((t) => t.id == _jobTitleId)) {
@@ -80,6 +82,10 @@ class _EmployeeEditFormState extends State<_EmployeeEditForm> {
         }
         if (_cityId != null && !cities.any((c) => c.id == _cityId)) {
           _cityId = null;
+        }
+        if (_missionTypeId != null &&
+            !missions.any((m) => m.id == _missionTypeId)) {
+          _missionTypeId = null;
         }
         _loading = false;
       });
@@ -117,7 +123,7 @@ class _EmployeeEditFormState extends State<_EmployeeEditForm> {
       surname: _surname.text,
       jobTitleId: _jobTitleId,
       gender: _gender,
-      missionType: _mission,
+      missionTypeId: _missionTypeId,
       dateOfBirth: _dob,
       cityId: _cityId,
       phoneSy: _phoneSy.text,
@@ -238,28 +244,21 @@ class _EmployeeEditFormState extends State<_EmployeeEditForm> {
                 onChanged: (v) => setState(() => _gender = v),
               ),
               const SizedBox(height: 12),
-              DropdownButtonFormField<MissionType>(
-                initialValue: _mission,
+              DropdownButtonFormField<String>(
+                initialValue: _missionTypeId,
                 isExpanded: true,
                 decoration: InputDecoration(
                   labelText: l.profileMissionType,
                   prefixIcon: const Icon(AppIcons.mission),
                 ),
                 items: [
-                  DropdownMenuItem(
-                    value: MissionType.administrative,
-                    child: Text(l.missionAdministrative),
-                  ),
-                  DropdownMenuItem(
-                    value: MissionType.religious,
-                    child: Text(l.missionReligious),
-                  ),
-                  DropdownMenuItem(
-                    value: MissionType.medical,
-                    child: Text(l.missionMedical),
-                  ),
+                  for (final m in _missions)
+                    DropdownMenuItem(
+                      value: m.id,
+                      child: Text(m.name.of(context)),
+                    ),
                 ],
-                onChanged: (v) => setState(() => _mission = v),
+                onChanged: (v) => setState(() => _missionTypeId = v),
               ),
               const SizedBox(height: 12),
               InkWell(

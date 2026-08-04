@@ -279,15 +279,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get genderFemale => 'أنثى';
 
   @override
-  String get missionAdministrative => 'البعثة الإدارية';
-
-  @override
-  String get missionReligious => 'البعثة الدينية';
-
-  @override
-  String get missionMedical => 'البعثة الطبية';
-
-  @override
   String get statusPendingTitle => 'قيد الانتظار';
 
   @override
@@ -324,10 +315,37 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String homeHijriDate(String date) {
+    return '$date هـ';
+  }
+
+  @override
+  String homeGregorianDate(String date) {
+    return '$date م';
+  }
+
+  @override
+  String profileTitleBadgeSuffix(String badge) {
+    return '($badge)';
+  }
+
+  @override
   String get homeAdminSection => 'الإدارة';
 
   @override
   String get homeGeneralSection => 'عام';
+
+  @override
+  String get homeAdminGroupFiles => 'الملفات والتقارير';
+
+  @override
+  String get homeAdminGroupPeople => 'الأشخاص والصلاحيات';
+
+  @override
+  String get homeAdminGroupSeason => 'الموسم والمراجع';
+
+  @override
+  String get homeAdminGroupOversight => 'الإشراف والسجلات';
 
   @override
   String get navApprovals => 'اعتماد الحسابات';
@@ -2401,13 +2419,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get prayerWidgetStale => 'افتح التطبيق لتحديث المواقيت';
 
   @override
-  String get navMyComplaints => 'شكاواي';
+  String get navMyComplaints => 'الشكاوى';
 
   @override
   String get navMyComplaintsSubtitle => 'ما قدَّمتَه، وما ردّ به عليه';
 
   @override
-  String get navComplaints => 'الشكاوى';
+  String get navComplaints => 'سجل الشكاوى';
 
   @override
   String get navComplaintsSubtitle => 'كل ما قُدِّم من شكاوى في البعثة';
@@ -2621,5 +2639,598 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String complaintsDismissedCount(int count) {
     return '$count مرفوضة';
+  }
+
+  @override
+  String get navEvaluations => 'التقييمات';
+
+  @override
+  String get navEvaluationsSubtitle => 'ما كُلِّفتَ بتقييمه';
+
+  @override
+  String get navEvaluationsManage => 'سجل التقييمات';
+
+  @override
+  String get navEvaluationsManageSubtitle => 'كل تقييم في البعثة وعلاماته';
+
+  @override
+  String get navEvaluationForms => 'إدارة التقييم';
+
+  @override
+  String get navEvaluationFormsSubtitle => 'نماذج التقييم وأسئلتها وعلاماتها';
+
+  @override
+  String get evaluationsTitle => 'سجل التقييمات';
+
+  @override
+  String get evaluationsMineTitle => 'التقييمات المكلَّف بها';
+
+  @override
+  String get evaluationsEmpty => 'لم تُكلَّف بأي تقييم بعد';
+
+  @override
+  String get evaluationsEmptyAll => 'لم يُفتح أي تقييم بعد';
+
+  @override
+  String get evaluationsNoMatches => 'لا نتائج مطابقة';
+
+  @override
+  String get evaluationsSearchHint => 'ابحث بالنموذج أو الجهة المُقيَّمة';
+
+  @override
+  String get evaluationsFilterAll => 'الكل';
+
+  @override
+  String get evaluationsNew => 'تقييم جديد';
+
+  @override
+  String evaluationsOpenCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تقييم قيد التعبئة',
+      many: '$count تقييماً قيد التعبئة',
+      few: '$count تقييمات قيد التعبئة',
+      two: 'تقييمان قيد التعبئة',
+      one: 'تقييم واحد قيد التعبئة',
+      zero: 'لا شيء قيد التعبئة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String evaluationsOverdueCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تقييم متأخر',
+      many: '$count تقييماً متأخراً',
+      few: '$count تقييمات متأخرة',
+      two: 'تقييمان متأخران',
+      one: 'تقييم واحد متأخر',
+      zero: 'لا شيء متأخر',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get evaluationStatusDraft => 'قيد التعبئة';
+
+  @override
+  String get evaluationStatusSubmitted => 'مكتمل';
+
+  @override
+  String get evaluationOverdue => 'متأخر';
+
+  @override
+  String evaluationDueOn(String date) {
+    return 'الموعد $date';
+  }
+
+  @override
+  String evaluationOpenedOn(String date) {
+    return 'فُتح في $date';
+  }
+
+  @override
+  String evaluationSubmittedOn(String date) {
+    return 'اكتمل في $date';
+  }
+
+  @override
+  String get evaluationEvaluator => 'المُقيِّم';
+
+  @override
+  String get evaluationEvaluatorHidden => 'المُقيِّم غير معلن';
+
+  @override
+  String get evaluationSubject => 'الجهة المُقيَّمة';
+
+  @override
+  String get evaluationNote => 'ملاحظة الإدارة';
+
+  @override
+  String evaluationProgress(int answered, int total) {
+    return '$answered من $total';
+  }
+
+  @override
+  String evaluationScore(String score, String total) {
+    return '$score من $total';
+  }
+
+  @override
+  String evaluationPercent(String percent) {
+    return '$percent٪';
+  }
+
+  @override
+  String get evaluationTargetEmployee => 'موظف';
+
+  @override
+  String get evaluationTargetModule => 'ملف تشغيلي';
+
+  @override
+  String get evaluationTargetReport => 'تقرير';
+
+  @override
+  String get evaluationTargetHotel => 'فندق';
+
+  @override
+  String get evaluationTargetCluster => 'تكتل';
+
+  @override
+  String get evaluationTargetGroup => 'مجموعة';
+
+  @override
+  String get evaluationTargetOther => 'أخرى';
+
+  @override
+  String get evaluationSheetTitle => 'التقييم';
+
+  @override
+  String evaluationStageOf(int index, int total) {
+    return 'المرحلة $index من $total';
+  }
+
+  @override
+  String evaluationStageScore(String score, String total) {
+    return 'علامة المرحلة $score من $total';
+  }
+
+  @override
+  String get evaluationQuestionRequired => 'إجباري';
+
+  @override
+  String get evaluationQuestionOptional => 'اختياري';
+
+  @override
+  String get evaluationQuestionUnanswered => 'لم تتم الإجابة';
+
+  @override
+  String get evaluationWriteHint => 'اكتب إجابتك';
+
+  @override
+  String get evaluationSaveDraft => 'حفظ';
+
+  @override
+  String get evaluationSubmit => 'اعتماد التقييم';
+
+  @override
+  String get evaluationSubmitted => 'اعتُمد التقييم';
+
+  @override
+  String get evaluationDraftSaved => 'حُفظت الإجابات';
+
+  @override
+  String get evaluationIncomplete => 'أجب عن كل الأسئلة الإجبارية أولاً';
+
+  @override
+  String get evaluationReopen => 'إعادة فتح';
+
+  @override
+  String get evaluationReopened => 'أُعيد فتح التقييم';
+
+  @override
+  String get evaluationReopenConfirm =>
+      'يُعاد التقييم إلى قيد التعبئة وتبقى الإجابات كما هي. متابعة؟';
+
+  @override
+  String get evaluationNext => 'التالي';
+
+  @override
+  String get evaluationBack => 'السابق';
+
+  @override
+  String get evaluationLocked => 'هذا التقييم للاطّلاع فقط';
+
+  @override
+  String get evaluationDiscardChanges =>
+      'هناك إجابات لم تُحفظ. الخروج دون حفظ؟';
+
+  @override
+  String get evaluationMissing => 'التقييم غير موجود';
+
+  @override
+  String get evaluationAlreadySubmitted => 'اعتُمد هذا التقييم من قبل';
+
+  @override
+  String get evaluationDelete => 'حذف التقييم';
+
+  @override
+  String get evaluationDeleteConfirm =>
+      'يُحذف هذا التقييم وإجاباته نهائياً. متابعة؟';
+
+  @override
+  String get evaluationDeleted => 'حُذف التقييم';
+
+  @override
+  String get evaluationAssignTitle => 'فتح تقييم';
+
+  @override
+  String get evaluationAssignForm => 'النموذج';
+
+  @override
+  String get evaluationAssignPickForm => 'اختر نموذج التقييم';
+
+  @override
+  String get evaluationAssignNoForms =>
+      'لا توجد نماذج مفعَّلة. أنشئ نموذجاً وفعِّله أولاً.';
+
+  @override
+  String get evaluationAssignSubject => 'الجهة المُقيَّمة';
+
+  @override
+  String get evaluationAssignPickSubject => 'اختر الجهة';
+
+  @override
+  String evaluationAssignSubjectPicked(String name) {
+    return 'عن: $name';
+  }
+
+  @override
+  String get evaluationAssignEvaluator => 'المُكلَّف بالتقييم';
+
+  @override
+  String get evaluationAssignPickEvaluator => 'اختر الموظف';
+
+  @override
+  String get evaluationAssignNoteHint =>
+      'ما الذي تريد الانتباه إليه؟ (اختياري)';
+
+  @override
+  String get evaluationAssignDue => 'موعد التسليم (اختياري)';
+
+  @override
+  String get evaluationAssignDueClear => 'بلا موعد';
+
+  @override
+  String get evaluationAssignSubmit => 'فتح التقييم وإرساله';
+
+  @override
+  String get evaluationAssigned => 'فُتح التقييم وأُبلغ المُكلَّف به';
+
+  @override
+  String get evaluationAssignAnonymousNote =>
+      'يرى الموظفُ المُقيَّم علامته ولا يعرف من قيَّمه.';
+
+  @override
+  String get evaluationFormsTitle => 'نماذج التقييم';
+
+  @override
+  String get evaluationFormsEmpty => 'لا نماذج تقييم بعد';
+
+  @override
+  String get evaluationFormsNew => 'نموذج جديد';
+
+  @override
+  String get evaluationFormsSearchHint => 'ابحث في النماذج';
+
+  @override
+  String get evaluationFormActive => 'مفعَّل';
+
+  @override
+  String get evaluationFormInactive => 'متوقف';
+
+  @override
+  String get evaluationFormActivate => 'تفعيل';
+
+  @override
+  String get evaluationFormDeactivate => 'إيقاف';
+
+  @override
+  String evaluationFormStages(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مرحلة',
+      many: '$count مرحلة',
+      few: '$count مراحل',
+      two: 'مرحلتان',
+      one: 'مرحلة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String evaluationFormQuestions(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count سؤال',
+      many: '$count سؤالاً',
+      few: '$count أسئلة',
+      two: 'سؤالان',
+      one: 'سؤال واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String evaluationFormTotal(String total) {
+    return 'من $total';
+  }
+
+  @override
+  String evaluationFormInUse(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تقييم مفتوح عليه',
+      many: '$count تقييماً مفتوحاً عليه',
+      few: '$count تقييمات مفتوحة عليه',
+      two: 'تقييمان مفتوحان عليه',
+      one: 'تقييم واحد مفتوح عليه',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get evaluationFormDelete => 'حذف النموذج';
+
+  @override
+  String get evaluationFormDeleteConfirm =>
+      'يُحذف هذا النموذج بمراحله وأسئلته. متابعة؟';
+
+  @override
+  String get evaluationFormDeleted => 'حُذف النموذج';
+
+  @override
+  String get evaluationFormInUseDelete =>
+      'لا يمكن حذف نموذج فُتح عليه تقييم. أوقفه بدل ذلك.';
+
+  @override
+  String get evaluationEditorNewTitle => 'نموذج تقييم جديد';
+
+  @override
+  String get evaluationEditorTitle => 'تعديل النموذج';
+
+  @override
+  String get evaluationEditorName => 'اسم النموذج';
+
+  @override
+  String get evaluationEditorNameHint =>
+      'مثال: تقييم الملف التشغيلي — التروية والإعاشة';
+
+  @override
+  String get evaluationEditorDescription => 'وصف مختصر (اختياري)';
+
+  @override
+  String get evaluationEditorFor => 'يُقيِّم';
+
+  @override
+  String get evaluationEditorForLocked =>
+      'لا يمكن تغيير نوع الجهة بعد فتح تقييمات على النموذج';
+
+  @override
+  String get evaluationEditorPublish => 'مفعَّل للاستخدام';
+
+  @override
+  String get evaluationEditorPublishHint =>
+      'النموذج المتوقف لا يمكن فتح تقييم جديد عليه، وتبقى التقييمات المفتوحة تعمل';
+
+  @override
+  String get evaluationEditorStages => 'المراحل';
+
+  @override
+  String get evaluationEditorAddStage => 'إضافة مرحلة';
+
+  @override
+  String get evaluationEditorStageName => 'اسم المرحلة';
+
+  @override
+  String get evaluationEditorStageNameHint => 'مثال: فريق التروية';
+
+  @override
+  String get evaluationEditorStageDescription => 'وصف المرحلة (اختياري)';
+
+  @override
+  String get evaluationEditorRemoveStage => 'حذف المرحلة';
+
+  @override
+  String get evaluationEditorRemoveStageConfirm =>
+      'تُحذف المرحلة بكل أسئلتها. متابعة؟';
+
+  @override
+  String get evaluationEditorAddChoice => 'سؤال بخيارات';
+
+  @override
+  String get evaluationEditorAddWritten => 'سؤال تحريري';
+
+  @override
+  String get evaluationEditorQuestionText => 'نص السؤال';
+
+  @override
+  String get evaluationEditorQuestionPoints => 'علامة السؤال';
+
+  @override
+  String get evaluationEditorRequired => 'إجباري';
+
+  @override
+  String get evaluationEditorAddOption => 'إضافة إجابة';
+
+  @override
+  String get evaluationEditorOptionText => 'نص الإجابة';
+
+  @override
+  String get evaluationEditorOptionPoints => 'العلامة';
+
+  @override
+  String get evaluationEditorNoQuestions => 'لا أسئلة في هذه المرحلة بعد';
+
+  @override
+  String get evaluationEditorWrittenNote =>
+      'السؤال التحريري بلا علامة — لا للسؤال ولا لإجابته';
+
+  @override
+  String evaluationEditorUnreachable(String best, String points) {
+    return 'أعلى إجابة تعطي $best بينما علامة السؤال $points';
+  }
+
+  @override
+  String get evaluationEditorNeedsTwoOptions =>
+      'السؤال بخيارات يحتاج إجابتين على الأقل';
+
+  @override
+  String evaluationEditorTotal(String total) {
+    return 'مجموع علامات النموذج: $total';
+  }
+
+  @override
+  String get evaluationEditorSave => 'حفظ النموذج';
+
+  @override
+  String get evaluationEditorSaved => 'حُفظ النموذج';
+
+  @override
+  String get evaluationEditorCannotPublish =>
+      'أكمِل النموذج قبل تفعيله: لكل مرحلة اسم، ولكل سؤال نصّ، ولكل سؤال بخيارات إجابتان على الأقل';
+
+  @override
+  String get evaluationEditorMoveUp => 'تحريك للأعلى';
+
+  @override
+  String get evaluationEditorMoveDown => 'تحريك للأسفل';
+
+  @override
+  String get evaluationsAboutMeTitle => 'التقييمات الصادرة بحقي';
+
+  @override
+  String get evaluationsAboutMeEmpty => 'لم يصدر بحقك أي تقييم';
+
+  @override
+  String get evaluationsSectionAbout => 'تقييمات هذه الجهة';
+
+  @override
+  String evaluationsAboutCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تقييم',
+      many: '$count تقييماً',
+      few: '$count تقييمات',
+      two: 'تقييمان',
+      one: 'تقييم واحد',
+      zero: 'لا تقييمات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String evaluationsAboutPending(int count) {
+    return '$count قيد التعبئة';
+  }
+
+  @override
+  String evaluationsAboutAverage(String percent) {
+    return 'المعدل $percent٪';
+  }
+
+  @override
+  String get evaluationsAboutAnonymousNote =>
+      'تُعرض العلامات دون أسماء من كتبها.';
+
+  @override
+  String get evaluationErrorOptionTooHigh =>
+      'علامة إحدى الإجابات أكبر من علامة سؤالها';
+
+  @override
+  String get evaluationErrorWrittenHasOptions =>
+      'السؤال التحريري لا يقبل إجابات جاهزة';
+
+  @override
+  String get evaluationsOpenFromForms =>
+      'تُفتح التقييمات من إدارة التقييم، على النموذج الذي ستُعبَّأ عليه';
+
+  @override
+  String evaluationAssignNoTargets(String kind) {
+    return 'لا توجد جهات من نوع «$kind» يمكن فتح تقييم عنها';
+  }
+
+  @override
+  String get evaluationAssignNoEvaluators => 'لا يوجد موظفون يمكن تكليفهم';
+
+  @override
+  String get evaluationFormMustBeActive =>
+      'فعِّل النموذج أولاً ليمكن فتح تقييم عليه';
+
+  @override
+  String get evaluationEditorForHint =>
+      'هنا تختار «نوع» الجهة فقط. أما الملف أو الموظف بعينه فيُختار عند فتح تقييم على هذا النموذج — من زرّ «تقييم جديد» على بطاقته بعد تفعيله.';
+
+  @override
+  String get evaluationAssignNoSeason =>
+      'تعذّر تحديد الموسم الحالي، ولا يمكن اختيار المُكلَّف بدونه';
+
+  @override
+  String get evaluationAssignedShow => 'عرض';
+
+  @override
+  String get evaluationAssignSubjects => 'الجهات المُقيَّمة';
+
+  @override
+  String get evaluationAssignEvaluators => 'المُكلَّفون بالتقييم';
+
+  @override
+  String get evaluationAssignPickSubjects => 'اختر الجهات';
+
+  @override
+  String get evaluationAssignPickEvaluators => 'اختر الموظفين';
+
+  @override
+  String get evaluationAssignAddMore => 'إضافة';
+
+  @override
+  String evaluationAssignPlanned(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'سيُفتح $count تقييم',
+      many: 'سيُفتح $count تقييماً',
+      few: 'ستُفتح $count تقييمات',
+      two: 'سيُفتح تقييمان',
+      one: 'سيُفتح تقييم واحد',
+      zero: 'لن يُفتح أي تقييم',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String evaluationAssignCross(int targets, int evaluators) {
+    return 'تقييم لكل جهة عند كل مُكلَّف — $targets × $evaluators';
+  }
+
+  @override
+  String evaluationAssignedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'فُتح $count تقييم وأُبلغ أصحابها',
+      many: 'فُتح $count تقييماً وأُبلغ أصحابها',
+      few: 'فُتحت $count تقييمات وأُبلغ أصحابها',
+      two: 'فُتح تقييمان وأُبلغ أصحابهما',
+      one: 'فُتح تقييم واحد وأُبلغ صاحبه',
+    );
+    return '$_temp0';
   }
 }

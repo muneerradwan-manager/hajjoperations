@@ -13,10 +13,9 @@ import '../../auth/application/session_cubit.dart';
 import '../../auth/data/auth_repository.dart';
 import '../application/profile_completion_cubit.dart';
 import '../data/profile_repository.dart';
-import '../domain/city.dart';
-import '../domain/job_title.dart';
 import '../domain/profile.dart';
 import '../domain/profile_enums.dart';
+import '../domain/reference_choice.dart';
 import '../../../core/widgets/blocking_progress.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
@@ -74,7 +73,7 @@ class _ProfileCompletionViewState extends State<_ProfileCompletionView> {
   String? _jobTitleId;
   String? _cityId;
   Gender? _gender;
-  MissionType? _mission;
+  String? _missionTypeId;
   DateTime? _dob;
   bool _photoError = false;
 
@@ -93,7 +92,7 @@ class _ProfileCompletionViewState extends State<_ProfileCompletionView> {
       _jobTitleId = e.jobTitleId;
       _cityId = e.cityId;
       _gender = e.gender;
-      _mission = e.missionType;
+      _missionTypeId = e.missionTypeId;
       _dob = e.dateOfBirth;
     }
   }
@@ -126,6 +125,9 @@ class _ProfileCompletionViewState extends State<_ProfileCompletionView> {
         _photo == null && (widget.existing?.photoUrl?.isEmpty ?? true);
     setState(() => _photoError = photoMissing);
     if (!formOk || photoMissing) return;
+    // The dropdowns only insist on an answer when their list has one to give
+    // (see [_choiceDropdown]); an empty list must not become a crash here.
+    if (_jobTitleId == null || _missionTypeId == null) return;
 
     context.read<ProfileCompletionCubit>().submit(
       firstName: _firstName.text.trim(),
@@ -135,7 +137,7 @@ class _ProfileCompletionViewState extends State<_ProfileCompletionView> {
       jobTitleId: _jobTitleId!,
       gender: _gender!,
       dateOfBirth: _dob!,
-      missionType: _mission!,
+      missionTypeId: _missionTypeId!,
       phoneSy: _phoneSy.text.trim(),
       phoneSa: _phoneSa.text.trim().isEmpty ? null : _phoneSa.text.trim(),
       cityId: _cityId,
@@ -223,10 +225,31 @@ class _ProfileCompletionViewState extends State<_ProfileCompletionView> {
       _text(_firstName, l.profileFirstName, AppIcons.firstName),
       _text(_fatherName, l.profileFatherName, AppIcons.fatherName),
       _text(_surname, l.profileSurname, AppIcons.surname),
-      _cityDropdown(l, state.cities),
-      _jobTitleDropdown(l, state.jobTitles),
+      _choiceDropdown(
+        l,
+        l.profileCity,
+        AppIcons.location,
+        state.cities,
+        _cityId,
+        (v) => setState(() => _cityId = v),
+      ),
+      _choiceDropdown(
+        l,
+        l.profileJobTitle,
+        AppIcons.jobTitle,
+        state.jobTitles,
+        _jobTitleId,
+        (v) => setState(() => _jobTitleId = v),
+      ),
       _genderDropdown(l),
-      _missionDropdown(l),
+      _choiceDropdown(
+        l,
+        l.profileMissionType,
+        AppIcons.mission,
+        state.missionTypes,
+        _missionTypeId,
+        (v) => setState(() => _missionTypeId = v),
+      ),
       _dobField(l),
       _text(
         _phoneSy,
@@ -364,48 +387,40 @@ class _ProfileCompletionViewState extends State<_ProfileCompletionView> {
     );
   }
 
-  /// Which Syrian city the employee is from.
+  /// The city, the post and the mission are one question asked three times: pick
+  /// an entry of a list the admin owns. One widget for all three, since 0085
+  /// made them one kind of row.
   ///
-  /// Required, but only once there is something to require: if the list came
-  /// back empty the field cannot be answered, and blocking the form on it would
+  /// Required, but only once there is something to require: if a list came back
+  /// empty the field cannot be answered, and blocking the form on it would
   /// strand somebody in the middle of registering.
-  Widget _cityDropdown(dynamic l, List<City> cities) {
-    return DropdownButtonFormField<String>(
-      initialValue: cities.any((c) => c.id == _cityId) ? _cityId : null,
-      isExpanded: true,
-      decoration: InputDecoration(
-        labelText: l.profileCity,
-        prefixIcon: const Icon(AppIcons.location),
-      ),
-      items: [
-        for (final c in cities)
-          DropdownMenuItem(value: c.id, child: Text(c.name.of(context))),
-      ],
-      validator: (v) =>
-          cities.isNotEmpty && v == null ? l.commonRequired : null,
-      onChanged: (v) => setState(() => _cityId = v),
-    );
-  }
-
-  Widget _jobTitleDropdown(dynamic l, List<JobTitle> titles) {
+  Widget _choiceDropdown(
+    dynamic l,
+    String label,
+    IconData icon,
+    List<ReferenceChoice> choices,
+    String? value,
+    ValueChanged<String?> onChanged,
+  ) {
     // Sorted by the name being READ. The query orders by the Arabic column,
     // which in an English list is no order at all.
-    final sorted = [...titles]
+    final sorted = [...choices]
       ..sort((a, b) => a.name.of(context).compareTo(b.name.of(context)));
 
     return DropdownButtonFormField<String>(
-      initialValue: _jobTitleId,
+      initialValue: sorted.any((c) => c.id == value) ? value : null,
       isExpanded: true,
       decoration: InputDecoration(
-        labelText: l.profileJobTitle,
-        prefixIcon: const Icon(AppIcons.jobTitle),
+        labelText: label,
+        prefixIcon: Icon(icon),
       ),
       items: [
-        for (final t in sorted)
-          DropdownMenuItem(value: t.id, child: Text(t.name.of(context))),
+        for (final c in sorted)
+          DropdownMenuItem(value: c.id, child: Text(c.name.of(context))),
       ],
-      validator: (v) => v == null ? l.commonRequired : null,
-      onChanged: (v) => setState(() => _jobTitleId = v),
+      validator: (v) =>
+          sorted.isNotEmpty && v == null ? l.commonRequired : null,
+      onChanged: onChanged,
     );
   }
 
@@ -423,33 +438,6 @@ class _ProfileCompletionViewState extends State<_ProfileCompletionView> {
       ],
       validator: (v) => v == null ? l.commonRequired : null,
       onChanged: (v) => setState(() => _gender = v),
-    );
-  }
-
-  Widget _missionDropdown(dynamic l) {
-    return DropdownButtonFormField<MissionType>(
-      initialValue: _mission,
-      isExpanded: true,
-      decoration: InputDecoration(
-        labelText: l.profileMissionType,
-        prefixIcon: const Icon(AppIcons.mission),
-      ),
-      items: [
-        DropdownMenuItem(
-          value: MissionType.administrative,
-          child: Text(l.missionAdministrative),
-        ),
-        DropdownMenuItem(
-          value: MissionType.religious,
-          child: Text(l.missionReligious),
-        ),
-        DropdownMenuItem(
-          value: MissionType.medical,
-          child: Text(l.missionMedical),
-        ),
-      ],
-      validator: (v) => v == null ? l.commonRequired : null,
-      onChanged: (v) => setState(() => _mission = v),
     );
   }
 

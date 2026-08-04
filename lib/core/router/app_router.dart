@@ -11,6 +11,9 @@ import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../features/reports/presentation/reports_screen.dart';
 import '../../features/reports/presentation/reports_manage_screen.dart';
 import '../../features/employees/presentation/employees_directory_screen.dart';
+import '../../features/evaluations/application/evaluations_cubit.dart';
+import '../../features/evaluations/presentation/evaluation_forms_screen.dart';
+import '../../features/evaluations/presentation/evaluations_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/modules/application/modules_cubit.dart';
 import '../../features/modules/presentation/modules_screen.dart';
@@ -55,6 +58,9 @@ abstract class Routes {
   static const auditLog = '/audit-log';
   static const complaints = '/complaints';
   static const complaintsManage = '/complaints/manage';
+  static const evaluations = '/evaluations';
+  static const evaluationsManage = '/evaluations/manage';
+  static const evaluationForms = '/evaluations/forms';
 }
 
 /// What each administered section asks of whoever tries to open it.
@@ -82,6 +88,10 @@ abstract class Routes {
 ///   * `/complaints` — what this person filed. Complaining is not a permission
 ///     and neither is reading your own; the register of EVERYONE's is
 ///     `/complaints/manage`, and that one is listed here.
+///   * `/evaluations` — the sheets this person was ASKED to fill. Being named
+///     to an evaluation is an assignment, not a grant, so there is nothing to
+///     guard it with; the register of everyone's is `/evaluations/manage` and
+///     the forms behind them are `/evaluations/forms`, both listed here.
 final sectionGuards = <String, bool Function(SessionState)>{
   Routes.seasons: (s) => s.canSeeSeasons,
   Routes.modulesManage: (s) => s.can(PermissionCodes.modulesViewAll),
@@ -92,6 +102,17 @@ final sectionGuards = <String, bool Function(SessionState)>{
   Routes.referenceData: (s) => s.can(PermissionCodes.referenceView),
   Routes.auditLog: (s) => s.can(PermissionCodes.auditView),
   Routes.complaintsManage: (s) => s.can(PermissionCodes.complaintsView),
+  Routes.evaluationsManage: (s) => s.can(PermissionCodes.evaluationsView),
+  // Two codes, and it is the only door in this table that takes either.
+  // إدارة التقييم is where a form is written AND where an evaluation is
+  // opened on one — the register issues nothing — so shutting it to
+  // `evaluations.assign` would leave that permission with no way to be
+  // exercised at all. What each of the two may DO in there still differs:
+  // the editing controls ask for `templates` and the assign action asks for
+  // `assign`, and the server refuses either to the wrong holder anyway.
+  Routes.evaluationForms: (s) =>
+      s.can(PermissionCodes.evaluationsTemplates) ||
+      s.can(PermissionCodes.evaluationsAssign),
 };
 
 GoRouter buildRouter(SessionCubit session) {
@@ -305,6 +326,29 @@ GoRouter buildRouter(SessionCubit session) {
         pageBuilder: (c, s) => fadeThroughPage(
           key: s.pageKey,
           child: const ComplaintsScreen(scope: ComplaintsScope.all),
+        ),
+      ),
+      // The same pair again, for the same reason: one is what this person was
+      // asked to fill, the other is the whole register. The forms behind both
+      // are a third door, because writing the paper and reading the marks are
+      // two different trusts.
+      GoRoute(
+        path: Routes.evaluations,
+        pageBuilder: (c, s) =>
+            fadeThroughPage(key: s.pageKey, child: const EvaluationsScreen()),
+      ),
+      GoRoute(
+        path: Routes.evaluationsManage,
+        pageBuilder: (c, s) => fadeThroughPage(
+          key: s.pageKey,
+          child: const EvaluationsScreen(scope: EvaluationsScope.all),
+        ),
+      ),
+      GoRoute(
+        path: Routes.evaluationForms,
+        pageBuilder: (c, s) => fadeThroughPage(
+          key: s.pageKey,
+          child: const EvaluationFormsScreen(),
         ),
       ),
     ],

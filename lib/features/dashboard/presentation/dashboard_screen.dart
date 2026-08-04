@@ -146,7 +146,7 @@ class _View extends StatelessWidget {
             child: SplitBar(
               slices: [
                 for (final m in stats.people!.byMission)
-                  ChartSlice(label: _mission(l, m.key), value: m.count),
+                  ChartSlice(label: _label(context, m), value: m.count),
               ],
             ),
           ),
@@ -618,13 +618,6 @@ class _View extends StatelessWidget {
     final en = c.labelEn;
     return english && en != null && en.isNotEmpty ? en : c.labelAr;
   }
-
-  String _mission(AppLocalizations l, String key) => switch (key) {
-    'administrative' => l.missionAdministrative,
-    'religious' => l.missionReligious,
-    'medical' => l.missionMedical,
-    _ => l.dashboardUnknown,
-  };
 
   String _gender(AppLocalizations l, String key) => switch (key) {
     'male' => l.genderMale,

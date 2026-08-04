@@ -116,4 +116,31 @@ class PermissionCodes {
   static const complaintsDismiss = 'complaints.dismiss';
 
   static const complaintsDelete = 'complaints.delete';
+
+  // ------------------------------------------------------------ evaluations
+  /// FILLING one is deliberately absent from this list, and the absence is the
+  /// design. An evaluation reaches its evaluator by NAME, the way a file reaches
+  /// its members by assignment (see migration 0084). A permission would say
+  /// "whoever is trusted may judge whoever he likes", and an appraisal nobody
+  /// asked for is not an appraisal.
+  ///
+  /// None of these has anything to do with the five-star peer rating inside a
+  /// finished operational file (0059). That one is not permissioned at all — it
+  /// is membership — and it stays exactly as it was.
+
+  /// Reading the whole register: every sheet, its marks, and who wrote it. The
+  /// evaluator is not a secret from the office — only from the person he judged,
+  /// which row security enforces rather than this code.
+  static const evaluationsView = 'evaluations.view';
+
+  /// Building and editing the forms — the questions, their answers and what
+  /// each is worth. إدارة التقييم proper.
+  static const evaluationsTemplates = 'evaluations.templates';
+
+  /// Opening one: naming a subject and naming the evaluator. Separate from
+  /// [evaluationsTemplates] because writing the paper and deciding who is
+  /// judged by it are two different trusts.
+  static const evaluationsAssign = 'evaluations.assign';
+
+  static const evaluationsDelete = 'evaluations.delete';
 }

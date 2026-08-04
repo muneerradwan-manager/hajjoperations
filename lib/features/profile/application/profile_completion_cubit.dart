@@ -4,10 +4,9 @@ import 'package:equatable/equatable.dart';
 
 import '../../../core/bloc/safe_cubit.dart';
 import '../data/profile_repository.dart';
-import '../domain/city.dart';
-import '../domain/job_title.dart';
 import '../domain/profile.dart';
 import '../domain/profile_enums.dart';
+import '../domain/reference_choice.dart';
 
 enum ProfileFormStatus { loading, ready, submitting, submitted, error }
 
@@ -16,34 +15,39 @@ class ProfileCompletionState extends Equatable {
     this.status = ProfileFormStatus.loading,
     this.jobTitles = const [],
     this.cities = const [],
+    this.missionTypes = const [],
     this.error,
   });
 
   final ProfileFormStatus status;
-  final List<JobTitle> jobTitles;
+  final List<ReferenceChoice> jobTitles;
 
   /// The Syrian cities to choose from. Read before the account is approved,
   /// which is the whole reason the list is readable that early.
-  final List<City> cities;
+  final List<ReferenceChoice> cities;
+
+  final List<ReferenceChoice> missionTypes;
 
   final String? error;
 
   ProfileCompletionState copyWith({
     ProfileFormStatus? status,
-    List<JobTitle>? jobTitles,
-    List<City>? cities,
+    List<ReferenceChoice>? jobTitles,
+    List<ReferenceChoice>? cities,
+    List<ReferenceChoice>? missionTypes,
     String? error,
   }) {
     return ProfileCompletionState(
       status: status ?? this.status,
       jobTitles: jobTitles ?? this.jobTitles,
       cities: cities ?? this.cities,
+      missionTypes: missionTypes ?? this.missionTypes,
       error: error,
     );
   }
 
   @override
-  List<Object?> get props => [status, jobTitles, cities, error];
+  List<Object?> get props => [status, jobTitles, cities, missionTypes, error];
 }
 
 class ProfileCompletionCubit extends SafeCubit<ProfileCompletionState> {
@@ -64,11 +68,13 @@ class ProfileCompletionCubit extends SafeCubit<ProfileCompletionState> {
     try {
       final titles = await _repo.fetchActiveJobTitles();
       final cities = await _repo.fetchSyrianCities();
+      final missions = await _repo.fetchMissionTypes();
       emit(
         state.copyWith(
           status: ProfileFormStatus.ready,
           jobTitles: titles,
           cities: cities,
+          missionTypes: missions,
         ),
       );
     } catch (e) {
@@ -90,7 +96,7 @@ class ProfileCompletionCubit extends SafeCubit<ProfileCompletionState> {
     required String jobTitleId,
     required Gender gender,
     required DateTime dateOfBirth,
-    required MissionType missionType,
+    required String missionTypeId,
     required String phoneSy,
     String? phoneSa,
     String? cityId,
@@ -126,7 +132,7 @@ class ProfileCompletionCubit extends SafeCubit<ProfileCompletionState> {
           jobTitleId: jobTitleId,
           gender: gender,
           dateOfBirth: dateOfBirth,
-          missionType: missionType,
+          missionTypeId: missionTypeId,
           phoneSy: phoneSy,
           phoneSa: phoneSa,
           cityId: cityId,
@@ -144,7 +150,7 @@ class ProfileCompletionCubit extends SafeCubit<ProfileCompletionState> {
           jobTitleId: jobTitleId,
           gender: gender,
           dateOfBirth: dateOfBirth,
-          missionType: missionType,
+          missionTypeId: missionTypeId,
           phoneSy: phoneSy,
           phoneSa: phoneSa,
           cityId: cityId,

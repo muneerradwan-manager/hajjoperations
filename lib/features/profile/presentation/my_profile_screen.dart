@@ -14,6 +14,7 @@ import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
 import '../../complaints/presentation/widgets/complaints_against_section.dart';
+import '../../evaluations/presentation/widgets/evaluations_about_section.dart';
 import '../domain/profile.dart';
 import 'profile_completion_screen.dart';
 import 'widgets/change_email_sheet.dart';
@@ -89,7 +90,7 @@ class MyProfileScreen extends StatelessWidget {
                   InfoRow(
                     icon: AppIcons.mission,
                     label: l.profileMissionType,
-                    value: profile.missionType?.label(l),
+                    value: profile.missionTypeName?.of(context),
                   ),
                   InfoRow(
                     icon: AppIcons.dateOfBirth,
@@ -131,6 +132,12 @@ class MyProfileScreen extends StatelessWidget {
               // hands a man his own case.
               const SizedBox(height: AppSpacing.lg),
               const ComplaintsAgainstSection(),
+              // And the marks, beside the words, for the same reason and
+              // through the same kind of door: `evaluations_about_me` does not
+              // select the evaluator's column, so what arrives here is a title,
+              // a date and a score and there is no name in it to withhold.
+              const SizedBox(height: AppSpacing.lg),
+              const EvaluationsAboutSection(),
             ];
 
             Future<void> refresh() => context.read<SessionCubit>().reload();

@@ -6,11 +6,3 @@ extension GenderL10n on Gender {
   String label(AppLocalizations l) =>
       this == Gender.male ? l.genderMale : l.genderFemale;
 }
-
-extension MissionTypeL10n on MissionType {
-  String label(AppLocalizations l) => switch (this) {
-    MissionType.administrative => l.missionAdministrative,
-    MissionType.religious => l.missionReligious,
-    MissionType.medical => l.missionMedical,
-  };
-}

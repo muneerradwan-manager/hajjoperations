@@ -45,7 +45,17 @@ def job_for(sources):
 def main():
     r = roster.build()
     people = r.all()
-    titles = {j['name']: j['id'] for j in sbx.select('job_titles', 'select=id,name')}
+    # Both lists live in the reference catalog since 0085.
+    def set_items(code):
+        rows = sbx.select(
+            'reference_items',
+            'select=id,name_ar,reference_sets!inner(code)'
+            f'&reference_sets.code=eq.{code}',
+        )
+        return {r['name_ar']: r['id'] for r in rows}
+
+    titles = set_items('job_titles')
+    missions = set_items('mission_types')
 
     existing = sbx.select('profiles', 'select=id,first_name,father_name,surname,is_admin')
     by_key = {}
@@ -110,7 +120,7 @@ def main():
             'father_name': p['father_name'],
             'surname': p['surname'],
             'gender': 'male',
-            'mission_type': 'administrative',
+            'mission_type_id': missions.get('البعثة الإدارية'),
             'job_title_id': titles.get(p['job_title']),
             'account_status': 'approved',
         }

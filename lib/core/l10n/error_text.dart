@@ -54,5 +54,24 @@ String friendlyErrorL(AppLocalizations l, String? raw) {
     return l.complaintTargetRequired;
   }
   if (s.contains('complaint_not_found')) return l.complaintMissing;
+  // The evaluations migration (0084). The form and the fill screen block most
+  // of these before sending, so these are the belt behind the braces — except
+  // `evaluation_incomplete`, which the fill screen raises itself as a code so
+  // that one sentence answers both the local refusal and the server's.
+  if (s.contains('evaluation_incomplete')) return l.evaluationIncomplete;
+  if (s.contains('evaluation_already_submitted')) {
+    return l.evaluationAlreadySubmitted;
+  }
+  if (s.contains('evaluation_not_found') ||
+      s.contains('evaluation_form_not_found')) {
+    return l.evaluationMissing;
+  }
+  if (s.contains('evaluation_form_in_use')) return l.evaluationEditorForLocked;
+  if (s.contains('evaluation_option_worth_more_than_question')) {
+    return l.evaluationErrorOptionTooHigh;
+  }
+  if (s.contains('evaluation_written_question_takes_no_options')) {
+    return l.evaluationErrorWrittenHasOptions;
+  }
   return raw;
 }

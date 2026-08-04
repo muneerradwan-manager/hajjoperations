@@ -10,7 +10,7 @@ import '../../../core/utils/validators.dart';
 import '../../../core/widgets/password_field.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../profile/data/profile_repository.dart';
-import '../../profile/domain/job_title.dart';
+import '../../profile/domain/reference_choice.dart';
 import '../../profile/domain/profile_enums.dart';
 import '../application/create_employee_cubit.dart';
 import '../data/employees_repository.dart';
@@ -53,7 +53,7 @@ class _ViewState extends State<_View> {
 
   String? _jobTitleId;
   Gender? _gender;
-  MissionType? _mission;
+  String? _missionTypeId;
   DateTime? _dob;
   bool _isExternal = false;
 
@@ -90,7 +90,7 @@ class _ViewState extends State<_View> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     if (_jobTitleId == null ||
         _gender == null ||
-        _mission == null ||
+        _missionTypeId == null ||
         _dob == null) {
       return;
     }
@@ -103,7 +103,7 @@ class _ViewState extends State<_View> {
       jobTitleId: _jobTitleId!,
       gender: _gender!,
       dateOfBirth: _dob!,
-      missionType: _mission!,
+      missionTypeId: _missionTypeId!,
       phoneSy: _phoneSy.text.trim(),
       phoneSa: _phoneSa.text.trim().isEmpty ? null : _phoneSa.text.trim(),
       isExternal: _isExternal,
@@ -169,9 +169,23 @@ class _ViewState extends State<_View> {
               _text(_firstName, l.profileFirstName, AppIcons.firstName),
               _text(_fatherName, l.profileFatherName, AppIcons.fatherName),
               _text(_surname, l.profileSurname, AppIcons.surname),
-              _jobTitleDropdown(l, state.jobTitles),
+              _choiceDropdown(
+                l,
+                l.profileJobTitle,
+                AppIcons.jobTitle,
+                state.jobTitles,
+                _jobTitleId,
+                (v) => setState(() => _jobTitleId = v),
+              ),
               _genderDropdown(l),
-              _missionDropdown(l),
+              _choiceDropdown(
+                l,
+                l.profileMissionType,
+                AppIcons.mission,
+                state.missionTypes,
+                _missionTypeId,
+                (v) => setState(() => _missionTypeId = v),
+              ),
               _dobField(l),
               _text(
                 _phoneSy,
@@ -313,25 +327,35 @@ class _ViewState extends State<_View> {
     );
   }
 
-  Widget _jobTitleDropdown(dynamic l, List<JobTitle> titles) {
+  /// The post and the mission are the same question over two lists the admin
+  /// owns, so they are one widget. (0085 made them one kind of row.)
+  Widget _choiceDropdown(
+    dynamic l,
+    String label,
+    IconData icon,
+    List<ReferenceChoice> choices,
+    String? value,
+    ValueChanged<String?> onChanged,
+  ) {
     // Sorted by the name being READ. The query orders by the Arabic column,
     // which in an English list is no order at all.
-    final sorted = [...titles]
+    final sorted = [...choices]
       ..sort((a, b) => a.name.of(context).compareTo(b.name.of(context)));
 
     return DropdownButtonFormField<String>(
-      initialValue: _jobTitleId,
+      initialValue: sorted.any((c) => c.id == value) ? value : null,
       isExpanded: true,
       decoration: InputDecoration(
-        labelText: l.profileJobTitle,
-        prefixIcon: const Icon(AppIcons.jobTitle),
+        labelText: label,
+        prefixIcon: Icon(icon),
       ),
       items: [
-        for (final t in sorted)
-          DropdownMenuItem(value: t.id, child: Text(t.name.of(context))),
+        for (final c in sorted)
+          DropdownMenuItem(value: c.id, child: Text(c.name.of(context))),
       ],
-      validator: (v) => v == null ? l.commonRequired : null,
-      onChanged: (v) => setState(() => _jobTitleId = v),
+      validator: (v) =>
+          sorted.isNotEmpty && v == null ? l.commonRequired : null,
+      onChanged: onChanged,
     );
   }
 
@@ -352,32 +376,6 @@ class _ViewState extends State<_View> {
     );
   }
 
-  Widget _missionDropdown(dynamic l) {
-    return DropdownButtonFormField<MissionType>(
-      initialValue: _mission,
-      isExpanded: true,
-      decoration: InputDecoration(
-        labelText: l.profileMissionType,
-        prefixIcon: const Icon(AppIcons.mission),
-      ),
-      items: [
-        DropdownMenuItem(
-          value: MissionType.administrative,
-          child: Text(l.missionAdministrative),
-        ),
-        DropdownMenuItem(
-          value: MissionType.religious,
-          child: Text(l.missionReligious),
-        ),
-        DropdownMenuItem(
-          value: MissionType.medical,
-          child: Text(l.missionMedical),
-        ),
-      ],
-      validator: (v) => v == null ? l.commonRequired : null,
-      onChanged: (v) => setState(() => _mission = v),
-    );
-  }
 
   Widget _dobField(dynamic l) {
     final text = _dob == null

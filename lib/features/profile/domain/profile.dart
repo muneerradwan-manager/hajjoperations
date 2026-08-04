@@ -1,5 +1,4 @@
 import '../../../core/l10n/localized_name.dart';
-import 'job_title.dart';
 import 'profile_enums.dart';
 
 /// A single employee profile row (public.profiles).
@@ -13,7 +12,8 @@ class Profile {
     this.jobTitleId,
     this.gender,
     this.dateOfBirth,
-    this.missionType,
+    this.missionTypeId,
+    this.missionTypeName,
     this.phoneSy,
     this.phoneSa,
     this.passportImageUrl,
@@ -40,7 +40,15 @@ class Profile {
   final String? jobTitleId;
   final Gender? gender;
   final DateTime? dateOfBirth;
-  final MissionType? missionType;
+
+  /// Which mission this employee is on — an entry of the admin-managed
+  /// `mission_types` list. It was an enum of three until 0085; the office adds
+  /// the fourth itself now.
+  final String? missionTypeId;
+
+  /// Joined from reference_items when the query embeds it.
+  final LocalizedName? missionTypeName;
+
   final String? phoneSy;
   final String? phoneSa;
   final String? passportImageUrl;
@@ -54,9 +62,9 @@ class Profile {
   final String? externalOrganization;
   final String? externalTitle;
 
-  /// Joined from `job_titles(name, name_en)` when the query embeds it, in both
-  /// languages — a job title is content, and reads in whichever one the app is
-  /// set to.
+  /// Joined from the `job_titles` list when the query embeds it, in both
+  /// languages — a job description is content, and reads in whichever one the
+  /// app is set to.
   final LocalizedName? jobTitleName;
 
   /// The Syrian city this employee is from — an entry of the admin-managed
@@ -92,7 +100,8 @@ class Profile {
       jobTitleId: jobTitleId,
       gender: gender,
       dateOfBirth: dateOfBirth,
-      missionType: missionType,
+      missionTypeId: missionTypeId,
+      missionTypeName: missionTypeName,
       phoneSy: phoneSy,
       phoneSa: phoneSa,
       passportImageUrl: passportImageUrl,
@@ -124,7 +133,8 @@ class Profile {
       dateOfBirth: map['date_of_birth'] == null
           ? null
           : DateTime.parse(map['date_of_birth'] as String),
-      missionType: MissionType.fromDb(map['mission_type'] as String?),
+      missionTypeId: map['mission_type_id'] as String?,
+      missionTypeName: _embedded(map['mission_type']),
       phoneSy: map['phone_sy'] as String?,
       phoneSa: map['phone_sa'] as String?,
       passportImageUrl: map['passport_image_url'] as String?,
@@ -139,12 +149,32 @@ class Profile {
       externalTitle: map['external_title'] as String?,
       jobTitleName: jobTitleNameOrNull(map),
       cityId: map['city_id'] as String?,
-      cityName: map['reference_items'] is Map
-          ? LocalizedName.fromMap(
-              (map['reference_items'] as Map).cast<String, dynamic>(),
-            )
-          : null,
+      cityName: _embedded(map['city']),
       email: map['email'] as String?,
     );
   }
+}
+
+/// The two names of a `reference_items` row embedded beside the profile, or null
+/// when the query did not ask for it.
+///
+/// Profiles point at the catalog three times over — the city, the post, the
+/// mission — so every embed is aliased by the column it came through
+/// (`city:city_id(…)`) rather than named for its table, which since 0085 would
+/// no longer say which of the three was meant.
+LocalizedName? _embedded(Object? value) => value is Map
+    ? LocalizedName.fromMap(value.cast<String, dynamic>())
+    : null;
+
+/// Reads a job description's two names out of whatever shape it arrived in.
+///
+/// The `job_title` embed of a profile query, or the flat `job_title_name` /
+/// `job_title_name_en` that `assignable_employees` returns. Null when the query
+/// did not ask for it at all.
+LocalizedName? jobTitleNameOrNull(Map<String, dynamic> map) {
+  final joined = _embedded(map['job_title']);
+  if (joined != null) return joined;
+  final flat = map['job_title_name'] as String?;
+  if (flat == null) return null;
+  return LocalizedName(ar: flat, en: map['job_title_name_en'] as String?);
 }

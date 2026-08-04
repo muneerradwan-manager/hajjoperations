@@ -16,6 +16,8 @@ import '../../../core/widgets/profile_hero.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../auth/application/session_cubit.dart';
 import '../../complaints/presentation/widgets/complaints_against_section.dart';
+import '../../evaluations/domain/evaluation.dart';
+import '../../evaluations/presentation/widgets/evaluations_about_section.dart';
 import '../../modules/data/modules_repository.dart';
 import '../../permissions/data/permissions_repository.dart';
 import '../../permissions/domain/permission.dart';
@@ -163,6 +165,7 @@ class _View extends StatelessWidget {
         session.can(PermissionCodes.modulesViewAll) ||
         session.can(PermissionCodes.modulesMembers);
     final canSeeComplaints = session.can(PermissionCodes.complaintsView);
+    final canSeeEvaluations = session.can(PermissionCodes.evaluationsView);
     final showManagement = canSuspend || canExternal || canManageParticipants;
 
     return Scaffold(
@@ -310,7 +313,7 @@ class _View extends StatelessWidget {
                   InfoRow(
                     icon: AppIcons.mission,
                     label: l.profileMissionType,
-                    value: p.missionType?.label(l),
+                    value: p.missionTypeName?.of(context),
                   ),
                   InfoRow(
                     icon: AppIcons.dateOfBirth,
@@ -395,6 +398,14 @@ class _View extends StatelessWidget {
               ComplaintsAgainstSection(
                 profileId: p.id,
                 canReadRegister: canSeeComplaints,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              EvaluationsAboutSection(
+                profileId: p.id,
+                target: EvaluationTarget.employee,
+                targetId: p.id,
+                canReadRegister: canSeeEvaluations,
+                canReopen: session.can(PermissionCodes.evaluationsAssign),
               ),
             ];
 

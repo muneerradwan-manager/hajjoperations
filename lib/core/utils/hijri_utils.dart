@@ -7,6 +7,30 @@ class HijriUtils {
   /// Current Hijri year, e.g. 1447.
   static int currentYear() => HijriCalendar.now().hYear;
 
+  /// Today written out in full, in the reader's language: "21 صفر 1448" or
+  /// "21 Safar 1448".
+  ///
+  /// [languageCode] is applied to the package's own static locale rather than
+  /// passed in, because that is the only handle it offers — and an unsupported
+  /// code throws rather than falling back, so it is checked first. The package
+  /// carries Arabic, English and Turkish; this app ships the first two.
+  ///
+  /// Composed by hand rather than through the package's own `toFormat`, for the
+  /// DIGITS. `toFormat` silently converts to Arabic-Indic numerals whenever the
+  /// locale is Arabic, and nothing else in this app does: the Gregorian date
+  /// beside this one comes from `intl`, whose Arabic data carries no ZERODIGIT
+  /// and so prints "4 أغسطس 2026"; the prayer clock under it prints "4:32 ص";
+  /// every date in a list prints "2026-08-04". One card showing "٢١ صفر ١٤٤٨"
+  /// next to "4 أغسطس 2026" is two habits of counting on one line. The month
+  /// name is still the package's, and still Arabic.
+  static String todayInWords(String languageCode) {
+    if (HijriCalendar.supportedLocales.contains(languageCode)) {
+      HijriCalendar.setLocal(languageCode);
+    }
+    final today = HijriCalendar.now();
+    return '${today.hDay} ${today.getLongMonthName()} ${today.hYear}';
+  }
+
   /// The Gregorian span the *current Hijri year* falls in, e.g. "2025/2026".
   ///
   /// Derived from the Hijri year's own first and last day, not from today's

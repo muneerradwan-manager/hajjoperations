@@ -620,24 +620,6 @@ abstract class AppLocalizations {
   /// **'Female'**
   String get genderFemale;
 
-  /// No description provided for @missionAdministrative.
-  ///
-  /// In en, this message translates to:
-  /// **'Administrative mission'**
-  String get missionAdministrative;
-
-  /// No description provided for @missionReligious.
-  ///
-  /// In en, this message translates to:
-  /// **'Religious mission'**
-  String get missionReligious;
-
-  /// No description provided for @missionMedical.
-  ///
-  /// In en, this message translates to:
-  /// **'Medical mission'**
-  String get missionMedical;
-
   /// No description provided for @statusPendingTitle.
   ///
   /// In en, this message translates to:
@@ -698,6 +680,24 @@ abstract class AppLocalizations {
   /// **'Welcome, {name}'**
   String homeWelcome(String name);
 
+  /// No description provided for @homeHijriDate.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} AH'**
+  String homeHijriDate(String date);
+
+  /// No description provided for @homeGregorianDate.
+  ///
+  /// In en, this message translates to:
+  /// **'{date} CE'**
+  String homeGregorianDate(String date);
+
+  /// No description provided for @profileTitleBadgeSuffix.
+  ///
+  /// In en, this message translates to:
+  /// **'({badge})'**
+  String profileTitleBadgeSuffix(String badge);
+
   /// No description provided for @homeAdminSection.
   ///
   /// In en, this message translates to:
@@ -709,6 +709,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'General'**
   String get homeGeneralSection;
+
+  /// No description provided for @homeAdminGroupFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Files & reports'**
+  String get homeAdminGroupFiles;
+
+  /// No description provided for @homeAdminGroupPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'People & permissions'**
+  String get homeAdminGroupPeople;
+
+  /// No description provided for @homeAdminGroupSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'Season & reference data'**
+  String get homeAdminGroupSeason;
+
+  /// No description provided for @homeAdminGroupOversight.
+  ///
+  /// In en, this message translates to:
+  /// **'Oversight & records'**
+  String get homeAdminGroupOversight;
 
   /// No description provided for @navApprovals.
   ///
@@ -4397,7 +4421,7 @@ abstract class AppLocalizations {
   /// No description provided for @navMyComplaints.
   ///
   /// In en, this message translates to:
-  /// **'My complaints'**
+  /// **'Complaints'**
   String get navMyComplaints;
 
   /// No description provided for @navMyComplaintsSubtitle.
@@ -4409,7 +4433,7 @@ abstract class AppLocalizations {
   /// No description provided for @navComplaints.
   ///
   /// In en, this message translates to:
-  /// **'Complaints'**
+  /// **'Complaints register'**
   String get navComplaints;
 
   /// No description provided for @navComplaintsSubtitle.
@@ -4747,6 +4771,900 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} dismissed'**
   String complaintsDismissedCount(int count);
+
+  /// No description provided for @navEvaluations.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluations'**
+  String get navEvaluations;
+
+  /// No description provided for @navEvaluationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What you were asked to evaluate'**
+  String get navEvaluationsSubtitle;
+
+  /// No description provided for @navEvaluationsManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluation register'**
+  String get navEvaluationsManage;
+
+  /// No description provided for @navEvaluationsManageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Every evaluation across the mission and its marks'**
+  String get navEvaluationsManageSubtitle;
+
+  /// No description provided for @navEvaluationForms.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluation forms'**
+  String get navEvaluationForms;
+
+  /// No description provided for @navEvaluationFormsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The forms, their questions and their marks'**
+  String get navEvaluationFormsSubtitle;
+
+  /// No description provided for @evaluationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluation register'**
+  String get evaluationsTitle;
+
+  /// No description provided for @evaluationsMineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My evaluations'**
+  String get evaluationsMineTitle;
+
+  /// No description provided for @evaluationsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You have not been asked to evaluate anything yet'**
+  String get evaluationsEmpty;
+
+  /// No description provided for @evaluationsEmptyAll.
+  ///
+  /// In en, this message translates to:
+  /// **'No evaluation has been opened yet'**
+  String get evaluationsEmptyAll;
+
+  /// No description provided for @evaluationsNoMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches'**
+  String get evaluationsNoMatches;
+
+  /// No description provided for @evaluationsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by form or subject'**
+  String get evaluationsSearchHint;
+
+  /// No description provided for @evaluationsFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get evaluationsFilterAll;
+
+  /// No description provided for @evaluationsNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New evaluation'**
+  String get evaluationsNew;
+
+  /// No description provided for @evaluationsOpenCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{nothing outstanding} =1{1 outstanding} other{{count} outstanding}}'**
+  String evaluationsOpenCount(int count);
+
+  /// No description provided for @evaluationsOverdueCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{none overdue} =1{1 overdue} other{{count} overdue}}'**
+  String evaluationsOverdueCount(int count);
+
+  /// No description provided for @evaluationStatusDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get evaluationStatusDraft;
+
+  /// No description provided for @evaluationStatusSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get evaluationStatusSubmitted;
+
+  /// No description provided for @evaluationOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get evaluationOverdue;
+
+  /// No description provided for @evaluationDueOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Due {date}'**
+  String evaluationDueOn(String date);
+
+  /// No description provided for @evaluationOpenedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened {date}'**
+  String evaluationOpenedOn(String date);
+
+  /// No description provided for @evaluationSubmittedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed {date}'**
+  String evaluationSubmittedOn(String date);
+
+  /// No description provided for @evaluationEvaluator.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluator'**
+  String get evaluationEvaluator;
+
+  /// No description provided for @evaluationEvaluatorHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluator not disclosed'**
+  String get evaluationEvaluatorHidden;
+
+  /// No description provided for @evaluationSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Subject'**
+  String get evaluationSubject;
+
+  /// No description provided for @evaluationNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note from the office'**
+  String get evaluationNote;
+
+  /// No description provided for @evaluationProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{answered} of {total}'**
+  String evaluationProgress(int answered, int total);
+
+  /// No description provided for @evaluationScore.
+  ///
+  /// In en, this message translates to:
+  /// **'{score} of {total}'**
+  String evaluationScore(String score, String total);
+
+  /// No description provided for @evaluationPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String evaluationPercent(String percent);
+
+  /// No description provided for @evaluationTargetEmployee.
+  ///
+  /// In en, this message translates to:
+  /// **'Employee'**
+  String get evaluationTargetEmployee;
+
+  /// No description provided for @evaluationTargetModule.
+  ///
+  /// In en, this message translates to:
+  /// **'Operational file'**
+  String get evaluationTargetModule;
+
+  /// No description provided for @evaluationTargetReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Report'**
+  String get evaluationTargetReport;
+
+  /// No description provided for @evaluationTargetHotel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hotel'**
+  String get evaluationTargetHotel;
+
+  /// No description provided for @evaluationTargetCluster.
+  ///
+  /// In en, this message translates to:
+  /// **'Cluster'**
+  String get evaluationTargetCluster;
+
+  /// No description provided for @evaluationTargetGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Group'**
+  String get evaluationTargetGroup;
+
+  /// No description provided for @evaluationTargetOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get evaluationTargetOther;
+
+  /// No description provided for @evaluationSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluation'**
+  String get evaluationSheetTitle;
+
+  /// No description provided for @evaluationStageOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage {index} of {total}'**
+  String evaluationStageOf(int index, int total);
+
+  /// No description provided for @evaluationStageScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage mark {score} of {total}'**
+  String evaluationStageScore(String score, String total);
+
+  /// No description provided for @evaluationQuestionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get evaluationQuestionRequired;
+
+  /// No description provided for @evaluationQuestionOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get evaluationQuestionOptional;
+
+  /// No description provided for @evaluationQuestionUnanswered.
+  ///
+  /// In en, this message translates to:
+  /// **'Not answered'**
+  String get evaluationQuestionUnanswered;
+
+  /// No description provided for @evaluationWriteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your answer'**
+  String get evaluationWriteHint;
+
+  /// No description provided for @evaluationSaveDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get evaluationSaveDraft;
+
+  /// No description provided for @evaluationSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit evaluation'**
+  String get evaluationSubmit;
+
+  /// No description provided for @evaluationSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluation submitted'**
+  String get evaluationSubmitted;
+
+  /// No description provided for @evaluationDraftSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Answers saved'**
+  String get evaluationDraftSaved;
+
+  /// No description provided for @evaluationIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer every required question first'**
+  String get evaluationIncomplete;
+
+  /// No description provided for @evaluationReopen.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen'**
+  String get evaluationReopen;
+
+  /// No description provided for @evaluationReopened.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluation reopened'**
+  String get evaluationReopened;
+
+  /// No description provided for @evaluationReopenConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This returns the evaluation to in-progress and keeps the answers. Continue?'**
+  String get evaluationReopenConfirm;
+
+  /// No description provided for @evaluationNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get evaluationNext;
+
+  /// No description provided for @evaluationBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get evaluationBack;
+
+  /// No description provided for @evaluationLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'This evaluation is read-only'**
+  String get evaluationLocked;
+
+  /// No description provided for @evaluationDiscardChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'There are unsaved answers. Leave without saving?'**
+  String get evaluationDiscardChanges;
+
+  /// No description provided for @evaluationMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluation not found'**
+  String get evaluationMissing;
+
+  /// No description provided for @evaluationAlreadySubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'This evaluation was already submitted'**
+  String get evaluationAlreadySubmitted;
+
+  /// No description provided for @evaluationDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete evaluation'**
+  String get evaluationDelete;
+
+  /// No description provided for @evaluationDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This evaluation and its answers are deleted permanently. Continue?'**
+  String get evaluationDeleteConfirm;
+
+  /// No description provided for @evaluationDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluation deleted'**
+  String get evaluationDeleted;
+
+  /// No description provided for @evaluationAssignTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open an evaluation'**
+  String get evaluationAssignTitle;
+
+  /// No description provided for @evaluationAssignForm.
+  ///
+  /// In en, this message translates to:
+  /// **'Form'**
+  String get evaluationAssignForm;
+
+  /// No description provided for @evaluationAssignPickForm.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an evaluation form'**
+  String get evaluationAssignPickForm;
+
+  /// No description provided for @evaluationAssignNoForms.
+  ///
+  /// In en, this message translates to:
+  /// **'No active forms. Create one and switch it on first.'**
+  String get evaluationAssignNoForms;
+
+  /// No description provided for @evaluationAssignSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Subject'**
+  String get evaluationAssignSubject;
+
+  /// No description provided for @evaluationAssignPickSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the subject'**
+  String get evaluationAssignPickSubject;
+
+  /// No description provided for @evaluationAssignSubjectPicked.
+  ///
+  /// In en, this message translates to:
+  /// **'About: {name}'**
+  String evaluationAssignSubjectPicked(String name);
+
+  /// No description provided for @evaluationAssignEvaluator.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluator'**
+  String get evaluationAssignEvaluator;
+
+  /// No description provided for @evaluationAssignPickEvaluator.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the employee'**
+  String get evaluationAssignPickEvaluator;
+
+  /// No description provided for @evaluationAssignNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What should they look at? (optional)'**
+  String get evaluationAssignNoteHint;
+
+  /// No description provided for @evaluationAssignDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Due date (optional)'**
+  String get evaluationAssignDue;
+
+  /// No description provided for @evaluationAssignDueClear.
+  ///
+  /// In en, this message translates to:
+  /// **'No due date'**
+  String get evaluationAssignDueClear;
+
+  /// No description provided for @evaluationAssignSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Open and send'**
+  String get evaluationAssignSubmit;
+
+  /// No description provided for @evaluationAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluation opened and the evaluator notified'**
+  String get evaluationAssigned;
+
+  /// No description provided for @evaluationAssignAnonymousNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The employee sees their mark and never learns who wrote it.'**
+  String get evaluationAssignAnonymousNote;
+
+  /// No description provided for @evaluationFormsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluation forms'**
+  String get evaluationFormsTitle;
+
+  /// No description provided for @evaluationFormsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No evaluation forms yet'**
+  String get evaluationFormsEmpty;
+
+  /// No description provided for @evaluationFormsNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New form'**
+  String get evaluationFormsNew;
+
+  /// No description provided for @evaluationFormsSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search the forms'**
+  String get evaluationFormsSearchHint;
+
+  /// No description provided for @evaluationFormActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get evaluationFormActive;
+
+  /// No description provided for @evaluationFormInactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get evaluationFormInactive;
+
+  /// No description provided for @evaluationFormActivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch on'**
+  String get evaluationFormActivate;
+
+  /// No description provided for @evaluationFormDeactivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch off'**
+  String get evaluationFormDeactivate;
+
+  /// No description provided for @evaluationFormStages.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 stage} other{{count} stages}}'**
+  String evaluationFormStages(int count);
+
+  /// No description provided for @evaluationFormQuestions.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 question} other{{count} questions}}'**
+  String evaluationFormQuestions(int count);
+
+  /// No description provided for @evaluationFormTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'out of {total}'**
+  String evaluationFormTotal(String total);
+
+  /// No description provided for @evaluationFormInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 evaluation open on it} other{{count} evaluations open on it}}'**
+  String evaluationFormInUse(int count);
+
+  /// No description provided for @evaluationFormDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete form'**
+  String get evaluationFormDelete;
+
+  /// No description provided for @evaluationFormDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This form, its stages and its questions are deleted. Continue?'**
+  String get evaluationFormDeleteConfirm;
+
+  /// No description provided for @evaluationFormDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Form deleted'**
+  String get evaluationFormDeleted;
+
+  /// No description provided for @evaluationFormInUseDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'A form with evaluations open on it cannot be deleted. Switch it off instead.'**
+  String get evaluationFormInUseDelete;
+
+  /// No description provided for @evaluationEditorNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New evaluation form'**
+  String get evaluationEditorNewTitle;
+
+  /// No description provided for @evaluationEditorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit form'**
+  String get evaluationEditorTitle;
+
+  /// No description provided for @evaluationEditorName.
+  ///
+  /// In en, this message translates to:
+  /// **'Form name'**
+  String get evaluationEditorName;
+
+  /// No description provided for @evaluationEditorNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Operational file evaluation - Tarwiyah and catering'**
+  String get evaluationEditorNameHint;
+
+  /// No description provided for @evaluationEditorDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Short description (optional)'**
+  String get evaluationEditorDescription;
+
+  /// No description provided for @evaluationEditorFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluates'**
+  String get evaluationEditorFor;
+
+  /// No description provided for @evaluationEditorForLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'The subject kind cannot change once evaluations have been opened on the form'**
+  String get evaluationEditorForLocked;
+
+  /// No description provided for @evaluationEditorPublish.
+  ///
+  /// In en, this message translates to:
+  /// **'Active for use'**
+  String get evaluationEditorPublish;
+
+  /// No description provided for @evaluationEditorPublishHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A form that is switched off takes no new evaluations; the ones already open keep working'**
+  String get evaluationEditorPublishHint;
+
+  /// No description provided for @evaluationEditorStages.
+  ///
+  /// In en, this message translates to:
+  /// **'Stages'**
+  String get evaluationEditorStages;
+
+  /// No description provided for @evaluationEditorAddStage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add stage'**
+  String get evaluationEditorAddStage;
+
+  /// No description provided for @evaluationEditorStageName.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage name'**
+  String get evaluationEditorStageName;
+
+  /// No description provided for @evaluationEditorStageNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Tarwiyah team'**
+  String get evaluationEditorStageNameHint;
+
+  /// No description provided for @evaluationEditorStageDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Stage description (optional)'**
+  String get evaluationEditorStageDescription;
+
+  /// No description provided for @evaluationEditorRemoveStage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete stage'**
+  String get evaluationEditorRemoveStage;
+
+  /// No description provided for @evaluationEditorRemoveStageConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'The stage and all its questions are deleted. Continue?'**
+  String get evaluationEditorRemoveStageConfirm;
+
+  /// No description provided for @evaluationEditorAddChoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Multiple-choice question'**
+  String get evaluationEditorAddChoice;
+
+  /// No description provided for @evaluationEditorAddWritten.
+  ///
+  /// In en, this message translates to:
+  /// **'Written question'**
+  String get evaluationEditorAddWritten;
+
+  /// No description provided for @evaluationEditorQuestionText.
+  ///
+  /// In en, this message translates to:
+  /// **'Question'**
+  String get evaluationEditorQuestionText;
+
+  /// No description provided for @evaluationEditorQuestionPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Question mark'**
+  String get evaluationEditorQuestionPoints;
+
+  /// No description provided for @evaluationEditorRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get evaluationEditorRequired;
+
+  /// No description provided for @evaluationEditorAddOption.
+  ///
+  /// In en, this message translates to:
+  /// **'Add answer'**
+  String get evaluationEditorAddOption;
+
+  /// No description provided for @evaluationEditorOptionText.
+  ///
+  /// In en, this message translates to:
+  /// **'Answer'**
+  String get evaluationEditorOptionText;
+
+  /// No description provided for @evaluationEditorOptionPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark'**
+  String get evaluationEditorOptionPoints;
+
+  /// No description provided for @evaluationEditorNoQuestions.
+  ///
+  /// In en, this message translates to:
+  /// **'No questions in this stage yet'**
+  String get evaluationEditorNoQuestions;
+
+  /// No description provided for @evaluationEditorWrittenNote.
+  ///
+  /// In en, this message translates to:
+  /// **'A written question carries no mark - neither the question nor its answer'**
+  String get evaluationEditorWrittenNote;
+
+  /// No description provided for @evaluationEditorUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'The best answer gives {best} while the question is worth {points}'**
+  String evaluationEditorUnreachable(String best, String points);
+
+  /// No description provided for @evaluationEditorNeedsTwoOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'A multiple-choice question needs at least two answers'**
+  String get evaluationEditorNeedsTwoOptions;
+
+  /// No description provided for @evaluationEditorTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Form total: {total}'**
+  String evaluationEditorTotal(String total);
+
+  /// No description provided for @evaluationEditorSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save form'**
+  String get evaluationEditorSave;
+
+  /// No description provided for @evaluationEditorSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Form saved'**
+  String get evaluationEditorSaved;
+
+  /// No description provided for @evaluationEditorCannotPublish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish the form before switching it on: every stage needs a name, every question needs text, and every multiple-choice question needs at least two answers'**
+  String get evaluationEditorCannotPublish;
+
+  /// No description provided for @evaluationEditorMoveUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Move up'**
+  String get evaluationEditorMoveUp;
+
+  /// No description provided for @evaluationEditorMoveDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Move down'**
+  String get evaluationEditorMoveDown;
+
+  /// No description provided for @evaluationsAboutMeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluations about me'**
+  String get evaluationsAboutMeTitle;
+
+  /// No description provided for @evaluationsAboutMeEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No evaluation has been written about you'**
+  String get evaluationsAboutMeEmpty;
+
+  /// No description provided for @evaluationsSectionAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluations of this subject'**
+  String get evaluationsSectionAbout;
+
+  /// No description provided for @evaluationsAboutCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No evaluations} =1{1 evaluation} other{{count} evaluations}}'**
+  String evaluationsAboutCount(int count);
+
+  /// No description provided for @evaluationsAboutPending.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} in progress'**
+  String evaluationsAboutPending(int count);
+
+  /// No description provided for @evaluationsAboutAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Average {percent}%'**
+  String evaluationsAboutAverage(String percent);
+
+  /// No description provided for @evaluationsAboutAnonymousNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Marks are shown without the names of who wrote them.'**
+  String get evaluationsAboutAnonymousNote;
+
+  /// No description provided for @evaluationErrorOptionTooHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'An answer is worth more than the question it answers'**
+  String get evaluationErrorOptionTooHigh;
+
+  /// No description provided for @evaluationErrorWrittenHasOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'A written question takes no preset answers'**
+  String get evaluationErrorWrittenHasOptions;
+
+  /// No description provided for @evaluationsOpenFromForms.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluations are opened from إدارة التقييم, standing on the form they will be filled on'**
+  String get evaluationsOpenFromForms;
+
+  /// No description provided for @evaluationAssignNoTargets.
+  ///
+  /// In en, this message translates to:
+  /// **'There is nothing of kind «{kind}» to open an evaluation about'**
+  String evaluationAssignNoTargets(String kind);
+
+  /// No description provided for @evaluationAssignNoEvaluators.
+  ///
+  /// In en, this message translates to:
+  /// **'There is no employee who can be assigned'**
+  String get evaluationAssignNoEvaluators;
+
+  /// No description provided for @evaluationFormMustBeActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch the form on before an evaluation can be opened on it'**
+  String get evaluationFormMustBeActive;
+
+  /// No description provided for @evaluationEditorForHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This picks the KIND of subject only. The particular file or employee is named when an evaluation is opened on this form — from the «New evaluation» button on its card, once the form is switched on.'**
+  String get evaluationEditorForHint;
+
+  /// No description provided for @evaluationAssignNoSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'The current season could not be read, and the evaluator cannot be chosen without it'**
+  String get evaluationAssignNoSeason;
+
+  /// No description provided for @evaluationAssignedShow.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get evaluationAssignedShow;
+
+  /// No description provided for @evaluationAssignSubjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Subjects'**
+  String get evaluationAssignSubjects;
+
+  /// No description provided for @evaluationAssignEvaluators.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluators'**
+  String get evaluationAssignEvaluators;
+
+  /// No description provided for @evaluationAssignPickSubjects.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the subjects'**
+  String get evaluationAssignPickSubjects;
+
+  /// No description provided for @evaluationAssignPickEvaluators.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the employees'**
+  String get evaluationAssignPickEvaluators;
+
+  /// No description provided for @evaluationAssignAddMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get evaluationAssignAddMore;
+
+  /// No description provided for @evaluationAssignPlanned.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No evaluation will be opened} =1{1 evaluation will be opened} other{{count} evaluations will be opened}}'**
+  String evaluationAssignPlanned(int count);
+
+  /// No description provided for @evaluationAssignCross.
+  ///
+  /// In en, this message translates to:
+  /// **'One per subject per evaluator — {targets} × {evaluators}'**
+  String evaluationAssignCross(int targets, int evaluators);
+
+  /// No description provided for @evaluationAssignedMany.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 evaluation opened and its evaluator notified} other{{count} evaluations opened and their evaluators notified}}'**
+  String evaluationAssignedMany(int count);
 }
 
 class _AppLocalizationsDelegate

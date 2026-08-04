@@ -280,15 +280,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get genderFemale => 'Female';
 
   @override
-  String get missionAdministrative => 'Administrative mission';
-
-  @override
-  String get missionReligious => 'Religious mission';
-
-  @override
-  String get missionMedical => 'Medical mission';
-
-  @override
   String get statusPendingTitle => 'Pending approval';
 
   @override
@@ -325,10 +316,37 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String homeHijriDate(String date) {
+    return '$date AH';
+  }
+
+  @override
+  String homeGregorianDate(String date) {
+    return '$date CE';
+  }
+
+  @override
+  String profileTitleBadgeSuffix(String badge) {
+    return '($badge)';
+  }
+
+  @override
   String get homeAdminSection => 'Administration';
 
   @override
   String get homeGeneralSection => 'General';
+
+  @override
+  String get homeAdminGroupFiles => 'Files & reports';
+
+  @override
+  String get homeAdminGroupPeople => 'People & permissions';
+
+  @override
+  String get homeAdminGroupSeason => 'Season & reference data';
+
+  @override
+  String get homeAdminGroupOversight => 'Oversight & records';
 
   @override
   String get navApprovals => 'Account approvals';
@@ -2405,13 +2423,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prayerWidgetStale => 'Open the app to refresh the times';
 
   @override
-  String get navMyComplaints => 'My complaints';
+  String get navMyComplaints => 'Complaints';
 
   @override
   String get navMyComplaintsSubtitle => 'What you filed, and what came back';
 
   @override
-  String get navComplaints => 'Complaints';
+  String get navComplaints => 'Complaints register';
 
   @override
   String get navComplaintsSubtitle =>
@@ -2617,5 +2635,580 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String complaintsDismissedCount(int count) {
     return '$count dismissed';
+  }
+
+  @override
+  String get navEvaluations => 'Evaluations';
+
+  @override
+  String get navEvaluationsSubtitle => 'What you were asked to evaluate';
+
+  @override
+  String get navEvaluationsManage => 'Evaluation register';
+
+  @override
+  String get navEvaluationsManageSubtitle =>
+      'Every evaluation across the mission and its marks';
+
+  @override
+  String get navEvaluationForms => 'Evaluation forms';
+
+  @override
+  String get navEvaluationFormsSubtitle =>
+      'The forms, their questions and their marks';
+
+  @override
+  String get evaluationsTitle => 'Evaluation register';
+
+  @override
+  String get evaluationsMineTitle => 'My evaluations';
+
+  @override
+  String get evaluationsEmpty =>
+      'You have not been asked to evaluate anything yet';
+
+  @override
+  String get evaluationsEmptyAll => 'No evaluation has been opened yet';
+
+  @override
+  String get evaluationsNoMatches => 'No matches';
+
+  @override
+  String get evaluationsSearchHint => 'Search by form or subject';
+
+  @override
+  String get evaluationsFilterAll => 'All';
+
+  @override
+  String get evaluationsNew => 'New evaluation';
+
+  @override
+  String evaluationsOpenCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count outstanding',
+      one: '1 outstanding',
+      zero: 'nothing outstanding',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String evaluationsOverdueCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count overdue',
+      one: '1 overdue',
+      zero: 'none overdue',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get evaluationStatusDraft => 'In progress';
+
+  @override
+  String get evaluationStatusSubmitted => 'Completed';
+
+  @override
+  String get evaluationOverdue => 'Overdue';
+
+  @override
+  String evaluationDueOn(String date) {
+    return 'Due $date';
+  }
+
+  @override
+  String evaluationOpenedOn(String date) {
+    return 'Opened $date';
+  }
+
+  @override
+  String evaluationSubmittedOn(String date) {
+    return 'Completed $date';
+  }
+
+  @override
+  String get evaluationEvaluator => 'Evaluator';
+
+  @override
+  String get evaluationEvaluatorHidden => 'Evaluator not disclosed';
+
+  @override
+  String get evaluationSubject => 'Subject';
+
+  @override
+  String get evaluationNote => 'Note from the office';
+
+  @override
+  String evaluationProgress(int answered, int total) {
+    return '$answered of $total';
+  }
+
+  @override
+  String evaluationScore(String score, String total) {
+    return '$score of $total';
+  }
+
+  @override
+  String evaluationPercent(String percent) {
+    return '$percent%';
+  }
+
+  @override
+  String get evaluationTargetEmployee => 'Employee';
+
+  @override
+  String get evaluationTargetModule => 'Operational file';
+
+  @override
+  String get evaluationTargetReport => 'Report';
+
+  @override
+  String get evaluationTargetHotel => 'Hotel';
+
+  @override
+  String get evaluationTargetCluster => 'Cluster';
+
+  @override
+  String get evaluationTargetGroup => 'Group';
+
+  @override
+  String get evaluationTargetOther => 'Other';
+
+  @override
+  String get evaluationSheetTitle => 'Evaluation';
+
+  @override
+  String evaluationStageOf(int index, int total) {
+    return 'Stage $index of $total';
+  }
+
+  @override
+  String evaluationStageScore(String score, String total) {
+    return 'Stage mark $score of $total';
+  }
+
+  @override
+  String get evaluationQuestionRequired => 'Required';
+
+  @override
+  String get evaluationQuestionOptional => 'Optional';
+
+  @override
+  String get evaluationQuestionUnanswered => 'Not answered';
+
+  @override
+  String get evaluationWriteHint => 'Write your answer';
+
+  @override
+  String get evaluationSaveDraft => 'Save';
+
+  @override
+  String get evaluationSubmit => 'Submit evaluation';
+
+  @override
+  String get evaluationSubmitted => 'Evaluation submitted';
+
+  @override
+  String get evaluationDraftSaved => 'Answers saved';
+
+  @override
+  String get evaluationIncomplete => 'Answer every required question first';
+
+  @override
+  String get evaluationReopen => 'Reopen';
+
+  @override
+  String get evaluationReopened => 'Evaluation reopened';
+
+  @override
+  String get evaluationReopenConfirm =>
+      'This returns the evaluation to in-progress and keeps the answers. Continue?';
+
+  @override
+  String get evaluationNext => 'Next';
+
+  @override
+  String get evaluationBack => 'Back';
+
+  @override
+  String get evaluationLocked => 'This evaluation is read-only';
+
+  @override
+  String get evaluationDiscardChanges =>
+      'There are unsaved answers. Leave without saving?';
+
+  @override
+  String get evaluationMissing => 'Evaluation not found';
+
+  @override
+  String get evaluationAlreadySubmitted =>
+      'This evaluation was already submitted';
+
+  @override
+  String get evaluationDelete => 'Delete evaluation';
+
+  @override
+  String get evaluationDeleteConfirm =>
+      'This evaluation and its answers are deleted permanently. Continue?';
+
+  @override
+  String get evaluationDeleted => 'Evaluation deleted';
+
+  @override
+  String get evaluationAssignTitle => 'Open an evaluation';
+
+  @override
+  String get evaluationAssignForm => 'Form';
+
+  @override
+  String get evaluationAssignPickForm => 'Choose an evaluation form';
+
+  @override
+  String get evaluationAssignNoForms =>
+      'No active forms. Create one and switch it on first.';
+
+  @override
+  String get evaluationAssignSubject => 'Subject';
+
+  @override
+  String get evaluationAssignPickSubject => 'Choose the subject';
+
+  @override
+  String evaluationAssignSubjectPicked(String name) {
+    return 'About: $name';
+  }
+
+  @override
+  String get evaluationAssignEvaluator => 'Evaluator';
+
+  @override
+  String get evaluationAssignPickEvaluator => 'Choose the employee';
+
+  @override
+  String get evaluationAssignNoteHint => 'What should they look at? (optional)';
+
+  @override
+  String get evaluationAssignDue => 'Due date (optional)';
+
+  @override
+  String get evaluationAssignDueClear => 'No due date';
+
+  @override
+  String get evaluationAssignSubmit => 'Open and send';
+
+  @override
+  String get evaluationAssigned =>
+      'Evaluation opened and the evaluator notified';
+
+  @override
+  String get evaluationAssignAnonymousNote =>
+      'The employee sees their mark and never learns who wrote it.';
+
+  @override
+  String get evaluationFormsTitle => 'Evaluation forms';
+
+  @override
+  String get evaluationFormsEmpty => 'No evaluation forms yet';
+
+  @override
+  String get evaluationFormsNew => 'New form';
+
+  @override
+  String get evaluationFormsSearchHint => 'Search the forms';
+
+  @override
+  String get evaluationFormActive => 'Active';
+
+  @override
+  String get evaluationFormInactive => 'Off';
+
+  @override
+  String get evaluationFormActivate => 'Switch on';
+
+  @override
+  String get evaluationFormDeactivate => 'Switch off';
+
+  @override
+  String evaluationFormStages(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count stages',
+      one: '1 stage',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String evaluationFormQuestions(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count questions',
+      one: '1 question',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String evaluationFormTotal(String total) {
+    return 'out of $total';
+  }
+
+  @override
+  String evaluationFormInUse(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count evaluations open on it',
+      one: '1 evaluation open on it',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get evaluationFormDelete => 'Delete form';
+
+  @override
+  String get evaluationFormDeleteConfirm =>
+      'This form, its stages and its questions are deleted. Continue?';
+
+  @override
+  String get evaluationFormDeleted => 'Form deleted';
+
+  @override
+  String get evaluationFormInUseDelete =>
+      'A form with evaluations open on it cannot be deleted. Switch it off instead.';
+
+  @override
+  String get evaluationEditorNewTitle => 'New evaluation form';
+
+  @override
+  String get evaluationEditorTitle => 'Edit form';
+
+  @override
+  String get evaluationEditorName => 'Form name';
+
+  @override
+  String get evaluationEditorNameHint =>
+      'e.g. Operational file evaluation - Tarwiyah and catering';
+
+  @override
+  String get evaluationEditorDescription => 'Short description (optional)';
+
+  @override
+  String get evaluationEditorFor => 'Evaluates';
+
+  @override
+  String get evaluationEditorForLocked =>
+      'The subject kind cannot change once evaluations have been opened on the form';
+
+  @override
+  String get evaluationEditorPublish => 'Active for use';
+
+  @override
+  String get evaluationEditorPublishHint =>
+      'A form that is switched off takes no new evaluations; the ones already open keep working';
+
+  @override
+  String get evaluationEditorStages => 'Stages';
+
+  @override
+  String get evaluationEditorAddStage => 'Add stage';
+
+  @override
+  String get evaluationEditorStageName => 'Stage name';
+
+  @override
+  String get evaluationEditorStageNameHint => 'e.g. Tarwiyah team';
+
+  @override
+  String get evaluationEditorStageDescription => 'Stage description (optional)';
+
+  @override
+  String get evaluationEditorRemoveStage => 'Delete stage';
+
+  @override
+  String get evaluationEditorRemoveStageConfirm =>
+      'The stage and all its questions are deleted. Continue?';
+
+  @override
+  String get evaluationEditorAddChoice => 'Multiple-choice question';
+
+  @override
+  String get evaluationEditorAddWritten => 'Written question';
+
+  @override
+  String get evaluationEditorQuestionText => 'Question';
+
+  @override
+  String get evaluationEditorQuestionPoints => 'Question mark';
+
+  @override
+  String get evaluationEditorRequired => 'Required';
+
+  @override
+  String get evaluationEditorAddOption => 'Add answer';
+
+  @override
+  String get evaluationEditorOptionText => 'Answer';
+
+  @override
+  String get evaluationEditorOptionPoints => 'Mark';
+
+  @override
+  String get evaluationEditorNoQuestions => 'No questions in this stage yet';
+
+  @override
+  String get evaluationEditorWrittenNote =>
+      'A written question carries no mark - neither the question nor its answer';
+
+  @override
+  String evaluationEditorUnreachable(String best, String points) {
+    return 'The best answer gives $best while the question is worth $points';
+  }
+
+  @override
+  String get evaluationEditorNeedsTwoOptions =>
+      'A multiple-choice question needs at least two answers';
+
+  @override
+  String evaluationEditorTotal(String total) {
+    return 'Form total: $total';
+  }
+
+  @override
+  String get evaluationEditorSave => 'Save form';
+
+  @override
+  String get evaluationEditorSaved => 'Form saved';
+
+  @override
+  String get evaluationEditorCannotPublish =>
+      'Finish the form before switching it on: every stage needs a name, every question needs text, and every multiple-choice question needs at least two answers';
+
+  @override
+  String get evaluationEditorMoveUp => 'Move up';
+
+  @override
+  String get evaluationEditorMoveDown => 'Move down';
+
+  @override
+  String get evaluationsAboutMeTitle => 'Evaluations about me';
+
+  @override
+  String get evaluationsAboutMeEmpty =>
+      'No evaluation has been written about you';
+
+  @override
+  String get evaluationsSectionAbout => 'Evaluations of this subject';
+
+  @override
+  String evaluationsAboutCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count evaluations',
+      one: '1 evaluation',
+      zero: 'No evaluations',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String evaluationsAboutPending(int count) {
+    return '$count in progress';
+  }
+
+  @override
+  String evaluationsAboutAverage(String percent) {
+    return 'Average $percent%';
+  }
+
+  @override
+  String get evaluationsAboutAnonymousNote =>
+      'Marks are shown without the names of who wrote them.';
+
+  @override
+  String get evaluationErrorOptionTooHigh =>
+      'An answer is worth more than the question it answers';
+
+  @override
+  String get evaluationErrorWrittenHasOptions =>
+      'A written question takes no preset answers';
+
+  @override
+  String get evaluationsOpenFromForms =>
+      'Evaluations are opened from إدارة التقييم, standing on the form they will be filled on';
+
+  @override
+  String evaluationAssignNoTargets(String kind) {
+    return 'There is nothing of kind «$kind» to open an evaluation about';
+  }
+
+  @override
+  String get evaluationAssignNoEvaluators =>
+      'There is no employee who can be assigned';
+
+  @override
+  String get evaluationFormMustBeActive =>
+      'Switch the form on before an evaluation can be opened on it';
+
+  @override
+  String get evaluationEditorForHint =>
+      'This picks the KIND of subject only. The particular file or employee is named when an evaluation is opened on this form — from the «New evaluation» button on its card, once the form is switched on.';
+
+  @override
+  String get evaluationAssignNoSeason =>
+      'The current season could not be read, and the evaluator cannot be chosen without it';
+
+  @override
+  String get evaluationAssignedShow => 'View';
+
+  @override
+  String get evaluationAssignSubjects => 'Subjects';
+
+  @override
+  String get evaluationAssignEvaluators => 'Evaluators';
+
+  @override
+  String get evaluationAssignPickSubjects => 'Choose the subjects';
+
+  @override
+  String get evaluationAssignPickEvaluators => 'Choose the employees';
+
+  @override
+  String get evaluationAssignAddMore => 'Add';
+
+  @override
+  String evaluationAssignPlanned(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count evaluations will be opened',
+      one: '1 evaluation will be opened',
+      zero: 'No evaluation will be opened',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String evaluationAssignCross(int targets, int evaluators) {
+    return 'One per subject per evaluator — $targets × $evaluators';
+  }
+
+  @override
+  String evaluationAssignedMany(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count evaluations opened and their evaluators notified',
+      one: '1 evaluation opened and its evaluator notified',
+    );
+    return '$_temp0';
   }
 }

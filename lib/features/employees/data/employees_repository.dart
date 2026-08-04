@@ -1,4 +1,5 @@
 import '../../../core/supabase/supabase_client.dart';
+import '../../profile/data/profile_repository.dart' show profileEmbeds;
 import '../../profile/domain/profile.dart';
 import '../../profile/domain/profile_enums.dart';
 
@@ -15,7 +16,7 @@ class EmployeesRepository {
     required String jobTitleId,
     required Gender gender,
     required DateTime dateOfBirth,
-    required MissionType missionType,
+    required String missionTypeId,
     required String phoneSy,
     String? phoneSa,
     bool isExternal = false,
@@ -32,7 +33,7 @@ class EmployeesRepository {
         'surname': surname,
         'job_title_id': jobTitleId,
         'gender': gender.db,
-        'mission_type': missionType.db,
+        'mission_type_id': missionTypeId,
         'phone_sy': phoneSy,
         'phone_sa': phoneSa,
         'date_of_birth': dateOfBirth.toIso8601String().split('T').first,
@@ -53,9 +54,7 @@ class EmployeesRepository {
   Future<List<Profile>> fetchPermanent() async {
     final rows = await supabase
         .from('permanent_employees')
-        // `reference_items` is the city: profiles points at it once, through
-        // city_id, so the embed needs no disambiguating.
-        .select('*, job_titles(name, name_en), reference_items(name_ar, name_en)')
+        .select(profileEmbeds)
         .order('first_name');
     return (rows as List)
         .map((r) => Profile.fromMap(r as Map<String, dynamic>))
@@ -73,7 +72,7 @@ class EmployeesRepository {
     if (seasonId == null) {
       final rows = await supabase
           .from('profiles')
-          .select('*, job_titles(name, name_en), reference_items(name_ar, name_en)')
+          .select(profileEmbeds)
           .eq('account_status', 'approved')
           .eq('is_external', true)
           .order('first_name');
@@ -86,9 +85,7 @@ class EmployeesRepository {
     // season because they were put into that season, not because they exist.
     final rows = await supabase
         .from('season_participants')
-        .select(
-          'profiles!inner(*, job_titles(name, name_en), reference_items(name_ar, name_en))',
-        )
+        .select('profiles!inner($profileEmbeds)')
         .eq('season_id', seasonId)
         .eq('status', 'active')
         .eq('profiles.is_external', true)
@@ -113,7 +110,7 @@ class EmployeesRepository {
   Future<Profile> fetchOne(String profileId) async {
     final row = await supabase
         .from('profiles')
-        .select('*, job_titles(name, name_en), reference_items(name_ar, name_en)')
+        .select(profileEmbeds)
         .eq('id', profileId)
         .single();
     return Profile.fromMap(row);
@@ -134,7 +131,7 @@ class EmployeesRepository {
     required String surname,
     String? jobTitleId,
     Gender? gender,
-    MissionType? missionType,
+    String? missionTypeId,
     DateTime? dateOfBirth,
     String? cityId,
     String? phoneSy,
@@ -153,7 +150,7 @@ class EmployeesRepository {
           'surname': surname.trim(),
           'job_title_id': jobTitleId,
           'gender': gender?.db,
-          'mission_type': missionType?.db,
+          'mission_type_id': missionTypeId,
           'date_of_birth': dateOfBirth?.toIso8601String().split('T').first,
           'city_id': cityId,
           'phone_sy': trimmed(phoneSy),

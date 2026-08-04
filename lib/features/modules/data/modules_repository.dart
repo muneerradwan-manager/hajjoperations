@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/supabase/storage_key.dart';
 import '../../../core/supabase/supabase_client.dart';
+import '../../profile/data/profile_repository.dart' show profileEmbeds;
 import '../../profile/domain/profile.dart';
 import '../domain/assignable_employee.dart';
 import '../domain/module_task.dart';
@@ -189,7 +190,7 @@ class ModulesRepository {
         .from('module_reports')
         .select(
           '*, module_report_attachments(*), '
-          'profiles:author_id(*, job_titles(name, name_en))',
+          'profiles:author_id($profileEmbeds)',
         )
         .eq('module_id', moduleId)
         .order('created_at', ascending: false);
@@ -571,8 +572,7 @@ class ModulesRepository {
         // is read from the row already in hand rather than fetched again.
         .select(
           '*, module_node_members(*, module_assigned_tasks(task_id), '
-          'profiles:profile_id(*, job_titles(name, name_en), '
-          'reference_items(name_ar, name_en)))',
+          'profiles:profile_id($profileEmbeds))',
         )
         .eq('module_id', moduleId)
         .order('sort_order');
@@ -644,8 +644,7 @@ class ModulesRepository {
         .from('module_members')
         .select(
           '*, module_assigned_tasks(task_id), '
-          'profiles:profile_id(*, job_titles(name, name_en), '
-          'reference_items(name_ar, name_en))',
+          'profiles:profile_id($profileEmbeds)',
         )
         .eq('module_id', moduleId);
     final members = (rows as List)
@@ -1045,7 +1044,7 @@ class ModulesRepository {
   Future<List<Profile>> fetchAssignableEmployees(String seasonId) async {
     final rows = await supabase
         .from('season_participants')
-        .select('profiles!inner(*, job_titles(name, name_en))')
+        .select('profiles!inner($profileEmbeds)')
         .eq('season_id', seasonId)
         .eq('status', 'active');
     final people = (rows as List)

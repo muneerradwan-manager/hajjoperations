@@ -80,7 +80,7 @@ class ApprovalDetailScreen extends StatelessWidget {
                   InfoRow(
                     icon: AppIcons.mission,
                     label: l.profileMissionType,
-                    value: profile.missionType?.label(l),
+                    value: profile.missionTypeName?.of(context),
                   ),
                   InfoRow(
                     icon: AppIcons.dateOfBirth,
