@@ -98,17 +98,26 @@ class EvaluationsCubit extends SafeCubit<EvaluationsState> {
   EvaluationsCubit(
     this._repo, {
     EvaluationsScope scope = EvaluationsScope.mine,
+    this.templateId,
   }) : super(EvaluationsState(scope: scope)) {
     load();
   }
 
   final EvaluationsRepository _repo;
 
+  /// Narrowed to one form, when the register was opened FROM that form.
+  ///
+  /// Asked of the server rather than filtered here: the list is capped, and a
+  /// form with four sheets among two hundred would come back with none of them
+  /// if the cap fell first.
+  final String? templateId;
+
   Future<void> load() async {
     emit(state.copyWith(status: EvaluationsStatus.loading, error: null));
     try {
       final evaluations = await _repo.fetchList(
         all: state.scope == EvaluationsScope.all,
+        templateId: templateId,
       );
       emit(
         state.copyWith(

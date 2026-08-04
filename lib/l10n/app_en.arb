@@ -1144,5 +1144,6 @@
   "evaluationAssignedMany": "{count, plural, =1{1 evaluation opened and its evaluator notified} other{{count} evaluations opened and their evaluators notified}}",
   "@evaluationAssignPlanned": { "placeholders": { "count": { "type": "int" } } },
   "@evaluationAssignCross": { "placeholders": { "targets": { "type": "int" }, "evaluators": { "type": "int" } } },
-  "@evaluationAssignedMany": { "placeholders": { "count": { "type": "int" } } }
+  "@evaluationAssignedMany": { "placeholders": { "count": { "type": "int" } } },
+  "evaluationFormShowEvaluations": "Show the evaluations on it"
 }

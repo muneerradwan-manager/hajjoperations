@@ -5665,6 +5665,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 evaluation opened and its evaluator notified} other{{count} evaluations opened and their evaluators notified}}'**
   String evaluationAssignedMany(int count);
+
+  /// No description provided for @evaluationFormShowEvaluations.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the evaluations on it'**
+  String get evaluationFormShowEvaluations;
 }
 
 class _AppLocalizationsDelegate

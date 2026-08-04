@@ -38,20 +38,74 @@ import 'widgets/evaluation_labels.dart';
 /// on — which is also the order the act really has, since the form settles what
 /// kind of thing may be named next.
 class EvaluationsScreen extends StatelessWidget {
-  const EvaluationsScreen({super.key, this.scope = EvaluationsScope.mine});
+  const EvaluationsScreen({
+    super.key,
+    this.scope = EvaluationsScope.mine,
+    this.templateId,
+    this.title,
+  });
 
   final EvaluationsScope scope;
 
+  /// Opened from one form, showing only what was issued on it. This is the way
+  /// out of the dead end deleting a form used to be: the database refuses while
+  /// sheets exist, and until now there was nowhere to go and look at them.
+  final String? templateId;
+
+  /// Overrides the app-bar title — the form's name, when opened from a form.
+  final String? title;
+
   @override
   Widget build(BuildContext context) => BlocProvider(
-    create: (_) => EvaluationsCubit(EvaluationsRepository(), scope: scope),
-    child: _View(scope: scope),
+    create: (_) => EvaluationsCubit(
+      EvaluationsRepository(),
+      scope: scope,
+      templateId: templateId,
+    ),
+    child: _View(scope: scope, title: title),
   );
 }
 
 class _View extends StatelessWidget {
-  const _View({required this.scope});
+  const _View({required this.scope, this.title});
   final EvaluationsScope scope;
+  final String? title;
+
+  Future<void> _delete(BuildContext context, Evaluation evaluation) async {
+    final l = context.l10n;
+    final cubit = context.read<EvaluationsCubit>();
+    final messenger = ScaffoldMessenger.of(context);
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: Text(evaluation.targetLabel ?? evaluation.templateTitle),
+        content: Text(l.evaluationDeleteConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialog).pop(false),
+            child: Text(l.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialog).pop(true),
+            child: Text(l.commonDelete),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    final error = await cubit.delete(evaluation.id);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            error == null ? l.evaluationDeleted : friendlyErrorL(l, error),
+          ),
+        ),
+      );
+  }
 
   Future<void> _open(
     BuildContext context,
@@ -81,10 +135,19 @@ class _View extends StatelessWidget {
     // sending a finished sheet back is an act ON a record, so it belongs to the
     // screen that holds the records.
     final canReopen = session.can(PermissionCodes.evaluationsAssign);
+    // Deleting a sheet. Drawn for whoever holds the code; the database also
+    // lets whoever ISSUED one withdraw it while it is untouched, and that
+    // narrower right is left to the server to answer — a card that offers the
+    // action and is refused says more than one that silently omits it.
+    final canDelete =
+        session.can(PermissionCodes.evaluationsDelete) ||
+        session.can(PermissionCodes.evaluationsAssign);
 
     return Scaffold(
       appBar: GlassAppBar(
-        title: Text(mine ? l.evaluationsMineTitle : l.evaluationsTitle),
+        title: Text(
+          title ?? (mine ? l.evaluationsMineTitle : l.evaluationsTitle),
+        ),
       ),
       body: SafeArea(
         child: BlocBuilder<EvaluationsCubit, EvaluationsState>(
@@ -160,6 +223,9 @@ class _View extends StatelessWidget {
                                 showEvaluator: !mine,
                                 onOpen: () =>
                                     _open(context, visible[i], canReopen),
+                                onDelete: !mine && canDelete
+                                    ? () => _delete(context, visible[i])
+                                    : null,
                               ),
                             ),
                           ),

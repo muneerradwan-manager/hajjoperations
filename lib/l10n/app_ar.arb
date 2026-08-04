@@ -1133,5 +1133,6 @@
   "evaluationAssignedMany": "{count, plural, =1{فُتح تقييم واحد وأُبلغ صاحبه} =2{فُتح تقييمان وأُبلغ أصحابهما} few{فُتحت {count} تقييمات وأُبلغ أصحابها} many{فُتح {count} تقييماً وأُبلغ أصحابها} other{فُتح {count} تقييم وأُبلغ أصحابها}}",
   "@evaluationAssignPlanned": { "placeholders": { "count": { "type": "int" } } },
   "@evaluationAssignCross": { "placeholders": { "targets": { "type": "int" }, "evaluators": { "type": "int" } } },
-  "@evaluationAssignedMany": { "placeholders": { "count": { "type": "int" } } }
+  "@evaluationAssignedMany": { "placeholders": { "count": { "type": "int" } } },
+  "evaluationFormShowEvaluations": "عرض التقييمات المفتوحة عليه"
 }

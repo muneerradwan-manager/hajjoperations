@@ -19,11 +19,16 @@ class EvaluationCard extends StatelessWidget {
     super.key,
     required this.evaluation,
     this.onOpen,
+    this.onDelete,
     this.showEvaluator = false,
   });
 
   final Evaluation evaluation;
   final VoidCallback? onOpen;
+
+  /// Null where deleting is not this reader's to do — a person's own list of
+  /// errands, where withdrawing the work is not the same as doing it.
+  final VoidCallback? onDelete;
 
   /// Whether to name who is filling it. True in the register, false in a
   /// person's own list — where the evaluator is the reader.
@@ -73,7 +78,16 @@ class EvaluationCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const NavChevron(),
+              if (onDelete != null)
+                PopupMenuButton<int>(
+                  icon: const Icon(AppIcons.more),
+                  itemBuilder: (_) => [
+                    PopupMenuItem(value: 0, child: Text(l.evaluationDelete)),
+                  ],
+                  onSelected: (_) => onDelete!(),
+                )
+              else
+                const NavChevron(),
             ],
           ),
           const SizedBox(height: AppSpacing.md),

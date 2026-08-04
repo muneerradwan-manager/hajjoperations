@@ -17,6 +17,8 @@ import '../domain/evaluation.dart';
 import 'assign_evaluation_screen.dart';
 import 'evaluation_editor_screen.dart';
 import 'evaluation_sheet_screen.dart';
+import 'evaluations_screen.dart';
+import '../application/evaluations_cubit.dart';
 import 'widgets/evaluation_labels.dart';
 
 /// إدارة التقييم: the forms, and the act of issuing one.
@@ -120,6 +122,32 @@ class _View extends StatelessWidget {
       );
   }
 
+  /// The evaluations issued on this form, and the way out of the dead end.
+  ///
+  /// Deleting a form is refused by the database while a single sheet stands on
+  /// it — `on delete restrict`, and rightly, because the marks written on it are
+  /// history. But the refusal used to end the conversation: إدارة التقييم showed
+  /// forms and nothing else, so a person was told "there are evaluations on it"
+  /// with nowhere to go and see them, let alone remove them.
+  Future<void> _openEvaluations(
+    BuildContext context,
+    EvaluationFormSummary form,
+  ) async {
+    final cubit = context.read<EvaluationFormsCubit>();
+    await Navigator.of(context).push(
+      fadeThroughRoute(
+        (_) => EvaluationsScreen(
+          scope: EvaluationsScope.all,
+          templateId: form.id,
+          title: form.title,
+        ),
+      ),
+    );
+    // Sheets may have been deleted in there, which is what unblocks deleting
+    // the form — so the count on this card has to be re-read.
+    await cubit.load();
+  }
+
   Future<void> _toggle(
     BuildContext context,
     EvaluationFormSummary form,
@@ -151,7 +179,16 @@ class _View extends StatelessWidget {
     if (form.isInUse) {
       messenger
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(l.evaluationFormInUseDelete)));
+        ..showSnackBar(
+          SnackBar(
+            content: Text(l.evaluationFormInUseDelete),
+            // Not merely "you cannot": here is where they are.
+            action: SnackBarAction(
+              label: l.evaluationFormShowEvaluations,
+              onPressed: () => _openEvaluations(context, form),
+            ),
+          ),
+        );
       return;
     }
 
@@ -277,6 +314,8 @@ class _View extends StatelessWidget {
                                 form: visible[i],
                                 canEdit: canEdit,
                                 canAssign: canAssign,
+                                onShowEvaluations: () =>
+                                    _openEvaluations(context, visible[i]),
                                 onAssign: () => _assign(context, visible[i]),
                                 onOpen: () => _edit(context, visible[i]),
                                 onToggle: (v) =>
@@ -301,6 +340,7 @@ class _FormCard extends StatelessWidget {
     required this.form,
     required this.canEdit,
     required this.canAssign,
+    required this.onShowEvaluations,
     required this.onAssign,
     required this.onOpen,
     required this.onToggle,
@@ -316,6 +356,7 @@ class _FormCard extends StatelessWidget {
   /// Whoever may issue an evaluation on it.
   final bool canAssign;
 
+  final VoidCallback onShowEvaluations;
   final VoidCallback onAssign;
   final VoidCallback onOpen;
   final ValueChanged<bool> onToggle;
@@ -378,9 +419,18 @@ class _FormCard extends StatelessWidget {
                   icon: const Icon(AppIcons.more),
                   itemBuilder: (_) => [
                     PopupMenuItem(value: 0, child: Text(l.commonEdit)),
+                    if (form.isInUse)
+                      PopupMenuItem(
+                        value: 2,
+                        child: Text(l.evaluationFormShowEvaluations),
+                      ),
                     PopupMenuItem(value: 1, child: Text(l.evaluationFormDelete)),
                   ],
-                  onSelected: (v) => v == 0 ? onOpen() : onDelete(),
+                  onSelected: (v) => switch (v) {
+                    0 => onOpen(),
+                    2 => onShowEvaluations(),
+                    _ => onDelete(),
+                  },
                 ),
               ],
             ],
@@ -418,12 +468,19 @@ class _FormCard extends StatelessWidget {
                 color: scheme.secondary,
                 dense: true,
               ),
+              // Tappable, because it is the answer to the question it raises:
+              // "there are four evaluations on this" is only useful if it can
+              // show you the four.
               if (form.isInUse)
-                GlassBadge(
-                  label: l.evaluationFormInUse(form.evaluationCount),
-                  icon: AppIcons.evaluations,
-                  color: scheme.tertiary,
-                  dense: true,
+                InkWell(
+                  onTap: onShowEvaluations,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  child: GlassBadge(
+                    label: l.evaluationFormInUse(form.evaluationCount),
+                    icon: AppIcons.evaluations,
+                    color: scheme.tertiary,
+                    dense: true,
+                  ),
                 ),
             ],
           ),

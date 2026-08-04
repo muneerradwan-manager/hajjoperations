@@ -3211,4 +3211,7 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get evaluationFormShowEvaluations => 'Show the evaluations on it';
 }

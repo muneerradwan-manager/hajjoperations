@@ -3233,4 +3233,7 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get evaluationFormShowEvaluations => 'عرض التقييمات المفتوحة عليه';
 }
