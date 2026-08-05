@@ -5684,6 +5684,96 @@ abstract class AppLocalizations {
   /// **'OK'**
   String get commonOk;
 
+  /// No description provided for @locationResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Coordinates read from the link'**
+  String get locationResolved;
+
+  /// No description provided for @seasonMapOnlyThis.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to show only this'**
+  String get seasonMapOnlyThis;
+
+  /// No description provided for @seasonMapShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all'**
+  String get seasonMapShowAll;
+
+  /// No description provided for @seasonMapNoTiles.
+  ///
+  /// In en, this message translates to:
+  /// **'The map backdrop could not be loaded — the positions are right, only the pictures are missing'**
+  String get seasonMapNoTiles;
+
+  /// No description provided for @seasonMapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Season map'**
+  String get seasonMapTitle;
+
+  /// No description provided for @seasonMapSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The season\'s places and open reports on one map'**
+  String get seasonMapSubtitle;
+
+  /// No description provided for @seasonMapManned.
+  ///
+  /// In en, this message translates to:
+  /// **'Somebody is there'**
+  String get seasonMapManned;
+
+  /// No description provided for @seasonMapUnmanned.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody checked in'**
+  String get seasonMapUnmanned;
+
+  /// No description provided for @seasonMapIncident.
+  ///
+  /// In en, this message translates to:
+  /// **'Open report'**
+  String get seasonMapIncident;
+
+  /// No description provided for @seasonMapEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No members'**
+  String get seasonMapEmpty;
+
+  /// No description provided for @seasonMapPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Places'**
+  String get seasonMapPlaces;
+
+  /// No description provided for @seasonMapIncidents.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports'**
+  String get seasonMapIncidents;
+
+  /// No description provided for @seasonMapCounts.
+  ///
+  /// In en, this message translates to:
+  /// **'{places} places · {incidents} reports'**
+  String seasonMapCounts(int places, int incidents);
+
+  /// No description provided for @seasonMapEmptyState.
+  ///
+  /// In en, this message translates to:
+  /// **'No place in this season has a position'**
+  String get seasonMapEmptyState;
+
+  /// No description provided for @seasonMapEmptyStateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A place appears here once its position is set on the operational file'**
+  String get seasonMapEmptyStateHint;
+
   /// No description provided for @incidentTitle.
   ///
   /// In en, this message translates to:

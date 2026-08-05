@@ -16,6 +16,7 @@ import '../../features/evaluations/presentation/evaluation_forms_screen.dart';
 import '../../features/evaluations/presentation/evaluations_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/incidents/presentation/incidents_screen.dart';
+import '../../features/map/presentation/season_map_screen.dart';
 import '../../features/incidents/presentation/raise_incident_screen.dart';
 import '../../features/modules/application/modules_cubit.dart';
 import '../../features/modules/presentation/modules_screen.dart';
@@ -84,6 +85,12 @@ abstract class Routes {
 
   /// The register. Guarded — see [_sectionGuards].
   static const incidents = '/incidents';
+
+  /// The season drawn. Unguarded, and narrowed by the server instead: the RPC
+  /// behind it returns the places of files the reader is IN, and everything
+  /// only to whoever runs files. A guard here would either lock a member out
+  /// of a map of his own camp, or be a second, weaker copy of that rule.
+  static const seasonMap = '/map';
 }
 
 /// What each administered section asks of whoever tries to open it.
@@ -296,6 +303,11 @@ GoRouter buildRouter(SessionCubit session) {
         path: Routes.incidents,
         pageBuilder: (c, s) =>
             fadeThroughPage(key: s.pageKey, child: const IncidentsScreen()),
+      ),
+      GoRoute(
+        path: Routes.seasonMap,
+        pageBuilder: (c, s) =>
+            fadeThroughPage(key: s.pageKey, child: const SeasonMapScreen()),
       ),
       GoRoute(
         path: Routes.reports,

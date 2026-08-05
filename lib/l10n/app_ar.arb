@@ -1140,6 +1140,26 @@
 
   "commonOk": "حسناً",
 
+  "locationResolved": "تم استخراج الإحداثيات من الرابط",
+
+  "seasonMapOnlyThis": "اضغط لإظهاره وحده",
+  "seasonMapShowAll": "إظهار الكل",
+
+  "seasonMapNoTiles": "تعذّر تحميل خلفية الخريطة — المواقع صحيحة، والصور وحدها لم تصل",
+
+  "seasonMapTitle": "خريطة الموسم",
+  "seasonMapSubtitle": "أماكن الموسم والبلاغات المفتوحة على خريطة واحدة",
+  "seasonMapManned": "فيه أحد",
+  "seasonMapUnmanned": "لم يسجّل أحد وصوله",
+  "seasonMapIncident": "بلاغ مفتوح",
+  "seasonMapEmpty": "بلا أعضاء",
+  "seasonMapPlaces": "الأماكن",
+  "seasonMapIncidents": "البلاغات",
+  "seasonMapCounts": "{places} مكاناً · {incidents} بلاغاً",
+  "@seasonMapCounts": { "placeholders": { "places": { "type": "int" }, "incidents": { "type": "int" } } },
+  "seasonMapEmptyState": "لا مكان محدّد الموقع في هذا الموسم",
+  "seasonMapEmptyStateHint": "يظهر المكان على الخريطة حين يُحدَّد موقعه في الملف التشغيلي",
+
   "incidentTitle": "بلاغ عاجل",
   "incidentHint": "لما لا يحتمل الانتظار — عطل، حادث، انقطاع. يصل فوراً إلى غرفة العمليات.",
   "incidentBodyHint": "ما الذي حدث؟",

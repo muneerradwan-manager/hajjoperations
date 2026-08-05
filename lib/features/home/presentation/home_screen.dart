@@ -304,6 +304,22 @@ class _HomeScreenState extends State<HomeScreen> {
               subtitle: l.navComplaintsSubtitle,
               onTap: () => context.push(Routes.complaintsManage),
             ),
+          // The season drawn. It belongs on the oversight shelf beside the
+          // dashboard and for the same reason — both are the season seen whole
+          // rather than a thing to go and do — and it is the only one of them
+          // that is read while the season is still happening.
+          //
+          // Ungated, like the dashboard: the RPC behind it answers per reader,
+          // so a member sees the camps of his own file and whoever runs files
+          // sees them all. A guard here would lock a man out of a map of the
+          // camp he is standing in.
+          (
+            group: _AdminGroup.oversight,
+            icon: AppIcons.checkIn,
+            title: l.seasonMapTitle,
+            subtitle: l.seasonMapSubtitle,
+            onTap: () => context.push(Routes.seasonMap),
+          ),
           // Taking data out of the app. It belongs on the oversight shelf and
           // not in settings: settings is where a person adjusts how the app
           // behaves FOR HIM — the language, the theme, whether it may notify

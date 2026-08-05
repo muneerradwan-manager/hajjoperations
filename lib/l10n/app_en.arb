@@ -1151,6 +1151,26 @@
 
   "commonOk": "OK",
 
+  "locationResolved": "Coordinates read from the link",
+
+  "seasonMapOnlyThis": "Tap to show only this",
+  "seasonMapShowAll": "Show all",
+
+  "seasonMapNoTiles": "The map backdrop could not be loaded — the positions are right, only the pictures are missing",
+
+  "seasonMapTitle": "Season map",
+  "seasonMapSubtitle": "The season's places and open reports on one map",
+  "seasonMapManned": "Somebody is there",
+  "seasonMapUnmanned": "Nobody checked in",
+  "seasonMapIncident": "Open report",
+  "seasonMapEmpty": "No members",
+  "seasonMapPlaces": "Places",
+  "seasonMapIncidents": "Reports",
+  "seasonMapCounts": "{places} places · {incidents} reports",
+  "@seasonMapCounts": { "placeholders": { "places": { "type": "int" }, "incidents": { "type": "int" } } },
+  "seasonMapEmptyState": "No place in this season has a position",
+  "seasonMapEmptyStateHint": "A place appears here once its position is set on the operational file",
+
   "incidentTitle": "Urgent report",
   "incidentHint": "For what cannot wait — a breakdown, an accident, a cut-off. It reaches the operations room immediately.",
   "incidentBodyHint": "What has happened?",

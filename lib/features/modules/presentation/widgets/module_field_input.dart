@@ -10,6 +10,7 @@ import '../../../../core/l10n/l10n_extension.dart';
 import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/glass_tokens.dart';
 import '../../../../core/widgets/info_section.dart';
+import '../../data/map_link_resolver.dart';
 import '../../domain/map_location.dart';
 import '../../domain/module_type.dart';
 import '../../domain/operational_module.dart';
@@ -291,6 +292,31 @@ class _LocationFieldState extends State<_LocationField> {
     widget.onChanged(location.url);
   }
 
+  /// The link currently being resolved, so that a person still typing does not
+  /// start a request per keystroke and so that a slow answer for an old paste
+  /// cannot overwrite a newer one.
+  String? _resolving;
+
+  Future<void> _resolveIfShort(String value) async {
+    final link = value.trim();
+    if (!MapLocation.isShortLink(link) || link == _resolving) return;
+    _resolving = link;
+
+    final found = await const MapLinkResolver().resolve(link);
+    if (!mounted || _resolving != link) return;
+    _resolving = null;
+    if (found == null) return;
+
+    // Replaced rather than annotated: what is stored becomes the canonical
+    // `?q=lat,lng`, which the database can read without following anything.
+    // A stored short link is a place the season map cannot draw.
+    _apply(found);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(context.l10n.locationResolved)));
+  }
+
   Future<void> _pickOnMap() async {
     final picked = await Navigator.of(context).push<MapLocation>(
       fadeThroughRoute(
@@ -392,6 +418,10 @@ class _LocationFieldState extends State<_LocationField> {
           onChanged: (v) {
             widget.onChanged(v);
             setState(() {});
+            // And if it carries none because it is a share link, go and get
+            // them. Pressing Share in Google Maps is the most natural way to
+            // produce one of these, and until now it read as an empty field.
+            _resolveIfShort(v);
           },
         ),
       ],

@@ -3246,6 +3246,56 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commonOk => 'حسناً';
 
   @override
+  String get locationResolved => 'تم استخراج الإحداثيات من الرابط';
+
+  @override
+  String get seasonMapOnlyThis => 'اضغط لإظهاره وحده';
+
+  @override
+  String get seasonMapShowAll => 'إظهار الكل';
+
+  @override
+  String get seasonMapNoTiles =>
+      'تعذّر تحميل خلفية الخريطة — المواقع صحيحة، والصور وحدها لم تصل';
+
+  @override
+  String get seasonMapTitle => 'خريطة الموسم';
+
+  @override
+  String get seasonMapSubtitle =>
+      'أماكن الموسم والبلاغات المفتوحة على خريطة واحدة';
+
+  @override
+  String get seasonMapManned => 'فيه أحد';
+
+  @override
+  String get seasonMapUnmanned => 'لم يسجّل أحد وصوله';
+
+  @override
+  String get seasonMapIncident => 'بلاغ مفتوح';
+
+  @override
+  String get seasonMapEmpty => 'بلا أعضاء';
+
+  @override
+  String get seasonMapPlaces => 'الأماكن';
+
+  @override
+  String get seasonMapIncidents => 'البلاغات';
+
+  @override
+  String seasonMapCounts(int places, int incidents) {
+    return '$places مكاناً · $incidents بلاغاً';
+  }
+
+  @override
+  String get seasonMapEmptyState => 'لا مكان محدّد الموقع في هذا الموسم';
+
+  @override
+  String get seasonMapEmptyStateHint =>
+      'يظهر المكان على الخريطة حين يُحدَّد موقعه في الملف التشغيلي';
+
+  @override
   String get incidentTitle => 'بلاغ عاجل';
 
   @override

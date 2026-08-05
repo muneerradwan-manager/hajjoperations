@@ -3224,6 +3224,56 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonOk => 'OK';
 
   @override
+  String get locationResolved => 'Coordinates read from the link';
+
+  @override
+  String get seasonMapOnlyThis => 'Tap to show only this';
+
+  @override
+  String get seasonMapShowAll => 'Show all';
+
+  @override
+  String get seasonMapNoTiles =>
+      'The map backdrop could not be loaded — the positions are right, only the pictures are missing';
+
+  @override
+  String get seasonMapTitle => 'Season map';
+
+  @override
+  String get seasonMapSubtitle =>
+      'The season\'s places and open reports on one map';
+
+  @override
+  String get seasonMapManned => 'Somebody is there';
+
+  @override
+  String get seasonMapUnmanned => 'Nobody checked in';
+
+  @override
+  String get seasonMapIncident => 'Open report';
+
+  @override
+  String get seasonMapEmpty => 'No members';
+
+  @override
+  String get seasonMapPlaces => 'Places';
+
+  @override
+  String get seasonMapIncidents => 'Reports';
+
+  @override
+  String seasonMapCounts(int places, int incidents) {
+    return '$places places · $incidents reports';
+  }
+
+  @override
+  String get seasonMapEmptyState => 'No place in this season has a position';
+
+  @override
+  String get seasonMapEmptyStateHint =>
+      'A place appears here once its position is set on the operational file';
+
+  @override
   String get incidentTitle => 'Urgent report';
 
   @override

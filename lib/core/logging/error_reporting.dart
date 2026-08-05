@@ -4,6 +4,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import '../utils/network_error.dart';
 import 'app_logger.dart';
 
 /// Routes every error the app can throw into the console, and — where there is
@@ -29,6 +30,12 @@ void installErrorLogging() {
         'flutter',
         'platform stream will not start — ${details.exception}',
       );
+      return;
+    }
+    if (_isImageDownloadFailure(details)) {
+      // Not even one line each: a map screen produces a hundred of these in a
+      // second and the hundredth says nothing the first did not.
+      _reportImageFailureOnce();
       return;
     }
     AppLogger.error(
@@ -76,6 +83,47 @@ bool _isDeadPlatformStream(FlutterErrorDetails details) {
   final context = details.context?.toString() ?? '';
   return context.contains('while activating platform stream') &&
       context.contains(_connectivityChannel);
+}
+
+/// An image that would not download — which, for a map, is weather rather than
+/// a fault.
+///
+/// A map screen asks for a hundred tiles at once. On a network that is slow,
+/// blocked, or simply having a bad minute, a hundred of these arrive together:
+/// a hundred red boxes in the console, a hundred held crash reports, and a
+/// Crashlytics dashboard whose loudest signal for the season is "somebody
+/// opened the map on bad wifi". Every one of them is the same non-event.
+///
+/// The map is built to survive it. Tiles that do not arrive leave a blank
+/// canvas and the pins are drawn over it regardless, so the screen still
+/// answers the question it was opened for.
+///
+/// Matched on the LIBRARY rather than on the host, so it covers any image the
+/// framework failed to fetch and does not need a list of tile servers to keep
+/// current. Narrow all the same: a failed image download is never a crash, and
+/// nothing else in the app reports through this library.
+bool _isImageDownloadFailure(FlutterErrorDetails details) =>
+    details.library == 'image resource service' &&
+    looksLikeNetworkFailure(details.exception);
+
+/// The last time an unreachable image was mentioned.
+DateTime? _lastImageFailureNote;
+
+/// Says it once a minute at most.
+///
+/// Silence would be wrong — a map with no tiles is a real thing to know about,
+/// and somebody reading the log should be able to find out why the screen is
+/// blank. A hundred identical lines is also wrong, and is what buries the one
+/// message that mattered.
+void _reportImageFailureOnce() {
+  final now = DateTime.now();
+  final last = _lastImageFailureNote;
+  if (last != null && now.difference(last) < const Duration(minutes: 1)) return;
+  _lastImageFailureNote = now;
+  AppLogger.info(
+    'flutter',
+    'images are not downloading — map tiles will be blank while this lasts',
+  );
 }
 
 /// The way out of the device for an error nobody was there to see.
