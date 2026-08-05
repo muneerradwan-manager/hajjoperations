@@ -5978,6 +5978,18 @@ abstract class AppLocalizations {
   /// **'Far from the recorded position — worth a look'**
   String get checkInFarFromPlace;
 
+  /// No description provided for @checkInNoPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'No places in this file can carry a code'**
+  String get checkInNoPlaces;
+
+  /// No description provided for @checkInNoPlacesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A code is fixed to a real place — a tower or a camp. This file has none drawn yet.'**
+  String get checkInNoPlacesHint;
+
   /// No description provided for @checkInQrTitle.
   ///
   /// In en, this message translates to:

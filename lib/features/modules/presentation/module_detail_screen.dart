@@ -196,10 +196,23 @@ class _ViewState extends State<_View> {
         widget.fromOffice && session.can(PermissionCodes.modulesActivate);
     final canMembers =
         widget.fromOffice && session.can(PermissionCodes.modulesMembers);
-    // Reading who is in place is the same trust as reading what they filed —
-    // both are the members reporting on the file. Not gated on `fromOffice`:
-    // this is about the file itself, not about administering the catalog.
-    final canSeePresence = session.can(PermissionCodes.modulesReports);
+    // Gated on `fromOffice` like the rest, and it was not always: the argument
+    // for leaving it open was that presence is "about the file itself", the
+    // same trust as reading what the members filed.
+    //
+    // That argument answered the wrong question. The trust is right — a man who
+    // may read the reports may read the roll — but this page is reached down
+    // two corridors, and WHICH corridor is what the page is for. Under عام a
+    // file is a man's own posting and every control on it should be about his
+    // own part in it: where he is, what he owes. Under الإدارة it is the
+    // season's paperwork and the controls are about running it: who is in
+    // place, what the codes are, who may be added.
+    //
+    // Leaving the roll on the عام page put "who is where" beside "I am here" —
+    // one of them a supervisor's question, the other a member's answer — on the
+    // screen a member opens to look at his own tower.
+    final canSeePresence =
+        widget.fromOffice && session.can(PermissionCodes.modulesReports);
 
     return BlocBuilder<ModuleDetailCubit, ModuleDetailState>(
       builder: (context, state) {
@@ -224,10 +237,18 @@ class _ViewState extends State<_View> {
                 // HIMSELF, so it sits on the bar rather than under the menu —
                 // it is pressed standing at a gate, often one-handed, and a
                 // thing pressed in that position should not be two taps deep.
-                // Offered only while the file is actually running: reporting
-                // an arrival at a file that has ended records nothing anybody
-                // will read.
-                if (module?.isRunning ?? false)
+                //
+                // Under عام only. Not because the office may not check in —
+                // whoever runs a file may well be standing in one of its towers
+                // — but because he does that on his OWN posting, which is the
+                // same file down the other corridor. Offering it here too would
+                // put a personal act among the controls for running the season,
+                // and it is the personal act that has to be unmissable.
+                //
+                // And only while the file is actually running: reporting an
+                // arrival at a file that has ended records nothing anybody will
+                // read.
+                if (!widget.fromOffice && (module?.isRunning ?? false))
                   IconButton(
                     tooltip: l.checkInTitle,
                     onPressed: () => showCheckInSheet(

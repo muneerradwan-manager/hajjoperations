@@ -206,6 +206,7 @@ class ModuleLevel {
     required this.depth,
     this.referenceSetId,
     this.secondaryReferenceSetId,
+    this.isPlace = false,
     this.fields = const [],
     this.roles = const [],
   });
@@ -222,6 +223,19 @@ class ModuleLevel {
   /// فندق, and it belongs to a تكتل. Null for a level that ties to nothing,
   /// which is every level but the tower.
   final String? secondaryReferenceSetId;
+
+  /// Whether a node here is somewhere a person can STAND — a tower, a camp —
+  /// as opposed to an arrangement on paper, like a قطاع or a تكتل.
+  ///
+  /// Stated by the level rather than worked out, because every way of working
+  /// it out is wrong somewhere: مكة nests القطاع → البرج → التكتل, so it is not
+  /// the deepest; the تكتل draws from master data just as the tower does, so it
+  /// is not "has a list"; and منى's المخيم is not the outermost. See 0089.
+  ///
+  /// Defaults to false when the column is absent — an app running against a
+  /// database that has not had 0089 applied offers no codes at all, and says
+  /// so, rather than offering the wrong ones.
+  final bool isPlace;
 
   /// What every node at this level carries besides its name — the الطاقة
   /// الاستيعابية and the موقع of a مخيم. Empty for a level that asks for
@@ -245,6 +259,9 @@ class ModuleLevel {
     depth: depth,
     referenceSetId: referenceSetId,
     secondaryReferenceSetId: secondaryReferenceSetId,
+    // Every level goes through here while a type is parsed, so anything left
+    // out is not "defaulted" — it is ERASED, silently, on the way in.
+    isPlace: isPlace,
     fields: fields,
     roles: roles,
   );
@@ -256,6 +273,7 @@ class ModuleLevel {
     depth: (map['depth'] as int?) ?? 1,
     referenceSetId: map['reference_set_id'] as String?,
     secondaryReferenceSetId: map['secondary_reference_set_id'] as String?,
+    isPlace: (map['is_place'] as bool?) ?? false,
   );
 }
 
@@ -362,6 +380,14 @@ class ModuleType {
       levels.where((l) => l.id == id).firstOrNull;
 
   ModuleLevel? get outermostLevel => levels.firstOrNull;
+
+  /// The levels that are somewhere a person can stand.
+  ///
+  /// Read from the level, never worked out from the tree. Depth cannot answer
+  /// it: مكة nests القطاع → البرج/الفندق → التكتل, and the تكتل — a bloc of
+  /// pilgrims INSIDE a building — is the deepest of the three. See 0089.
+  List<ModuleLevel> get placeLevels =>
+      [for (final level in levels) if (level.isPlace) level];
 
   /// The level nested directly inside [level], if any.
   ModuleLevel? levelBelow(ModuleLevel level) =>

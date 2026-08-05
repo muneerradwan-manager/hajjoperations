@@ -3399,6 +3399,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Far from the recorded position — worth a look';
 
   @override
+  String get checkInNoPlaces => 'No places in this file can carry a code';
+
+  @override
+  String get checkInNoPlacesHint =>
+      'A code is fixed to a real place — a tower or a camp. This file has none drawn yet.';
+
+  @override
   String get checkInQrTitle => 'Place code';
 
   @override

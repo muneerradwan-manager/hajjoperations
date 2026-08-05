@@ -3417,6 +3417,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get checkInFarFromPlace => 'بعيد عن الموقع المسجّل — يستحق المراجعة';
 
   @override
+  String get checkInNoPlaces => 'لا أماكن يمكن ترميزها في هذا الملف';
+
+  @override
+  String get checkInNoPlacesHint =>
+      'الرمز يُلصق على مكان قائم — برج أو مخيم. هذا الملف لم تُرسم أبراجه بعد.';
+
+  @override
   String get checkInQrTitle => 'رمز المكان';
 
   @override
