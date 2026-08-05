@@ -122,21 +122,6 @@ class SettingsScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    // In settings rather than on each list, because it is not
-                    // an action on one screen's contents — it is a way out of
-                    // the app for anything in it.
-                    InfoSection(
-                      title: l.exportTitle,
-                      icon: AppIcons.upload,
-                      children: [
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(l.exportSubtitle),
-                          trailing: const NavChevron(),
-                          onTap: () => context.push(Routes.export),
-                        ),
-                      ],
-                    ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.lg),

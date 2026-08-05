@@ -390,6 +390,34 @@ void main() {
       );
     });
 
+    test('a network watcher that cannot start does not take the app down',
+        () async {
+      // Windows. `connectivity_plus` fails to start its listener there —
+      // NetworkManager::StartListen answering E_INVALIDARG — and the error
+      // arrives on the stream the moment anything subscribes. Unhandled, it
+      // escapes into the framework and is reported as a crash at every
+      // start-up, on a desktop build, because of a feature written for a phone
+      // in Mina.
+      final broken = StreamController<void>.broadcast();
+      addTearDown(broken.close);
+
+      final outbox = build(reconnects: broken.stream);
+      var sent = false;
+      outbox.register('thing', (_) async => sent = true);
+      await outbox.start();
+
+      broken.addError(Exception('NetworkManager::StartListen'));
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+
+      // The queue is still alive and still sends: the hint is lost, the
+      // machinery is not.
+      await outbox.add(kind: 'thing', payload: const {});
+      await outbox.drain();
+
+      expect(sent, isTrue);
+      expect(outbox.entries, isEmpty);
+    });
+
     test('a reconnect does not disturb what has stopped trying', () async {
       await store.save([
         OutboxEntry(

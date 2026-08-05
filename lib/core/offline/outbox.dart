@@ -188,7 +188,18 @@ class Outbox {
     }
     _emit();
 
-    _reconnectSub ??= _reconnects?.listen((_) => unawaited(onReconnect()));
+    // `onError` as well, and not because the stream this is given in the app
+    // promises to fail — it promises not to. It is because a stream is an
+    // argument here, and an error on one that nobody handles does not stay in
+    // the queue: it escapes to the framework and is reported as a crash. The
+    // queue watching the network must never be the reason the app looks broken.
+    _reconnectSub ??= _reconnects?.listen(
+      (_) => unawaited(onReconnect()),
+      onError: (Object error) {
+        AppLogger.info('outbox', 'reconnect stream failed — $error');
+      },
+      cancelOnError: false,
+    );
 
     // Awaited, so that "started" means the first attempt has been made rather
     // than merely begun. `bootstrap` does not wait on start() at all, so this

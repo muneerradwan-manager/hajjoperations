@@ -304,6 +304,23 @@ class _HomeScreenState extends State<HomeScreen> {
               subtitle: l.navComplaintsSubtitle,
               onTap: () => context.push(Routes.complaintsManage),
             ),
+          // Taking data out of the app. It belongs on the oversight shelf and
+          // not in settings: settings is where a person adjusts how the app
+          // behaves FOR HIM — the language, the theme, whether it may notify
+          // him. An export is not a preference, it is work done ON the
+          // season's records, and it sits with the other screens that look at
+          // all of them at once.
+          //
+          // Ungated, because the screen gates itself: it offers only the
+          // datasets this reader already has the permission to open, and every
+          // one of them fetches through the same repositories the screens do.
+          (
+            group: _AdminGroup.oversight,
+            icon: AppIcons.upload,
+            title: l.exportTitle,
+            subtitle: l.exportSubtitle,
+            onTap: () => context.push(Routes.export),
+          ),
           // The operations room's own screen. Oversight, but of a different
           // kind from the rest of this group: everything else here is read
           // after the fact, and this one is read while it is still happening.
@@ -445,18 +462,13 @@ class _HomeScreenState extends State<HomeScreen> {
           // app is still holding of yours outranks what it has been told.
           actions: const [OutboxBadge(), NotificationBell()],
         ),
-        // Present on the home screen of every account, always, and drawn in the
-        // error colour. An emergency button that has to be looked for is not an
-        // emergency button — the whole feature is worth nothing unless a man
-        // who has just watched a bus break down can reach it without thinking.
-        floatingActionButton: FloatingActionButton.extended(
-          heroTag: 'raise-incident',
-          backgroundColor: Theme.of(context).colorScheme.error,
-          foregroundColor: Theme.of(context).colorScheme.onError,
-          onPressed: () => context.push(Routes.raiseIncident),
-          icon: const Icon(AppIcons.warning),
-          label: Text(l.incidentTitle),
-        ),
+        // The emergency button is NOT a floating one. It sits under the prayer
+        // card, in the body — see `prayer` below.
+        //
+        // A floating button covers the last row of whatever is beneath it, and
+        // it covers a different row on every window width. This one is wanted
+        // in a place a person learns once: directly under the two things at the
+        // top of the page that are already about the present moment.
         body: Builder(
           // Inside the Scaffold body, so `scrollPadding` sees the inset the
           // Scaffold reserves for the app bar it is extending behind.
@@ -537,7 +549,20 @@ class _HomeScreenState extends State<HomeScreen> {
               // go; these two are facts about the moment the reader is standing
               // in. Where there is a panel it stands in the panel for exactly
               // that reason, beside the season badge rather than among the tiles.
-              const prayer = PrayerTimesCard();
+              // The prayer card and the emergency button travel together,
+              // because they are the same kind of thing on this page: facts
+              // and acts about the moment the reader is standing in, rather
+              // than places to go. Bundled here rather than added to each
+              // layout, so the wide arrangement — where this sits in the side
+              // panel — cannot drift from the narrow one.
+              const prayer = Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  PrayerTimesCard(),
+                  SizedBox(height: AppSpacing.sm),
+                  _RaiseIncidentButton(),
+                ],
+              );
 
               return size.hasSidePanel
                   ? TwoPaneLayout(
@@ -572,6 +597,37 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The way to report something that cannot wait.
+///
+/// On the home screen of every account, always, and drawn in the error colour
+/// — the only thing on this page that is. A man who has just watched a bus
+/// break down on the road to Arafat has to reach it without looking for it,
+/// and a button he has to go and find is not an emergency button.
+///
+/// Under the prayer card rather than floating over the page: a floating button
+/// hides the last row of whatever it happens to be over, and hides a different
+/// row at every window width. Here it has one place, and a person learns it
+/// once.
+class _RaiseIncidentButton extends StatelessWidget {
+  const _RaiseIncidentButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return FilledButton.icon(
+      style: FilledButton.styleFrom(
+        backgroundColor: scheme.error,
+        foregroundColor: scheme.onError,
+        minimumSize: const Size.fromHeight(48),
+      ),
+      onPressed: () => context.push(Routes.raiseIncident),
+      icon: const Icon(AppIcons.warning, size: 20),
+      label: Text(context.l10n.incidentTitle),
     );
   }
 }

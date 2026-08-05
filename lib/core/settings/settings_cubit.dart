@@ -61,16 +61,44 @@ class SettingsCubit extends SafeCubit<SettingsState> {
 
   static const _kNotifications = 'settings.notifications';
 
+  /// Written when somebody chooses "follow the system", so that choosing it is
+  /// distinguishable from never having chosen at all.
+  ///
+  /// It used to be stored by REMOVING the key, which was fine while "nothing
+  /// stored" and "follow the system" meant the same thing. They no longer do:
+  /// nothing stored is now Arabic, and without this sentinel a person who
+  /// deliberately asked for the device's language would get Arabic back on the
+  /// next launch, with no way to make the choice stick.
+  static const followSystem = 'system';
+
+  /// Dark unless somebody said otherwise.
+  ///
+  /// This app is read at three in the morning in Mina and on a coach before
+  /// Fajr, far more often than it is read at a desk. Following the device
+  /// would hand a white screen to whoever never opened the settings, which is
+  /// most people.
   static ThemeMode _readThemeMode(SharedPreferences p) =>
       switch (p.getString(_kTheme)) {
         'light' => ThemeMode.light,
         'dark' => ThemeMode.dark,
-        _ => ThemeMode.system,
+        followSystem => ThemeMode.system,
+        // Unset, or a value written by a build that spelled it differently.
+        _ => ThemeMode.dark,
       };
 
+  /// Arabic unless somebody said otherwise.
+  ///
+  /// Arabic is not a fallback here, it is the language the mission works in:
+  /// the master data is Arabic, half the English column in the catalog was
+  /// never filled in, and every notification the database composes is written
+  /// in it. A phone set to English is a phone, not a decision.
+  ///
+  /// Null still means "follow the device", and is still reachable — it is
+  /// simply no longer what you get by saying nothing.
   static Locale? _readLocale(SharedPreferences p) {
     final code = p.getString(localeKey);
-    return code == null ? null : Locale(code);
+    if (code == followSystem) return null;
+    return code == null ? const Locale('ar') : Locale(code);
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
@@ -92,11 +120,8 @@ class SettingsCubit extends SafeCubit<SettingsState> {
 
   Future<void> setLocale(Locale? locale) async {
     emit(state.copyWith(locale: locale, clearLocale: locale == null));
-    if (locale == null) {
-      await _prefs.remove(localeKey);
-    } else {
-      await _prefs.setString(localeKey, locale.languageCode);
-    }
+    // The sentinel rather than removing the key — see [followSystem].
+    await _prefs.setString(localeKey, locale?.languageCode ?? followSystem);
     // The screen re-renders itself; the two things OUTSIDE it do not. A week of
     // prayer alarms and the home-screen widget both carry finished sentences,
     // written in whichever language was chosen when they were laid down, and

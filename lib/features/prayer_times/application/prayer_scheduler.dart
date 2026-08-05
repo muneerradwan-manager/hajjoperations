@@ -218,7 +218,16 @@ class PrayerScheduler {
   /// which is what "follow the system" means in the settings page.
   Future<AppLocalizations> _strings(SharedPreferences prefs) {
     final chosen = prefs.getString(SettingsCubit.localeKey);
-    final locale = chosen != null ? Locale(chosen) : _deviceLocale();
+    // Three cases, not two. `null` is somebody who has never opened the
+    // settings and gets the app's own default; the sentinel is somebody who
+    // asked for the device's language on purpose; anything else is a language
+    // they named. Reading the sentinel as a language code would try to load a
+    // `Locale('system')` and fall back to whatever the delegate does with it.
+    final locale = switch (chosen) {
+      null => const Locale('ar'),
+      SettingsCubit.followSystem => _deviceLocale(),
+      final code => Locale(code),
+    };
     return AppLocalizations.delegate.load(locale);
   }
 
