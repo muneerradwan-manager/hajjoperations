@@ -713,7 +713,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeAdminGroupFiles.
   ///
   /// In en, this message translates to:
-  /// **'Files & reports'**
+  /// **'Files & decisions'**
   String get homeAdminGroupFiles;
 
   /// No description provided for @homeAdminGroupPeople.
@@ -1073,37 +1073,37 @@ abstract class AppLocalizations {
   /// No description provided for @perm_reports.
   ///
   /// In en, this message translates to:
-  /// **'Reports'**
+  /// **'Decisions'**
   String get perm_reports;
 
   /// No description provided for @permReportsViewAll.
   ///
   /// In en, this message translates to:
-  /// **'View all reports, including drafts'**
+  /// **'View all decisions, including drafts'**
   String get permReportsViewAll;
 
   /// No description provided for @permReportsCreate.
   ///
   /// In en, this message translates to:
-  /// **'Create reports'**
+  /// **'Create decisions'**
   String get permReportsCreate;
 
   /// No description provided for @permReportsEdit.
   ///
   /// In en, this message translates to:
-  /// **'Edit reports'**
+  /// **'Edit decisions'**
   String get permReportsEdit;
 
   /// No description provided for @permReportsDelete.
   ///
   /// In en, this message translates to:
-  /// **'Delete reports'**
+  /// **'Delete decisions'**
   String get permReportsDelete;
 
   /// No description provided for @permReportsPublish.
   ///
   /// In en, this message translates to:
-  /// **'Publish & unpublish reports'**
+  /// **'Publish & unpublish decisions'**
   String get permReportsPublish;
 
   /// No description provided for @perm_notifications.
@@ -1397,7 +1397,7 @@ abstract class AppLocalizations {
   /// No description provided for @reportNumber.
   ///
   /// In en, this message translates to:
-  /// **'Report number'**
+  /// **'Decision number'**
   String get reportNumber;
 
   /// No description provided for @reportNumberBadge.
@@ -1415,7 +1415,7 @@ abstract class AppLocalizations {
   /// No description provided for @reportContentHint.
   ///
   /// In en, this message translates to:
-  /// **'Build the report from the pieces below — a heading, prose, a list, a table, a link, a code to scan. They appear in the order you add them.'**
+  /// **'Build the decision from the pieces below — a heading, prose, a list, a table, a link, a code to scan. They appear in the order you add them.'**
   String get reportContentHint;
 
   /// No description provided for @reportNoBlocks.
@@ -1583,25 +1583,25 @@ abstract class AppLocalizations {
   /// No description provided for @reportNew.
   ///
   /// In en, this message translates to:
-  /// **'New report'**
+  /// **'New decision'**
   String get reportNew;
 
   /// No description provided for @reportEdit.
   ///
   /// In en, this message translates to:
-  /// **'Edit report'**
+  /// **'Edit decision'**
   String get reportEdit;
 
   /// No description provided for @reportSaved.
   ///
   /// In en, this message translates to:
-  /// **'Report saved'**
+  /// **'Decision saved'**
   String get reportSaved;
 
   /// No description provided for @reportIdentity.
   ///
   /// In en, this message translates to:
-  /// **'What this report is'**
+  /// **'What this decision is'**
   String get reportIdentity;
 
   /// No description provided for @reportTitle.
@@ -1613,13 +1613,13 @@ abstract class AppLocalizations {
   /// No description provided for @reportScopeHint.
   ///
   /// In en, this message translates to:
-  /// **'General reports stay true whichever season is running'**
+  /// **'General decisions stay true whichever season is running'**
   String get reportScopeHint;
 
   /// No description provided for @reportOncePerSeason.
   ///
   /// In en, this message translates to:
-  /// **'This kind of report is created only once per season, and it already exists — edit the existing one instead of creating another'**
+  /// **'This kind of decision is created only once per season, and it already exists — edit the existing one instead of creating another'**
   String get reportOncePerSeason;
 
   /// No description provided for @reportPublished.
@@ -1631,7 +1631,7 @@ abstract class AppLocalizations {
   /// No description provided for @reportPublishedHint.
   ///
   /// In en, this message translates to:
-  /// **'An unpublished report is visible only to whoever manages reports'**
+  /// **'An unpublished decision is visible only to whoever manages decisions'**
   String get reportPublishedHint;
 
   /// No description provided for @reportAddRow.
@@ -1649,7 +1649,7 @@ abstract class AppLocalizations {
   /// No description provided for @reportsManageEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No reports yet'**
+  /// **'No decisions yet'**
   String get reportsManageEmpty;
 
   /// No description provided for @reportDeleteConfirm.
@@ -1661,7 +1661,7 @@ abstract class AppLocalizations {
   /// No description provided for @reportDeleted.
   ///
   /// In en, this message translates to:
-  /// **'Report deleted'**
+  /// **'Decision deleted'**
   String get reportDeleted;
 
   /// No description provided for @reportRowsSection.
@@ -1679,19 +1679,19 @@ abstract class AppLocalizations {
   /// No description provided for @navReportsManage.
   ///
   /// In en, this message translates to:
-  /// **'Reports management'**
+  /// **'Decisions management'**
   String get navReportsManage;
 
   /// No description provided for @navReportsManageSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Enter, correct and publish reports'**
+  /// **'Enter, correct and publish decisions'**
   String get navReportsManageSubtitle;
 
   /// No description provided for @navReports.
   ///
   /// In en, this message translates to:
-  /// **'Reports'**
+  /// **'Decisions'**
   String get navReports;
 
   /// No description provided for @navReportsSubtitle.
@@ -1709,13 +1709,13 @@ abstract class AppLocalizations {
   /// No description provided for @reportsNoMatches.
   ///
   /// In en, this message translates to:
-  /// **'No report matches'**
+  /// **'No decision matches'**
   String get reportsNoMatches;
 
   /// No description provided for @reportsSearchHint.
   ///
   /// In en, this message translates to:
-  /// **'Search reports'**
+  /// **'Search decisions'**
   String get reportsSearchHint;
 
   /// No description provided for @reportsScopeAll.
@@ -1745,13 +1745,13 @@ abstract class AppLocalizations {
   /// No description provided for @reportMissing.
   ///
   /// In en, this message translates to:
-  /// **'That report is no longer available'**
+  /// **'That decision is no longer available'**
   String get reportMissing;
 
   /// No description provided for @reportAboutSection.
   ///
   /// In en, this message translates to:
-  /// **'About this report'**
+  /// **'About this decision'**
   String get reportAboutSection;
 
   /// No description provided for @reportKind.
@@ -3797,7 +3797,7 @@ abstract class AppLocalizations {
   /// No description provided for @dashboardSectionCentralReports.
   ///
   /// In en, this message translates to:
-  /// **'Central reports'**
+  /// **'Decisions'**
   String get dashboardSectionCentralReports;
 
   /// No description provided for @dashboardCentralPublished.
@@ -4067,7 +4067,7 @@ abstract class AppLocalizations {
   /// No description provided for @dashboardReports.
   ///
   /// In en, this message translates to:
-  /// **'Reports'**
+  /// **'Decisions'**
   String get dashboardReports;
 
   /// No description provided for @dashboardReportsCaption.
@@ -4079,7 +4079,7 @@ abstract class AppLocalizations {
   /// No description provided for @dashboardReportsTrend.
   ///
   /// In en, this message translates to:
-  /// **'Reports over 30 days'**
+  /// **'Decisions over 30 days'**
   String get dashboardReportsTrend;
 
   /// No description provided for @dashboardReportsEmpty.
@@ -4535,7 +4535,7 @@ abstract class AppLocalizations {
   /// No description provided for @complaintTargetReport.
   ///
   /// In en, this message translates to:
-  /// **'A report'**
+  /// **'A decision'**
   String get complaintTargetReport;
 
   /// No description provided for @complaintTargetHotel.
@@ -4967,7 +4967,7 @@ abstract class AppLocalizations {
   /// No description provided for @evaluationTargetReport.
   ///
   /// In en, this message translates to:
-  /// **'Report'**
+  /// **'Decision'**
   String get evaluationTargetReport;
 
   /// No description provided for @evaluationTargetHotel.

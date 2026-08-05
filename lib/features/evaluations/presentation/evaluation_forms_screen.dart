@@ -449,20 +449,21 @@ class _FormCard extends StatelessWidget {
               // than from the questions.
               if (canEdit) ...[
                 Switch(value: form.isActive, onChanged: onToggle),
+                // Editing and deleting only.
+                //
+                // "Show the evaluations" used to sit here too, and it was the
+                // third way to the same screen on one card — beside the count
+                // badge above and the button below, both of which are visible
+                // without opening anything. A menu is where a thing goes when
+                // there is nowhere better; two better places already exist.
                 PopupMenuButton<int>(
                   icon: const Icon(AppIcons.more),
                   itemBuilder: (_) => [
                     PopupMenuItem(value: 0, child: Text(l.commonEdit)),
-                    if (form.isInUse)
-                      PopupMenuItem(
-                        value: 2,
-                        child: Text(l.evaluationFormShowEvaluations),
-                      ),
                     PopupMenuItem(value: 1, child: Text(l.evaluationFormDelete)),
                   ],
                   onSelected: (v) => switch (v) {
                     0 => onOpen(),
-                    2 => onShowEvaluations(),
                     _ => onDelete(),
                   },
                 ),

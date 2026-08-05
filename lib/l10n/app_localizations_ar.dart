@@ -336,7 +336,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeGeneralSection => 'عام';
 
   @override
-  String get homeAdminGroupFiles => 'الملفات والتقارير';
+  String get homeAdminGroupFiles => 'الملفات والقرارات';
 
   @override
   String get homeAdminGroupPeople => 'الأشخاص والصلاحيات';
@@ -520,22 +520,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get permReferenceImport => 'نسخ البيانات من موسم آخر';
 
   @override
-  String get perm_reports => 'التقارير';
+  String get perm_reports => 'القرارات';
 
   @override
-  String get permReportsViewAll => 'عرض كل التقارير بما فيها المسودات';
+  String get permReportsViewAll => 'عرض كل القرارات بما فيها المسودات';
 
   @override
-  String get permReportsCreate => 'إنشاء التقارير';
+  String get permReportsCreate => 'إنشاء القرارات';
 
   @override
-  String get permReportsEdit => 'تعديل التقارير';
+  String get permReportsEdit => 'تعديل القرارات';
 
   @override
-  String get permReportsDelete => 'حذف التقارير';
+  String get permReportsDelete => 'حذف القرارات';
 
   @override
-  String get permReportsPublish => 'نشر التقارير وإلغاء نشرها';
+  String get permReportsPublish => 'نشر القرارات وإلغاء نشرها';
 
   @override
   String get perm_notifications => 'الإشعارات';
@@ -699,7 +699,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reportAddTag => 'أضف عنصراً';
 
   @override
-  String get reportNumber => 'رقم التقرير';
+  String get reportNumber => 'رقم القرار';
 
   @override
   String reportNumberBadge(String number) {
@@ -711,7 +711,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get reportContentHint =>
-      'ابنِ التقرير من العناصر أدناه — عنوان، نصّ، قائمة، جدول، رابط، رمز للمسح. تظهر بالترتيب الذي تضيفها به.';
+      'ابنِ القرار من العناصر أدناه — عنوان، نصّ، قائمة، جدول، رابط، رمز للمسح. تظهر بالترتيب الذي تضيفها به.';
 
   @override
   String get reportNoBlocks => 'لم يُضف شيء بعد';
@@ -795,34 +795,34 @@ class AppLocalizationsAr extends AppLocalizations {
   String get blockTableNeedsColumns => 'سمِّ الأعمدة أولاً، ثم أضف الصفوف';
 
   @override
-  String get reportNew => 'تقرير جديد';
+  String get reportNew => 'قرار جديد';
 
   @override
-  String get reportEdit => 'تعديل التقرير';
+  String get reportEdit => 'تعديل القرار';
 
   @override
-  String get reportSaved => 'تم حفظ التقرير';
+  String get reportSaved => 'تم حفظ القرار';
 
   @override
-  String get reportIdentity => 'ما هذا التقرير';
+  String get reportIdentity => 'ما هذا القرار';
 
   @override
   String get reportTitle => 'العنوان';
 
   @override
   String get reportScopeHint =>
-      'التقرير العام يبقى سارياً مهما كان الموسم الجاري';
+      'القرار العام يبقى سارياً مهما كان الموسم الجاري';
 
   @override
   String get reportOncePerSeason =>
-      'هذا النوع من التقارير يُنشأ مرة واحدة فقط خلال الموسم، وهو منشأ من قبل — عدّل التقرير الموجود بدلاً من إنشاء آخر';
+      'هذا النوع من القرارات يُنشأ مرة واحدة فقط خلال الموسم، وهو منشأ من قبل — عدّل القرار الموجود بدلاً من إنشاء آخر';
 
   @override
   String get reportPublished => 'منشور';
 
   @override
   String get reportPublishedHint =>
-      'التقرير غير المنشور لا يراه إلا من يدير التقارير';
+      'القرار غير المنشور لا يراه إلا من يدير القرارات';
 
   @override
   String get reportAddRow => 'إضافة صف';
@@ -831,7 +831,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reportNoRows => 'لا توجد صفوف بعد';
 
   @override
-  String get reportsManageEmpty => 'لا توجد تقارير بعد';
+  String get reportsManageEmpty => 'لا توجد قرارات بعد';
 
   @override
   String reportDeleteConfirm(String title) {
@@ -839,7 +839,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get reportDeleted => 'تم حذف التقرير';
+  String get reportDeleted => 'تم حذف القرار';
 
   @override
   String reportRowsSection(int count) {
@@ -852,25 +852,25 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get navReportsManage => 'إدارة التقارير';
+  String get navReportsManage => 'إدارة القرارات';
 
   @override
-  String get navReportsManageSubtitle => 'إدخال التقارير وتعديلها ونشرها';
+  String get navReportsManageSubtitle => 'إدخال القرارات وتعديلها ونشرها';
 
   @override
-  String get navReports => 'التقارير';
+  String get navReports => 'القرارات';
 
   @override
   String get navReportsSubtitle => 'الجداول والتعاميم المنشورة على البعثة';
 
   @override
-  String get reportsEmpty => 'لم يُنشر أي تقرير بعد';
+  String get reportsEmpty => 'لم يُنشر أي قرار بعد';
 
   @override
-  String get reportsNoMatches => 'لا يوجد تقرير مطابق';
+  String get reportsNoMatches => 'لا يوجد قرار مطابق';
 
   @override
-  String get reportsSearchHint => 'ابحث في التقارير';
+  String get reportsSearchHint => 'ابحث في القرارات';
 
   @override
   String get reportsScopeAll => 'الكل';
@@ -885,10 +885,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reportsDraft => 'غير منشور';
 
   @override
-  String get reportMissing => 'لم يعد هذا التقرير متاحاً';
+  String get reportMissing => 'لم يعد هذا القرار متاحاً';
 
   @override
-  String get reportAboutSection => 'عن هذا التقرير';
+  String get reportAboutSection => 'عن هذا القرار';
 
   @override
   String get reportKind => 'النوع';
@@ -2053,7 +2053,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dashboardSectionQueue => 'طلبات الاعتماد';
 
   @override
-  String get dashboardSectionCentralReports => 'التقارير المركزية';
+  String get dashboardSectionCentralReports => 'القرارات';
 
   @override
   String get dashboardCentralPublished => 'منشور';
@@ -2201,7 +2201,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dashboardActiveDraft => 'المفعّل مقابل المسوّدة';
 
   @override
-  String get dashboardReports => 'التقارير';
+  String get dashboardReports => 'القرارات';
 
   @override
   String dashboardReportsCaption(int authors) {
@@ -2216,7 +2216,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get dashboardReportsTrend => 'التقارير خلال ٣٠ يوماً';
+  String get dashboardReportsTrend => 'القرارات خلال ٣٠ يوماً';
 
   @override
   String get dashboardReportsEmpty => 'لم تُرفَع تقارير في هذه المدّة';
@@ -2478,7 +2478,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get complaintTargetModule => 'ملف تشغيلي';
 
   @override
-  String get complaintTargetReport => 'تقرير';
+  String get complaintTargetReport => 'قرار';
 
   @override
   String get complaintTargetHotel => 'فندق';
@@ -2776,7 +2776,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get evaluationTargetModule => 'ملف تشغيلي';
 
   @override
-  String get evaluationTargetReport => 'تقرير';
+  String get evaluationTargetReport => 'قرار';
 
   @override
   String get evaluationTargetHotel => 'فندق';

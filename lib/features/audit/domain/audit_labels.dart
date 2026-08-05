@@ -73,7 +73,7 @@ class AuditLabels {
     ),
     AuditEntityGroup(
       key: 'reports',
-      name: LocalizedName(ar: 'التقارير المركزية', en: 'Reports'),
+      name: LocalizedName(ar: 'القرارات', en: 'Decisions'),
       tables: [
         'reports',
         'report_types',
@@ -176,17 +176,17 @@ class AuditLabels {
       ar: 'مجموعة مهام',
       en: 'Task group',
     ),
-    'reports': LocalizedName(ar: 'تقرير مركزي', en: 'Report'),
-    'report_types': LocalizedName(ar: 'نوع تقرير', en: 'Report type'),
+    'reports': LocalizedName(ar: 'قرار', en: 'Decision'),
+    'report_types': LocalizedName(ar: 'نوع قرار', en: 'Decision type'),
     'report_type_fields': LocalizedName(
-      ar: 'حقل نوع تقرير',
-      en: 'Report type field',
+      ar: 'حقل نوع قرار',
+      en: 'Decision type field',
     ),
     'report_type_columns': LocalizedName(
-      ar: 'عمود نوع تقرير',
-      en: 'Report type column',
+      ar: 'عمود نوع قرار',
+      en: 'Decision type column',
     ),
-    'report_attachments': LocalizedName(ar: 'مرفق تقرير', en: 'Report attachment'),
+    'report_attachments': LocalizedName(ar: 'مرفق قرار', en: 'Decision attachment'),
     'notifications': LocalizedName(ar: 'إشعار', en: 'Notification'),
     'notification_attachments': LocalizedName(
       ar: 'مرفق إشعار',

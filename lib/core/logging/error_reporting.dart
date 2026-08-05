@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 import 'app_logger.dart';
 
@@ -21,6 +22,15 @@ void installErrorLogging() {
   final previous = FlutterError.onError;
 
   FlutterError.onError = (details) {
+    if (_isDeadPlatformStream(details)) {
+      // One line, no stack, no report — the same voice `bootstrap` uses for a
+      // platform without Firebase or without a disk, and for the same reason.
+      AppLogger.info(
+        'flutter',
+        'platform stream will not start — ${details.exception}',
+      );
+      return;
+    }
     AppLogger.error(
       'flutter',
       details.summary.toString(),
@@ -39,6 +49,33 @@ void installErrorLogging() {
     // False lets it carry on to the platform's own handler.
     return false;
   };
+}
+
+/// The channel `connectivity_plus` publishes network changes on.
+const _connectivityChannel = 'dev.fluttercommunity.plus/connectivity_status';
+
+/// A platform stream that refused to start — which is not a fault, and must
+/// not be reported as one.
+///
+/// On Windows the connectivity plugin can answer `NetworkManager::StartListen`
+/// with E_INVALIDARG the moment anything subscribes. The subscriber —
+/// `platformReconnects`, in `core/offline/reconnects.dart` — already treats the
+/// network hint as optional and gets on without it, but it CANNOT catch this
+/// one: `EventChannel` reports a failure to ACTIVATE straight to
+/// [FlutterError], never onto the stream, so the `handleError` sitting on that
+/// stream is not on the path the error takes. It comes here instead, and left
+/// alone it is a red trace and a held crash report at every single start-up on
+/// the desktop build — for a feature meant for a phone in Mina.
+///
+/// Deliberately narrow: this one channel, and only while the stream is being
+/// brought up. Anything the same plugin reports later still travels, and every
+/// other channel in the app is untouched — a handler that quietly eats errors
+/// is worth less than the traces it saves.
+bool _isDeadPlatformStream(FlutterErrorDetails details) {
+  if (details.exception is! PlatformException) return false;
+  final context = details.context?.toString() ?? '';
+  return context.contains('while activating platform stream') &&
+      context.contains(_connectivityChannel);
 }
 
 /// The way out of the device for an error nobody was there to see.

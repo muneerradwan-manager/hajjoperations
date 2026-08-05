@@ -91,6 +91,39 @@ void main() {
 
   const arabicNames = ['الفجر', 'الشروق', 'الظهر', 'العصر', 'المغرب', 'العشاء'];
 
+  /// Whether [name] reached the screen WHOLE, rather than trimmed to an
+  /// ellipsis.
+  ///
+  /// `find.text` cannot answer this and never could: it matches the semantic
+  /// string, so a cell painting "المغ…" still answers to `find.text('المغرب')`.
+  /// For a long time the test above asserted "none of them elide" with exactly
+  /// that finder, and المغرب was in fact losing its last letters at every phone
+  /// width there is — the assertion was true and the sentence it was written to
+  /// defend was false.
+  ///
+  /// So it is measured: the painted box against what the same string wants at
+  /// the same style. Anything wider than its box has been cut.
+  void expectDrawnInFull(
+    WidgetTester tester,
+    String name, {
+    TextDirection direction = TextDirection.rtl,
+  }) {
+    final finder = find.text(name);
+    final box = tester.getRect(finder);
+    final painter = TextPainter(
+      text: TextSpan(text: name, style: tester.widget<Text>(finder).style),
+      textDirection: direction,
+      maxLines: 1,
+    )..layout();
+
+    expect(
+      painter.width,
+      lessThanOrEqualTo(box.width + 0.5),
+      reason: '"$name" was cut: it wants ${painter.width.toStringAsFixed(1)} '
+          'and was given ${box.width.toStringAsFixed(1)}',
+    );
+  }
+
   group('the strip', () {
     testWidgets('a phone gets all six marks, and none of them elide', (
       tester,
@@ -103,30 +136,64 @@ void main() {
         // Once each: the strip. The headline names the coming mark too, but as
         // "العصر · 3:42 م" — one Text, and never an exact match for this.
         expect(find.text(name), findsOneWidget, reason: name);
+        // And whole. This is the half the finder cannot see, and the half the
+        // strip's whole layout exists to protect.
+        expectDrawnInFull(tester, name);
       }
 
       await dismiss(tester, cubit);
     });
 
-    testWidgets('a 320 panel folds the six into two rows of three', (
+    testWidgets('nor at the narrowest panel the app puts it in', (
       tester,
     ) async {
+      final cubit = stubbed(fix: _mina);
+      await show(tester, cubit, width: 320);
+
+      for (final name in arabicNames) {
+        expectDrawnInFull(tester, name);
+      }
+
+      await dismiss(tester, cubit);
+    });
+
+    testWidgets('a narrow panel folds the six into two rows of three', (
+      tester,
+    ) async {
+      // The two widths are not arbitrary and are not a phone and a tablet.
+      // They are one on each side of the only line that matters: whether six
+      // names fit across without one being cut.
+      //
+      // Where that line falls is no longer a number in the source — the strip
+      // measures the actual names, at the actual style and font scale, so it
+      // moves with the language and with whatever the reader set in the
+      // phone's own settings. It sits above every phone width, which is the
+      // finding that put this test right: six Arabic names have never fitted
+      // across a phone, and the card was quietly clipping المغرب on all of
+      // them while a constant of 44 said they fitted.
       final narrow = stubbed(fix: _mina);
       await show(tester, narrow, width: 320);
       expect(tester.takeException(), isNull);
       for (final name in arabicNames) {
         expect(find.text(name), findsOneWidget, reason: name);
       }
+      final rowsWhenNarrow = _rowCount(tester, arabicNames);
       final folded = tester.getSize(find.byType(PrayerTimesCard)).height;
       await dismiss(tester, narrow);
 
       final wide = stubbed(fix: _mina);
-      await show(tester, wide, width: 440);
+      await show(tester, wide, width: 700);
+      final rowsWhenWide = _rowCount(tester, arabicNames);
       final flat = tester.getSize(find.byType(PrayerTimesCard)).height;
       await dismiss(tester, wide);
 
-      // The fold is the only observable difference, and it is the point of it:
-      // a second row rather than المغرب losing its last two letters.
+      expect(rowsWhenNarrow, 2, reason: 'the narrow panel should fold');
+      expect(rowsWhenWide, 1, reason: 'a wide one has no reason to');
+
+      // And the fold is what costs the height. Asserted as well as the row
+      // count because the height is what a reader actually notices, and a
+      // layout that folded without growing would mean the second row had
+      // landed on top of the first.
       expect(folded, greaterThan(flat));
     });
 
@@ -144,6 +211,10 @@ void main() {
         'Isha',
       ]) {
         expect(find.text(name), findsOneWidget, reason: name);
+        // English asks for less room than Arabic, so it may well fit across
+        // where المغرب does not — the strip decides per language rather than
+        // per width, and this is the half of that which is worth pinning.
+        expectDrawnInFull(tester, name, direction: TextDirection.ltr);
       }
       expect(find.text('Prayer times'), findsOneWidget);
 
@@ -350,3 +421,13 @@ class _StubRepository extends PrayerTimesRepository {
     return builder(at ?? DateTime.now());
   }
 }
+
+/// How many rows the six marks landed on.
+///
+/// Counted from where each name was PAINTED rather than from the widget tree:
+/// the strip builds either one Row of six or a Column of two Rows of three, and
+/// the tops of the boxes say which happened without this test having to know
+/// the shape of either.
+int _rowCount(WidgetTester tester, List<String> names) => {
+  for (final name in names) tester.getRect(find.text(name)).top.roundToDouble(),
+}.length;

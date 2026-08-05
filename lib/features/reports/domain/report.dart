@@ -34,7 +34,29 @@ class ReportRow {
   );
 }
 
-/// A published report: what it says about itself, and its table.
+/// A published **قرار** — a decision: what it says about itself, and its table.
+///
+/// The word in the code and the word on the screen do not match, and the
+/// mismatch is deliberate rather than an oversight.
+///
+/// What this feature holds are the mission's DECISIONS — the numbered
+/// resolutions and circulars published to everybody, each with its number, its
+/// scope and the table under it. It was built and named "reports" by mistake,
+/// and the screens now say القرارات / Decisions, which is what the Administration
+/// has always called them.
+///
+/// The identifiers did not follow: the table is `reports`, the routes are
+/// `/reports` and `/reports/manage`, the permission codes are `reports.*`, and
+/// six migrations up to 0071 are written against those names. Renaming them
+/// would be a schema change, a permission migration and a re-grant for every
+/// account holding one — real risk taken during a season, to fix a word that
+/// nobody but a developer reads.
+///
+/// **Do not confuse this with a تقرير.** That word is still in use and still
+/// correct, for a different thing entirely: `module_reports`, what a member
+/// files against his own operational file on its cadence (0044). The two are
+/// separate tables, separate screens and separate permissions, and the Arabic
+/// labels now keep them apart — القرارات here, التقارير there.
 class Report {
   const Report({
     required this.id,

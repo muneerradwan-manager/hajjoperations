@@ -337,7 +337,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeGeneralSection => 'General';
 
   @override
-  String get homeAdminGroupFiles => 'Files & reports';
+  String get homeAdminGroupFiles => 'Files & decisions';
 
   @override
   String get homeAdminGroupPeople => 'People & permissions';
@@ -521,22 +521,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permReferenceImport => 'Copy data from another season';
 
   @override
-  String get perm_reports => 'Reports';
+  String get perm_reports => 'Decisions';
 
   @override
-  String get permReportsViewAll => 'View all reports, including drafts';
+  String get permReportsViewAll => 'View all decisions, including drafts';
 
   @override
-  String get permReportsCreate => 'Create reports';
+  String get permReportsCreate => 'Create decisions';
 
   @override
-  String get permReportsEdit => 'Edit reports';
+  String get permReportsEdit => 'Edit decisions';
 
   @override
-  String get permReportsDelete => 'Delete reports';
+  String get permReportsDelete => 'Delete decisions';
 
   @override
-  String get permReportsPublish => 'Publish & unpublish reports';
+  String get permReportsPublish => 'Publish & unpublish decisions';
 
   @override
   String get perm_notifications => 'Notifications';
@@ -699,7 +699,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportAddTag => 'Add an item';
 
   @override
-  String get reportNumber => 'Report number';
+  String get reportNumber => 'Decision number';
 
   @override
   String reportNumberBadge(String number) {
@@ -711,7 +711,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportContentHint =>
-      'Build the report from the pieces below — a heading, prose, a list, a table, a link, a code to scan. They appear in the order you add them.';
+      'Build the decision from the pieces below — a heading, prose, a list, a table, a link, a code to scan. They appear in the order you add them.';
 
   @override
   String get reportNoBlocks => 'Nothing added yet';
@@ -795,34 +795,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get blockTableNeedsColumns => 'Name the columns first, then add rows';
 
   @override
-  String get reportNew => 'New report';
+  String get reportNew => 'New decision';
 
   @override
-  String get reportEdit => 'Edit report';
+  String get reportEdit => 'Edit decision';
 
   @override
-  String get reportSaved => 'Report saved';
+  String get reportSaved => 'Decision saved';
 
   @override
-  String get reportIdentity => 'What this report is';
+  String get reportIdentity => 'What this decision is';
 
   @override
   String get reportTitle => 'Title';
 
   @override
   String get reportScopeHint =>
-      'General reports stay true whichever season is running';
+      'General decisions stay true whichever season is running';
 
   @override
   String get reportOncePerSeason =>
-      'This kind of report is created only once per season, and it already exists — edit the existing one instead of creating another';
+      'This kind of decision is created only once per season, and it already exists — edit the existing one instead of creating another';
 
   @override
   String get reportPublished => 'Published';
 
   @override
   String get reportPublishedHint =>
-      'An unpublished report is visible only to whoever manages reports';
+      'An unpublished decision is visible only to whoever manages decisions';
 
   @override
   String get reportAddRow => 'Add a row';
@@ -831,7 +831,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportNoRows => 'No rows yet';
 
   @override
-  String get reportsManageEmpty => 'No reports yet';
+  String get reportsManageEmpty => 'No decisions yet';
 
   @override
   String reportDeleteConfirm(String title) {
@@ -839,7 +839,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get reportDeleted => 'Report deleted';
+  String get reportDeleted => 'Decision deleted';
 
   @override
   String reportRowsSection(int count) {
@@ -852,13 +852,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get navReportsManage => 'Reports management';
+  String get navReportsManage => 'Decisions management';
 
   @override
-  String get navReportsManageSubtitle => 'Enter, correct and publish reports';
+  String get navReportsManageSubtitle => 'Enter, correct and publish decisions';
 
   @override
-  String get navReports => 'Reports';
+  String get navReports => 'Decisions';
 
   @override
   String get navReportsSubtitle =>
@@ -868,10 +868,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportsEmpty => 'Nothing has been published yet';
 
   @override
-  String get reportsNoMatches => 'No report matches';
+  String get reportsNoMatches => 'No decision matches';
 
   @override
-  String get reportsSearchHint => 'Search reports';
+  String get reportsSearchHint => 'Search decisions';
 
   @override
   String get reportsScopeAll => 'All';
@@ -886,10 +886,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportsDraft => 'Unpublished';
 
   @override
-  String get reportMissing => 'That report is no longer available';
+  String get reportMissing => 'That decision is no longer available';
 
   @override
-  String get reportAboutSection => 'About this report';
+  String get reportAboutSection => 'About this decision';
 
   @override
   String get reportKind => 'Kind';
@@ -2057,7 +2057,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardSectionQueue => 'Approvals';
 
   @override
-  String get dashboardSectionCentralReports => 'Central reports';
+  String get dashboardSectionCentralReports => 'Decisions';
 
   @override
   String get dashboardCentralPublished => 'Published';
@@ -2205,7 +2205,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardActiveDraft => 'Active against draft';
 
   @override
-  String get dashboardReports => 'Reports';
+  String get dashboardReports => 'Decisions';
 
   @override
   String dashboardReportsCaption(int authors) {
@@ -2220,7 +2220,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get dashboardReportsTrend => 'Reports over 30 days';
+  String get dashboardReportsTrend => 'Decisions over 30 days';
 
   @override
   String get dashboardReportsEmpty => 'No reports filed in this stretch';
@@ -2483,7 +2483,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get complaintTargetModule => 'An operational file';
 
   @override
-  String get complaintTargetReport => 'A report';
+  String get complaintTargetReport => 'A decision';
 
   @override
   String get complaintTargetHotel => 'A hotel';
@@ -2769,7 +2769,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get evaluationTargetModule => 'Operational file';
 
   @override
-  String get evaluationTargetReport => 'Report';
+  String get evaluationTargetReport => 'Decision';
 
   @override
   String get evaluationTargetHotel => 'Hotel';

@@ -477,7 +477,10 @@ class _ReportsDataset extends ExportDataset {
   String get id => 'reports';
 
   @override
-  LocalizedName get name => _n('التقارير المركزية', 'Central reports');
+  // القرارات, not التقارير. The identifiers in this feature all say `report`
+  // — see the note on the `Report` class for why they were left alone — but
+  // what the reader is choosing to export is the mission's decisions.
+  LocalizedName get name => _n('القرارات', 'Decisions');
 
   @override
   String? get permission => null;

@@ -395,7 +395,37 @@ class _BodyState extends State<_Body> {
   /// search box. Files that need one have tens or hundreds.
   static const _worthFiltering = 10;
 
+  /// Above this the sectors start folded.
+  ///
+  /// A file with four sectors reads as one page and should stay one page. توزيع
+  /// أعضاء مكاتب البعثة على مخيمات منى runs to hundreds across a dozen
+  /// sectors, and there the roster is not something a reader is READING — it is
+  /// something he is scrolling PAST to reach the reports and the duties under
+  /// it. Folded, the same page is a list of sectors he can open the one he
+  /// wants; unfolded, it is a minute of thumb.
+  ///
+  /// Higher than [_worthFiltering] on purpose. A search box earns its place
+  /// well before folding does: at fifteen people you want to find a name, and
+  /// at fifteen you do not yet mind seeing them all.
+  static const _worthFolding = 40;
+
   _RosterFilter _filter = const _RosterFilter();
+
+  /// The sectors the reader has moved AGAINST the default, by id.
+  ///
+  /// Storing the exception rather than the state is what lets the default
+  /// change underneath without stranding anything: a file that crosses
+  /// [_worthFolding] because somebody was added does not suddenly re-open every
+  /// sector the reader had shut, and one that drops below it does not shut the
+  /// ones he had opened.
+  final _foldedAgainstDefault = <String>{};
+
+  bool _sectorIsOpen(String sectorId, {required bool foldByDefault}) =>
+      sectorIsOpen(
+        filtering: _filter.isActive,
+        foldByDefault: foldByDefault,
+        movedByReader: _foldedAgainstDefault.contains(sectorId),
+      );
 
   ModuleDetailState get state => widget.state;
   OperationalModule get module => widget.module;
@@ -700,6 +730,20 @@ class _BodyState extends State<_Body> {
               level: sectorLevel,
               sector: sector,
               filter: _filter,
+              isOpen: _sectorIsOpen(
+                sector.id,
+                foldByDefault: state.peopleCount >= _worthFolding,
+              ),
+              // Folding is never offered while a filter is running: with the
+              // sectors forced open, a chevron that appears to close one would
+              // either lie or hide a match.
+              onToggle: _filter.isActive
+                  ? null
+                  : () => setState(() {
+                      if (!_foldedAgainstDefault.remove(sector.id)) {
+                        _foldedAgainstDefault.add(sector.id);
+                      }
+                    }),
             )
       else if (state.members.isEmpty)
         GlassCard(
@@ -1059,12 +1103,20 @@ class _SectorCard extends StatelessWidget {
     required this.level,
     required this.sector,
     this.filter = const _RosterFilter(),
+    this.isOpen = true,
+    this.onToggle,
   });
 
   final ModuleDetailState state;
   final ModuleLevel level;
   final ModuleNode sector;
   final _RosterFilter filter;
+
+  /// Whether this sector's people are drawn at all.
+  final bool isOpen;
+
+  /// Null where folding is not on offer — a small file, or a live filter.
+  final VoidCallback? onToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -1092,6 +1144,19 @@ class _SectorCard extends StatelessWidget {
       if (supervisors.isEmpty && below == 0) return const SizedBox.shrink();
     }
 
+    // Everyone under this sector, its own staff included. Shown on the header
+    // so that a folded sector still says how much is inside it — a row that
+    // hides its contents and does not say how many is a row nobody opens.
+    final towerLevel2 = towerLevel;
+    final headcount =
+        supervisors.length +
+        (towerLevel2 == null
+            ? 0
+            : towers.fold<int>(
+                0,
+                (n, t) => n + const _RosterFilter().survivorsIn(t, towerLevel2),
+              ));
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1099,34 +1164,107 @@ class _SectorCard extends StatelessWidget {
         SectionHeader(
           sector.label ?? level.name.of(context),
           icon: AppIcons.roles,
+          trailing: onToggle == null
+              ? null
+              : _FoldToggle(
+                  isOpen: isOpen,
+                  count: headcount,
+                  onPressed: onToggle!,
+                ),
         ),
+        if (!isOpen) const SizedBox(height: AppSpacing.sm),
         // The قطاع's own staff, in one card of their own — the same card every
         // other group of people on this screen sits in. They were loose tiles
         // here, each carrying its own card, which made the sector's supervisors
         // look like a different class of thing from the برج full of people
         // directly beneath them.
-        if (supervisors.isNotEmpty) ...[
-          GlassCard(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: AdaptiveGrid(
-              minTileWidth: _kNestedMemberWidth,
-              spacing: AppSpacing.lg,
-              equalHeights: false,
-              children: supervisors,
+        if (isOpen) ...[
+          if (supervisors.isNotEmpty) ...[
+            GlassCard(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: AdaptiveGrid(
+                minTileWidth: _kNestedMemberWidth,
+                spacing: AppSpacing.lg,
+                equalHeights: false,
+                children: supervisors,
+              ),
             ),
-          ),
+            const SizedBox(height: AppSpacing.md),
+          ],
+          if (towerLevel != null)
+            for (final tower in towers)
+              _TowerCard(
+                state: state,
+                level: towerLevel,
+                tower: tower,
+                filter: filter,
+              ),
           const SizedBox(height: AppSpacing.md),
         ],
-        if (towerLevel != null)
-          for (final tower in towers)
-            _TowerCard(
-              state: state,
-              level: towerLevel,
-              tower: tower,
-              filter: filter,
-            ),
-        const SizedBox(height: AppSpacing.md),
       ],
+    );
+  }
+}
+
+/// Whether one sector's people are drawn.
+///
+/// Top-level and public so it can be tested without standing a whole file page
+/// up: it is three booleans and one of them is a correctness rule rather than a
+/// preference.
+///
+/// **A live filter forces every sector open.** That is not a convenience. A
+/// name matching inside a folded sector would be found by the search, counted
+/// in "showing 3 of 120" at the top of the page, and then be nowhere on the
+/// screen — a search that reports a result it does not show is worse than one
+/// that finds nothing.
+///
+/// [movedByReader] records the EXCEPTION rather than the state, which is what
+/// lets the default change underneath without stranding anything: a file that
+/// crosses the folding threshold because one person was added does not re-open
+/// every sector the reader had shut.
+bool sectorIsOpen({
+  required bool filtering,
+  required bool foldByDefault,
+  required bool movedByReader,
+}) {
+  if (filtering) return true;
+  final openByDefault = !foldByDefault;
+  return movedByReader ? !openByDefault : openByDefault;
+}
+
+/// The control that folds a sector away, and says what is inside it folded.
+///
+/// The count is the whole reason this is a button with a label rather than a
+/// bare chevron. A folded row that does not say how many people it is hiding is
+/// a row a reader has to open to find out whether it was worth opening — which
+/// is the scrolling the folding was meant to save, done one tap at a time.
+class _FoldToggle extends StatelessWidget {
+  const _FoldToggle({
+    required this.isOpen,
+    required this.count,
+    required this.onPressed,
+  });
+
+  final bool isOpen;
+  final int count;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+
+    return TextButton.icon(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        foregroundColor: scheme.onSurfaceVariant,
+      ),
+      icon: Icon(
+        isOpen ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+        size: 20,
+      ),
+      label: Text(l.moduleMembersCount(count)),
     );
   }
 }

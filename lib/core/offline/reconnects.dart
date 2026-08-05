@@ -17,18 +17,20 @@ import '../logging/app_logger.dart';
 /// can be swapped out without the queue knowing.
 /// It also NEVER FAILS, which is the second half of treating it as a hint.
 ///
-/// Watching the network is a platform service, and on Windows the plugin's
-/// listener can refuse to start at all — `NetworkManager::StartListen` answering
-/// E_INVALIDARG, which arrives as an error on the stream the moment anything
-/// subscribes. Unhandled, that error escapes into the framework and is reported
-/// as a crash at every start-up: a red trace about connectivity, on a desktop
-/// build, because of a feature for a phone in Mina.
+/// Watching the network is a platform service, and it can fail in two places.
+/// Once running, the stream itself can carry an error, and that one is
+/// swallowed below rather than at the subscriber — losing the hint costs the
+/// queue nothing it cannot do without. It still drains when the app starts,
+/// when something is added, and when its own backoff timer comes round. All
+/// that is lost is the few seconds between a signal returning and the next
+/// scheduled try.
 ///
-/// So the error is swallowed here rather than at the subscriber. Losing the
-/// hint costs the queue nothing it cannot do without — it still drains when the
-/// app starts, when something is added, and when its own backoff timer comes
-/// round. All that is lost is the few seconds between a signal returning and
-/// the next scheduled try.
+/// The other failure is the listener refusing to start at all — on Windows,
+/// `NetworkManager::StartListen` answering E_INVALIDARG the moment anything
+/// subscribes. That one CANNOT be caught here, however the stream is wrapped:
+/// `EventChannel` hands an activation failure straight to `FlutterError` and
+/// never puts it on the stream, so `handleError` is not on the path it takes.
+/// It is dealt with where it actually lands, in `installErrorLogging`.
 Stream<void> platformReconnects() => Connectivity().onConnectivityChanged
     .where((results) => results.any(_isConnected))
     .map((_) {})

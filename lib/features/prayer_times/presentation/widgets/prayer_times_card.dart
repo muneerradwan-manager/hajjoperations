@@ -21,14 +21,9 @@ import '../../domain/prayer_text.dart';
 // reaching for `slotName` through the card keeps working.
 export '../../domain/prayer_text.dart';
 
-/// The narrowest a strip cell may get before the six marks stop being one row
-/// and become two rows of three.
-///
-/// Below this a name like المغرب starts losing letters to an ellipsis, and a
-/// prayer whose name is cut in half is worse than a strip that takes a second
-/// line. Two rows of three is what a 320-wide side panel gets, and what a phone
-/// gets if the system font scale is turned up.
-const _minCellWidth = 44.0;
+/// What one cell costs a row besides the name in it: a pixel of margin each
+/// side, and a pixel of rounding either way.
+const _cellChrome = 4.0;
 
 /// Below this a cell is single-row but tight, and the type steps down a point
 /// rather than the names eliding.
@@ -448,12 +443,62 @@ class _Strip extends StatelessWidget {
   final PrayerDay day;
   final PrayerWindow window;
 
+  /// Whether every one of the six names is drawn in full in a cell this wide.
+  ///
+  /// Measured with the same [TextPainter] the cell will use, at the same style
+  /// and the same font scale, against the longest name there actually is. The
+  /// answer is therefore true in Arabic and in English, at the reader's own
+  /// font scale, and on a device whose font metrics are nothing like the test
+  /// machine's — none of which a constant can promise.
+  static bool _fits(
+    BuildContext context,
+    double cellWidth, {
+    required bool compact,
+  }) {
+    final l = context.l10n;
+    final style = Theme.of(context).textTheme.labelSmall?.copyWith(
+      // The heaviest of the three weights a cell uses: the current prayer is
+      // bold, and it is the one that would overflow first.
+      fontWeight: FontWeight.w700,
+      fontSize: compact ? 10 : 11,
+      height: 1.2,
+    );
+    final scaler = MediaQuery.textScalerOf(context);
+    final room = cellWidth - _cellChrome;
+
+    for (final slot in PrayerSlot.values) {
+      final painter = TextPainter(
+        text: TextSpan(text: slotName(l, slot), style: style),
+        textDirection: Directionality.of(context),
+        textScaler: scaler,
+        maxLines: 1,
+      )..layout();
+      if (painter.width > room) return false;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, box) {
         final count = PrayerSlot.values.length;
-        final oneRow = box.maxWidth / count >= _minCellWidth;
+
+        // Whether six fit on one line is ASKED, not estimated.
+        //
+        // It used to be a constant — 44 logical pixels per cell — and the
+        // constant was simply wrong: at 44 the six stayed in one row and
+        // المغرب lost its last letters at every phone width there is, 360
+        // included. The rule above it was right and the number under it never
+        // matched, which is the failure mode a magic number has.
+        //
+        // A number cannot be right here anyway. What fits depends on the
+        // longest NAME — المغرب in Arabic, Sunrise in English, and neither is
+        // the other's width — on the type scale the theme sets, and on the
+        // font scale the reader chose in the phone's own settings. All three
+        // are known at this point and none of them are known where a constant
+        // is written.
+        final oneRow = _fits(context, box.maxWidth / count, compact: false);
         final width = box.maxWidth / (oneRow ? count : 3);
 
         Widget cell(PrayerSlot slot) => _Cell(
