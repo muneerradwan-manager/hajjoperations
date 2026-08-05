@@ -15,10 +15,14 @@ import '../../features/evaluations/application/evaluations_cubit.dart';
 import '../../features/evaluations/presentation/evaluation_forms_screen.dart';
 import '../../features/evaluations/presentation/evaluations_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/incidents/presentation/incidents_screen.dart';
+import '../../features/incidents/presentation/raise_incident_screen.dart';
 import '../../features/modules/application/modules_cubit.dart';
 import '../../features/modules/presentation/modules_screen.dart';
 import '../../features/modules/presentation/reference_data_screen.dart';
 import '../../features/notifications/presentation/notifications_screen.dart';
+import '../../features/export/presentation/export_screen.dart';
+import '../../features/outbox/presentation/outbox_screen.dart';
 import '../../features/permissions/presentation/permissions_employees_screen.dart';
 import '../../features/profile/presentation/my_profile_screen.dart';
 import '../../features/profile/presentation/profile_completion_screen.dart';
@@ -61,6 +65,25 @@ abstract class Routes {
   static const evaluations = '/evaluations';
   static const evaluationsManage = '/evaluations/manage';
   static const evaluationForms = '/evaluations/forms';
+
+  /// Deliberately absent from [_sectionGuards] below: what is waiting here is
+  /// the reader's OWN work, held by his own device. There is no permission to
+  /// hold for seeing what you yourself wrote.
+  static const outbox = '/outbox';
+
+  /// Also unguarded, and for a related reason: the screen offers only the
+  /// datasets the reader already has the permission to open, and every one of
+  /// them fetches through the same repositories the screens do. A guard here
+  /// would be a second, weaker copy of a rule enforced in two better places.
+  static const export = '/export';
+
+  /// Raising an urgent report. Unguarded on purpose and for the same reason
+  /// filing a complaint is: a system in which only certain people may say that
+  /// a bus has broken down is a system that does not find out about the bus.
+  static const raiseIncident = '/incident';
+
+  /// The register. Guarded — see [_sectionGuards].
+  static const incidents = '/incidents';
 }
 
 /// What each administered section asks of whoever tries to open it.
@@ -113,6 +136,10 @@ final sectionGuards = <String, bool Function(SessionState)>{
   Routes.evaluationForms: (s) =>
       s.can(PermissionCodes.evaluationsTemplates) ||
       s.can(PermissionCodes.evaluationsAssign),
+  // The register of urgent reports — the operations room's screen. RAISING one
+  // is `/incident` and is deliberately not in this table: anybody may say that
+  // something has gone wrong.
+  Routes.incidents: (s) => s.can(PermissionCodes.incidentsReceive),
 };
 
 GoRouter buildRouter(SessionCubit session) {
@@ -244,6 +271,31 @@ GoRouter buildRouter(SessionCubit session) {
         path: Routes.settings,
         pageBuilder: (c, s) =>
             fadeThroughPage(key: s.pageKey, child: const SettingsScreen()),
+      ),
+      GoRoute(
+        path: Routes.outbox,
+        pageBuilder: (c, s) =>
+            fadeThroughPage(key: s.pageKey, child: const OutboxScreen()),
+      ),
+      GoRoute(
+        path: Routes.export,
+        pageBuilder: (c, s) =>
+            fadeThroughPage(key: s.pageKey, child: const ExportScreen()),
+      ),
+      GoRoute(
+        path: Routes.raiseIncident,
+        pageBuilder: (c, s) => fadeThroughPage(
+          key: s.pageKey,
+          child: RaiseIncidentScreen(
+            moduleId: s.uri.queryParameters['module'],
+            nodeId: s.uri.queryParameters['node'],
+          ),
+        ),
+      ),
+      GoRoute(
+        path: Routes.incidents,
+        pageBuilder: (c, s) =>
+            fadeThroughPage(key: s.pageKey, child: const IncidentsScreen()),
       ),
       GoRoute(
         path: Routes.reports,

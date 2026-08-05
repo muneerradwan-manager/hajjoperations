@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../utils/network_error.dart';
 import 'l10n_extension.dart';
 
 /// Turns a cubit's stored error string into something a person can read.
@@ -19,21 +20,10 @@ String friendlyError(BuildContext context, String? raw) =>
 String friendlyErrorL(AppLocalizations l, String? raw) {
   if (raw == null || raw.trim().isEmpty) return l.commonGenericError;
   final s = raw.toLowerCase();
-  const networkSmells = [
-    'socketexception',
-    'clientexception',
-    'failed host lookup',
-    'connection refused',
-    'connection reset',
-    'connection closed',
-    'network is unreachable',
-    'timeoutexception',
-    'handshakeexception',
-    'operation timed out',
-  ];
-  for (final smell in networkSmells) {
-    if (s.contains(smell)) return l.commonConnectionErrorTitle;
-  }
+  // The same list the outbox decides retries by — see [looksLikeNetworkFailure].
+  // Kept in one place because the two must agree: a failure this calls "the
+  // connection" is exactly the failure that ought to be tried again.
+  if (looksLikeNetworkFailure(raw)) return l.commonConnectionErrorTitle;
   // Codes the admin-set-email function answers with. They arrive wrapped in
   // exception text ("FunctionException(status: 400, details: {error:
   // email_taken}…)"), so this matches by substring like the smells above.

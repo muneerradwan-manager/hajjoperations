@@ -44,10 +44,24 @@ class AppNotification {
 
   /// The file this notification is about, when it is about one.
   ///
-  /// Both an assignment ('you were put into this file') and a broadcast to a
-  /// file's members are about the same place, so both open it. A general
-  /// broadcast names nothing and returns null.
+  /// An assignment ('you were put into this file'), a broadcast to a file's
+  /// members and an overdue-report reminder are all about the same place, so
+  /// all three open it. A general broadcast names nothing and returns null.
   String? get moduleId => moduleIdIn(data);
+
+  /// The kinds that carry a file to open.
+  ///
+  /// An allow-list rather than "any `data` with a `module_id` in it": the key
+  /// appears on notifications that are about something else in the file, and a
+  /// tap that opens the wrong screen is worse than a tap that does nothing.
+  static const _typesWithModule = {
+    'module_assigned',
+    'module_broadcast',
+    // Written by the scheduled pass in migration 0086. The reminder is only
+    // useful if it opens the file it is about — the whole point is to be one
+    // tap from filing the thing that is late.
+    'report_overdue',
+  };
 
   /// The same rule, asked of a bare map.
   ///
@@ -56,8 +70,7 @@ class AppNotification {
   /// the inbox. Two copies of this rule would be two answers the first time one
   /// of them was extended.
   static String? moduleIdIn(Map<String, dynamic> data) {
-    final type = data['type'];
-    if (type != 'module_assigned' && type != 'module_broadcast') return null;
+    if (!_typesWithModule.contains(data['type'])) return null;
     final id = data['module_id'];
     return id is String && id.isNotEmpty ? id : null;
   }

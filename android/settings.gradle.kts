@@ -22,6 +22,10 @@ plugins {
     id("com.android.application") version "9.0.1" apply false
     // START: FlutterFire Configuration
     id("com.google.gms.google-services") version("4.4.4") apply false
+    // Uploads the mapping file so a release stack trace arrives readable rather
+    // than as a page of obfuscated symbols, and catches native crashes and ANRs
+    // that never reach Dart's error handlers at all.
+    id("com.google.firebase.crashlytics") version("3.0.6") apply false
     // END: FlutterFire Configuration
     id("org.jetbrains.kotlin.android") version "2.3.20" apply false
 }

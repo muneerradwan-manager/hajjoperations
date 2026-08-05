@@ -21,6 +21,9 @@ import '../../../core/widgets/profile_avatar.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
+import '../../checkin/presentation/check_in_sheet.dart';
+import '../../checkin/presentation/place_codes_screen.dart';
+import '../../checkin/presentation/presence_screen.dart';
 // The two screens link to each other — a file lists its people, and a person
 // lists his files. Dart allows the cycle; the alternative is a router constant
 // that hides which screen is actually being opened.
@@ -193,6 +196,10 @@ class _ViewState extends State<_View> {
         widget.fromOffice && session.can(PermissionCodes.modulesActivate);
     final canMembers =
         widget.fromOffice && session.can(PermissionCodes.modulesMembers);
+    // Reading who is in place is the same trust as reading what they filed —
+    // both are the members reporting on the file. Not gated on `fromOffice`:
+    // this is about the file itself, not about administering the catalog.
+    final canSeePresence = session.can(PermissionCodes.modulesReports);
 
     return BlocBuilder<ModuleDetailCubit, ModuleDetailState>(
       builder: (context, state) {
@@ -213,15 +220,63 @@ class _ViewState extends State<_View> {
                     l.modulesTitle,
               ),
               actions: [
-                if ((canEdit || canDelete) && module != null)
+                // Checking in is the one action here a member takes about
+                // HIMSELF, so it sits on the bar rather than under the menu —
+                // it is pressed standing at a gate, often one-handed, and a
+                // thing pressed in that position should not be two taps deep.
+                // Offered only while the file is actually running: reporting
+                // an arrival at a file that has ended records nothing anybody
+                // will read.
+                if (module?.isRunning ?? false)
+                  IconButton(
+                    tooltip: l.checkInTitle,
+                    onPressed: () => showCheckInSheet(
+                      context,
+                      moduleId: context.read<ModuleDetailCubit>().moduleId,
+                    ),
+                    icon: const Icon(AppIcons.checkIn),
+                  ),
+                if ((canEdit || canDelete || canSeePresence) && module != null)
                   OverflowMenu(
                     actions: [
-                      if (canEdit)
+                      if (canSeePresence)
+                        MenuAction(
+                          icon: AppIcons.checkIn,
+                          label: l.presenceTitle,
+                          onSelected: () => Navigator.of(context).push(
+                            fadeThroughRoute(
+                              (_) => PresenceScreen(
+                                moduleId:
+                                    context.read<ModuleDetailCubit>().moduleId,
+                              ),
+                            ),
+                          ),
+                        ),
+                      if (canEdit) ...[
                         MenuAction(
                           icon: AppIcons.edit,
                           label: l.commonEdit,
                           onSelected: () => _edit(module),
                         ),
+                        // Behind the same door as editing: preparing the codes
+                        // is setting the file up, not working in it.
+                        MenuAction(
+                          icon: AppIcons.qrCode,
+                          label: l.checkInQrTitle,
+                          onSelected: () => Navigator.of(context).push(
+                            fadeThroughRoute(
+                              (_) => BlocProvider.value(
+                                // The same cubit, not a second one: the list of
+                                // places is this page's own state, already
+                                // loaded, and refetching it would show an empty
+                                // screen for a beat on a phone in a hotel lobby.
+                                value: context.read<ModuleDetailCubit>(),
+                                child: const PlaceCodesScreen(),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                       if (canDelete)
                         MenuAction(
                           icon: AppIcons.delete,
@@ -1928,18 +1983,23 @@ class _ReportSheetState extends State<_ReportSheet> {
   Future<void> _save() async {
     setState(() => _busy = true);
     final notes = _notes.text.trim();
-    final error = await context.read<ModuleDetailCubit>().submitReport(
+    final outcome = await context.read<ModuleDetailCubit>().submitReport(
       notes: notes.isEmpty ? null : notes,
       attachments: _added,
       removed: _removed,
     );
     if (!mounted) return;
-    if (error != null) {
+    if (!outcome.ok) {
       setState(() => _busy = false);
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(error)));
+        ..showSnackBar(SnackBar(content: Text(outcome.error!)));
       return;
+    }
+    if (outcome.queued) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(context.l10n.outboxSavedOffline)));
     }
     Navigator.of(context).pop(true);
   }

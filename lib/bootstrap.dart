@@ -13,7 +13,13 @@ import 'core/logging/app_bloc_observer.dart';
 import 'core/logging/app_logger.dart';
 import 'core/logging/logging_http_client.dart';
 import 'core/logging/error_reporting.dart';
+import 'core/offline/outbox.dart';
+import 'core/offline/outbox_store.dart';
+import 'core/offline/reconnects.dart';
 import 'core/supabase/secure_session_storage.dart';
+import 'features/checkin/data/check_in_outbox.dart';
+import 'features/incidents/data/incidents_outbox.dart';
+import 'features/modules/data/module_outbox.dart';
 import 'features/notifications/data/push_service.dart';
 import 'features/prayer_times/application/prayer_scheduler.dart';
 import 'firebase_options.dart';
@@ -47,6 +53,48 @@ Future<void> _initFirebaseIfConfigured() async {
   }
 }
 
+/// Brings the outbox up where there is somewhere to keep it.
+///
+/// Called after Supabase, because everything the queue sends goes through that
+/// client; and before the first frame, because the badge in the app bar reads
+/// it and a queue installed a moment later would show as empty for that moment.
+///
+/// It is allowed to FAIL, and the whole shape of this function is that
+/// allowance. The queue needs a directory on a disk, and the web has neither —
+/// `path_provider` has no implementation there and answers with a
+/// `MissingPluginException`. Unguarded, that took the entire app down at
+/// start-up on Chrome: a splash screen and nothing behind it, because a feature
+/// for a phone in Mina could not find a folder in a browser.
+///
+/// The same reasoning as [_initFirebaseIfConfigured] one function up, and the
+/// same conclusion. Where the queue cannot exist, it simply is not installed;
+/// `sendOrQueue` already falls back to sending directly when there is no queue,
+/// and the badge already draws nothing. Nothing else in the app has to know
+/// which platform it is on.
+///
+/// Only `start()` is left unawaited: reading a small file and taking the first
+/// run at what is in it is not something a splash screen should wait on, and
+/// nothing on screen depends on the answer.
+Future<void> _installOutbox() async {
+  try {
+    final outbox = Outbox(
+      store: await OutboxStore.open(),
+      reconnects: platformReconnects(),
+    );
+    ModuleOutbox.register(outbox);
+    CheckInOutbox.register(outbox);
+    IncidentsOutbox.register(outbox);
+    Outbox.instance = outbox;
+    unawaited(outbox.start());
+  } catch (error) {
+    // Info, one line, no stack — the same voice push uses two functions up,
+    // and for the same reason. A platform having no disk is not a fault, and a
+    // red twelve-line trace at every start-up on the web trains whoever is
+    // reading the console to skip exactly the place real faults appear.
+    AppLogger.info('app', 'no outbox on this platform — writes go straight out');
+  }
+}
+
 /// Reads a required key out of `.env`, failing with a sentence that names the
 /// key instead of the bare null-check error the `!` operator used to die with.
 String _requireEnv(String key) {
@@ -69,6 +117,23 @@ Future<AppDependencies> bootstrap() async {
   installErrorLogging();
   Bloc.observer = const AppBlocObserver();
   AppLogger.info('app', 'starting — debug logging on');
+
+  // Started here rather than further down, and started rather than awaited.
+  //
+  // Nothing below waits on it — it costs the first frame nothing wherever it
+  // sits — but everything below it can now FAIL INTO it. A missing `.env`, a
+  // Supabase key the server rejects, a keystore that will not open: these are
+  // the start-up failures that leave a man in the field looking at a splash
+  // screen, and until this line existed none of them left the device. What
+  // happens before the attach lands is held by the reporter and sent when it
+  // does; see [CrashReporting].
+  //
+  // Push is explicitly non-critical (see _initFirebaseIfConfigured) and its
+  // platform-channel init was once holding the first frame hostage, which is
+  // why PushService takes the future rather than the call.
+  final firebaseInit = _initFirebaseIfConfigured();
+  PushService.firebaseInit = firebaseInit;
+  unawaited(firebaseInit.then((_) => CrashReporting.attach()));
 
   // Edge-to-edge with transparent system bars: the aurora backdrop runs behind
   // the status and navigation bars instead of stopping at a grey strip.
@@ -111,11 +176,7 @@ Future<AppDependencies> bootstrap() async {
     debug: kDebugMode,
   );
 
-  // Off the critical path on purpose: push is explicitly non-critical (see
-  // _initFirebaseIfConfigured), yet its platform-channel init was holding the
-  // first frame hostage. PushService awaits this future before it talks to
-  // Firebase, so nothing races it.
-  PushService.firebaseInit = _initFirebaseIfConfigured();
+  await _installOutbox();
 
   final prefs = await prefsFuture;
 

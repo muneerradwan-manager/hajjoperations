@@ -38,6 +38,29 @@ void main() {
       expect(n.hasTarget, isTrue);
     });
 
+    test('an overdue-report reminder opens the file it is about', () {
+      // Exactly the shape the scheduled pass in migration 0086 builds. The
+      // reminder is only worth sending if it lands one tap from filing the
+      // thing that is late.
+      final n = _n({
+        'type': 'report_overdue',
+        'module_id': 'm-13',
+        'period_start': '2026-08-04',
+        'about_profile_id': 'p-5',
+      });
+      expect(n.moduleId, 'm-13');
+      expect(n.hasTarget, isTrue);
+    });
+
+    test('a type nobody knows points nowhere, whatever it carries', () {
+      // The allow-list is the point: `module_id` turns up on payloads that are
+      // about something else in the file, and a tap that opens the wrong
+      // screen is worse than a tap that does nothing.
+      final n = _n({'type': 'something_new', 'module_id': 'm-1'});
+      expect(n.moduleId, isNull);
+      expect(n.hasTarget, isFalse);
+    });
+
     test('a broadcast to everyone points nowhere', () {
       // It names no place, so the card must not offer to open one.
       final n = _n({'type': 'broadcast'});

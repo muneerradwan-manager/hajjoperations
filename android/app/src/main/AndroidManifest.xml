@@ -5,6 +5,14 @@
          Coarse is enough to place a building; fine sharpens it when granted. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <!-- Reading the code fixed at a camp gate to report an arrival. Declared
+         because the scanner draws the camera preview inside this app; the photo
+         attachments do not need it, because those hand the job to the camera
+         app through an intent and get a file back. The feature is not required
+         to install: a phone without a camera keeps every other part of the app,
+         and an arrival can still be reported by position alone. -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <!-- Prayer alerts and the home-screen widget both live in Android's alarm
          service rather than in this app: the process is not running when الفجر
          comes in, and there is no timer to rely on. A reboot clears every alarm

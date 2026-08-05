@@ -2,7 +2,10 @@ import 'package:equatable/equatable.dart';
 
 import '../../../core/bloc/safe_cubit.dart';
 import '../../../core/l10n/localized_name.dart';
+import '../../../core/offline/outbox.dart';
+import '../../../core/offline/save_outcome.dart';
 import '../../../core/supabase/supabase_client.dart';
+import '../data/module_outbox.dart';
 import '../data/modules_repository.dart';
 import '../domain/module_task.dart';
 import '../domain/module_type.dart';
@@ -296,24 +299,40 @@ class ModuleDetailCubit extends SafeCubit<ModuleDetailState> {
   final String? viewAsProfileId;
 
   /// Files the viewer's report for the period in force: what they attached,
-  /// what they took back off, and any notes. Returns null on success, else what
-  /// went wrong.
-  Future<String?> submitReport({
+  /// what they took back off, and any notes.
+  ///
+  /// Kept for sending later if the network is what stopped it — this is the
+  /// evening report from a camp, and a man who has just photographed it will
+  /// not photograph it again.
+  Future<SaveOutcome> submitReport({
     String? notes,
     List<PendingAttachment> attachments = const [],
     List<StoredAttachment> removed = const [],
   }) async {
     try {
-      await _repo.submitReport(
-        moduleId: moduleId,
-        notes: notes,
+      final sent = await sendOrQueue(
+        send: () => _repo.submitReport(
+          moduleId: moduleId,
+          notes: notes,
+          attachments: attachments,
+          removed: removed,
+        ),
+        kind: ModuleOutbox.report,
+        payload: ModuleOutbox.reportPayload(
+          moduleId: moduleId,
+          notes: notes,
+          removed: removed,
+        ),
+        label: state.module?.moduleTypeName?.ar,
         attachments: attachments,
-        removed: removed,
       );
-      await load();
-      return null;
+      // Only when it actually landed. Re-reading after a queue would blank the
+      // page back to what the server still says, which is the state before the
+      // thing the person just did.
+      if (sent) await load();
+      return sent ? const SaveOutcome.sent() : const SaveOutcome.queued();
     } catch (e) {
-      return e.toString();
+      return SaveOutcome.failed(e.toString());
     }
   }
 
@@ -364,8 +383,11 @@ class ModuleDetailCubit extends SafeCubit<ModuleDetailState> {
   }
 
   /// Moves one duty along, with whatever note and evidence came with it.
-  /// Returns null on success, else what went wrong.
-  Future<String?> setTaskState(
+  ///
+  /// Kept for sending later if the network is what stopped it. This is the
+  /// write a man makes standing in front of the thing he is reporting on, and
+  /// it is the one the whole season is read back from.
+  Future<SaveOutcome> setTaskState(
     ModuleTaskLine line,
     TaskState newState, {
     String? note,
@@ -373,29 +395,43 @@ class ModuleDetailCubit extends SafeCubit<ModuleDetailState> {
     List<StoredAttachment> removed = const [],
   }) async {
     try {
-      // The state row first: the evidence is stored under its id, and storage
-      // will not accept a file until it exists.
-      final statusId = await _repo.setTaskState(
-        moduleId: moduleId,
-        state: newState,
-        typeTaskId: line.typeTaskId,
-        moduleTaskId: line.moduleTaskId,
-        nodeId: line.nodeId,
-        profileId: line.profileId,
-        note: note,
-      );
-      if (attachments.isNotEmpty || removed.isNotEmpty) {
-        await _repo.setTaskAttachments(
+      final sent = await sendOrQueue(
+        send: () async {
+          // The state row first: the evidence is stored under its id, and
+          // storage will not accept a file until it exists.
+          final statusId = await _repo.setTaskState(
+            moduleId: moduleId,
+            state: newState,
+            typeTaskId: line.typeTaskId,
+            moduleTaskId: line.moduleTaskId,
+            nodeId: line.nodeId,
+            profileId: line.profileId,
+            note: note,
+          );
+          if (attachments.isNotEmpty || removed.isNotEmpty) {
+            await _repo.setTaskAttachments(
+              moduleId: moduleId,
+              statusId: statusId,
+              attachments: attachments,
+              removed: removed,
+            );
+          }
+        },
+        kind: ModuleOutbox.taskState,
+        payload: ModuleOutbox.taskStatePayload(
           moduleId: moduleId,
-          statusId: statusId,
-          attachments: attachments,
+          state: newState,
+          line: line,
+          note: note,
           removed: removed,
-        );
-      }
-      await _reloadBoard();
-      return null;
+        ),
+        label: line.title.ar,
+        attachments: attachments,
+      );
+      if (sent) await _reloadBoard();
+      return sent ? const SaveOutcome.sent() : const SaveOutcome.queued();
     } catch (e) {
-      return e.toString();
+      return SaveOutcome.failed(e.toString());
     }
   }
 

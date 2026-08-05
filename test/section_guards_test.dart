@@ -153,6 +153,9 @@ void main() {
         '/complaints/manage',
         '/evaluations/manage',
         '/evaluations/forms',
+        // The operations room's register of urgent reports. RAISING one is
+        // `/incident` and is deliberately NOT here — see the open list below.
+        '/incidents',
       });
     });
 
@@ -168,12 +171,17 @@ void main() {
       // reaches its evaluator by NAME, so there is no permission to fill one
       // and nothing to guard the list of your own errands with. Closing it
       // would mean somebody could be assigned work they could not open.
+      // /incident is raising one, and it is the most important entry on this
+      // list: a system in which only certain people may report that a bus has
+      // broken down is a system that does not find out about the bus. Reading
+      // everyone's is `/incidents`, and that one IS guarded.
       for (final open in [
         '/modules',
         '/reports',
         '/dashboard',
         '/complaints',
         '/evaluations',
+        '/incident',
         '/',
       ]) {
         expect(

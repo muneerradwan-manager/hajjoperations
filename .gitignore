@@ -18,6 +18,16 @@ firebase/*-adminsdk-*.json
 # Admin/service keys for local seeding. Deliberately NOT `.env`: that file is
 # bundled as a Flutter asset, so anything in it ships inside the APK.
 .env.seed
+
+# Exported data. The export screen writes real people into these — names,
+# emails, telephone numbers of the mission's staff — and the share sheet drops
+# them wherever the person chose, which on a development machine is often the
+# project folder. They are not bundled into the app (only `assets/images/` and
+# `assets/fonts/pdf/` are declared), so the danger is not the APK: it is one
+# `git add .` putting the staff directory into the repository's history, where
+# it cannot be taken back out.
+*.csv
+!test/**/*.csv
 .atom/
 .build/
 .buildlog/

@@ -1310,6 +1310,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 attachment} other{{count} attachments}}'**
   String notificationAttachmentsCount(int count);
 
+  /// No description provided for @attachmentTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'That file is larger than the {limit} limit. Choose a smaller one.'**
+  String attachmentTooLarge(String limit);
+
   /// No description provided for @attachmentImage.
   ///
   /// In en, this message translates to:
@@ -5671,6 +5677,582 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show the evaluations on it'**
   String get evaluationFormShowEvaluations;
+
+  /// No description provided for @commonOk.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get commonOk;
+
+  /// No description provided for @incidentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent report'**
+  String get incidentTitle;
+
+  /// No description provided for @incidentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For what cannot wait — a breakdown, an accident, a cut-off. It reaches the operations room immediately.'**
+  String get incidentHint;
+
+  /// No description provided for @incidentBodyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What has happened?'**
+  String get incidentBodyHint;
+
+  /// No description provided for @incidentAttach.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach a photo'**
+  String get incidentAttach;
+
+  /// No description provided for @incidentSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send the report'**
+  String get incidentSend;
+
+  /// No description provided for @incidentSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending…'**
+  String get incidentSending;
+
+  /// No description provided for @incidentSent.
+  ///
+  /// In en, this message translates to:
+  /// **'The operations room has been alerted'**
+  String get incidentSent;
+
+  /// No description provided for @incidentWhatIsAttached.
+  ///
+  /// In en, this message translates to:
+  /// **'Attached automatically: your name, your position, the time'**
+  String get incidentWhatIsAttached;
+
+  /// No description provided for @incidentNotDeliveredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'It did not go through'**
+  String get incidentNotDeliveredTitle;
+
+  /// No description provided for @incidentNotDeliveredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'There is no network. The report is saved on your device and will be sent when it returns — but **nobody has been told yet**. If this cannot wait, telephone the operations room now.'**
+  String get incidentNotDeliveredBody;
+
+  /// No description provided for @incidentsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent reports'**
+  String get incidentsTitle;
+
+  /// No description provided for @incidentsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No open reports'**
+  String get incidentsEmpty;
+
+  /// No description provided for @incidentsEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Every urgent report appears here the moment it arrives'**
+  String get incidentsEmptyHint;
+
+  /// No description provided for @incidentsShowClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Show closed'**
+  String get incidentsShowClosed;
+
+  /// No description provided for @incidentStateOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get incidentStateOpen;
+
+  /// No description provided for @incidentStateInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get incidentStateInProgress;
+
+  /// No description provided for @incidentStateClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get incidentStateClosed;
+
+  /// No description provided for @incidentTake.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'ll take it'**
+  String get incidentTake;
+
+  /// No description provided for @incidentClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close the report'**
+  String get incidentClose;
+
+  /// No description provided for @incidentReopen.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen'**
+  String get incidentReopen;
+
+  /// No description provided for @incidentResolutionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What happened? (optional)'**
+  String get incidentResolutionHint;
+
+  /// No description provided for @incidentCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get incidentCall;
+
+  /// No description provided for @incidentOpenMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Position'**
+  String get incidentOpenMap;
+
+  /// No description provided for @incidentWaited.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting {duration}'**
+  String incidentWaited(String duration);
+
+  /// No description provided for @incidentHandledBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Taken by {name}'**
+  String incidentHandledBy(String name);
+
+  /// No description provided for @incidentOpenCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No open reports} =1{1 open report} other{{count} open reports}}'**
+  String incidentOpenCount(int count);
+
+  /// No description provided for @durationMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m'**
+  String durationMinutes(int count);
+
+  /// No description provided for @durationHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h'**
+  String durationHours(int count);
+
+  /// No description provided for @checkInScanTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the place code'**
+  String get checkInScanTitle;
+
+  /// No description provided for @checkInScanHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Point the camera at the code fixed at the place'**
+  String get checkInScanHint;
+
+  /// No description provided for @checkInTorch.
+  ///
+  /// In en, this message translates to:
+  /// **'Torch'**
+  String get checkInTorch;
+
+  /// No description provided for @checkInNoCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'The camera could not be opened — the permission may be refused'**
+  String get checkInNoCamera;
+
+  /// No description provided for @checkInUsePositionInstead.
+  ///
+  /// In en, this message translates to:
+  /// **'Record my arrival by position instead'**
+  String get checkInUsePositionInstead;
+
+  /// No description provided for @checkInTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check in'**
+  String get checkInTitle;
+
+  /// No description provided for @checkInAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Record my arrival'**
+  String get checkInAction;
+
+  /// No description provided for @checkInScan.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a code'**
+  String get checkInScan;
+
+  /// No description provided for @checkInHere.
+  ///
+  /// In en, this message translates to:
+  /// **'I am here'**
+  String get checkInHere;
+
+  /// No description provided for @checkInNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Note (optional)'**
+  String get checkInNoteHint;
+
+  /// No description provided for @checkInDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Your arrival was recorded'**
+  String get checkInDone;
+
+  /// No description provided for @checkInQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on the device — it will be recorded when the network returns'**
+  String get checkInQueued;
+
+  /// No description provided for @checkInWrongFile.
+  ///
+  /// In en, this message translates to:
+  /// **'That code belongs to a different file'**
+  String get checkInWrongFile;
+
+  /// No description provided for @checkInNotMember.
+  ///
+  /// In en, this message translates to:
+  /// **'You are not a member of this file'**
+  String get checkInNotMember;
+
+  /// No description provided for @checkInPlaceUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'The file itself'**
+  String get checkInPlaceUnknown;
+
+  /// No description provided for @checkInMethodQr.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get checkInMethodQr;
+
+  /// No description provided for @checkInMethodGps.
+  ///
+  /// In en, this message translates to:
+  /// **'Position'**
+  String get checkInMethodGps;
+
+  /// No description provided for @checkInMethodManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual'**
+  String get checkInMethodManual;
+
+  /// No description provided for @checkInDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'{metres} m from the recorded position'**
+  String checkInDistance(String metres);
+
+  /// No description provided for @checkInDistanceUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'No position recorded for this place'**
+  String get checkInDistanceUnknown;
+
+  /// No description provided for @checkInFarFromPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Far from the recorded position — worth a look'**
+  String get checkInFarFromPlace;
+
+  /// No description provided for @checkInQrTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Place code'**
+  String get checkInQrTitle;
+
+  /// No description provided for @checkInQrHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Print this and fix it at the place — whoever arrives scans it to record their arrival'**
+  String get checkInQrHint;
+
+  /// No description provided for @checkInQrPrint.
+  ///
+  /// In en, this message translates to:
+  /// **'Print or share'**
+  String get checkInQrPrint;
+
+  /// No description provided for @presenceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is in place now'**
+  String get presenceTitle;
+
+  /// No description provided for @presenceEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody has checked in yet'**
+  String get presenceEmpty;
+
+  /// No description provided for @presenceEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The last twelve hours of arrivals appear here'**
+  String get presenceEmptyHint;
+
+  /// No description provided for @presenceSuspectCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 record worth a look} other{{count} records worth a look}}'**
+  String presenceSuspectCount(int count);
+
+  /// No description provided for @exportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export data'**
+  String get exportTitle;
+
+  /// No description provided for @exportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Take any list out as a file — with the columns you choose'**
+  String get exportSubtitle;
+
+  /// No description provided for @exportWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'What do you want to export?'**
+  String get exportWhat;
+
+  /// No description provided for @exportWhichColumns.
+  ///
+  /// In en, this message translates to:
+  /// **'Columns'**
+  String get exportWhichColumns;
+
+  /// No description provided for @exportColumnsDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get exportColumnsDefault;
+
+  /// No description provided for @exportColumnsAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get exportColumnsAll;
+
+  /// No description provided for @exportPickAtLeastOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose at least one column'**
+  String get exportPickAtLeastOne;
+
+  /// No description provided for @exportOptionAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty to include all'**
+  String get exportOptionAny;
+
+  /// No description provided for @exportFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'File format'**
+  String get exportFormat;
+
+  /// No description provided for @exportFormatCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'CSV (Excel)'**
+  String get exportFormatCsv;
+
+  /// No description provided for @exportFormatPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF (for printing)'**
+  String get exportFormatPdf;
+
+  /// No description provided for @exportRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Export and share'**
+  String get exportRun;
+
+  /// No description provided for @exportRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing…'**
+  String get exportRunning;
+
+  /// No description provided for @exportDoneRows.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 row exported} other{{count} rows exported}}'**
+  String exportDoneRows(int count);
+
+  /// No description provided for @exportNothingMatched.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing matched — check the options above'**
+  String get exportNothingMatched;
+
+  /// No description provided for @exportNothingAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'There is nothing you can export'**
+  String get exportNothingAvailable;
+
+  /// No description provided for @exportNothingAvailableHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Export covers what you are allowed to see'**
+  String get exportNothingAvailableHint;
+
+  /// No description provided for @exportGeneratedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'From the Hajj Mission management system'**
+  String get exportGeneratedBy;
+
+  /// No description provided for @exportPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Page'**
+  String get exportPage;
+
+  /// No description provided for @accountStatusIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Incomplete'**
+  String get accountStatusIncomplete;
+
+  /// No description provided for @accountStatusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get accountStatusPending;
+
+  /// No description provided for @accountStatusApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get accountStatusApproved;
+
+  /// No description provided for @accountStatusRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Rejected'**
+  String get accountStatusRejected;
+
+  /// No description provided for @outboxSavedOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on the device — it will be sent when the network returns'**
+  String get outboxSavedOffline;
+
+  /// No description provided for @outboxTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to be sent'**
+  String get outboxTitle;
+
+  /// No description provided for @outboxEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is waiting to be sent'**
+  String get outboxEmpty;
+
+  /// No description provided for @outboxEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything you wrote has reached the server'**
+  String get outboxEmptyHint;
+
+  /// No description provided for @outboxPending.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item waiting to be sent} other{{count} items waiting to be sent}}'**
+  String outboxPending(int count);
+
+  /// No description provided for @outboxStateWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for a network'**
+  String get outboxStateWaiting;
+
+  /// No description provided for @outboxStateSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending…'**
+  String get outboxStateSending;
+
+  /// No description provided for @outboxStateBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Not accepted'**
+  String get outboxStateBlocked;
+
+  /// No description provided for @outboxAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 attempt} other{{count} attempts}}'**
+  String outboxAttempts(int count);
+
+  /// No description provided for @outboxRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get outboxRetry;
+
+  /// No description provided for @outboxDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get outboxDiscard;
+
+  /// No description provided for @outboxDiscardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this item?'**
+  String get outboxDiscardTitle;
+
+  /// No description provided for @outboxDiscardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It will never reach the server, and cannot be brought back.'**
+  String get outboxDiscardBody;
+
+  /// No description provided for @outboxKindTaskState.
+  ///
+  /// In en, this message translates to:
+  /// **'Duty state'**
+  String get outboxKindTaskState;
+
+  /// No description provided for @outboxKindReport.
+  ///
+  /// In en, this message translates to:
+  /// **'File report'**
+  String get outboxKindReport;
+
+  /// No description provided for @outboxBlockedNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 item was not accepted} other{{count} items were not accepted}}'**
+  String outboxBlockedNotice(int count);
 }
 
 class _AppLocalizationsDelegate

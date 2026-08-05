@@ -143,4 +143,18 @@ class PermissionCodes {
   static const evaluationsAssign = 'evaluations.assign';
 
   static const evaluationsDelete = 'evaluations.delete';
+
+  // -------------------------------------------------------------- incidents
+  /// RAISING one is deliberately absent, for the same reason filing a complaint
+  /// is: a system in which only certain people may report that a bus has broken
+  /// down is a system that does not find out about the bus.
+
+  /// Being on the receiving end of every urgent report in the mission. A duty
+  /// rather than a privilege — whoever holds it is expected to answer them.
+  static const incidentsReceive = 'incidents.receive';
+
+  /// Taking one on and closing it. Separate from receiving because reading the
+  /// register and being answerable for it are two different trusts, and the
+  /// database makes this one require the other (see migration 0088).
+  static const incidentsHandle = 'incidents.handle';
 }

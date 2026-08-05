@@ -18,6 +18,7 @@ import '../../../core/widgets/states.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../auth/application/session_cubit.dart';
 import '../../notifications/presentation/widgets/notification_bell.dart';
+import '../../outbox/presentation/widgets/outbox_badge.dart';
 import '../../prayer_times/application/prayer_times_cubit.dart';
 import '../../prayer_times/data/prayer_times_repository.dart';
 import '../../prayer_times/presentation/widgets/prayer_times_card.dart';
@@ -286,6 +287,17 @@ class _HomeScreenState extends State<HomeScreen> {
               subtitle: l.navComplaintsSubtitle,
               onTap: () => context.push(Routes.complaintsManage),
             ),
+          // The operations room's own screen. Oversight, but of a different
+          // kind from the rest of this group: everything else here is read
+          // after the fact, and this one is read while it is still happening.
+          if (session.can(PermissionCodes.incidentsReceive))
+            (
+              group: _AdminGroup.oversight,
+              icon: AppIcons.warning,
+              title: l.incidentsTitle,
+              subtitle: l.incidentsEmptyHint,
+              onTap: () => context.push(Routes.incidents),
+            ),
           // The two halves of التقييم, and they are deliberately two tiles
           // rather than one section with a switch. The paper and the marks are
           // different trusts: whoever writes the questions need not read
@@ -409,7 +421,21 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () => context.push(Routes.settings),
             icon: const Icon(AppIcons.settings),
           ),
-          actions: const [NotificationBell()],
+          // The outbox first, and only when it has something in it. What the
+          // app is still holding of yours outranks what it has been told.
+          actions: const [OutboxBadge(), NotificationBell()],
+        ),
+        // Present on the home screen of every account, always, and drawn in the
+        // error colour. An emergency button that has to be looked for is not an
+        // emergency button — the whole feature is worth nothing unless a man
+        // who has just watched a bus break down can reach it without thinking.
+        floatingActionButton: FloatingActionButton.extended(
+          heroTag: 'raise-incident',
+          backgroundColor: Theme.of(context).colorScheme.error,
+          foregroundColor: Theme.of(context).colorScheme.onError,
+          onPressed: () => context.push(Routes.raiseIncident),
+          icon: const Icon(AppIcons.warning),
+          label: Text(l.incidentTitle),
         ),
         body: Builder(
           // Inside the Scaffold body, so `scrollPadding` sees the inset the

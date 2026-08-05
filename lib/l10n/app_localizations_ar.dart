@@ -653,6 +653,11 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String attachmentTooLarge(String limit) {
+    return 'الملف أكبر من الحدّ المسموح ($limit). اختر ملفاً أصغر.';
+  }
+
+  @override
   String get attachmentImage => 'صورة';
 
   @override
@@ -3236,4 +3241,370 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get evaluationFormShowEvaluations => 'عرض التقييمات المفتوحة عليه';
+
+  @override
+  String get commonOk => 'حسناً';
+
+  @override
+  String get incidentTitle => 'بلاغ عاجل';
+
+  @override
+  String get incidentHint =>
+      'لما لا يحتمل الانتظار — عطل، حادث، انقطاع. يصل فوراً إلى غرفة العمليات.';
+
+  @override
+  String get incidentBodyHint => 'ما الذي حدث؟';
+
+  @override
+  String get incidentAttach => 'إرفاق صورة';
+
+  @override
+  String get incidentSend => 'أرسل البلاغ';
+
+  @override
+  String get incidentSending => 'جارٍ الإرسال…';
+
+  @override
+  String get incidentSent => 'وصل البلاغ إلى غرفة العمليات';
+
+  @override
+  String get incidentWhatIsAttached =>
+      'يُرفق تلقائياً: اسمك، وموقعك، ووقت البلاغ';
+
+  @override
+  String get incidentNotDeliveredTitle => 'لم يصل البلاغ';
+
+  @override
+  String get incidentNotDeliveredBody =>
+      'لا توجد شبكة. حُفظ البلاغ على جهازك وسيُرسل تلقائياً عند عودتها — لكن **لم يُبلَّغ أحد بعد**. إن كان الأمر لا يحتمل، اتصل بغرفة العمليات هاتفياً الآن.';
+
+  @override
+  String get incidentsTitle => 'البلاغات العاجلة';
+
+  @override
+  String get incidentsEmpty => 'لا بلاغات مفتوحة';
+
+  @override
+  String get incidentsEmptyHint => 'يظهر هنا كل بلاغ عاجل فور وصوله';
+
+  @override
+  String get incidentsShowClosed => 'إظهار المغلقة';
+
+  @override
+  String get incidentStateOpen => 'مفتوح';
+
+  @override
+  String get incidentStateInProgress => 'قيد المعالجة';
+
+  @override
+  String get incidentStateClosed => 'مغلق';
+
+  @override
+  String get incidentTake => 'أتولّاه';
+
+  @override
+  String get incidentClose => 'إغلاق البلاغ';
+
+  @override
+  String get incidentReopen => 'إعادة فتحه';
+
+  @override
+  String get incidentResolutionHint => 'ماذا جرى؟ (اختياري)';
+
+  @override
+  String get incidentCall => 'اتصال';
+
+  @override
+  String get incidentOpenMap => 'الموقع';
+
+  @override
+  String incidentWaited(String duration) {
+    return 'منتظر منذ $duration';
+  }
+
+  @override
+  String incidentHandledBy(String name) {
+    return 'تولّاه $name';
+  }
+
+  @override
+  String incidentOpenCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count بلاغاً مفتوحاً',
+      few: '$count بلاغات مفتوحة',
+      two: 'بلاغان مفتوحان',
+      one: 'بلاغ واحد مفتوح',
+      zero: 'لا بلاغات مفتوحة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String durationMinutes(int count) {
+    return '$count د';
+  }
+
+  @override
+  String durationHours(int count) {
+    return '$count س';
+  }
+
+  @override
+  String get checkInScanTitle => 'امسح رمز الموقع';
+
+  @override
+  String get checkInScanHint => 'وجّه الكاميرا إلى الرمز الملصق على المكان';
+
+  @override
+  String get checkInTorch => 'الإضاءة';
+
+  @override
+  String get checkInNoCamera => 'تعذّر فتح الكاميرا — قد تكون الصلاحية مرفوضة';
+
+  @override
+  String get checkInUsePositionInstead => 'سجّل وصولي بالموقع بدلاً من ذلك';
+
+  @override
+  String get checkInTitle => 'تسجيل الوصول';
+
+  @override
+  String get checkInAction => 'سجّل وصولي';
+
+  @override
+  String get checkInScan => 'مسح رمز';
+
+  @override
+  String get checkInHere => 'أنا هنا';
+
+  @override
+  String get checkInNoteHint => 'ملاحظة (اختياري)';
+
+  @override
+  String get checkInDone => 'سُجّل وصولك';
+
+  @override
+  String get checkInQueued => 'حُفظ على الجهاز — سيُسجَّل عند عودة الشبكة';
+
+  @override
+  String get checkInWrongFile => 'هذا الرمز يخصّ ملفاً آخر';
+
+  @override
+  String get checkInNotMember => 'لست عضواً في هذا الملف';
+
+  @override
+  String get checkInPlaceUnknown => 'الملف نفسه';
+
+  @override
+  String get checkInMethodQr => 'رمز';
+
+  @override
+  String get checkInMethodGps => 'موقع';
+
+  @override
+  String get checkInMethodManual => 'يدوي';
+
+  @override
+  String checkInDistance(String metres) {
+    return 'على بعد $metres م من الموقع المسجّل';
+  }
+
+  @override
+  String get checkInDistanceUnknown => 'لا موقع مسجّل للمكان';
+
+  @override
+  String get checkInFarFromPlace => 'بعيد عن الموقع المسجّل — يستحق المراجعة';
+
+  @override
+  String get checkInQrTitle => 'رمز المكان';
+
+  @override
+  String get checkInQrHint =>
+      'اطبع هذا الرمز وألصقه في المكان — يمسحه من يصل فيسجّل وصوله';
+
+  @override
+  String get checkInQrPrint => 'طباعة أو مشاركة';
+
+  @override
+  String get presenceTitle => 'من في موقعه الآن';
+
+  @override
+  String get presenceEmpty => 'لم يسجّل أحد وصوله بعد';
+
+  @override
+  String get presenceEmptyHint => 'تظهر هنا آخر تسجيلات الوصول خلال ١٢ ساعة';
+
+  @override
+  String presenceSuspectCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تسجيلاً يستحق المراجعة',
+      few: '$count تسجيلات تستحق المراجعة',
+      two: 'تسجيلان يستحقان المراجعة',
+      one: 'تسجيل واحد يستحق المراجعة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get exportTitle => 'تصدير البيانات';
+
+  @override
+  String get exportSubtitle => 'أخرج أي قائمة كملف — باختيار الأعمدة';
+
+  @override
+  String get exportWhat => 'ما الذي تريد تصديره؟';
+
+  @override
+  String get exportWhichColumns => 'الأعمدة';
+
+  @override
+  String get exportColumnsDefault => 'الافتراضية';
+
+  @override
+  String get exportColumnsAll => 'الكل';
+
+  @override
+  String get exportPickAtLeastOne => 'اختر عموداً واحداً على الأقل';
+
+  @override
+  String get exportOptionAny => 'اتركه فارغاً ليشمل الجميع';
+
+  @override
+  String get exportFormat => 'صيغة الملف';
+
+  @override
+  String get exportFormatCsv => 'CSV (إكسل)';
+
+  @override
+  String get exportFormatPdf => 'PDF (للطباعة)';
+
+  @override
+  String get exportRun => 'تصدير ومشاركة';
+
+  @override
+  String get exportRunning => 'جارٍ التحضير…';
+
+  @override
+  String exportDoneRows(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'صُدِّر $count سطراً',
+      few: 'صُدِّرت $count أسطر',
+      two: 'صُدِّر سطران',
+      one: 'صُدِّر سطر واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get exportNothingMatched =>
+      'لا توجد بيانات مطابقة — راجع الخيارات أعلاه';
+
+  @override
+  String get exportNothingAvailable => 'لا يوجد ما يمكن تصديره';
+
+  @override
+  String get exportNothingAvailableHint =>
+      'التصدير متاح لما تملك صلاحية الاطلاع عليه';
+
+  @override
+  String get exportGeneratedBy => 'مستخرج من نظام إدارة بعثة الحج';
+
+  @override
+  String get exportPage => 'صفحة';
+
+  @override
+  String get accountStatusIncomplete => 'غير مكتمل';
+
+  @override
+  String get accountStatusPending => 'قيد الانتظار';
+
+  @override
+  String get accountStatusApproved => 'معتمد';
+
+  @override
+  String get accountStatusRejected => 'مرفوض';
+
+  @override
+  String get outboxSavedOffline => 'حُفظ على الجهاز — سيُرسل عند عودة الشبكة';
+
+  @override
+  String get outboxTitle => 'بانتظار الإرسال';
+
+  @override
+  String get outboxEmpty => 'لا شيء بانتظار الإرسال';
+
+  @override
+  String get outboxEmptyHint => 'كل ما كتبته وصل إلى الخادم';
+
+  @override
+  String outboxPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count عنصر بانتظار الإرسال',
+      many: '$count عنصراً بانتظار الإرسال',
+      few: '$count عناصر بانتظار الإرسال',
+      two: 'عنصران بانتظار الإرسال',
+      one: 'عنصر واحد بانتظار الإرسال',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get outboxStateWaiting => 'بانتظار الشبكة';
+
+  @override
+  String get outboxStateSending => 'جارٍ الإرسال…';
+
+  @override
+  String get outboxStateBlocked => 'لم يُقبل';
+
+  @override
+  String outboxAttempts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count محاولة',
+      few: '$count محاولات',
+      two: 'محاولتان',
+      one: 'محاولة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get outboxRetry => 'إعادة المحاولة';
+
+  @override
+  String get outboxDiscard => 'حذف';
+
+  @override
+  String get outboxDiscardTitle => 'حذف هذا العنصر؟';
+
+  @override
+  String get outboxDiscardBody => 'لن يصل إلى الخادم، ولا يمكن استرجاعه.';
+
+  @override
+  String get outboxKindTaskState => 'حالة مهمة';
+
+  @override
+  String get outboxKindReport => 'تقرير ملف';
+
+  @override
+  String outboxBlockedNotice(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count عنصراً لم يُقبل',
+      few: '$count عناصر لم تُقبل',
+      two: 'عنصران لم يُقبلا',
+      one: 'عنصر واحد لم يُقبل',
+    );
+    return '$_temp0';
+  }
 }

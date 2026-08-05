@@ -653,6 +653,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String attachmentTooLarge(String limit) {
+    return 'That file is larger than the $limit limit. Choose a smaller one.';
+  }
+
+  @override
   String get attachmentImage => 'Image';
 
   @override
@@ -3214,4 +3219,367 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get evaluationFormShowEvaluations => 'Show the evaluations on it';
+
+  @override
+  String get commonOk => 'OK';
+
+  @override
+  String get incidentTitle => 'Urgent report';
+
+  @override
+  String get incidentHint =>
+      'For what cannot wait — a breakdown, an accident, a cut-off. It reaches the operations room immediately.';
+
+  @override
+  String get incidentBodyHint => 'What has happened?';
+
+  @override
+  String get incidentAttach => 'Attach a photo';
+
+  @override
+  String get incidentSend => 'Send the report';
+
+  @override
+  String get incidentSending => 'Sending…';
+
+  @override
+  String get incidentSent => 'The operations room has been alerted';
+
+  @override
+  String get incidentWhatIsAttached =>
+      'Attached automatically: your name, your position, the time';
+
+  @override
+  String get incidentNotDeliveredTitle => 'It did not go through';
+
+  @override
+  String get incidentNotDeliveredBody =>
+      'There is no network. The report is saved on your device and will be sent when it returns — but **nobody has been told yet**. If this cannot wait, telephone the operations room now.';
+
+  @override
+  String get incidentsTitle => 'Urgent reports';
+
+  @override
+  String get incidentsEmpty => 'No open reports';
+
+  @override
+  String get incidentsEmptyHint =>
+      'Every urgent report appears here the moment it arrives';
+
+  @override
+  String get incidentsShowClosed => 'Show closed';
+
+  @override
+  String get incidentStateOpen => 'Open';
+
+  @override
+  String get incidentStateInProgress => 'In progress';
+
+  @override
+  String get incidentStateClosed => 'Closed';
+
+  @override
+  String get incidentTake => 'I\'ll take it';
+
+  @override
+  String get incidentClose => 'Close the report';
+
+  @override
+  String get incidentReopen => 'Reopen';
+
+  @override
+  String get incidentResolutionHint => 'What happened? (optional)';
+
+  @override
+  String get incidentCall => 'Call';
+
+  @override
+  String get incidentOpenMap => 'Position';
+
+  @override
+  String incidentWaited(String duration) {
+    return 'Waiting $duration';
+  }
+
+  @override
+  String incidentHandledBy(String name) {
+    return 'Taken by $name';
+  }
+
+  @override
+  String incidentOpenCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count open reports',
+      one: '1 open report',
+      zero: 'No open reports',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String durationMinutes(int count) {
+    return '${count}m';
+  }
+
+  @override
+  String durationHours(int count) {
+    return '${count}h';
+  }
+
+  @override
+  String get checkInScanTitle => 'Scan the place code';
+
+  @override
+  String get checkInScanHint =>
+      'Point the camera at the code fixed at the place';
+
+  @override
+  String get checkInTorch => 'Torch';
+
+  @override
+  String get checkInNoCamera =>
+      'The camera could not be opened — the permission may be refused';
+
+  @override
+  String get checkInUsePositionInstead =>
+      'Record my arrival by position instead';
+
+  @override
+  String get checkInTitle => 'Check in';
+
+  @override
+  String get checkInAction => 'Record my arrival';
+
+  @override
+  String get checkInScan => 'Scan a code';
+
+  @override
+  String get checkInHere => 'I am here';
+
+  @override
+  String get checkInNoteHint => 'Note (optional)';
+
+  @override
+  String get checkInDone => 'Your arrival was recorded';
+
+  @override
+  String get checkInQueued =>
+      'Saved on the device — it will be recorded when the network returns';
+
+  @override
+  String get checkInWrongFile => 'That code belongs to a different file';
+
+  @override
+  String get checkInNotMember => 'You are not a member of this file';
+
+  @override
+  String get checkInPlaceUnknown => 'The file itself';
+
+  @override
+  String get checkInMethodQr => 'Code';
+
+  @override
+  String get checkInMethodGps => 'Position';
+
+  @override
+  String get checkInMethodManual => 'Manual';
+
+  @override
+  String checkInDistance(String metres) {
+    return '$metres m from the recorded position';
+  }
+
+  @override
+  String get checkInDistanceUnknown => 'No position recorded for this place';
+
+  @override
+  String get checkInFarFromPlace =>
+      'Far from the recorded position — worth a look';
+
+  @override
+  String get checkInQrTitle => 'Place code';
+
+  @override
+  String get checkInQrHint =>
+      'Print this and fix it at the place — whoever arrives scans it to record their arrival';
+
+  @override
+  String get checkInQrPrint => 'Print or share';
+
+  @override
+  String get presenceTitle => 'Who is in place now';
+
+  @override
+  String get presenceEmpty => 'Nobody has checked in yet';
+
+  @override
+  String get presenceEmptyHint =>
+      'The last twelve hours of arrivals appear here';
+
+  @override
+  String presenceSuspectCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count records worth a look',
+      one: '1 record worth a look',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get exportTitle => 'Export data';
+
+  @override
+  String get exportSubtitle =>
+      'Take any list out as a file — with the columns you choose';
+
+  @override
+  String get exportWhat => 'What do you want to export?';
+
+  @override
+  String get exportWhichColumns => 'Columns';
+
+  @override
+  String get exportColumnsDefault => 'Default';
+
+  @override
+  String get exportColumnsAll => 'All';
+
+  @override
+  String get exportPickAtLeastOne => 'Choose at least one column';
+
+  @override
+  String get exportOptionAny => 'Leave empty to include all';
+
+  @override
+  String get exportFormat => 'File format';
+
+  @override
+  String get exportFormatCsv => 'CSV (Excel)';
+
+  @override
+  String get exportFormatPdf => 'PDF (for printing)';
+
+  @override
+  String get exportRun => 'Export and share';
+
+  @override
+  String get exportRunning => 'Preparing…';
+
+  @override
+  String exportDoneRows(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count rows exported',
+      one: '1 row exported',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get exportNothingMatched =>
+      'Nothing matched — check the options above';
+
+  @override
+  String get exportNothingAvailable => 'There is nothing you can export';
+
+  @override
+  String get exportNothingAvailableHint =>
+      'Export covers what you are allowed to see';
+
+  @override
+  String get exportGeneratedBy => 'From the Hajj Mission management system';
+
+  @override
+  String get exportPage => 'Page';
+
+  @override
+  String get accountStatusIncomplete => 'Incomplete';
+
+  @override
+  String get accountStatusPending => 'Pending';
+
+  @override
+  String get accountStatusApproved => 'Approved';
+
+  @override
+  String get accountStatusRejected => 'Rejected';
+
+  @override
+  String get outboxSavedOffline =>
+      'Saved on the device — it will be sent when the network returns';
+
+  @override
+  String get outboxTitle => 'Waiting to be sent';
+
+  @override
+  String get outboxEmpty => 'Nothing is waiting to be sent';
+
+  @override
+  String get outboxEmptyHint => 'Everything you wrote has reached the server';
+
+  @override
+  String outboxPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items waiting to be sent',
+      one: '1 item waiting to be sent',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get outboxStateWaiting => 'Waiting for a network';
+
+  @override
+  String get outboxStateSending => 'Sending…';
+
+  @override
+  String get outboxStateBlocked => 'Not accepted';
+
+  @override
+  String outboxAttempts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attempts',
+      one: '1 attempt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get outboxRetry => 'Try again';
+
+  @override
+  String get outboxDiscard => 'Delete';
+
+  @override
+  String get outboxDiscardTitle => 'Delete this item?';
+
+  @override
+  String get outboxDiscardBody =>
+      'It will never reach the server, and cannot be brought back.';
+
+  @override
+  String get outboxKindTaskState => 'Duty state';
+
+  @override
+  String get outboxKindReport => 'File report';
+
+  @override
+  String outboxBlockedNotice(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items were not accepted',
+      one: '1 item was not accepted',
+    );
+    return '$_temp0';
+  }
 }

@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/bloc/safe_cubit.dart';
 import '../../../core/constants/permission_codes.dart';
+import '../../../core/logging/error_reporting.dart';
 import '../../notifications/data/push_service.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../profile/domain/profile.dart';
@@ -123,6 +124,7 @@ class SessionCubit extends SafeCubit<SessionState> {
     final session = event.session;
     if (session == null) {
       _loadedUserId = null;
+      CrashReporting.setUser(null);
       emit(const SessionState(status: SessionStatus.unauthenticated));
       return;
     }
@@ -185,6 +187,12 @@ class SessionCubit extends SafeCubit<SessionState> {
     // Claimed before the first await, so that the auth events this same session
     // is about to raise can see a load is already under way for it.
     _loadedUserId = uid;
+
+    // Named on every crash report from here on. The id alone, and set at the
+    // point the session is known rather than at sign-in, so that a restored
+    // session — the ordinary case, since nobody signs in again each morning of
+    // the season — carries it too.
+    CrashReporting.setUser(uid);
 
     try {
       await _reload();

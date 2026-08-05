@@ -52,6 +52,17 @@ class AppIcons {
     matchTextDirection: true,
   );
 
+  /// Work kept on the device because there was no network to send it over, and
+  /// the second chance given to a piece of it that was refused.
+  static const outbox = Iconsax.cloud_cross;
+  static const retry = Iconsax.refresh;
+
+  /// Reporting that you have arrived somewhere, and the code fixed at the place
+  /// that proves it. A pin rather than a tick: what is being recorded is a
+  /// PLACE, and a tick would read as "done".
+  static const checkIn = Iconsax.location_tick;
+  static const qrCode = Iconsax.scan_barcode;
+
   // Auth / account
   static const email = Iconsax.sms;
   static const password = Iconsax.lock;

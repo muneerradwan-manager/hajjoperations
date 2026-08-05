@@ -73,6 +73,20 @@ class StoredAttachment {
     return '${size.toStringAsFixed(unit == 0 ? 0 : 1)} ${units[unit]}';
   }
 
+  /// The inverse of [fromMap], in the same column names.
+  ///
+  /// Wanted by the outbox, which has to write a taking-back of an attachment
+  /// into a JSON file and read it again a day later, on the other side of the
+  /// app having been closed.
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'kind': kind.name,
+    'path': path,
+    'name': name,
+    'mime_type': mimeType,
+    'size_bytes': sizeBytes,
+  };
+
   factory StoredAttachment.fromMap(Map<String, dynamic> map) =>
       StoredAttachment(
         id: map['id'] as String,

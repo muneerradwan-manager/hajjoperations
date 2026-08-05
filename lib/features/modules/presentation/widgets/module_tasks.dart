@@ -562,7 +562,7 @@ class _TaskStateSheetState extends State<_TaskStateSheet> {
   Future<void> _save() async {
     setState(() => _busy = true);
     final note = _note.text.trim();
-    final error = await context.read<ModuleDetailCubit>().setTaskState(
+    final outcome = await context.read<ModuleDetailCubit>().setTaskState(
       widget.task,
       _state,
       note: note.isEmpty ? null : note,
@@ -570,12 +570,20 @@ class _TaskStateSheetState extends State<_TaskStateSheet> {
       removed: _removed,
     );
     if (!mounted) return;
-    if (error != null) {
+    if (!outcome.ok) {
       setState(() => _busy = false);
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(error)));
+        ..showSnackBar(SnackBar(content: Text(outcome.error!)));
       return;
+    }
+    // Said plainly rather than passed over. The sheet closes either way and the
+    // work is his either way, but a man who knows his phone had no signal is
+    // owed the difference between "it is with them" and "it is with the app".
+    if (outcome.queued) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(context.l10n.outboxSavedOffline)));
     }
     Navigator.of(context).pop(true);
   }
