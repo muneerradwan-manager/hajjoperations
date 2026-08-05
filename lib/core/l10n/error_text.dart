@@ -37,6 +37,12 @@ String friendlyErrorL(AppLocalizations l, String? raw) {
   // sending, so these are the belt behind the braces; `complaint_locked` is the
   // one that genuinely reaches a person, when somebody closed the thread while
   // they were typing into it.
+  // The check-in guard (0094). The sheet blocks this before sending — the
+  // button is dead until a place is named — so this is the belt behind the
+  // braces: an outbox entry queued by an older build, or a file whose places
+  // were deleted between the pick and the send.
+  if (s.contains('check_in_needs_a_place')) return l.checkInNeedsAPlace;
+  if (s.contains('check_in_node_mismatch')) return l.checkInWrongFile;
   if (s.contains('complaint_locked')) return l.complaintLocked;
   if (s.contains('complaint_body_required')) return l.complaintBodyRequired;
   if (s.contains('complaint_target_missing') ||

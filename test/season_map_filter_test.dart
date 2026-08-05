@@ -113,5 +113,5 @@ void main() {
 /// A cubit standing on a fixed state, so the filter logic can be exercised
 /// without a repository or a network behind it.
 class _StateOnly extends SeasonMapCubit {
-  _StateOnly(SeasonMapState initial) : super.forTest(initial);
+  _StateOnly(super.initial) : super.forTest();
 }

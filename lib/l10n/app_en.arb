@@ -1227,6 +1227,10 @@
   "@checkInDistance": { "placeholders": { "metres": { "type": "String" } } },
   "checkInDistanceUnknown": "No position recorded for this place",
   "checkInFarFromPlace": "Far from the recorded position — worth a look",
+  "checkInWhichPlace": "Where are you?",
+  "checkInPickAPlaceFirst": "Choose the place above, or scan the code fixed to it",
+  "checkInNeedsAPlace": "Not recorded: choose the place, scan the code, or turn location on",
+
   "checkInNoPlaces": "No places in this file can carry a code",
   "checkInNoPlacesHint": "A code is fixed to a real place — a tower or a camp. This file has none drawn yet.",
   "checkInQrTitle": "Place code",

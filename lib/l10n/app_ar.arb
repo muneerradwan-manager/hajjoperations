@@ -1216,6 +1216,10 @@
   "@checkInDistance": { "placeholders": { "metres": { "type": "String" } } },
   "checkInDistanceUnknown": "لا موقع مسجّل للمكان",
   "checkInFarFromPlace": "بعيد عن الموقع المسجّل — يستحق المراجعة",
+  "checkInWhichPlace": "أين أنت؟",
+  "checkInPickAPlaceFirst": "حدّد المكان أعلاه، أو امسح الرمز الملصق عليه",
+  "checkInNeedsAPlace": "لم يُسجَّل: حدّد المكان، أو امسح الرمز، أو فعّل خدمة الموقع",
+
   "checkInNoPlaces": "لا أماكن يمكن ترميزها في هذا الملف",
   "checkInNoPlacesHint": "الرمز يُلصق على مكان قائم — برج أو مخيم. هذا الملف لم تُرسم أبراجه بعد.",
   "checkInQrTitle": "رمز المكان",

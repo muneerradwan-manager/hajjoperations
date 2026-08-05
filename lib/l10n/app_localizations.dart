@@ -6068,6 +6068,24 @@ abstract class AppLocalizations {
   /// **'Far from the recorded position — worth a look'**
   String get checkInFarFromPlace;
 
+  /// No description provided for @checkInWhichPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Where are you?'**
+  String get checkInWhichPlace;
+
+  /// No description provided for @checkInPickAPlaceFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the place above, or scan the code fixed to it'**
+  String get checkInPickAPlaceFirst;
+
+  /// No description provided for @checkInNeedsAPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Not recorded: choose the place, scan the code, or turn location on'**
+  String get checkInNeedsAPlace;
+
   /// No description provided for @checkInNoPlaces.
   ///
   /// In en, this message translates to:

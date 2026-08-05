@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/l10n/error_text.dart';
+import '../../../core/logging/app_logger.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../application/check_in_cubit.dart';
+import '../data/check_in_repository.dart';
 import '../domain/check_in.dart';
 import 'scan_check_in_screen.dart';
 
@@ -42,11 +44,55 @@ class _CheckInSheetState extends State<_CheckInSheet> {
   final _note = TextEditingController();
   bool _busy = false;
 
+  /// What this file offers as an answer to "where are you", when the sheet was
+  /// opened without a place already known.
+  ///
+  /// Null while they are still being fetched, which is a different thing from
+  /// an empty list: the first means "wait", the second means "this file has
+  /// nothing to name", and the button below reads them differently.
+  List<({String id, String name})>? _places;
+
+  /// Which of them the person says he is at.
+  String? _picked;
+
   @override
-  void dispose() {
-    _note.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    if (widget.nodeId == null) _loadPlaces();
   }
+
+  Future<void> _loadPlaces() async {
+    try {
+      final places = await CheckInRepository().fetchCheckInTargets(
+        widget.moduleId,
+      );
+      if (mounted) setState(() => _places = places);
+    } catch (error, stack) {
+      // A list that would not load must not stop a man reporting that he
+      // arrived: the code and the position both still work without it. But it
+      // is reported rather than swallowed — an empty picker and a failed fetch
+      // look identical on the screen, and the first time this happened it cost
+      // a round of guessing to tell them apart.
+      AppLogger.error('check-in', 'places would not load', error, stack);
+      if (mounted) setState(() => _places = const []);
+    }
+  }
+
+  /// The place this check-in would name, if any.
+  String? get _nodeId => widget.nodeId ?? _picked;
+
+  /// Whether "I am here" can produce a record worth keeping.
+  ///
+  /// It cannot when the file has something to name and nothing has been chosen:
+  /// with no code scanned and no place named, all that would be sent is the
+  /// file itself, and the server refuses that now — rightly, since such a row is
+  /// invisible on the map and uncounted on the board (0094).
+  ///
+  /// A file with no nodes at all leaves the button live, because there the
+  /// position is the only thing that can carry the check-in and the phone
+  /// should be allowed to try.
+  bool get _canReportHere =>
+      _nodeId != null || (_places != null && _places!.isEmpty);
 
   Future<void> _scan() async {
     final code = await Navigator.of(context).push<CheckInCode>(
@@ -64,8 +110,7 @@ class _CheckInSheetState extends State<_CheckInSheet> {
     await _record(CheckInMethod.qr, nodeId: code.nodeId ?? widget.nodeId);
   }
 
-  Future<void> _here() =>
-      _record(CheckInMethod.manual, nodeId: widget.nodeId);
+  Future<void> _here() => _record(CheckInMethod.manual, nodeId: _nodeId);
 
   Future<void> _record(CheckInMethod method, {String? nodeId}) async {
     setState(() => _busy = true);
@@ -112,6 +157,26 @@ class _CheckInSheetState extends State<_CheckInSheet> {
         children: [
           Text(l.checkInTitle, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: AppSpacing.md),
+          // Offered only when the sheet was opened without a place already
+          // known — from the file page rather than from a tower. Scanning a
+          // code makes it unnecessary, which is why it sits above the buttons
+          // as a fallback rather than as a step.
+          if (widget.nodeId == null && (_places?.isNotEmpty ?? false)) ...[
+            DropdownButtonFormField<String>(
+              initialValue: _picked,
+              isExpanded: true,
+              decoration: InputDecoration(labelText: l.checkInWhichPlace),
+              items: [
+                for (final place in _places!)
+                  DropdownMenuItem(
+                    value: place.id,
+                    child: Text(place.name, overflow: TextOverflow.ellipsis),
+                  ),
+              ],
+              onChanged: _busy ? null : (v) => setState(() => _picked = v),
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
           TextField(
             controller: _note,
             enabled: !_busy,
@@ -126,10 +191,23 @@ class _CheckInSheetState extends State<_CheckInSheet> {
           ),
           const SizedBox(height: AppSpacing.sm),
           OutlinedButton.icon(
-            onPressed: _busy ? null : _here,
+            onPressed: (_busy || !_canReportHere) ? null : _here,
             icon: const Icon(AppIcons.checkIn),
             label: Text(l.checkInHere),
           ),
+          // Said under the disabled button rather than after pressing it. A
+          // control that does nothing and explains nothing is the one thing
+          // worse than a control that records nothing.
+          if (!_canReportHere && !_busy)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.xs),
+              child: Text(
+                _places == null ? l.commonLoading : l.checkInPickAPlaceFirst,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
         ],
       ),
     );

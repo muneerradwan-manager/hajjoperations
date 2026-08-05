@@ -3467,6 +3467,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get checkInFarFromPlace => 'بعيد عن الموقع المسجّل — يستحق المراجعة';
 
   @override
+  String get checkInWhichPlace => 'أين أنت؟';
+
+  @override
+  String get checkInPickAPlaceFirst =>
+      'حدّد المكان أعلاه، أو امسح الرمز الملصق عليه';
+
+  @override
+  String get checkInNeedsAPlace =>
+      'لم يُسجَّل: حدّد المكان، أو امسح الرمز، أو فعّل خدمة الموقع';
+
+  @override
   String get checkInNoPlaces => 'لا أماكن يمكن ترميزها في هذا الملف';
 
   @override

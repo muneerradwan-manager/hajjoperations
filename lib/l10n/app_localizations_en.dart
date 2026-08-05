@@ -3449,6 +3449,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Far from the recorded position — worth a look';
 
   @override
+  String get checkInWhichPlace => 'Where are you?';
+
+  @override
+  String get checkInPickAPlaceFirst =>
+      'Choose the place above, or scan the code fixed to it';
+
+  @override
+  String get checkInNeedsAPlace =>
+      'Not recorded: choose the place, scan the code, or turn location on';
+
+  @override
   String get checkInNoPlaces => 'No places in this file can carry a code';
 
   @override
