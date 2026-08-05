@@ -90,8 +90,13 @@ const _generalPalette = <Accent>[
 /// Four shelves, four families — see the note at the head of this file. Adding
 /// a tile means naming its shelf and nothing else.
 enum _AdminGroup {
-  /// The paperwork itself: the season's files, the reports drawn from them, and
-  /// the blank forms the office writes. Green, the mission's own work.
+  /// The paperwork itself: the season's files, the reports drawn from them, the
+  /// blank forms the office writes, and the complaints register. Green, the
+  /// mission's own work.
+  ///
+  /// The complaints belong here rather than on the shelf below because of what
+  /// is DONE with them. A register that is replied to, dismissed and locked is
+  /// a standing file being worked through, not a record being looked back at.
   files(Accent.greenDeep),
 
   /// Everybody with an account, and what each of them may do. Red, which is
@@ -101,9 +106,14 @@ enum _AdminGroup {
   /// The year, and the lists everything else is built from.
   season(Accent.gold),
 
-  /// Looking at all of it, and what it left behind: the numbers from above, the
-  /// acts in order, the complaints, the marks. The deepest red there is, for
-  /// the shelf that only ever looks back.
+  /// Looking at all of it: the numbers from above, the acts in order, and the
+  /// urgent reports. The deepest red there is.
+  ///
+  /// It used to be described as the shelf that only ever looks BACK, and two of
+  /// the things on it have since left for that reason — the complaints and the
+  /// evaluations register are both worked through rather than read after the
+  /// fact. What remains is the season seen whole, plus the one screen here that
+  /// is read while it is still happening.
   oversight(Accent.plum);
 
   const _AdminGroup(this.accent);
@@ -279,9 +289,16 @@ class _HomeScreenState extends State<HomeScreen> {
           // The whole register, which is oversight and belongs here. Filing one
           // and reading your own are not — those are everybody's, and stand
           // below under العام beside the rest of a person's own work.
+          // إدارة الشكاوى sits with the paperwork, not on the oversight shelf.
+          //
+          // It moved because of what the shelf is FOR: الإشراف والسجلات is what
+          // you read after the fact — the numbers from above, the acts in
+          // order. A complaint register is not read that way. It is worked
+          // THROUGH — replied to, dismissed, locked — which makes it one of the
+          // office's standing files, beside the reports and the blank forms.
           if (session.can(PermissionCodes.complaintsView))
             (
-              group: _AdminGroup.oversight,
+              group: _AdminGroup.files,
               icon: AppIcons.complaints,
               title: l.navComplaints,
               subtitle: l.navComplaintsSubtitle,
@@ -306,14 +323,17 @@ class _HomeScreenState extends State<HomeScreen> {
           // office's own stationery, filed with the rest of the paperwork.
           // Filling one is neither; that is an errand, and it stands below
           // under العام with the rest of a person's own work.
-          if (session.can(PermissionCodes.evaluationsView))
-            (
-              group: _AdminGroup.oversight,
-              icon: AppIcons.evaluations,
-              title: l.navEvaluationsManage,
-              subtitle: l.navEvaluationsManageSubtitle,
-              onTap: () => context.push(Routes.evaluationsManage),
-            ),
+          // سجل التقييمات is deliberately NOT a tile here any more.
+          //
+          // It is reached from inside إدارة التقييمات, where the forms are —
+          // and that is where somebody looking for it actually goes, because
+          // the register only makes sense next to the papers it was written
+          // from. Two doors to it from the home screen made إدارة a list of
+          // forms with no way out and the register an orphan beside it.
+          //
+          // The permission has not changed: `/evaluations/manage` is still
+          // guarded by `evaluations.view` in sectionGuards, so nothing was
+          // opened by taking the tile away.
           if (session.can(PermissionCodes.evaluationsTemplates))
             (
               group: _AdminGroup.files,

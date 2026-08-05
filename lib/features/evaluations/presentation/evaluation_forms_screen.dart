@@ -233,8 +233,35 @@ class _View extends StatelessWidget {
     final canEdit = session.can(PermissionCodes.evaluationsTemplates);
     final canAssign = session.can(PermissionCodes.evaluationsAssign);
 
+    // Reading the register is its own trust, and it is the one that decides
+    // whether the door below is drawn at all.
+    final canSeeRegister = session.can(PermissionCodes.evaluationsView);
+
     return Scaffold(
-      appBar: GlassAppBar(title: Text(l.evaluationFormsTitle)),
+      appBar: GlassAppBar(
+        title: Text(l.evaluationFormsTitle),
+        // The way to the whole register — every sheet issued on every form.
+        //
+        // It is here because this is where somebody goes looking for it: the
+        // register only means anything beside the papers it was written from,
+        // and it used to be reachable ONLY through a snack bar that appeared
+        // when you tried to delete a form that was in use. A brand-new form
+        // showed no count badge either, so a person who had just written one
+        // saw a "new evaluation" button and no way at all to see what came of
+        // it.
+        actions: [
+          if (canSeeRegister)
+            IconButton(
+              tooltip: l.navEvaluationsManage,
+              onPressed: () => Navigator.of(context).push(
+                fadeThroughRoute(
+                  (_) => const EvaluationsScreen(scope: EvaluationsScope.all),
+                ),
+              ),
+              icon: const Icon(AppIcons.evaluations),
+            ),
+        ],
+      ),
       floatingActionButton: canEdit
           ? FloatingActionButton.extended(
               onPressed: () => _edit(context),
@@ -314,6 +341,7 @@ class _View extends StatelessWidget {
                                 form: visible[i],
                                 canEdit: canEdit,
                                 canAssign: canAssign,
+                                canSeeRegister: canSeeRegister,
                                 onShowEvaluations: () =>
                                     _openEvaluations(context, visible[i]),
                                 onAssign: () => _assign(context, visible[i]),
@@ -340,6 +368,7 @@ class _FormCard extends StatelessWidget {
     required this.form,
     required this.canEdit,
     required this.canAssign,
+    required this.canSeeRegister,
     required this.onShowEvaluations,
     required this.onAssign,
     required this.onOpen,
@@ -355,6 +384,11 @@ class _FormCard extends StatelessWidget {
 
   /// Whoever may issue an evaluation on it.
   final bool canAssign;
+
+  /// Whoever may read the sheets that came of it. Separate from [canAssign]:
+  /// issuing an evaluation and reading everyone's answers are two trusts, and
+  /// the register is behind the second.
+  final bool canSeeRegister;
 
   final VoidCallback onShowEvaluations;
   final VoidCallback onAssign;
@@ -488,15 +522,29 @@ class _FormCard extends StatelessWidget {
           // even when the form is switched off — disabled with the reason said
           // out loud, rather than absent, because a missing button is a
           // question nobody can answer.
-          if (canAssign) ...[
+          if (canAssign || canSeeRegister) ...[
             const SizedBox(height: AppSpacing.md),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: FilledButton.tonalIcon(
-                onPressed: form.isActive ? onAssign : null,
-                icon: const Icon(AppIcons.add, size: 18),
-                label: Text(l.evaluationsNew),
-              ),
+            Wrap(
+              spacing: AppSpacing.sm,
+              children: [
+                if (canAssign)
+                  FilledButton.tonalIcon(
+                    onPressed: form.isActive ? onAssign : null,
+                    icon: const Icon(AppIcons.add, size: 18),
+                    label: Text(l.evaluationsNew),
+                  ),
+                // Beside "new", and drawn whether or not this form has any
+                // sheets yet. The count badge above already opens them, but it
+                // only exists once there ARE some — so the moment after
+                // writing a form, when a person most wants to look, was the one
+                // moment nothing was offered.
+                if (canSeeRegister)
+                  TextButton.icon(
+                    onPressed: onShowEvaluations,
+                    icon: const Icon(AppIcons.evaluations, size: 18),
+                    label: Text(l.evaluationFormShowEvaluations),
+                  ),
+              ],
             ),
             if (!form.isActive)
               Padding(
