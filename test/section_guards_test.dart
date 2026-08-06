@@ -159,6 +159,11 @@ void main() {
         // Who is present, across the season. FILING your own arrival is
         // `/check-in` and is deliberately not here, for the same reason.
         '/presence',
+        // Both were open until 0100. The export is the one that matters:
+        // `export.data` widens the row policies themselves, so that door now
+        // leads somewhere its holder could not otherwise go.
+        '/export',
+        '/map',
       });
     });
 
@@ -184,7 +189,6 @@ void main() {
       // code on the wall and the phone's own position (0098) — and a grant on
       // top of that would only stop the honest. Reading everyone's is
       // `/presence`, and that one IS guarded.
-      // /map is unguarded too, and narrowed by its RPC instead.
       for (final open in [
         '/modules',
         '/reports',
@@ -193,7 +197,6 @@ void main() {
         '/evaluations',
         '/incident',
         '/check-in',
-        '/map',
         '/',
       ]) {
         expect(

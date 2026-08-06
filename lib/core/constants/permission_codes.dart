@@ -61,6 +61,28 @@ class PermissionCodes {
 
   static const modulesReports = 'modules.reports';
 
+  // ----------------------------------------------------------------- export
+  /// Taking data out of the app — and, since 0100, taking out data the holder
+  /// cannot open on screen.
+  ///
+  /// **The second most powerful grant in the system after admin**, and it has
+  /// to be, because the instruction was that whoever may export may export any
+  /// type. That could not be done in Dart: offering the employees to somebody
+  /// without `employees.view` would produce an EMPTY FILE, silently, since
+  /// `profiles_select` returns him nothing — and an empty export is worse than
+  /// a refusal, because he believes he has the data. So 0100 widens the row
+  /// policies themselves.
+  ///
+  /// Two fences survive it: a holder still cannot read the complaints or the
+  /// evaluations filed about HIMSELF. See 0100.
+  static const exportData = 'export.data';
+
+  // -------------------------------------------------------------------- map
+  /// Opening the season map. The RPC behind it still narrows per reader — a
+  /// member would see the places of his own files — so this decides who may
+  /// open the PAGE, not what is on it.
+  static const mapView = 'map.view';
+
   // --------------------------------------------------------------- check-in
   //
   // Filing your OWN arrival needs no code at all, and that is deliberate: a

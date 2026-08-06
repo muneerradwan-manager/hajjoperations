@@ -24,11 +24,21 @@ LocalizedName _n(String ar, String en) => LocalizedName(ar: ar, en: en);
 /// the person receiving the file cannot tell which of those it was. A dataset
 /// says what it fetches, is asked for its rows directly, and can be read.
 ///
-/// Nothing here widens what anybody can see. Every fetch goes through the same
-/// repository the screen uses, so row security narrows an export exactly as it
-/// narrows a page; [ExportDataset.permission] only decides whether the dataset
-/// is OFFERED. A person who exports the employees gets the employees he could
-/// already have scrolled through, in a file instead of on a screen.
+/// Every fetch goes through the same repository the screen uses, so row
+/// security narrows an export exactly as it narrows a page. That used to mean
+/// this screen could not widen anything at all.
+///
+/// **It can now.** 0100 made `export.data` a senior read: the row policies
+/// themselves accept it, so a holder exports the employees whether or not he
+/// may open the employees screen. The widening had to happen there rather than
+/// here — offering a dataset the reader's policies refuse produces an EMPTY
+/// FILE and no error, and an empty export is worse than a refusal because he
+/// carries it away believing it is the data.
+///
+/// Two things it still does not open: the complaints and the evaluations filed
+/// about the holder HIMSELF. 0079 and 0084 fence a manager off his own case so
+/// that a read permission cannot become the way to find out who accused you,
+/// and 0100 widens the helper INSIDE that fence rather than around it.
 abstract final class ExportCatalog {
   static final List<ExportDataset> all = [
     _EmployeesDataset(),
@@ -42,15 +52,26 @@ abstract final class ExportCatalog {
     _EvaluationsDataset(),
   ];
 
-  /// What this reader may be offered. The catalogue is not a menu of everything
-  /// that exists — a section somebody cannot open is a section he cannot export.
+  /// What this reader may be offered.
+  ///
+  /// `export.data` offers everything, and that is the point of it (0100).
+  /// Whoever may take data out may take any of it — so the per-dataset
+  /// permissions below decide nothing for a holder, and the row policies were
+  /// widened to match. Without that widening this list would be a lie: the
+  /// employees would be offered and the file would come back empty, because
+  /// `profiles_select` would return him nothing and no error would be raised.
+  ///
+  /// The per-dataset check is kept for the admin case and for a future grant
+  /// that is narrower than this one. Nothing today reaches it except an admin,
+  /// who passes the first clause anyway.
   static List<ExportDataset> visibleTo({
     required bool isAdmin,
     required Set<String> permissions,
   }) => [
     for (final dataset in all)
-      if (dataset.permission == null ||
-          isAdmin ||
+      if (isAdmin ||
+          permissions.contains(PermissionCodes.exportData) ||
+          dataset.permission == null ||
           permissions.contains(dataset.permission))
         dataset,
   ];

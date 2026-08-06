@@ -534,7 +534,11 @@ class _PlacePin extends StatelessWidget {
     final colour = _conditionColour(scheme, place.condition);
 
     return Tooltip(
-      message: '${place.placeName} · ${place.moduleName}',
+      // The name alone. A pin is a hotel or a camp, and pointing at one asks
+      // which — the file it is organised under, its counts and its condition
+      // are what the sheet answers on a tap, and crowding them into a hover
+      // makes the one thing being asked for harder to read.
+      message: place.placeName,
       child: GestureDetector(
         onTap: onTap,
         child: Container(

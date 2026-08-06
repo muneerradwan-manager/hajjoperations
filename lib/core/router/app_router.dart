@@ -74,10 +74,11 @@ abstract class Routes {
   /// hold for seeing what you yourself wrote.
   static const outbox = '/outbox';
 
-  /// Also unguarded, and for a related reason: the screen offers only the
-  /// datasets the reader already has the permission to open, and every one of
-  /// them fetches through the same repositories the screens do. A guard here
-  /// would be a second, weaker copy of a rule enforced in two better places.
+  /// Taking data out. **Guarded since 0100**, and the old argument for leaving
+  /// it open is the reason it had to change: it offered only what the reader
+  /// could already open, so it could not widen anything. `export.data` now
+  /// widens the row policies themselves, which makes this the door to a senior
+  /// read rather than a second view of what is already visible.
   static const export = '/export';
 
   /// Raising an urgent report. Unguarded on purpose and for the same reason
@@ -88,10 +89,11 @@ abstract class Routes {
   /// The register. Guarded — see [_sectionGuards].
   static const incidents = '/incidents';
 
-  /// The season drawn. Unguarded, and narrowed by the server instead: the RPC
-  /// behind it returns the places of files the reader is IN, and everything
-  /// only to whoever runs files. A guard here would either lock a member out
-  /// of a map of his own camp, or be a second, weaker copy of that rule.
+  /// The season drawn. **Guarded since 0100.** The RPC still narrows per reader
+  /// — a member would get the places of files he is in — and that narrowing is
+  /// untouched; this decides who may open the PAGE. The season laid out whole
+  /// is an operations-room view, and a member does not need one to serve in his
+  /// tower.
   static const seasonMap = '/map';
 
   /// Reporting that you have arrived somewhere. Unguarded, for `/incident`'s
@@ -165,6 +167,13 @@ final sectionGuards = <String, bool Function(SessionState)>{
   // is deliberately not in this table, for the same reason raising an incident
   // is not.
   Routes.presence: (s) => s.can(PermissionCodes.checkinBoard),
+
+  // Both of these were open, and both comments above say why they no longer
+  // are. The export one is the one that matters: `export.data` widens the row
+  // policies in 0100, so this door leads somewhere the reader could not
+  // otherwise go — which is exactly the case a guard is for.
+  Routes.export: (s) => s.can(PermissionCodes.exportData),
+  Routes.seasonMap: (s) => s.can(PermissionCodes.mapView),
 };
 
 GoRouter buildRouter(SessionCubit session) {

@@ -309,17 +309,18 @@ class _HomeScreenState extends State<HomeScreen> {
           // rather than a thing to go and do — and it is the only one of them
           // that is read while the season is still happening.
           //
-          // Ungated, like the dashboard: the RPC behind it answers per reader,
-          // so a member sees the camps of his own file and whoever runs files
-          // sees them all. A guard here would lock a man out of a map of the
-          // camp he is standing in.
-          (
-            group: _AdminGroup.oversight,
-            icon: AppIcons.checkIn,
-            title: l.seasonMapTitle,
-            subtitle: l.seasonMapSubtitle,
-            onTap: () => context.push(Routes.seasonMap),
-          ),
+          // Gated since 0100. The RPC still answers per reader and that is
+          // untouched; what changed is that the season laid out whole is an
+          // operations-room view, and a member does not need one to serve in
+          // his own tower.
+          if (session.can(PermissionCodes.mapView))
+            (
+              group: _AdminGroup.oversight,
+              icon: AppIcons.checkIn,
+              title: l.seasonMapTitle,
+              subtitle: l.seasonMapSubtitle,
+              onTap: () => context.push(Routes.seasonMap),
+            ),
           // Taking data out of the app. It belongs on the oversight shelf and
           // not in settings: settings is where a person adjusts how the app
           // behaves FOR HIM — the language, the theme, whether it may notify
@@ -327,16 +328,18 @@ class _HomeScreenState extends State<HomeScreen> {
           // season's records, and it sits with the other screens that look at
           // all of them at once.
           //
-          // Ungated, because the screen gates itself: it offers only the
-          // datasets this reader already has the permission to open, and every
-          // one of them fetches through the same repositories the screens do.
-          (
-            group: _AdminGroup.oversight,
-            icon: AppIcons.upload,
-            title: l.exportTitle,
-            subtitle: l.exportSubtitle,
-            onTap: () => context.push(Routes.export),
-          ),
+          // Gated since 0100, and it is the grant that most needs a door. It
+          // used to gate itself by offering only what the reader could already
+          // open; `export.data` now widens the row policies themselves, so a
+          // holder takes out what he cannot see on any screen.
+          if (session.can(PermissionCodes.exportData))
+            (
+              group: _AdminGroup.oversight,
+              icon: AppIcons.upload,
+              title: l.exportTitle,
+              subtitle: l.exportSubtitle,
+              onTap: () => context.push(Routes.export),
+            ),
           // The operations room's own screen. Oversight, but of a different
           // kind from the rest of this group: everything else here is read
           // after the fact, and this one is read while it is still happening.
