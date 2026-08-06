@@ -736,6 +736,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportScanCode => 'Scan';
 
   @override
+  String get reportCellEntryGone => 'This choice no longer exists';
+
+  @override
   String get reportTimeFrom => 'From';
 
   @override
@@ -851,6 +854,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get blockTableExpandNone => 'None';
+
+  @override
+  String get blockColumnLabel => 'Heading';
+
+  @override
+  String get blockColumnKind => 'Column type';
+
+  @override
+  String get blockColumnKindText => 'Text';
+
+  @override
+  String get blockColumnKindNumber => 'Number';
+
+  @override
+  String get blockColumnKindDate => 'Date';
+
+  @override
+  String get blockColumnKindTime => 'Time';
+
+  @override
+  String get blockColumnKindTimeRange => 'Time range';
+
+  @override
+  String get blockColumnKindReference => 'From master data';
+
+  @override
+  String get blockColumnKindTags => 'List of items';
+
+  @override
+  String get blockColumnSet => 'List';
+
+  @override
+  String get blockColumnSpan => 'Merge repeats';
+
+  @override
+  String blockColumnRetypeWarning(int count) {
+    return '$count cells cannot be converted and will be emptied';
+  }
 
   @override
   String get blockTableColumns => 'Columns';

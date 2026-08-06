@@ -1466,6 +1466,12 @@ abstract class AppLocalizations {
   /// **'Scan'**
   String get reportScanCode;
 
+  /// No description provided for @reportCellEntryGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This choice no longer exists'**
+  String get reportCellEntryGone;
+
   /// No description provided for @reportTimeFrom.
   ///
   /// In en, this message translates to:
@@ -1687,6 +1693,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'None'**
   String get blockTableExpandNone;
+
+  /// No description provided for @blockColumnLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Heading'**
+  String get blockColumnLabel;
+
+  /// No description provided for @blockColumnKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Column type'**
+  String get blockColumnKind;
+
+  /// No description provided for @blockColumnKindText.
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get blockColumnKindText;
+
+  /// No description provided for @blockColumnKindNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Number'**
+  String get blockColumnKindNumber;
+
+  /// No description provided for @blockColumnKindDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get blockColumnKindDate;
+
+  /// No description provided for @blockColumnKindTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get blockColumnKindTime;
+
+  /// No description provided for @blockColumnKindTimeRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Time range'**
+  String get blockColumnKindTimeRange;
+
+  /// No description provided for @blockColumnKindReference.
+  ///
+  /// In en, this message translates to:
+  /// **'From master data'**
+  String get blockColumnKindReference;
+
+  /// No description provided for @blockColumnKindTags.
+  ///
+  /// In en, this message translates to:
+  /// **'List of items'**
+  String get blockColumnKindTags;
+
+  /// No description provided for @blockColumnSet.
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get blockColumnSet;
+
+  /// No description provided for @blockColumnSpan.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge repeats'**
+  String get blockColumnSpan;
+
+  /// No description provided for @blockColumnRetypeWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} cells cannot be converted and will be emptied'**
+  String blockColumnRetypeWarning(int count);
 
   /// No description provided for @blockTableColumns.
   ///

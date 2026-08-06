@@ -77,32 +77,83 @@ void main() {
     });
   });
 
-  group('editing the headings', () {
+  group('editing the columns', () {
     test('renaming one keeps every generated cell', () {
-      // realignRows returns rows of `after.length`. Handed the whole row, it
-      // returned FOUR cells — the three cluster counts and the total were
-      // simply gone, on a rename.
-      final c = cubit()..setBlockColumns(0, ['أ', 'باء', 'ج', 'د']);
+      // The old heading-text realign returned rows of `after.length` — FOUR
+      // cells: the three cluster counts and the total were simply gone, on a
+      // rename. Identity makes the rename exact, and the splice-aware move
+      // carries the generated block untouched.
+      final c = cubit();
+      final id = c.state.blocks[0].tableColumns[1].id;
+      c.renameBlockColumn(0, id, 'باء');
 
+      expect(c.state.blocks[0].tableColumns[1].label, 'باء');
       expect(c.state.blocks[0].rows.single, [
         'a', 'b', 'c', 'x0', 'x1', 'x2', 'd',
       ]);
     });
 
     test('adding a typed column keeps the generated block where it was', () {
-      final c = cubit()..setBlockColumns(0, ['أ', 'ب', 'ج', 'د', 'هـ']);
+      final c = cubit()..addBlockColumn(0);
 
       final b = c.state.blocks[0];
       expect(b.expandAt, 3);
       expect(b.rows.single, ['a', 'b', 'c', 'x0', 'x1', 'x2', 'd', '']);
     });
 
-    test('removing typed columns clamps the splice rather than losing it', () {
-      final c = cubit()..setBlockColumns(0, ['أ', 'ب']);
+    test('removing a typed column before the splice clamps it', () {
+      final c = cubit();
+      final ids = [for (final col in c.state.blocks[0].tableColumns) col.id];
+      c.removeBlockColumn(0, ids[2]); // ج
+      c.removeBlockColumn(0, ids[3]); // د
 
       final b = c.state.blocks[0];
       expect(b.expandAt, 2);
       expect(b.rows.single, ['a', 'b', 'x0', 'x1', 'x2']);
+    });
+
+    test('moving a column carries its cells and leaves the splice alone', () {
+      final c = cubit();
+      final id = c.state.blocks[0].tableColumns[0].id; // أ one step down
+      c.moveBlockColumn(0, id, 1);
+
+      final b = c.state.blocks[0];
+      expect([for (final col in b.tableColumns) col.label],
+          ['ب', 'أ', 'ج', 'د']);
+      expect(b.rows.single, ['b', 'a', 'c', 'x0', 'x1', 'x2', 'd']);
+    });
+
+    test('a column edit normalises the block and drops the legacy lists', () {
+      final legacy = DraftBlock(
+        ReportBlockKind.table,
+        data: {
+          'columns': ['أ', 'ب'],
+          'spans': [true, false],
+          'tags': [false, true],
+          'rows': [
+            ['1', 'x\ny'],
+          ],
+        },
+      );
+      final c = cubit(block: legacy);
+      c.renameBlockColumn(0, 'c0', 'اليوم');
+
+      final data = c.state.blocks[0].data;
+      expect(data.containsKey('spans'), isFalse);
+      expect(data.containsKey('tags'), isFalse);
+      // The marks survived the normalisation as properties of the columns.
+      final cols = c.state.blocks[0].tableColumns;
+      expect(cols[0].span, isTrue);
+      expect(cols[1].kind, TableColumnKind.tags);
+      expect(c.state.blocks[0].rows.single, ['1', 'x\ny']);
+    });
+
+    test('a retype counts its losses before it is asked to happen', () {
+      final c = cubit();
+      final id = c.state.blocks[0].tableColumns[0].id; // cells: 'a'
+
+      expect(c.retypeLossCount(0, id, TableColumnKind.time), 1);
+      expect(c.retypeLossCount(0, id, TableColumnKind.text), 0);
     });
   });
 

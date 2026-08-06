@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/l10n/l10n_extension.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/glass_tokens.dart';
 import '../../../../core/widgets/glass.dart';
 import '../../application/report_editor_cubit.dart';
 import '../../domain/report_block.dart';
+import 'table_cell_input.dart';
 import 'tag_list_field.dart';
 
 /// Writing a general report.
@@ -96,6 +98,215 @@ IconData _iconFor(ReportBlockKind kind) => switch (kind) {
   ReportBlockKind.divider => AppIcons.modules,
 };
 
+/// One typed column: its heading, what its cells are, and the means to move it.
+///
+/// Retyping is the one edit here that can invalidate data — `text → reference`
+/// leaves a cell holding a name that is not an id — so the kind dropdown asks
+/// the cubit for the loss count FIRST and puts a number in front of the person
+/// before anything is emptied. Nothing else in this app empties a column
+/// silently, and this must not be the first.
+class _ColumnCard extends StatelessWidget {
+  const _ColumnCard({
+    super.key,
+    required this.blockIndex,
+    required this.column,
+    required this.isFirst,
+    required this.isLast,
+    required this.cubit,
+  });
+
+  final int blockIndex;
+  final TableColumn column;
+  final bool isFirst;
+  final bool isLast;
+  final ReportEditorCubit cubit;
+
+  Future<void> _retype(
+    BuildContext context,
+    TableColumnKind kind, {
+    String? setCode,
+  }) async {
+    final l = context.l10n;
+    final lost = cubit.retypeLossCount(
+      blockIndex,
+      column.id,
+      kind,
+      setCode: setCode,
+    );
+    if (lost > 0) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l.blockColumnKind),
+          content: Text(l.blockColumnRetypeWarning(lost)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(l.commonCancel),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(dialogContext).colorScheme.error,
+              ),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(l.commonDelete),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+    cubit.retypeBlockColumn(blockIndex, column.id, kind, setCode: setCode);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final sets = cubit.state.referenceSets;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
+      child: GlassCard(
+        subtle: true,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    // Keyed by the column's IDENTITY, so a reorder does not
+                    // leave this controller's text under the next heading.
+                    key: ValueKey('label_${column.id}'),
+                    initialValue: column.label,
+                    decoration: InputDecoration(
+                      isDense: true,
+                      labelText: l.blockColumnLabel,
+                    ),
+                    onChanged: (v) =>
+                        cubit.renameBlockColumn(blockIndex, column.id, v),
+                  ),
+                ),
+                // Two taps, not a drag: a drag inside a scrolling form fights
+                // the scroll.
+                IconButton(
+                  tooltip: l.blockMoveUp,
+                  visualDensity: VisualDensity.compact,
+                  onPressed: isFirst
+                      ? null
+                      : () => cubit.moveBlockColumn(blockIndex, column.id, -1),
+                  icon: const Icon(Icons.keyboard_arrow_up, size: 20),
+                ),
+                IconButton(
+                  tooltip: l.blockMoveDown,
+                  visualDensity: VisualDensity.compact,
+                  onPressed: isLast
+                      ? null
+                      : () => cubit.moveBlockColumn(blockIndex, column.id, 1),
+                  icon: const Icon(Icons.keyboard_arrow_down, size: 20),
+                ),
+                IconButton(
+                  tooltip: l.commonDelete,
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () =>
+                      cubit.removeBlockColumn(blockIndex, column.id),
+                  icon: Icon(AppIcons.delete, size: 16, color: scheme.error),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<TableColumnKind>(
+                    initialValue: column.kind,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      isDense: true,
+                      labelText: l.blockColumnKind,
+                    ),
+                    items: [
+                      for (final kind in TableColumnKind.values)
+                        DropdownMenuItem(
+                          value: kind,
+                          child: Text(_kindLabel(l, kind)),
+                        ),
+                    ],
+                    onChanged: (kind) {
+                      if (kind == null || kind == column.kind) return;
+                      // A reference needs its list before it means anything;
+                      // the set dropdown beside this finishes the job.
+                      _retype(
+                        context,
+                        kind,
+                        setCode: kind == TableColumnKind.reference
+                            ? column.setCode ?? sets.firstOrNull?.code
+                            : null,
+                      );
+                    },
+                  ),
+                ),
+                if (column.kind == TableColumnKind.reference) ...[
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      initialValue: column.setCode,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        isDense: true,
+                        labelText: l.blockColumnSet,
+                      ),
+                      items: [
+                        for (final set in sets)
+                          DropdownMenuItem(
+                            value: set.code,
+                            child: Text(set.name.of(context)),
+                          ),
+                      ],
+                      onChanged: (code) {
+                        if (code == null) return;
+                        _retype(
+                          context,
+                          TableColumnKind.reference,
+                          setCode: code,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+                // Merging equal list-cells downward is meaningless, so the
+                // chip hides for tags rather than offering a dead switch.
+                if (column.kind != TableColumnKind.tags) ...[
+                  const SizedBox(width: AppSpacing.sm),
+                  FilterChip(
+                    label: Text(l.blockColumnSpan),
+                    selected: column.span,
+                    onSelected: (_) =>
+                        cubit.toggleBlockColumnSpan(blockIndex, column.id),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _kindLabel(AppLocalizations l, TableColumnKind kind) => switch (kind) {
+  TableColumnKind.text => l.blockColumnKindText,
+  TableColumnKind.number => l.blockColumnKindNumber,
+  TableColumnKind.date => l.blockColumnKindDate,
+  TableColumnKind.time => l.blockColumnKindTime,
+  TableColumnKind.timeRange => l.blockColumnKindTimeRange,
+  TableColumnKind.reference => l.blockColumnKindReference,
+  TableColumnKind.tags => l.blockColumnKindTags,
+};
+
 String _labelFor(BuildContext context, ReportBlockKind kind) {
   final l = context.l10n;
   return switch (kind) {
@@ -177,40 +388,33 @@ class _BlockCard extends StatelessWidget {
     );
   }
 
-  /// One row's inputs, across the EFFECTIVE columns.
+  /// One row's inputs, across the EFFECTIVE columns, each asked for the way
+  /// its column says.
   ///
   /// The generated columns are resolved through the cubit's own expansion —
   /// the same resolution the reader uses — so the editor and the page agree
   /// about which heading a cell sits under. A generated column's field is
   /// labelled with its entry's name (تكتل الكعبة, not "عمود ١٦") and keyed by
-  /// the entry's id, so a season gaining a cluster does not strand a
-  /// controller's text under the wrong heading.
+  /// the entry's id; the typed ones are keyed by their COLUMN id, so moving a
+  /// column does not strand a controller's text under the wrong heading.
   List<Widget> _rowFields(BuildContext context, int r) {
     final block = this.block;
     final expansion = cubit.state.expansionOf(block);
-    final at = block.expandAt ?? block.columns.length;
-
-    // (label, stable key part) per effective column, typed and generated
-    // spliced exactly as the rows store them.
-    final headings = <({String label, String key})>[
-      for (var c = 0; c < at; c++)
-        (label: block.columns[c], key: 'c$c'),
-      for (final item in expansion)
-        (label: item.name.of(context), key: item.id),
-      for (var c = at; c < block.columns.length; c++)
-        (label: block.columns[c], key: 'c$c'),
-    ];
+    final effective = block.effectiveTableColumns(expansion);
 
     return [
-      for (var e = 0; e < headings.length; e++) ...[
+      for (var e = 0; e < effective.length; e++) ...[
         const SizedBox(height: AppSpacing.xs),
-        TextFormField(
-          key: ValueKey('b${index}_r${r}_${headings[e].key}'),
-          initialValue: e < block.rows[r].length ? block.rows[r][e] : '',
-          decoration: InputDecoration(
-            isDense: true,
-            labelText: headings[e].label,
-          ),
+        TableCellInput(
+          key: ValueKey('b${index}_r${r}_${effective[e].id}'),
+          column: effective[e],
+          value: e < block.rows[r].length ? block.rows[r][e] : '',
+          set: effective[e].setCode == null
+              ? null
+              : cubit.state.referenceSets
+                    .where((s) => s.code == effective[e].setCode)
+                    .firstOrNull,
+          seasonId: cubit.state.seasonId,
           onChanged: (v) => cubit.setBlockCell(index, r, e, v),
         ),
       ],
@@ -303,61 +507,33 @@ class _BlockCard extends StatelessWidget {
         ];
 
       case ReportBlockKind.table:
+        final columns = block.tableColumns;
         return [
           const SizedBox(height: AppSpacing.sm),
-          // The columns first, and as tags: a table is not a table until it
-          // knows what its columns are, and naming them is a list of short
-          // things like any other.
-          TagListField(
-            label: l.blockTableColumns,
-            items: block.columns,
-            hint: l.blockAddColumn,
-            onChanged: (v) => cubit.setBlockColumns(index, v),
+          // One card per column: its heading, what its cells ARE, and — for a
+          // choice — which list they come from. The columns used to be a list
+          // of bare strings and every cell a text box; giving the column a
+          // kind is what lets the row below offer a date picker for a date
+          // and this season's clusters for a تكتل, instead of a box to
+          // misspell either into.
+          for (final column in columns)
+            _ColumnCard(
+              key: ValueKey('col_${index}_${column.id}'),
+              blockIndex: index,
+              column: column,
+              isFirst: column.id == columns.first.id,
+              isLast: column.id == columns.last.id,
+              cubit: cubit,
+            ),
+          const SizedBox(height: AppSpacing.sm),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              onPressed: () => cubit.addBlockColumn(index),
+              icon: const Icon(AppIcons.add, size: 18),
+              label: Text(l.blockAddColumn),
+            ),
           ),
-          // Which of them print a repeated value once against the rows it
-          // covers — the date beside its three meals rather than three times.
-          // Only the typed columns are offered: a generated one holds a count
-          // per تكتل, and two clusters with the same number are a coincidence,
-          // not a merged cell.
-          if (block.columns.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              l.blockTableSpans,
-              style: Theme.of(context).textTheme.labelSmall,
-            ),
-            Wrap(
-              spacing: AppSpacing.sm,
-              children: [
-                for (var c = 0; c < block.columns.length; c++)
-                  FilterChip(
-                    label: Text(block.columns[c]),
-                    selected: block.spansAt(c),
-                    onSelected: (_) => cubit.toggleBlockSpan(index, c),
-                  ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            // A column of items rather than a sentence. مكونات الوجبات is nine
-            // per meal, and nine lines down a column makes the row nine lines
-            // tall with the rest of the table sitting in a stripe of white.
-            // Told rather than guessed: a paragraph in a table has newlines in
-            // it too and is not a list.
-            Text(
-              l.blockTableTags,
-              style: Theme.of(context).textTheme.labelSmall,
-            ),
-            Wrap(
-              spacing: AppSpacing.sm,
-              children: [
-                for (var c = 0; c < block.columns.length; c++)
-                  FilterChip(
-                    label: Text(block.columns[c]),
-                    selected: block.tagsAt(c),
-                    onSelected: (_) => cubit.toggleBlockTags(index, c),
-                  ),
-              ],
-            ),
-          ],
           // And the list whose entries become one column each. THIS is what a
           // hand-typed table could never do, and the reason توزيع الوجبات
           // needed a report type of its own until 0102: a column per تكتل that

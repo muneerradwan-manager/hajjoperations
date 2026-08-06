@@ -735,6 +735,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reportScanCode => 'امسح الرمز';
 
   @override
+  String get reportCellEntryGone => 'لم يعد هذا الخيار موجوداً';
+
+  @override
   String get reportTimeFrom => 'من';
 
   @override
@@ -850,6 +853,44 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get blockTableExpandNone => 'بلا';
+
+  @override
+  String get blockColumnLabel => 'العنوان';
+
+  @override
+  String get blockColumnKind => 'نوع العمود';
+
+  @override
+  String get blockColumnKindText => 'نصّ';
+
+  @override
+  String get blockColumnKindNumber => 'رقم';
+
+  @override
+  String get blockColumnKindDate => 'تاريخ';
+
+  @override
+  String get blockColumnKindTime => 'وقت';
+
+  @override
+  String get blockColumnKindTimeRange => 'مدة زمنية';
+
+  @override
+  String get blockColumnKindReference => 'من البيانات المرجعية';
+
+  @override
+  String get blockColumnKindTags => 'قائمة عناصر';
+
+  @override
+  String get blockColumnSet => 'القائمة';
+
+  @override
+  String get blockColumnSpan => 'دمج المتكرر';
+
+  @override
+  String blockColumnRetypeWarning(int count) {
+    return 'ستُفرَّغ $count من الخلايا التي لا يمكن تحويلها';
+  }
 
   @override
   String get blockTableColumns => 'الأعمدة';
