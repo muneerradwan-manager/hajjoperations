@@ -11,6 +11,7 @@ import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
 import '../../modules/data/modules_repository.dart';
+import '../../modules/domain/module_type.dart';
 import '../../modules/presentation/widgets/module_field_input.dart';
 import '../../seasons/data/seasons_repository.dart';
 import '../application/report_editor_cubit.dart';
@@ -122,12 +123,13 @@ class _View extends StatelessWidget {
               builder: (context, size) => SinglePaneLayout(
                 gutter: size.gutter,
                 children: [
+                  // One card for what the document IS — its kind, title,
+                  // number, scope, whether it is published, and the signed
+                  // paper it came from. They were two cards, and the second
+                  // held one field: "ما هذا القرار" over a single PDF picker,
+                  // which reads as a section somebody forgot to finish.
                   _Identity(state: state, cubit: cubit, isNew: isNew),
                   if (state.type case final t?) ...[
-                    if (t.fields.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      _Fields(state: state, cubit: cubit),
-                    ],
                     // A type with a table is FILLED IN; one without is
                     // WRITTEN. Never both, and the form says which by showing
                     // one of the two.
@@ -168,11 +170,13 @@ class _Identity extends StatefulWidget {
 
 class _IdentityState extends State<_Identity> {
   late final _title = TextEditingController(text: widget.state.title);
+  late final _subtitle = TextEditingController(text: widget.state.subtitle);
   late final _number = TextEditingController(text: widget.state.number);
 
   @override
   void dispose() {
     _title.dispose();
+    _subtitle.dispose();
     _number.dispose();
     super.dispose();
   }
@@ -189,24 +193,80 @@ class _IdentityState extends State<_Identity> {
         children: [
           Text(l.reportIdentity, style: Theme.of(context).textTheme.titleSmall),
           const SizedBox(height: AppSpacing.md),
-          DropdownButtonFormField<String>(
-            initialValue: s.typeId,
-            isExpanded: true,
-            decoration: InputDecoration(labelText: '${l.reportKind} *'),
-            items: [
-              for (final t in s.types)
-                DropdownMenuItem(value: t.id, child: Text(t.name.of(context))),
+          // The report TYPE is no longer asked for when writing a new document.
+          //
+          // It used to offer عام / مكونات الوجبات / مواعيد / توزيع, which put a
+          // structural decision — what shape is this — in front of somebody who
+          // had come to write a قرار, before he had typed its title. And the
+          // three meal shapes are not kinds of document at all: they are three
+          // tables, and a document that can hold a table can hold any of them.
+          //
+          // So a new one is always written, and its tables are built inside it.
+          // The chooser survives only for an OLD document that was filed under
+          // one of the typed shapes, where hiding it would leave a reader
+          // unable to see what he is looking at.
+          if (!widget.isNew && (s.type?.hasTable ?? false)) ...[
+            DropdownButtonFormField<String>(
+              initialValue: s.typeId,
+              isExpanded: true,
+              decoration: InputDecoration(labelText: l.reportShape),
+              items: [
+                for (final t in s.types)
+                  DropdownMenuItem(
+                    value: t.id,
+                    child: Text(t.name.of(context)),
+                  ),
+              ],
+              // Never editable. Its columns are the type's, and rows keyed to
+              // the old ones would be values with no column to stand under.
+              onChanged: null,
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
+          // Which act this is. Above the title deliberately: it changes how the
+          // whole document is read, and a man writing one knows before he
+          // writes the first word whether he is deciding something or telling
+          // the mission something.
+          //
+          // Editable after publishing, unlike the type: a document filed under
+          // the wrong one of these is a wrong LABEL, not wrong data, and
+          // correcting it costs nothing. Changing the type would empty the
+          // table.
+          SegmentedButton<DecisionKind>(
+            showSelectedIcon: false,
+            segments: [
+              ButtonSegment(
+                value: DecisionKind.decision,
+                icon: const Icon(AppIcons.file, size: 18),
+                label: Text(l.reportKindDecision),
+              ),
+              ButtonSegment(
+                value: DecisionKind.circular,
+                icon: const Icon(AppIcons.send, size: 18),
+                label: Text(l.reportKindCircular),
+              ),
             ],
-            // Changing the kind empties the table: its columns are the type's,
-            // and rows keyed to the old ones would be values with no column to
-            // stand under.
-            onChanged: widget.isNew ? widget.cubit.setType : null,
+            selected: {s.kind},
+            onSelectionChanged: (v) => widget.cubit.setKind(v.first),
           ),
           const SizedBox(height: AppSpacing.md),
           TextField(
             controller: _title,
             onChanged: widget.cubit.setTitle,
             decoration: InputDecoration(labelText: '${l.reportTitle} *'),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          // Names the DOCUMENT, beside its title. Not the `subheading` block,
+          // which divides a body halfway down — they were one field until 0102
+          // only because the type table happened to hold both, and a man
+          // writing a قرار could put its subject in either.
+          TextField(
+            controller: _subtitle,
+            onChanged: widget.cubit.setSubtitle,
+            decoration: InputDecoration(
+              labelText: l.reportSubtitle,
+              helperText: l.commonOptional,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           TextField(
@@ -248,6 +308,19 @@ class _IdentityState extends State<_Identity> {
               ),
             ),
           ],
+          // The signed paper this document came from, on the same card as the
+          // rest of what it IS. Whatever else the type declares comes with it —
+          // written against the schema rather than against the word "PDF", so
+          // a type that declares a link or a code renders here too.
+          for (final f in s.type?.fields ?? const <ModuleField>[]) ...[
+            const SizedBox(height: AppSpacing.md),
+            ModuleFieldInput(
+              field: f,
+              value: s.data[f.key],
+              referenceSet: s.setById(f.referenceSetId),
+              onChanged: (v) => widget.cubit.setField(f.key, v),
+            ),
+          ],
           // Publishing carries its own permission: an editor without it keeps
           // the switch in sight — the report's state is a fact of the page —
           // but cannot throw it.
@@ -264,40 +337,6 @@ class _IdentityState extends State<_Identity> {
                 ? widget.cubit.setPublished
                 : null,
           ),
-        ],
-      ),
-    );
-  }
-}
-
-/// The header fields the type declares — notes, a link, a code, the document.
-class _Fields extends StatelessWidget {
-  const _Fields({required this.state, required this.cubit});
-
-  final ReportEditorState state;
-  final ReportEditorCubit cubit;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    return GlassCard(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            l.reportAboutSection,
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          for (final f in state.type!.fields) ...[
-            const SizedBox(height: AppSpacing.md),
-            ModuleFieldInput(
-              field: f,
-              value: state.data[f.key],
-              referenceSet: state.setById(f.referenceSetId),
-              onChanged: (v) => cubit.setField(f.key, v),
-            ),
-          ],
         ],
       ),
     );

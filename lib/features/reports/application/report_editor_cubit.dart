@@ -34,6 +34,21 @@ class DraftBlock {
     for (final r in (data['rows'] as List?) ?? const [])
       [for (final c in (r as List? ?? const [])) '$c'],
   ];
+
+  /// Mirrors [ReportBlock.expandSetCode] and [ReportBlock.spansAt] — the draft
+  /// and the saved block read the same jsonb, and a getter that existed on one
+  /// and not the other is how an editor and a reader come to disagree about
+  /// what a document says.
+  String? get expandSetCode {
+    final code = data['expand']?.toString().trim();
+    return (code == null || code.isEmpty) ? null : code;
+  }
+
+  List<bool> get spans => [
+    for (final s in (data['spans'] as List?) ?? const []) s == true,
+  ];
+
+  bool spansAt(int column) => column < spans.length ? spans[column] : false;
 }
 
 /// A row being edited, before it has an id of its own.
@@ -53,6 +68,8 @@ class ReportEditorState extends Equatable {
     this.otherReports = const [],
     this.typeId,
     this.title = '',
+    this.subtitle = '',
+    this.kind = DecisionKind.decision,
     this.number = '',
     this.seasonId,
     this.data = const {},
@@ -74,6 +91,12 @@ class ReportEditorState extends Equatable {
 
   final String? typeId;
   final String title;
+
+  /// A second line naming the document. Not the `subheading` block (0102).
+  final String subtitle;
+
+  /// Whether this decides something or announces something (0102).
+  final DecisionKind kind;
 
   /// The reference number it was issued under, when it has one.
   final String number;
@@ -146,6 +169,8 @@ class ReportEditorState extends Equatable {
     List<Report>? otherReports,
     Object? typeId = _unset,
     String? title,
+    String? subtitle,
+    DecisionKind? kind,
     String? number,
     Object? seasonId = _unset,
     Map<String, dynamic>? data,
@@ -161,6 +186,8 @@ class ReportEditorState extends Equatable {
     otherReports: otherReports ?? this.otherReports,
     typeId: typeId == _unset ? this.typeId : typeId as String?,
     title: title ?? this.title,
+    subtitle: subtitle ?? this.subtitle,
+    kind: kind ?? this.kind,
     number: number ?? this.number,
     // Null means general, so it cannot be defaulted away with `??`.
     seasonId: seasonId == _unset ? this.seasonId : seasonId as String?,
@@ -180,6 +207,12 @@ class ReportEditorState extends Equatable {
     otherReports,
     typeId,
     title,
+    // Both of these were missing, and the failure would have been silent in the
+    // worst way: Equatable compares this list, so a state that differed only by
+    // kind or subtitle would compare EQUAL and the cubit would not emit. The
+    // segmented button would refuse to move under the finger.
+    subtitle,
+    kind,
     number,
     seasonId,
     data,
@@ -229,8 +262,24 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
             for (final r in reports)
               if (r.id != e?.id) r,
           ],
-          typeId: e?.reportTypeId,
+          // A new document is always WRITTEN, and the editor no longer asks
+          // which shape it is (0102). `general` is not one choice among four
+          // any more — it is the only one a person can start, and its tables
+          // are built inside its own content.
+          //
+          // Falls back to the first type if `general` is ever missing, so the
+          // editor opens with a saveable document rather than a dead save
+          // button and no way to see why.
+          typeId:
+              e?.reportTypeId ??
+              types
+                  .where((t) => t.code == 'general')
+                  .firstOrNull
+                  ?.id ??
+              types.firstOrNull?.id,
           title: e?.title ?? '',
+          subtitle: e?.subtitle ?? '',
+          kind: e?.kind ?? DecisionKind.decision,
           number: e?.number ?? '',
           seasonId: e?.seasonId,
           data: {...?e?.data},
@@ -251,6 +300,8 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
 
   void setType(String? id) => emit(state.copyWith(typeId: id, rows: const []));
   void setTitle(String v) => emit(state.copyWith(title: v));
+  void setSubtitle(String v) => emit(state.copyWith(subtitle: v));
+  void setKind(DecisionKind v) => emit(state.copyWith(kind: v));
   void setNumber(String v) => emit(state.copyWith(number: v));
   void setSeason(String? id) => emit(state.copyWith(seasonId: id));
   void setPublished(bool v) => emit(state.copyWith(isPublished: v));
@@ -301,6 +352,37 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
         after: columns,
         rows: state.blocks[index].rows,
       ),
+    });
+  }
+
+  /// Which typed column prints a repeated value once against the rows it
+  /// covers. Padded to the column count so a toggle on the third column of a
+  /// table that has never had spans does not land in an empty list.
+  void toggleBlockSpan(int index, int column) {
+    final b = state.blocks[index];
+    final spans = [
+      for (var i = 0; i < b.columns.length; i++)
+        i == column ? !b.spansAt(i) : b.spansAt(i),
+    ];
+    _setBlock(index, {'spans': spans});
+  }
+
+  /// The master-data list whose entries become one column each.
+  ///
+  /// The rows are NOT realigned. A generated column's values are keyed by
+  /// position after the typed ones, and changing which list generates them
+  /// changes how many there are — carrying the old values across would put a
+  /// count that belonged to one تكتل under another's name, which is the error
+  /// `realignRows` exists to prevent and the one nobody notices until the
+  /// numbers are quoted. Emptying is the honest answer.
+  void setBlockExpand(int index, String? code) {
+    final b = state.blocks[index];
+    if (b.expandSetCode == code) return;
+    _setBlock(index, {
+      'expand': code,
+      'rows': [
+        for (final row in b.rows) row.take(b.columns.length).toList(),
+      ],
     });
   }
 
@@ -437,6 +519,10 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
                   'p_number': state.number.trim().isEmpty
                       ? null
                       : state.number.trim(),
+                  'p_kind': state.kind.dbName,
+                  'p_subtitle': state.subtitle.trim().isEmpty
+                      ? null
+                      : state.subtitle.trim(),
                   'p_data': state.data,
                   'p_is_published': state.isPublished,
                   'p_rows': [

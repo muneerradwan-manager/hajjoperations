@@ -269,6 +269,23 @@ class ReportCard extends StatelessWidget {
                   spacing: AppSpacing.sm,
                   runSpacing: AppSpacing.xs,
                   children: [
+                    // First, because it is what the reader is sorting by
+                    // without being asked to: a قرار binds him and a تعميم
+                    // tells him something. In one undifferentiated list he
+                    // reads past everything he merely needs to know to find
+                    // what he must do (0102).
+                    GlassBadge(
+                      label: report.kind == DecisionKind.circular
+                          ? l.reportKindCircular
+                          : l.reportKindDecision,
+                      icon: report.kind == DecisionKind.circular
+                          ? AppIcons.send
+                          : AppIcons.file,
+                      color: report.kind == DecisionKind.circular
+                          ? scheme.tertiary
+                          : scheme.primary,
+                      dense: true,
+                    ),
                     // Which of the two it is, said plainly — a reader looking
                     // at a meal timetable needs to know whether it is THIS
                     // year's.

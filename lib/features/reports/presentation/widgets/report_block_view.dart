@@ -18,9 +18,22 @@ import 'report_table.dart';
 /// code, and a note, which is set apart because being set apart is what makes
 /// it a note.
 class ReportBlockView extends StatelessWidget {
-  const ReportBlockView({super.key, required this.block});
+  const ReportBlockView({
+    super.key,
+    required this.block,
+    this.expandedColumns = const [],
+  });
 
   final ReportBlock block;
+
+  /// What the block's `expand` list resolved to, in this document's season.
+  ///
+  /// Passed in rather than looked up. A block knows the CODE of the list its
+  /// extra columns come from — `clusters` — and resolving that to this
+  /// season's تكتلات needs the master data, which the screen already has and a
+  /// leaf widget has no business fetching. Empty for a table that does not
+  /// expand, which is every ordinary one.
+  final List<String> expandedColumns;
 
   @override
   Widget build(BuildContext context) {
@@ -123,7 +136,7 @@ class ReportBlockView extends StatelessWidget {
         );
 
       case ReportBlockKind.table:
-        return _WrittenTable(block: block);
+        return _WrittenTable(block: block, expanded: expandedColumns);
     }
   }
 }
@@ -134,12 +147,27 @@ class ReportBlockView extends StatelessWidget {
 /// difference between a written report and a typed one. Everything after that —
 /// whether there is room for a grid, and what to do when there is not — is the
 /// same question [ReportTable] answers for both.
+///
+/// Since 0102 a block can do the two things only a report TYPE could before:
+/// grow a column per entry of a master-data list, and print a repeated value
+/// once against the rows it covers. Those two were the whole reason توزيع
+/// الوجبات and مواعيد الوجبات needed types of their own.
 class _WrittenTable extends StatelessWidget {
-  const _WrittenTable({required this.block});
+  const _WrittenTable({required this.block, required this.expanded});
 
   final ReportBlock block;
+  final List<String> expanded;
 
   @override
-  Widget build(BuildContext context) =>
-      ReportTable(columns: block.columns, rows: block.rows);
+  Widget build(BuildContext context) => ReportTable(
+    columns: block.effectiveColumns(expanded),
+    rows: block.rows,
+    // Only the TYPED columns can span. A generated one holds a count per
+    // تكتل, and two clusters that happen to have the same number are not one
+    // merged cell — they are a coincidence this would hide.
+    spans: {
+      for (var i = 0; i < block.columns.length; i++)
+        if (block.spansAt(i)) i,
+    },
+  );
 }

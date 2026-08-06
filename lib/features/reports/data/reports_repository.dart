@@ -10,7 +10,7 @@ import '../domain/report_type.dart';
 /// how the two answers come to disagree.
 class ReportsRepository {
   static const _columns = '''
-    id, report_type_id, season_id, title, number, data, is_published,
+    id, report_type_id, season_id, title, subtitle, kind, number, data, is_published,
     updated_at,
     created_at,
     report_types(name_ar, name_en),
@@ -20,7 +20,7 @@ class ReportsRepository {
   /// The list's projection: everything a ReportCard shows, and NOT `data` —
   /// the header jsonb can carry paragraphs, and the list never renders it.
   static const _listColumns = '''
-    id, report_type_id, season_id, title, number, is_published,
+    id, report_type_id, season_id, title, subtitle, kind, number, is_published,
     updated_at,
     created_at,
     report_types(name_ar, name_en),

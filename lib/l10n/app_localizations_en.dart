@@ -750,6 +750,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportAddTag => 'Add an item';
 
   @override
+  String get reportSubtitle => 'Subtitle';
+
+  @override
+  String get reportShape => 'Document shape';
+
+  @override
+  String get reportKindDecision => 'Decision';
+
+  @override
+  String get reportKindCircular => 'Circular';
+
+  @override
   String get reportNumber => 'Decision number';
 
   @override
@@ -823,6 +835,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get blockQrHint => 'Usually a link';
+
+  @override
+  String get blockTableSpans => 'Columns that merge downward';
+
+  @override
+  String get blockTableExpand => 'A column per entry of';
+
+  @override
+  String get blockTableExpandHint =>
+      'One column per entry — and it follows the list when an entry is added';
+
+  @override
+  String get blockTableExpandNone => 'None';
 
   @override
   String get blockTableColumns => 'Columns';

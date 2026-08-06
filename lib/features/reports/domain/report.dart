@@ -34,6 +34,31 @@ class ReportRow {
   );
 }
 
+/// Which act a document IS.
+///
+/// The section carries both and always has, with nothing to tell them apart
+/// until 0102. A قرار DECIDES — forms a committee, appoints a supervisor, allots
+/// the camps — and somebody is bound by it. A تعميم TELLS — the meal times, the
+/// movement plan, what happens on the day of Tarwiyah — and everybody is meant
+/// to know it. In one undifferentiated list, a man looking for what he must DO
+/// reads past everything he merely needs to know.
+///
+/// Deliberately NOT a property of the report TYPE. A type says what shape a
+/// document has — a table of meal times, a written body of blocks — and the
+/// same shape carries both acts: تقرير عام is used for قرارات that form
+/// committees and for تعميمات that announce a timetable.
+enum DecisionKind {
+  decision,
+  circular;
+
+  /// Anything a newer migration adds reads as a قرار rather than throwing in
+  /// somebody's hand: the older meaning, and the one every existing row has.
+  static DecisionKind fromDb(String? value) =>
+      value == 'circular' ? DecisionKind.circular : DecisionKind.decision;
+
+  String get dbName => name;
+}
+
 /// A published **قرار** — a decision: what it says about itself, and its table.
 ///
 /// The word in the code and the word on the screen do not match, and the
@@ -62,6 +87,8 @@ class Report {
     required this.id,
     required this.reportTypeId,
     required this.title,
+    this.subtitle,
+    this.kind = DecisionKind.decision,
     this.number,
     this.seasonId,
     this.seasonHijriYear,
@@ -77,6 +104,16 @@ class Report {
   final String id;
   final String reportTypeId;
   final String title;
+
+  /// A second line naming the DOCUMENT, beside its title.
+  ///
+  /// Not the `subheading` BLOCK, which divides a body halfway down. These were
+  /// one field until 0102, only because the type table happened to hold both —
+  /// and a man writing a قرار could put its subject in either.
+  final String? subtitle;
+
+  /// Whether this decides something or announces something. See [DecisionKind].
+  final DecisionKind kind;
 
   /// The reference number it was issued under — 3190, 3190/47 — when it has
   /// one. Free text, because that is how they are written, and optional,
@@ -118,6 +155,13 @@ class Report {
         id: id,
         reportTypeId: reportTypeId,
         title: title,
+        // Every report goes through here on its way to a screen — `withRows`
+        // and `withAttachments` both call it — so a field left out is not
+        // "defaulted", it is ERASED, silently, between the fetch and the page.
+        // A قرار would have been read from the database and drawn as whatever
+        // the constructor's default happened to be.
+        subtitle: subtitle,
+        kind: kind,
         number: number,
         seasonId: seasonId,
         seasonHijriYear: seasonHijriYear,
@@ -151,6 +195,8 @@ class Report {
       id: map['id'] as String,
       reportTypeId: map['report_type_id'] as String,
       title: map['title'] as String,
+      subtitle: map['subtitle'] as String?,
+      kind: DecisionKind.fromDb(map['kind'] as String?),
       number: map['number'] as String?,
       seasonId: map['season_id'] as String?,
       seasonHijriYear: season?['hijri_year'] as int?,

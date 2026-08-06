@@ -252,7 +252,13 @@ class _Body extends StatelessWidget {
               for (final block in report.blocks)
                 if (!block.isEmpty) ...[
                   const SizedBox(height: AppSpacing.md),
-                  ReportBlockView(block: block),
+                  ReportBlockView(
+                    block: block,
+                    expandedColumns: [
+                      for (final item in state.expansionOf(block))
+                        item.name.of(context),
+                    ],
+                  ),
                 ],
 
             // A typed one's content is its table.

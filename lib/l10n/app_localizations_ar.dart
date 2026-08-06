@@ -748,6 +748,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reportAddTag => 'أضف عنصراً';
 
   @override
+  String get reportSubtitle => 'عنوان فرعي';
+
+  @override
+  String get reportShape => 'شكل المستند';
+
+  @override
+  String get reportKindDecision => 'قرار';
+
+  @override
+  String get reportKindCircular => 'تعميم';
+
+  @override
   String get reportNumber => 'رقم القرار';
 
   @override
@@ -821,6 +833,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get blockQrHint => 'غالباً رابط';
+
+  @override
+  String get blockTableSpans => 'أعمدة تُدمج رأسياً';
+
+  @override
+  String get blockTableExpand => 'عمود لكل عنصر من';
+
+  @override
+  String get blockTableExpandHint =>
+      'يُضاف عمود لكل عنصر — ويتبع القائمة إن أُضيف إليها';
+
+  @override
+  String get blockTableExpandNone => 'بلا';
 
   @override
   String get blockTableColumns => 'الأعمدة';

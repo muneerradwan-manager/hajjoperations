@@ -274,6 +274,53 @@ class _BlockCard extends StatelessWidget {
             hint: l.blockAddColumn,
             onChanged: (v) => cubit.setBlockColumns(index, v),
           ),
+          // Which of them print a repeated value once against the rows it
+          // covers — the date beside its three meals rather than three times.
+          // Only the typed columns are offered: a generated one holds a count
+          // per تكتل, and two clusters with the same number are a coincidence,
+          // not a merged cell.
+          if (block.columns.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              l.blockTableSpans,
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+            Wrap(
+              spacing: AppSpacing.sm,
+              children: [
+                for (var c = 0; c < block.columns.length; c++)
+                  FilterChip(
+                    label: Text(block.columns[c]),
+                    selected: block.spansAt(c),
+                    onSelected: (_) => cubit.toggleBlockSpan(index, c),
+                  ),
+              ],
+            ),
+          ],
+          // And the list whose entries become one column each. THIS is what a
+          // hand-typed table could never do, and the reason توزيع الوجبات
+          // needed a report type of its own until 0102: a column per تكتل that
+          // appears the day a تكتل is added, rather than a heading somebody
+          // typed that goes stale silently.
+          const SizedBox(height: AppSpacing.sm),
+          DropdownButtonFormField<String?>(
+            initialValue: block.expandSetCode,
+            isExpanded: true,
+            decoration: InputDecoration(
+              isDense: true,
+              labelText: l.blockTableExpand,
+              helperText: l.blockTableExpandHint,
+            ),
+            items: [
+              DropdownMenuItem(value: null, child: Text(l.blockTableExpandNone)),
+              for (final set in cubit.state.referenceSets)
+                DropdownMenuItem(
+                  value: set.code,
+                  child: Text(set.name.of(context)),
+                ),
+            ],
+            onChanged: (v) => cubit.setBlockExpand(index, v),
+          ),
           if (block.columns.isEmpty)
             Padding(
               padding: const EdgeInsets.only(top: AppSpacing.sm),

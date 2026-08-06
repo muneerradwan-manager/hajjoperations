@@ -260,6 +260,10 @@
     "placeholders": { "from": { "type": "String" }, "to": { "type": "String" } }
   },
   "reportAddTag": "أضف عنصراً",
+  "reportSubtitle": "عنوان فرعي",
+  "reportShape": "شكل المستند",
+  "reportKindDecision": "قرار",
+  "reportKindCircular": "تعميم",
   "reportNumber": "رقم القرار",
   "reportNumberBadge": "رقم {number}",
   "@reportNumberBadge": {
@@ -287,6 +291,10 @@
   "blockLabel": "التسمية",
   "blockQrValue": "ما يحمله الرمز",
   "blockQrHint": "غالباً رابط",
+  "blockTableSpans": "أعمدة تُدمج رأسياً",
+  "blockTableExpand": "عمود لكل عنصر من",
+  "blockTableExpandHint": "يُضاف عمود لكل عنصر — ويتبع القائمة إن أُضيف إليها",
+  "blockTableExpandNone": "بلا",
   "blockTableColumns": "الأعمدة",
   "blockTableColumnsHint": "مفصولة بـ |",
   "blockTableRows": "الصفوف",

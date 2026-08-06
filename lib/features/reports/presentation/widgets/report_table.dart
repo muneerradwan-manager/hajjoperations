@@ -37,6 +37,7 @@ class ReportTable extends StatelessWidget {
     required this.columns,
     required this.rows,
     this.tagged = const {},
+    this.spans = const {},
   });
 
   final List<String> columns;
@@ -52,6 +53,21 @@ class ReportTable extends StatelessWidget {
   /// paragraph in a written report's table has newlines in it too and is not a
   /// list.
   final Set<int> tagged;
+
+  /// Which columns print a repeated value ONCE, against the rows it covers.
+  ///
+  /// مواعيد الوجبات prints the date once beside its three meals rather than
+  /// three times, and a table that cannot do that is a table somebody rebuilds
+  /// in Word. 0068 called it `spans_rows` and only a report TYPE could declare
+  /// it; since 0102 any table block can.
+  ///
+  /// Flutter's [Table] has no row spanning, so this is not a merged cell — it
+  /// is the same thing a merged cell LOOKS like: the value drawn on the first
+  /// row of its run and the cells below it left blank, with the striping
+  /// following the run rather than the row so the group reads as one block. The
+  /// distinction matters only to whoever maintains this; on the page they are
+  /// indistinguishable.
+  final Set<int> spans;
 
 
   /// A header may claim more room than its own cells need, but only so much.
@@ -122,6 +138,7 @@ class ReportTable extends StatelessWidget {
           headerStyle: headerStyle,
           cellStyle: cellStyle,
           tagged: tagged,
+          spans: spans,
           // Given more room than it wants, the table spreads to fill it rather
           // than huddling at one edge of the card. Given less, it keeps every
           // column at the width its longest line needs and lets the reader
@@ -238,6 +255,7 @@ class _Grid extends StatelessWidget {
     required this.headerStyle,
     required this.cellStyle,
     required this.tagged,
+    required this.spans,
     required this.fill,
   });
 
@@ -252,11 +270,38 @@ class _Grid extends StatelessWidget {
   final TextStyle? headerStyle;
   final TextStyle? cellStyle;
   final Set<int> tagged;
+  final Set<int> spans;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     String cell(List<String> row, int i) => i < row.length ? row[i] : '';
+
+    // Which row each run of repeated values STARTS on, for every spanning
+    // column. A cell whose run started above it draws nothing, which is what a
+    // merged cell looks like; the one that started the run draws the value.
+    bool startsRun(int row, int column) {
+      if (row == 0) return true;
+      return cell(rows[row], column) != cell(rows[row - 1], column);
+    }
+
+    // The stripe follows the FIRST spanning column's runs rather than the row
+    // number, so a date and its three meals shade as one block. Without this
+    // the merged value floats over an alternating background, which reads
+    // worse than not merging at all.
+    final leader = spans.isEmpty ? null : (spans.toList()..sort()).first;
+    final groupOf = List<int>.filled(rows.length, 0);
+    for (var i = 0; i < rows.length; i++) {
+      if (leader == null) {
+        groupOf[i] = i;
+      } else if (i == 0) {
+        groupOf[i] = 0;
+      } else {
+        groupOf[i] = startsRun(i, leader)
+            ? groupOf[i - 1] + 1
+            : groupOf[i - 1];
+      }
+    }
 
     return GlassCard(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
@@ -288,14 +333,18 @@ class _Grid extends StatelessWidget {
               // Striping rather than a line under every cell: a seventeen
               // column grid ruled both ways reads as graph paper.
               decoration: BoxDecoration(
-                color: i.isOdd
+                color: groupOf[i].isOdd
                     ? scheme.onSurface.withValues(alpha: 0.03)
                     : Colors.transparent,
               ),
               children: [
                 for (var j = 0; j < columns.length; j++)
                   _Cell(
-                    text: cell(rows[i], j),
+                    // A spanning column prints its value on the row its run
+                    // starts and nothing on the rows it covers.
+                    text: spans.contains(j) && !startsRun(i, j)
+                        ? ''
+                        : cell(rows[i], j),
                     style: cellStyle,
                     padding: padding,
                     isTags: tagged.contains(j),

@@ -66,8 +66,50 @@ class ReportBlock {
       if ('$i'.trim().isNotEmpty) '$i',
   ];
 
+  /// The headings somebody typed. Not necessarily all the headings the table
+  /// HAS — see [expandSetCode].
   List<String> get columns => [
     for (final c in (data['columns'] as List?) ?? const []) '$c',
+  ];
+
+  /// A master-data list whose entries become one column each, appended after
+  /// the typed ones. Null for an ordinary table.
+  ///
+  /// This is the whole reason توزيع الوجبات needed a report TYPE of its own
+  /// before: 0068 declared one column that expanded into one per تكتل, so a
+  /// season with a new cluster got a new column without anybody editing
+  /// anything. A table whose cluster names were typed by hand goes stale the
+  /// moment a تكتل is added, silently — which is the failure that made a
+  /// hand-written table an unacceptable substitute.
+  ///
+  /// Stored as the set's CODE rather than its id, so a document written this
+  /// season still resolves next season: the entries differ, the list does not.
+  String? get expandSetCode {
+    final code = data['expand']?.toString().trim();
+    return (code == null || code.isEmpty) ? null : code;
+  }
+
+  /// Which typed columns merge equal consecutive cells downward.
+  ///
+  /// مواعيد الوجبات prints the date once against its three meals rather than
+  /// three times, and a table that cannot do that is a table somebody will
+  /// rebuild in Word. Indexed against [columns]; anything beyond it is false.
+  List<bool> get spans => [
+    for (final s in (data['spans'] as List?) ?? const []) s == true,
+  ];
+
+  bool spansAt(int column) =>
+      column < spans.length ? spans[column] : false;
+
+  /// Every heading the table actually has, given the season's entries.
+  ///
+  /// [expanded] is what [expandSetCode] resolved to — passed in rather than
+  /// looked up, because the block does not know about repositories and the same
+  /// block is rendered by an editor that has the sets loaded and by a reader
+  /// that has them loaded too.
+  List<String> effectiveColumns(List<String> expanded) => [
+    ...columns,
+    if (expandSetCode != null) ...expanded,
   ];
 
   /// Rows as they are stored: a list of lists, one value per column.

@@ -1490,6 +1490,30 @@ abstract class AppLocalizations {
   /// **'Add an item'**
   String get reportAddTag;
 
+  /// No description provided for @reportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitle'**
+  String get reportSubtitle;
+
+  /// No description provided for @reportShape.
+  ///
+  /// In en, this message translates to:
+  /// **'Document shape'**
+  String get reportShape;
+
+  /// No description provided for @reportKindDecision.
+  ///
+  /// In en, this message translates to:
+  /// **'Decision'**
+  String get reportKindDecision;
+
+  /// No description provided for @reportKindCircular.
+  ///
+  /// In en, this message translates to:
+  /// **'Circular'**
+  String get reportKindCircular;
+
   /// No description provided for @reportNumber.
   ///
   /// In en, this message translates to:
@@ -1633,6 +1657,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Usually a link'**
   String get blockQrHint;
+
+  /// No description provided for @blockTableSpans.
+  ///
+  /// In en, this message translates to:
+  /// **'Columns that merge downward'**
+  String get blockTableSpans;
+
+  /// No description provided for @blockTableExpand.
+  ///
+  /// In en, this message translates to:
+  /// **'A column per entry of'**
+  String get blockTableExpand;
+
+  /// No description provided for @blockTableExpandHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One column per entry — and it follows the list when an entry is added'**
+  String get blockTableExpandHint;
+
+  /// No description provided for @blockTableExpandNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get blockTableExpandNone;
 
   /// No description provided for @blockTableColumns.
   ///

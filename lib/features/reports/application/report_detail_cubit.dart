@@ -32,6 +32,27 @@ class ReportDetailState extends Equatable {
   ReferenceSet? setById(String? id) =>
       id == null ? null : referenceSets.where((s) => s.id == id).firstOrNull;
 
+  /// By CODE, which is how a table BLOCK names the list its extra columns come
+  /// from. A typed column names it by id, because a report type is seeded
+  /// alongside the set it points at and the two ids are written together; a
+  /// block is typed by a person into a document that has to keep resolving next
+  /// season, when the set is the same list with a different row.
+  ReferenceSet? setByCode(String? code) =>
+      code == null ? null : referenceSets.where((s) => s.code == code).firstOrNull;
+
+  /// The entries a table block's `expand` becomes one column each of.
+  ///
+  /// Scoped to the DOCUMENT's season, exactly as [drawnColumns] scopes a typed
+  /// column's source: last year's تكتلات must not appear as empty columns on
+  /// this year's table, and this year's must appear without anybody editing the
+  /// document — which was the one thing a hand-typed table could never do, and
+  /// the reason توزيع الوجبات needed a report type of its own before 0102.
+  List<ReferenceItem> expansionOf(ReportBlock block) {
+    final set = setByCode(block.expandSetCode);
+    if (set == null) return const [];
+    return set.itemsForSeason(report?.seasonId);
+  }
+
   /// The columns as they are actually drawn: a plain declaration stands for
   /// itself, and one with a source list becomes a column per entry of it.
   ///
