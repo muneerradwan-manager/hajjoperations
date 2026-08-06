@@ -72,15 +72,24 @@ BLOCKS = [
     ('paragraph', {'text':
         'تُقدَّم الوجبات في المخيمات وفق الجدول أدناه. الوجبة الجافة تُسلَّم '
         'في العبوة، والساخنة تُقدَّم في وقتها ولا تُخزَّن.'}),
-    # Four columns: stays a grid at every width.
+    # Four columns: stays a grid at every width. Written in the 0104 OBJECT
+    # shape on purpose — this file's job is to exercise everything a document
+    # can carry, and a seed that writes the legacy shape teaches the wrong one.
+    # اليوم spans (the date prints once against its meals) and التوقيت is a
+    # time range stored canonically; the reader renders the sentence.
     ('table', {
-        'columns': ['اليوم', 'الوجبة', 'نوعها', 'التوقيت'],
+        'columns': [
+            {'id': 'c0', 'label': 'اليوم', 'kind': 'text', 'span': True},
+            {'id': 'c1', 'label': 'الوجبة', 'kind': 'text'},
+            {'id': 'c2', 'label': 'نوعها', 'kind': 'text'},
+            {'id': 'c3', 'label': 'التوقيت', 'kind': 'time_range'},
+        ],
         'rows': [
-            ['8 ذي الحجة - تروية', 'غداء', 'جافة', 'من الساعة 13:00 إلى الساعة 17:00'],
-            ['8 ذي الحجة - تروية', 'عشاء', 'جافة', 'من الساعة 19:00 إلى الساعة 22:00'],
-            ['9 ذي الحجة - عرفات', 'فطور', 'جافة', 'من الساعة 6:00 إلى الساعة 9:00'],
-            ['9 ذي الحجة - عرفات', 'غداء', 'ساخنة', 'من الساعة 13:00 إلى 16:00'],
-            ['10 ذي الحجة - تشريق', 'عشاء', 'جافة', 'من الساعة 19:00 إلى الساعة 22:00'],
+            ['8 ذي الحجة - تروية', 'غداء', 'جافة', '13:00-17:00'],
+            ['8 ذي الحجة - تروية', 'عشاء', 'جافة', '19:00-22:00'],
+            ['9 ذي الحجة - عرفات', 'فطور', 'جافة', '06:00-09:00'],
+            ['9 ذي الحجة - عرفات', 'غداء', 'ساخنة', '13:00-16:00'],
+            ['10 ذي الحجة - تشريق', 'عشاء', 'جافة', '19:00-22:00'],
         ],
     }),
     ('subheading', {'text': 'أعداد الوجبات حسب التكتل'}),

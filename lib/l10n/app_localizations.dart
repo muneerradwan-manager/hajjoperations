@@ -1664,36 +1664,6 @@ abstract class AppLocalizations {
   /// **'Usually a link'**
   String get blockQrHint;
 
-  /// No description provided for @blockTableSpans.
-  ///
-  /// In en, this message translates to:
-  /// **'Columns that merge downward'**
-  String get blockTableSpans;
-
-  /// No description provided for @blockTableTags.
-  ///
-  /// In en, this message translates to:
-  /// **'Columns read as a list'**
-  String get blockTableTags;
-
-  /// No description provided for @blockTableExpand.
-  ///
-  /// In en, this message translates to:
-  /// **'A column per entry of'**
-  String get blockTableExpand;
-
-  /// No description provided for @blockTableExpandHint.
-  ///
-  /// In en, this message translates to:
-  /// **'One column per entry — and it follows the list when an entry is added'**
-  String get blockTableExpandHint;
-
-  /// No description provided for @blockTableExpandNone.
-  ///
-  /// In en, this message translates to:
-  /// **'None'**
-  String get blockTableExpandNone;
-
   /// No description provided for @blockColumnLabel.
   ///
   /// In en, this message translates to:
@@ -1765,30 +1735,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} cells cannot be converted and will be emptied'**
   String blockColumnRetypeWarning(int count);
-
-  /// No description provided for @blockTableColumns.
-  ///
-  /// In en, this message translates to:
-  /// **'Columns'**
-  String get blockTableColumns;
-
-  /// No description provided for @blockTableColumnsHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Separated by |'**
-  String get blockTableColumnsHint;
-
-  /// No description provided for @blockTableRows.
-  ///
-  /// In en, this message translates to:
-  /// **'Rows'**
-  String get blockTableRows;
-
-  /// No description provided for @blockTableRowsHint.
-  ///
-  /// In en, this message translates to:
-  /// **'One row per line, cells separated by |'**
-  String get blockTableRowsHint;
 
   /// No description provided for @blockAddItem.
   ///

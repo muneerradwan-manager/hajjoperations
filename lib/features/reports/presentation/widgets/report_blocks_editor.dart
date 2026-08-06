@@ -534,30 +534,12 @@ class _BlockCard extends StatelessWidget {
               label: Text(l.blockAddColumn),
             ),
           ),
-          // And the list whose entries become one column each. THIS is what a
-          // hand-typed table could never do, and the reason توزيع الوجبات
-          // needed a report type of its own until 0102: a column per تكتل that
-          // appears the day a تكتل is added, rather than a heading somebody
-          // typed that goes stale silently.
-          const SizedBox(height: AppSpacing.sm),
-          DropdownButtonFormField<String?>(
-            initialValue: block.expandSetCode,
-            isExpanded: true,
-            decoration: InputDecoration(
-              isDense: true,
-              labelText: l.blockTableExpand,
-              helperText: l.blockTableExpandHint,
-            ),
-            items: [
-              DropdownMenuItem(value: null, child: Text(l.blockTableExpandNone)),
-              for (final set in cubit.state.referenceSets)
-                DropdownMenuItem(
-                  value: set.code,
-                  child: Text(set.name.of(context)),
-                ),
-            ],
-            onChanged: (v) => cubit.setBlockExpand(index, v),
-          ),
+          // NOTE deliberately absent: the "a column per entry of a list"
+          // chooser. The EXPANSION mechanism stays — توزيع الوجبات, converted
+          // by 0103, grows a column per تكتل through it, and the row fields
+          // below render and edit those generated cells — but offering it on
+          // every new table confused more than it served. A block that carries
+          // an expansion keeps working; nothing in this editor creates one.
           if (block.columns.isEmpty)
             Padding(
               padding: const EdgeInsets.only(top: AppSpacing.sm),

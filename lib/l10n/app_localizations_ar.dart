@@ -839,22 +839,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get blockQrHint => 'غالباً رابط';
 
   @override
-  String get blockTableSpans => 'أعمدة تُدمج رأسياً';
-
-  @override
-  String get blockTableTags => 'أعمدة تُقرأ كقائمة';
-
-  @override
-  String get blockTableExpand => 'عمود لكل عنصر من';
-
-  @override
-  String get blockTableExpandHint =>
-      'يُضاف عمود لكل عنصر — ويتبع القائمة إن أُضيف إليها';
-
-  @override
-  String get blockTableExpandNone => 'بلا';
-
-  @override
   String get blockColumnLabel => 'العنوان';
 
   @override
@@ -891,18 +875,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String blockColumnRetypeWarning(int count) {
     return 'ستُفرَّغ $count من الخلايا التي لا يمكن تحويلها';
   }
-
-  @override
-  String get blockTableColumns => 'الأعمدة';
-
-  @override
-  String get blockTableColumnsHint => 'مفصولة بـ |';
-
-  @override
-  String get blockTableRows => 'الصفوف';
-
-  @override
-  String get blockTableRowsHint => 'صف في كل سطر، والخلايا مفصولة بـ |';
 
   @override
   String get blockAddItem => 'أضف عنصراً';

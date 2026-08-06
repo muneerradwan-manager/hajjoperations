@@ -840,22 +840,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get blockQrHint => 'Usually a link';
 
   @override
-  String get blockTableSpans => 'Columns that merge downward';
-
-  @override
-  String get blockTableTags => 'Columns read as a list';
-
-  @override
-  String get blockTableExpand => 'A column per entry of';
-
-  @override
-  String get blockTableExpandHint =>
-      'One column per entry — and it follows the list when an entry is added';
-
-  @override
-  String get blockTableExpandNone => 'None';
-
-  @override
   String get blockColumnLabel => 'Heading';
 
   @override
@@ -892,18 +876,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String blockColumnRetypeWarning(int count) {
     return '$count cells cannot be converted and will be emptied';
   }
-
-  @override
-  String get blockTableColumns => 'Columns';
-
-  @override
-  String get blockTableColumnsHint => 'Separated by |';
-
-  @override
-  String get blockTableRows => 'Rows';
-
-  @override
-  String get blockTableRowsHint => 'One row per line, cells separated by |';
 
   @override
   String get blockAddItem => 'Add an item';
