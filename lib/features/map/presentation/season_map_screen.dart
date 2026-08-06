@@ -1,21 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
-import '../../../core/animations/animations.dart';
 import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/states.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../incidents/data/incidents_repository.dart';
 import '../../incidents/domain/incident.dart';
-import '../../modules/presentation/module_detail_screen.dart';
 import '../application/season_map_cubit.dart';
 import '../data/season_map_repository.dart';
 import '../domain/map_place.dart';
+
+/// The colour a place is drawn in, and the words for it.
+///
+/// Held here rather than inside the pin, because the pin, the legend under the
+/// map and the sheet that opens on a tap must agree exactly. They are the same
+/// claim said three ways — a dot, a key, and a sentence — and a reader who
+/// found the legend saying one thing and the sheet another would be right to
+/// stop trusting the colours, which are the whole reason to draw the season
+/// rather than list it.
+Color _conditionColour(ColorScheme scheme, PlaceCondition condition) =>
+    switch (condition) {
+      PlaceCondition.incident => scheme.error,
+      PlaceCondition.unmanned => scheme.tertiary,
+      PlaceCondition.manned => scheme.primary,
+      PlaceCondition.empty => scheme.outline,
+    };
+
+String _conditionLabel(AppLocalizations l, PlaceCondition condition) =>
+    switch (condition) {
+      PlaceCondition.incident => l.seasonMapIncident,
+      PlaceCondition.unmanned => l.seasonMapUnmanned,
+      PlaceCondition.manned => l.seasonMapManned,
+      PlaceCondition.empty => l.seasonMapEmpty,
+    };
 
 /// The season on one map.
 ///
@@ -215,45 +239,27 @@ class _MapViewState extends State<_MapView> {
     );
   }
 
+  /// What the pin knows about itself.
+  ///
+  /// It used to open the operational file. That was the wrong answer to the
+  /// gesture: a man tapping a camp on a map is asking about the CAMP — is
+  /// anybody in it, is anything wrong there, where exactly is it — and what
+  /// arrived was a roster and a form, several screens deep, with the map lost
+  /// behind it. He then had to find his way back to carry on reading the
+  /// picture, which is the one thing a map is for.
+  ///
+  /// So the pin answers about the place, in a sheet over the map that is
+  /// dismissed with a thumb. The file is NAMED here, because knowing which file
+  /// a camp belongs to is part of knowing what it is — but it is text, not a
+  /// door.
   void _openPlace(MapPlace place) {
-    // A hotel that is not a node in any file has nothing to open — most of
-    // المدينة is in that position, since the Madinah file organises people by
-    // service company and not by building. It still says what it is, because a
-    // pin that does nothing at all reads as broken.
-    final moduleId = place.moduleId;
-    if (moduleId == null) {
-      _say(place.placeName, place.groupName.of(context));
-      return;
-    }
-
-    // Otherwise the file, opened the way عام opens it: this is a map of the
-    // season being run, not of the catalogue being edited.
-    Navigator.of(context).push(
-      fadeThroughRoute((_) => ModuleDetailScreen(moduleId: moduleId)),
-    );
-  }
-
-  void _say(String title, String subtitle) {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
-      builder: (sheetContext) => Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          0,
-          AppSpacing.lg,
-          AppSpacing.xl,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: Theme.of(sheetContext).textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.xs),
-            Text(subtitle, style: Theme.of(sheetContext).textTheme.bodySmall),
-          ],
-        ),
-      ),
+      // On a desk monitor an unconstrained sheet runs the full width and leaves
+      // a title alone at one end and a button at the other.
+      constraints: const BoxConstraints(maxWidth: 640),
+      builder: (sheetContext) => _PlaceSheet(place: place),
     );
   }
 
@@ -261,12 +267,13 @@ class _MapViewState extends State<_MapView> {
     showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
+      constraints: const BoxConstraints(maxWidth: 640),
       builder: (sheetContext) => Padding(
-        padding: const EdgeInsets.fromLTRB(
+        padding: EdgeInsets.fromLTRB(
           AppSpacing.lg,
           0,
           AppSpacing.lg,
-          AppSpacing.xl,
+          AppSpacing.xl + MediaQuery.viewPaddingOf(sheetContext).bottom,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -327,6 +334,185 @@ class _MapPanel extends StatelessWidget {
   }
 }
 
+/// What one pin knows about itself.
+///
+/// Everything here is already in hand when the map draws: [MapPlace] carries
+/// the counts, the condition and the position, so opening this costs no query
+/// and cannot fail. That matters more than it looks — the room taps a pin to
+/// settle a question in the middle of a conversation, and a spinner is an
+/// answer arriving after the question has moved on.
+class _PlaceSheet extends StatelessWidget {
+  const _PlaceSheet({required this.place});
+
+  final MapPlace place;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        0,
+        AppSpacing.lg,
+        // The sheet ends above the gesture bar rather than under it. Android 15
+        // draws edge to edge and will happily put the navigation pill on top of
+        // the last row otherwise.
+        AppSpacing.xl + MediaQuery.viewPaddingOf(context).bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // The same dot that is on the map, so the eye carries the colour
+              // it just tapped straight into the sentence explaining it.
+              Container(
+                width: 14,
+                height: 14,
+                margin: const EdgeInsets.only(top: 5),
+                decoration: BoxDecoration(
+                  color: _conditionColour(scheme, place.condition),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: scheme.surface, width: 2),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(place.placeName, style: theme.textTheme.titleMedium),
+                    Text(
+                      place.groupName.of(context),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            _conditionLabel(l, place.condition),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: _conditionColour(scheme, place.condition),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              _Count(
+                value: place.posted,
+                label: l.seasonMapPosted,
+              ),
+              _Count(
+                value: place.present,
+                label: l.seasonMapPresent,
+              ),
+              _Count(
+                value: place.openIncidents,
+                label: l.seasonMapOpenIncidents,
+                // Zero open incidents is the good news, so it is not coloured
+                // like a warning; any at all is.
+                colour: place.openIncidents > 0 ? scheme.error : null,
+              ),
+            ],
+          ),
+          // A hotel that stands in no file has no roster to belong to — most of
+          // المدينة is in that position, since the file there is organised by
+          // service company and not by building.
+          if (place.moduleName.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              l.seasonMapInFile,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+            Text(place.moduleName, style: theme.textTheme.bodyMedium),
+          ],
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${place.position.latitude.toStringAsFixed(6)}, '
+                  '${place.position.longitude.toStringAsFixed(6)}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              // The one thing a man standing in Mina actually wants off a pin:
+              // the numbers, in a form he can paste into whatever will drive
+              // him there. Copying rather than launching, because which app
+              // that is differs by phone and by whose SIM is in it.
+              TextButton.icon(
+                onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  await Clipboard.setData(
+                    ClipboardData(
+                      text: '${place.position.latitude},'
+                          '${place.position.longitude}',
+                    ),
+                  );
+                  messenger
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(
+                      SnackBar(content: Text(l.seasonMapCoordinatesCopied)),
+                    );
+                },
+                icon: const Icon(Icons.copy_rounded, size: 18),
+                label: Text(l.seasonMapCopyCoordinates),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One figure and what it counts.
+class _Count extends StatelessWidget {
+  const _Count({required this.value, required this.label, this.colour});
+
+  final int value;
+  final String label;
+  final Color? colour;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$value',
+            style: theme.textTheme.headlineSmall?.copyWith(color: colour),
+          ),
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// One place, coloured by what is true of it.
 ///
 /// Colour before words: the whole reason to draw the season rather than list it
@@ -340,12 +526,7 @@ class _PlacePin extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final colour = switch (place.condition) {
-      PlaceCondition.incident => scheme.error,
-      PlaceCondition.unmanned => scheme.tertiary,
-      PlaceCondition.manned => scheme.primary,
-      PlaceCondition.empty => scheme.outline,
-    };
+    final colour = _conditionColour(scheme, place.condition);
 
     return Tooltip(
       message: '${place.placeName} · ${place.moduleName}',
@@ -461,10 +642,19 @@ class _Legend extends StatelessWidget {
             spacing: AppSpacing.md,
             runSpacing: AppSpacing.xs,
             children: [
-              _Key(colour: scheme.primary, label: l.seasonMapManned),
-              _Key(colour: scheme.tertiary, label: l.seasonMapUnmanned),
-              _Key(colour: scheme.error, label: l.seasonMapIncident),
-              _Key(colour: scheme.outline, label: l.seasonMapEmpty),
+              // Listed calmest-first, which is the reverse of the enum's own
+              // order: the enum ranks by what somebody must DO about it, and a
+              // key is read left to right by somebody not yet worried.
+              for (final condition in const [
+                PlaceCondition.manned,
+                PlaceCondition.unmanned,
+                PlaceCondition.incident,
+                PlaceCondition.empty,
+              ])
+                _Key(
+                  colour: _conditionColour(scheme, condition),
+                  label: _conditionLabel(l, condition),
+                ),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
