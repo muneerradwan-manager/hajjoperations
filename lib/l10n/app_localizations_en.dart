@@ -337,7 +337,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeGeneralSection => 'General';
 
   @override
-  String get homeAdminGroupFiles => 'Files & decisions';
+  String get homeAdminGroupFiles => 'Files, decisions & circulars';
 
   @override
   String get homeAdminGroupPeople => 'People & permissions';
@@ -521,7 +521,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permReferenceImport => 'Copy data from another season';
 
   @override
-  String get perm_reports => 'Decisions';
+  String get perm_reports => 'Decisions and circulars';
 
   @override
   String get permReportsViewAll => 'View all decisions, including drafts';
@@ -840,6 +840,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get blockTableSpans => 'Columns that merge downward';
 
   @override
+  String get blockTableTags => 'Columns read as a list';
+
+  @override
   String get blockTableExpand => 'A column per entry of';
 
   @override
@@ -928,13 +931,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get navReportsManage => 'Decisions management';
+  String get navReportsManage => 'Decisions & circulars management';
 
   @override
   String get navReportsManageSubtitle => 'Enter, correct and publish decisions';
 
   @override
-  String get navReports => 'Decisions';
+  String get navReports => 'Decisions and circulars';
 
   @override
   String get navReportsSubtitle =>

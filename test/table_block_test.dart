@@ -97,6 +97,71 @@ void main() {
     });
   });
 
+  group('where the generated columns go', () {
+    // توزيع الوجبات is التاريخ، الوجبة، النسبة، then a column per تكتل, then
+    // المجموع — the total is the sum ACROSS the clusters and belongs after the
+    // things it totals. Appending blindly moves a published document's column.
+    final distribution = table({
+      'columns': ['التاريخ', 'الوجبة', 'النسبة', 'المجموع'],
+      'expand': 'clusters',
+      'expand_at': 3,
+      'spans': [true, false, false, false],
+    });
+
+    test('in the middle, when the document says so', () {
+      expect(distribution.effectiveColumns(['تكتل أ', 'تكتل ب']), [
+        'التاريخ',
+        'الوجبة',
+        'النسبة',
+        'تكتل أ',
+        'تكتل ب',
+        'المجموع',
+      ]);
+    });
+
+    test('at the end, when it does not', () {
+      final plain = table({
+        'columns': ['أ', 'ب'],
+        'expand': 'clusters',
+      });
+
+      expect(plain.effectiveColumns(['ج']), ['أ', 'ب', 'ج']);
+    });
+
+    test('and a merge follows its own column across the splice', () {
+      // The marks were ticked against the TYPED columns and the table is drawn
+      // against the spliced ones. Unmapped, a merge meant for التاريخ would
+      // land on a cluster's count.
+      expect(distribution.effectiveIndexOf(0, 2), 0);
+      expect(distribution.effectiveIndexOf(2, 2), 2);
+      // المجموع is the fourth typed column and the sixth drawn one.
+      expect(distribution.effectiveIndexOf(3, 2), 5);
+    });
+
+    test('nothing moves when there is nothing to splice', () {
+      expect(distribution.effectiveIndexOf(3, 0), 3);
+      expect(distribution.effectiveColumns(const []), [
+        'التاريخ',
+        'الوجبة',
+        'النسبة',
+        'المجموع',
+      ]);
+    });
+
+    test('an insertion point past the end is clamped, not thrown', () {
+      // A column removed after the point was recorded. Better a table that
+      // renders with its extra columns at the end than an editor that crashes
+      // on a document somebody has to correct.
+      final stale = table({
+        'columns': ['أ'],
+        'expand': 'clusters',
+        'expand_at': 9,
+      });
+
+      expect(stale.effectiveColumns(['ج']), ['أ', 'ج']);
+    });
+  });
+
   test('an empty table is still empty when it only names a list', () {
     // `expand` alone is a table somebody started and did not fill. It must not
     // render as a header row over nothing.

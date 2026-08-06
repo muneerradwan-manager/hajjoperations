@@ -101,16 +101,59 @@ class ReportBlock {
   bool spansAt(int column) =>
       column < spans.length ? spans[column] : false;
 
+  /// Which typed columns hold a LIST rather than a sentence.
+  ///
+  /// مكونات الوجبات is nine items per meal, stored one per line because that is
+  /// how the published document prints them. Nine lines down a column makes the
+  /// row nine lines tall and leaves the rest of the table in a stripe of white;
+  /// read as tags they flow across the width they are given. Told rather than
+  /// guessed, because a paragraph in a table has newlines in it too and is not
+  /// a list.
+  List<bool> get tags => [
+    for (final t in (data['tags'] as List?) ?? const []) t == true,
+  ];
+
+  bool tagsAt(int column) => column < tags.length ? tags[column] : false;
+
+  /// Where among the typed columns the generated ones are inserted.
+  ///
+  /// Null means at the end, which is what an ordinary table wants. توزيع
+  /// الوجبات wants them in the MIDDLE: التاريخ، الوجبة، النسبة، then a column
+  /// per تكتل, then المجموع — because the total is the sum across the clusters
+  /// and belongs after the things it totals. Appending blindly would move it,
+  /// which changes a published document's shape for no reason anybody asked
+  /// for.
+  int? get expandAt {
+    final at = data['expand_at'];
+    if (at is int) return at.clamp(0, columns.length);
+    final parsed = int.tryParse('${at ?? ''}');
+    return parsed?.clamp(0, columns.length);
+  }
+
   /// Every heading the table actually has, given the season's entries.
   ///
   /// [expanded] is what [expandSetCode] resolved to — passed in rather than
   /// looked up, because the block does not know about repositories and the same
   /// block is rendered by an editor that has the sets loaded and by a reader
   /// that has them loaded too.
-  List<String> effectiveColumns(List<String> expanded) => [
-    ...columns,
-    if (expandSetCode != null) ...expanded,
-  ];
+  List<String> effectiveColumns(List<String> expanded) {
+    if (expandSetCode == null || expanded.isEmpty) return columns;
+    final at = expandAt ?? columns.length;
+    return [...columns.take(at), ...expanded, ...columns.skip(at)];
+  }
+
+  /// Where a typed column ends up once the generated ones are spliced in.
+  ///
+  /// `spans` and `tags` are indexed against the TYPED columns, because that is
+  /// what a person ticked in the editor. The table is drawn against the
+  /// effective ones. Without this the marks land on whatever happens to sit at
+  /// that position after the splice — a merge on a cluster's count instead of
+  /// on the date.
+  int effectiveIndexOf(int typedColumn, int expandedCount) {
+    if (expandSetCode == null || expandedCount == 0) return typedColumn;
+    final at = expandAt ?? columns.length;
+    return typedColumn < at ? typedColumn : typedColumn + expandedCount;
+  }
 
   /// Rows as they are stored: a list of lists, one value per column.
   List<List<String>> get rows => [

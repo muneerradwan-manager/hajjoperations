@@ -177,6 +177,46 @@ class _BlockCard extends StatelessWidget {
     );
   }
 
+  /// One row's inputs, across the EFFECTIVE columns.
+  ///
+  /// The generated columns are resolved through the cubit's own expansion —
+  /// the same resolution the reader uses — so the editor and the page agree
+  /// about which heading a cell sits under. A generated column's field is
+  /// labelled with its entry's name (تكتل الكعبة, not "عمود ١٦") and keyed by
+  /// the entry's id, so a season gaining a cluster does not strand a
+  /// controller's text under the wrong heading.
+  List<Widget> _rowFields(BuildContext context, int r) {
+    final block = this.block;
+    final expansion = cubit.state.expansionOf(block);
+    final at = block.expandAt ?? block.columns.length;
+
+    // (label, stable key part) per effective column, typed and generated
+    // spliced exactly as the rows store them.
+    final headings = <({String label, String key})>[
+      for (var c = 0; c < at; c++)
+        (label: block.columns[c], key: 'c$c'),
+      for (final item in expansion)
+        (label: item.name.of(context), key: item.id),
+      for (var c = at; c < block.columns.length; c++)
+        (label: block.columns[c], key: 'c$c'),
+    ];
+
+    return [
+      for (var e = 0; e < headings.length; e++) ...[
+        const SizedBox(height: AppSpacing.xs),
+        TextFormField(
+          key: ValueKey('b${index}_r${r}_${headings[e].key}'),
+          initialValue: e < block.rows[r].length ? block.rows[r][e] : '',
+          decoration: InputDecoration(
+            isDense: true,
+            labelText: headings[e].label,
+          ),
+          onChanged: (v) => cubit.setBlockCell(index, r, e, v),
+        ),
+      ],
+    ];
+  }
+
   List<Widget> _fields(BuildContext context) {
     final l = context.l10n;
 
@@ -296,6 +336,27 @@ class _BlockCard extends StatelessWidget {
                   ),
               ],
             ),
+            const SizedBox(height: AppSpacing.sm),
+            // A column of items rather than a sentence. مكونات الوجبات is nine
+            // per meal, and nine lines down a column makes the row nine lines
+            // tall with the rest of the table sitting in a stripe of white.
+            // Told rather than guessed: a paragraph in a table has newlines in
+            // it too and is not a list.
+            Text(
+              l.blockTableTags,
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+            Wrap(
+              spacing: AppSpacing.sm,
+              children: [
+                for (var c = 0; c < block.columns.length; c++)
+                  FilterChip(
+                    label: Text(block.columns[c]),
+                    selected: block.tagsAt(c),
+                    onSelected: (_) => cubit.toggleBlockTags(index, c),
+                  ),
+              ],
+            ),
           ],
           // And the list whose entries become one column each. THIS is what a
           // hand-typed table could never do, and the reason توزيع الوجبات
@@ -363,20 +424,19 @@ class _BlockCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    for (var c = 0; c < block.columns.length; c++) ...[
-                      const SizedBox(height: AppSpacing.xs),
-                      TextFormField(
-                        key: ValueKey('b${index}_r${r}_c$c'),
-                        initialValue: c < block.rows[r].length
-                            ? block.rows[r][c]
-                            : '',
-                        decoration: InputDecoration(
-                          isDense: true,
-                          labelText: block.columns[c],
-                        ),
-                        onChanged: (v) => cubit.setBlockCell(index, r, c, v),
-                      ),
-                    ],
+                    // Every column the table HAS — the typed ones AND the ones
+                    // its expansion generates, each labelled by the entry it
+                    // stands for and addressed at its EFFECTIVE index.
+                    //
+                    // Both halves of that sentence fix a live corruption. The
+                    // loop used to cover the typed columns only, so a
+                    // distribution table's thirteen cluster cells were never
+                    // rendered and could not be edited at all. And it handed
+                    // `setBlockCell` its typed loop index while the rows store
+                    // effective positions — so the field labelled المجموع read
+                    // and OVERWROTE the first تكتل's count, in both directions,
+                    // silently.
+                    ..._rowFields(context, r),
                   ],
                 ),
               ),

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../core/bloc/safe_cubit.dart';
 import '../../../core/supabase/supabase_client.dart';
@@ -49,6 +50,32 @@ class DraftBlock {
   ];
 
   bool spansAt(int column) => column < spans.length ? spans[column] : false;
+
+  List<bool> get tags => [
+    for (final t in (data['tags'] as List?) ?? const []) t == true,
+  ];
+
+  bool tagsAt(int column) => column < tags.length ? tags[column] : false;
+
+  /// Where among the typed columns the generated ones are spliced. Mirrors
+  /// [ReportBlock.expandAt] — this getter was MISSING from the draft, which is
+  /// half of how the editor came to write cells at the wrong index: it read the
+  /// generated block as sitting at the end while the reader spliced it into
+  /// the middle.
+  int? get expandAt {
+    final at = data['expand_at'];
+    if (at is int) return at.clamp(0, columns.length);
+    final parsed = int.tryParse('${at ?? ''}');
+    return parsed?.clamp(0, columns.length);
+  }
+
+  /// The index a typed column is stored at, once the generated ones are
+  /// spliced in. Mirrors [ReportBlock.effectiveIndexOf].
+  int effectiveIndexOf(int typedColumn, int expandedCount) {
+    if (expandSetCode == null || expandedCount == 0) return typedColumn;
+    final at = expandAt ?? columns.length;
+    return typedColumn < at ? typedColumn : typedColumn + expandedCount;
+  }
 }
 
 /// A row being edited, before it has an id of its own.
@@ -147,6 +174,25 @@ class ReportEditorState extends Equatable {
     return out;
   }
 
+  /// The entries a table block's `expand` becomes one column each of, in THIS
+  /// document's season.
+  ///
+  /// The mirror of `ReportDetailState.expansionOf`, and the two must agree:
+  /// the editor and the reader splice the generated columns at the same width
+  /// or the editor writes a value under one heading and the reader draws it
+  /// under another — which is the error nobody notices until the numbers are
+  /// quoted.
+  List<ReferenceItem> expansionOf(DraftBlock block) {
+    final code = block.expandSetCode;
+    if (code == null) return const [];
+    final set = referenceSets.where((s) => s.code == code).firstOrNull;
+    if (set == null) return const [];
+    return [
+      for (final item in set.itemsForSeason(seasonId))
+        if (item.isActive) item,
+    ];
+  }
+
   /// Whether the chosen kind is entered once per season and that season
   /// already has its report. The season includes the GENERAL bucket: one
   /// document there too, not many.
@@ -231,6 +277,19 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
     : super(const ReportEditorState()) {
     _load();
   }
+
+  /// A cubit standing on a state that is already loaded.
+  ///
+  /// For exercising the block-table arithmetic — splices, realignments,
+  /// effective indices — without a repository or a network behind it, which is
+  /// most of what there is to get wrong here and none of it needs a server to
+  /// be wrong in.
+  @visibleForTesting
+  ReportEditorCubit.forTest(super.initial)
+    : _repo = ReportsRepository(),
+      _modules = ModulesRepository(),
+      _seasons = SeasonsRepository(),
+      existing = null;
 
   final ReportsRepository _repo;
   final ModulesRepository _modules;
@@ -344,14 +403,49 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
   /// The moving is [realignRows], which is where the awkward part lives: the
   /// columns are entered as tags, so a rename is indistinguishable from a
   /// removal and an addition, and it has to be recognised rather than told.
+  ///
+  /// The GENERATED cells are lifted out before the realign and spliced back
+  /// after it. `realignRows` returns rows of exactly `after.length`, and
+  /// handing it the whole row used to hand it the cluster counts too — so
+  /// renaming one heading on توزيع الوجبات threw away thirteen columns of
+  /// numbers, silently. The typed columns are the only thing being edited
+  /// here, so they are the only thing the realign may touch.
   void setBlockColumns(int index, List<String> columns) {
+    final b = state.blocks[index];
+    final expanded = state.expansionOf(b).length;
+    final beforeAt = b.expandAt ?? b.columns.length;
+    // The generated block moves with its insertion point: it sat after
+    // `beforeAt` typed columns and must sit after the same count — clamped,
+    // in case the edit removed columns before it.
+    final afterAt = beforeAt.clamp(0, columns.length);
+
+    List<String> typedPart(List<String> row) => [
+      ...row.take(beforeAt),
+      ...row.skip(beforeAt + expanded),
+    ];
+    List<String> generatedPart(List<String> row) => [
+      for (var i = 0; i < expanded; i++)
+        beforeAt + i < row.length ? row[beforeAt + i] : '',
+    ];
+
+    final generated = [for (final row in b.rows) generatedPart(row)];
+    final realigned = realignRows(
+      before: b.columns,
+      after: columns,
+      rows: [for (final row in b.rows) typedPart(row)],
+    );
+
     _setBlock(index, {
       'columns': columns,
-      'rows': realignRows(
-        before: state.blocks[index].columns,
-        after: columns,
-        rows: state.blocks[index].rows,
-      ),
+      if (b.expandSetCode != null) 'expand_at': afterAt,
+      'rows': [
+        for (var r = 0; r < realigned.length; r++)
+          [
+            ...realigned[r].take(afterAt),
+            ...generated[r],
+            ...realigned[r].skip(afterAt),
+          ],
+      ],
     });
   }
 
@@ -367,6 +461,16 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
     _setBlock(index, {'spans': spans});
   }
 
+  /// Which typed column is read as a list of tags rather than a sentence.
+  void toggleBlockTags(int index, int column) {
+    final b = state.blocks[index];
+    final tags = [
+      for (var i = 0; i < b.columns.length; i++)
+        i == column ? !b.tagsAt(i) : b.tagsAt(i),
+    ];
+    _setBlock(index, {'tags': tags});
+  }
+
   /// The master-data list whose entries become one column each.
   ///
   /// The rows are NOT realigned. A generated column's values are keyed by
@@ -378,20 +482,34 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
   void setBlockExpand(int index, String? code) {
     final b = state.blocks[index];
     if (b.expandSetCode == code) return;
+    final expanded = state.expansionOf(b).length;
+    final at = b.expandAt ?? b.columns.length;
     _setBlock(index, {
       'expand': code,
+      // A new list starts its columns at the end; a document that wants them
+      // in the middle records that at conversion (0103) or on a column edit.
+      'expand_at': code == null ? null : b.columns.length,
+      // The generated cells are CUT OUT, not truncated from the end: the old
+      // `take(columns.length)` assumed they sat last, and on توزيع الوجبات —
+      // where المجموع sits after them — it kept the clusters and threw away
+      // the totals.
       'rows': [
-        for (final row in b.rows) row.take(b.columns.length).toList(),
+        for (final row in b.rows)
+          [...row.take(at), ...row.skip(at + expanded)],
       ],
     });
   }
 
   void addBlockRow(int index) {
     final b = state.blocks[index];
+    // Sized to every column the table HAS — typed and generated alike. Sized
+    // to the typed ones alone, a 17-column distribution row was born 4 cells
+    // wide, and the first cluster count typed into it landed under المجموع.
+    final width = b.columns.length + state.expansionOf(b).length;
     _setBlock(index, {
       'rows': [
         ...b.rows,
-        [for (final _ in b.columns) ''],
+        List.filled(width, ''),
       ],
     });
   }
@@ -401,6 +519,11 @@ class ReportEditorCubit extends SafeCubit<ReportEditorState> {
     _setBlock(index, {'rows': rows});
   }
 
+  /// Writes one cell. [column] is the EFFECTIVE index — the position in the
+  /// stored row, generated columns included — and the UI must supply it as
+  /// such. The editor used to hand this its typed loop index, which on any
+  /// table with an expansion pointed at the wrong cell: the حقل labelled
+  /// المجموع read and overwrote the first تكتل's count.
   void setBlockCell(int index, int row, int column, String value) {
     final rows = [
       for (final r in state.blocks[index].rows) [...r],

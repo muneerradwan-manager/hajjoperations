@@ -713,7 +713,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeAdminGroupFiles.
   ///
   /// In en, this message translates to:
-  /// **'Files & decisions'**
+  /// **'Files, decisions & circulars'**
   String get homeAdminGroupFiles;
 
   /// No description provided for @homeAdminGroupPeople.
@@ -1073,7 +1073,7 @@ abstract class AppLocalizations {
   /// No description provided for @perm_reports.
   ///
   /// In en, this message translates to:
-  /// **'Decisions'**
+  /// **'Decisions and circulars'**
   String get perm_reports;
 
   /// No description provided for @permReportsViewAll.
@@ -1664,6 +1664,12 @@ abstract class AppLocalizations {
   /// **'Columns that merge downward'**
   String get blockTableSpans;
 
+  /// No description provided for @blockTableTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Columns read as a list'**
+  String get blockTableTags;
+
   /// No description provided for @blockTableExpand.
   ///
   /// In en, this message translates to:
@@ -1823,7 +1829,7 @@ abstract class AppLocalizations {
   /// No description provided for @navReportsManage.
   ///
   /// In en, this message translates to:
-  /// **'Decisions management'**
+  /// **'Decisions & circulars management'**
   String get navReportsManage;
 
   /// No description provided for @navReportsManageSubtitle.
@@ -1835,7 +1841,7 @@ abstract class AppLocalizations {
   /// No description provided for @navReports.
   ///
   /// In en, this message translates to:
-  /// **'Decisions'**
+  /// **'Decisions and circulars'**
   String get navReports;
 
   /// No description provided for @navReportsSubtitle.

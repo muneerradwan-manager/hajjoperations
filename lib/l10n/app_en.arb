@@ -119,7 +119,7 @@
   "homeAdminSection": "Administration",
   "homeGeneralSection": "General",
 
-  "homeAdminGroupFiles": "Files & decisions",
+  "homeAdminGroupFiles": "Files, decisions & circulars",
   "homeAdminGroupPeople": "People & permissions",
   "homeAdminGroupSeason": "Season & reference data",
   "homeAdminGroupOversight": "Oversight & records",
@@ -186,7 +186,7 @@
   "permReferenceEdit": "Add & edit master data",
   "permReferenceDelete": "Delete master data",
   "permReferenceImport": "Copy data from another season",
-  "perm_reports": "Decisions",
+  "perm_reports": "Decisions and circulars",
   "permReportsViewAll": "View all decisions, including drafts",
   "permReportsCreate": "Create decisions",
   "permReportsEdit": "Edit decisions",
@@ -300,6 +300,7 @@
   "blockQrValue": "What the code carries",
   "blockQrHint": "Usually a link",
   "blockTableSpans": "Columns that merge downward",
+  "blockTableTags": "Columns read as a list",
   "blockTableExpand": "A column per entry of",
   "blockTableExpandHint": "One column per entry — and it follows the list when an entry is added",
   "blockTableExpandNone": "None",
@@ -335,9 +336,9 @@
   "@reportRowNumber": {
     "placeholders": { "number": { "type": "int" } }
   },
-  "navReportsManage": "Decisions management",
+  "navReportsManage": "Decisions & circulars management",
   "navReportsManageSubtitle": "Enter, correct and publish decisions",
-  "navReports": "Decisions",
+  "navReports": "Decisions and circulars",
   "navReportsSubtitle": "Timetables and notices published to the mission",
   "reportsEmpty": "Nothing has been published yet",
   "reportsNoMatches": "No decision matches",

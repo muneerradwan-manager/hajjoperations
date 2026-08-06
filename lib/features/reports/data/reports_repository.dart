@@ -82,11 +82,26 @@ class ReportsRepository {
         .toList();
   }
 
-  /// One report in full: its header, its table and its attachments.
+  /// One document in full: its header, its table, its BLOCKS and its
+  /// attachments.
+  ///
+  /// `report_blocks` was missing from this select from 0069 until 0103, and it
+  /// hid because nothing exercised it: the only type with blocks was `general`,
+  /// and `general` had zero documents until the meal shapes were converted into
+  /// it. The moment there was a written document, it read as blank.
+  ///
+  /// The blank page was the lesser half. This same call feeds the EDITOR — both
+  /// screens push `ReportEditorScreen(existing: …)` with what they fetched, and
+  /// the editor never refetches — while `save_report` deletes every block and
+  /// re-inserts the ones it is handed. So a written document opened and saved
+  /// would have had its entire content deleted, silently, by somebody who
+  /// changed its title. `test/reports_select_test.dart` holds this shut.
   Future<Report?> fetchReport(String id) async {
     final row = await supabase
         .from('reports')
-        .select('$_columns, report_rows(*), report_attachments(*)')
+        .select(
+          '$_columns, report_rows(*), report_blocks(*), report_attachments(*)',
+        )
         .eq('id', id)
         .maybeSingle();
     return row == null ? null : Report.fromMap(row);

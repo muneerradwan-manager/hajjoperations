@@ -165,9 +165,18 @@ class _WrittenTable extends StatelessWidget {
     // Only the TYPED columns can span. A generated one holds a count per
     // تكتل, and two clusters that happen to have the same number are not one
     // merged cell — they are a coincidence this would hide.
+    //
+    // Mapped through `effectiveIndexOf`, because the marks were ticked against
+    // the typed columns and the table is drawn against the spliced ones: a
+    // distribution table puts thirteen clusters between النسبة and المجموع, and
+    // an unmapped index would merge a cluster's count instead of the date.
     spans: {
       for (var i = 0; i < block.columns.length; i++)
-        if (block.spansAt(i)) i,
+        if (block.spansAt(i)) block.effectiveIndexOf(i, expanded.length),
+    },
+    tagged: {
+      for (var i = 0; i < block.columns.length; i++)
+        if (block.tagsAt(i)) block.effectiveIndexOf(i, expanded.length),
     },
   );
 }
