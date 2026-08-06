@@ -56,6 +56,12 @@ class AuditLabels {
       name: LocalizedName(ar: 'تقارير الملفات', en: 'File reports'),
       tables: ['module_reports', 'module_report_attachments'],
     ),
+    // Standalone since 0105 — no relation to the operational files.
+    AuditEntityGroup(
+      key: 'personal_tasks',
+      name: LocalizedName(ar: 'المهام', en: 'Tasks'),
+      tables: ['personal_tasks', 'personal_task_attachments'],
+    ),
     AuditEntityGroup(
       key: 'reference',
       name: LocalizedName(ar: 'البيانات المرجعية', en: 'Master data'),
@@ -144,6 +150,11 @@ class AuditLabels {
       en: 'Duty attachment',
     ),
     'module_ratings': LocalizedName(ar: 'تقييم', en: 'Rating'),
+    'personal_tasks': LocalizedName(ar: 'مهمة', en: 'Task'),
+    'personal_task_attachments': LocalizedName(
+      ar: 'مرفق مهمة',
+      en: 'Task attachment',
+    ),
     'module_reports': LocalizedName(ar: 'تقرير ملف', en: 'File report'),
     'module_report_attachments': LocalizedName(
       ar: 'مرفق تقرير ملف',

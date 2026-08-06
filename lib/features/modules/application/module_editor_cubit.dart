@@ -601,21 +601,6 @@ class ModuleEditorCubit extends SafeCubit<ModuleEditorState> {
     }
   }
 
-  /// Hands one member his share of his team's duties. Handing him none is a
-  /// legitimate outcome — he is on the team, and that is the posting.
-  Future<String?> setMemberTasks(String memberId, Set<String> taskIds) async {
-    emit(state.copyWith(status: EditorStatus.saving));
-    try {
-      await _repo.setAssignedTasks(memberId: memberId, taskIds: taskIds);
-      await _reloadMembers();
-      emit(state.copyWith(status: EditorStatus.ready));
-      return null;
-    } catch (e) {
-      emit(state.copyWith(status: EditorStatus.ready));
-      return e.toString();
-    }
-  }
-
   /// Returns null on success, else the failure. Removing a sector removes the
   /// towers under it.
   Future<String?> deleteNode(String id) async {

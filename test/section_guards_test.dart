@@ -164,6 +164,9 @@ void main() {
         // leads somewhere its holder could not otherwise go.
         '/export',
         '/map',
+        // Writing tasks onto OTHER people's lists (0105). A person's own list
+        // is `/tasks` and is deliberately not here — see the open list below.
+        '/tasks/manage',
       });
     });
 
@@ -189,6 +192,10 @@ void main() {
       // code on the wall and the phone's own position (0098) — and a grant on
       // top of that would only stop the honest. Reading everyone's is
       // `/presence`, and that one IS guarded.
+      // /tasks is a person's own list, and owning one is not a permission
+      // somebody grants: everybody has one by existing, and what was assigned
+      // to them arrived by NAME. Writing onto other people's lists is
+      // `/tasks/manage`, and that one IS guarded.
       for (final open in [
         '/modules',
         '/reports',
@@ -197,6 +204,7 @@ void main() {
         '/evaluations',
         '/incident',
         '/check-in',
+        '/tasks',
         '/',
       ]) {
         expect(

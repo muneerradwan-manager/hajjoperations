@@ -545,8 +545,8 @@ class _BodyState extends State<_Body> {
     // and it is the part with a scrollbar.
     final work = <Widget>[
       // The posting itself: which post, where, and what the Administration says
-      // it is. Not its duties — those are the board below, where they carry a
-      // state and are read per place rather than per man.
+      // it is. Not its duties — those are the descriptive lists below, read
+      // per post rather than per man.
       if (roles.isNotEmpty) ...[
         const SizedBox(height: AppSpacing.lg),
         SectionHeader(
@@ -556,14 +556,13 @@ class _BodyState extends State<_Body> {
           icon: AppIcons.roles,
         ),
         for (final held in roles) ...[
-          _TaskCard(type: type!, held: held),
+          _TaskCard(held: held),
           const SizedBox(height: AppSpacing.md),
         ],
       ],
 
-      // The duties, in the three levels the work is organised in: the file's,
-      // then each post's at each place, then whatever was written for one man
-      // by name. See `moduleTaskSections`.
+      // The duty lists written on the file: the file's own, then each post's.
+      // Description only — see `moduleTaskSections`.
       ...moduleTaskSections(context, state, canManage: canManageTasks),
 
       if (module.reportCadence.asksForReports) ...[
@@ -1026,14 +1025,7 @@ class _RoleRosterCard extends StatelessWidget {
               spacing: AppSpacing.lg,
               equalHeights: false,
               children: [
-                for (final member in members)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _MemberTile(member: member),
-                      ..._duties(context, member.taskIds),
-                    ],
-                  ),
+                for (final member in members) _MemberTile(member: member),
               ],
             ),
           ),
@@ -1041,39 +1033,6 @@ class _RoleRosterCard extends StatelessWidget {
         ],
       ],
     );
-  }
-
-  /// What this person was handed, in the stages the work happens in. Someone
-  /// with nothing handed to him is not an oversight — being in the file is
-  /// itself the posting — so this says so plainly rather than leaving a gap.
-  List<Widget> _duties(BuildContext context, Set<String> assigned) {
-    final l = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    final type = state.type;
-    if (type == null || !role.tasksAreAssigned) return const [];
-    final tasks = type.dutiesOf(role, assigned);
-
-    return [
-      const SizedBox(height: AppSpacing.md),
-      if (tasks.isEmpty)
-        Text(
-          l.moduleNoAssignedTasks,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: scheme.onSurfaceVariant,
-            fontStyle: FontStyle.italic,
-          ),
-        )
-      else ...[
-        Text(
-          l.moduleAssignedTasks,
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        ...stagedTasks(context, type, tasks),
-      ],
-    ];
   }
 }
 
@@ -1485,20 +1444,18 @@ class _PdfCard extends StatelessWidget {
   }
 }
 
-/// What a role actually is: its job description, and the duties on top of it.
-/// The description is defined once on the module type, so it appears here
-/// without ever being re-entered per file.
+/// What a posting actually is: the post, where it is held, and the job
+/// description the Administration wrote for it once on the type.
 ///
-/// The duties are whichever of the two kinds the role uses — the standing list
-/// every holder carries, or only the share this person was handed. Nobody
-/// should be shown a duty that is not his.
+/// Not its duties — since 0105 a post's duties are a descriptive list written
+/// on the file (see `moduleTaskSections`), and repeating them here would be
+/// the same list printed twice.
 ///
 /// The places are on the card because the same role is often held in several
 /// towers at once, and "which towers" is half the answer.
 class _TaskCard extends StatelessWidget {
-  const _TaskCard({required this.type, required this.held});
+  const _TaskCard({required this.held});
 
-  final ModuleType type;
   final RoleHere held;
 
   @override
@@ -1506,7 +1463,6 @@ class _TaskCard extends StatelessWidget {
     final l = context.l10n;
     final scheme = Theme.of(context).colorScheme;
     final role = held.role;
-    final tasks = held.tasks;
 
     return GlassCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -1546,109 +1502,6 @@ class _TaskCard extends StatelessWidget {
               ).textTheme.bodyMedium?.copyWith(height: 1.6),
             ),
           ],
-          // The standing duties of the post are NOT here any more. Since 0083
-          // they belong to the post rather than to the man holding it, and they
-          // are read — with their state, and once per place he holds it — off
-          // the board below (see `moduleTaskSections`). Repeating them here as
-          // a flat list with no state would be the old screen printed twice.
-          //
-          // What stays is the one list the board cannot carry: a role whose
-          // duties are a MENU (`tasks_are_assigned`, 0027), where what is his
-          // is what he was handed rather than what the post owes.
-          if (role.tasksAreAssigned) ...[
-            const SizedBox(height: AppSpacing.md),
-            if (tasks.isEmpty)
-              Text(
-                l.moduleNoAssignedTasksMine,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  fontStyle: FontStyle.italic,
-                ),
-              )
-            else ...[
-              Text(
-                l.moduleAssignedTasks,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              ...stagedTasks(context, type, tasks),
-            ],
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-/// [tasks] laid out in the stages of the work, each under its heading — or as a
-/// plain list, for a type whose duties fall into no stages.
-List<Widget> stagedTasks(
-  BuildContext context,
-  ModuleType type,
-  List<RoleTask> tasks,
-) {
-  final scheme = Theme.of(context).colorScheme;
-
-  return [
-    for (final (stage, inStage) in type.byStage(tasks)) ...[
-      if (stage != null)
-        Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-          child: Text(
-            stage.name.of(context),
-            style: Theme.of(
-              context,
-            ).textTheme.labelMedium?.copyWith(color: scheme.primary),
-          ),
-        ),
-      for (final task in inStage) _TaskLine(task: task),
-      if (stage != null) const SizedBox(height: AppSpacing.xs),
-    ],
-  ];
-}
-
-/// One duty, wherever it is listed.
-class _TaskLine extends StatelessWidget {
-  const _TaskLine({required this.task});
-
-  final RoleTask task;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 3),
-            child: Icon(AppIcons.tasks, size: 15, color: scheme.primary),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  task.title.of(context),
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(height: 1.5),
-                ),
-                if (task.description != null)
-                  Text(
-                    task.description!.of(context),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-              ],
-            ),
-          ),
         ],
       ),
     );

@@ -19,6 +19,7 @@ String permissionLabel(AppLocalizations l, String code) => switch (code) {
   'checkin' => l.perm_checkin,
   'export' => l.perm_export,
   'map' => l.perm_map,
+  'tasks' => l.perm_tasks,
   // Actions
   'employees.view' => l.permEmployeesView,
   'employees.create' => l.permEmployeesCreate,
@@ -74,6 +75,7 @@ String permissionLabel(AppLocalizations l, String code) => switch (code) {
   'checkin.rotate' => l.permCheckinRotate,
   'export.data' => l.permExportData,
   'map.view' => l.permMapView,
+  'tasks.assign' => l.permTasksAssign,
   // The fallback is the CODE, and it is the reason this went unnoticed for
   // three migrations: an unlabelled grant does not fail, it renders as
   // `evaluations.templates` in a list of Arabic sentences and reads as

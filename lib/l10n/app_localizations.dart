@@ -1274,6 +1274,18 @@ abstract class AppLocalizations {
   /// **'Open the season map'**
   String get permMapView;
 
+  /// No description provided for @perm_tasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get perm_tasks;
+
+  /// No description provided for @permTasksAssign.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign tasks to other people'**
+  String get permTasksAssign;
+
   /// No description provided for @permissionRequires.
   ///
   /// In en, this message translates to:
@@ -2963,13 +2975,13 @@ abstract class AppLocalizations {
   /// No description provided for @moduleSectionTasks.
   ///
   /// In en, this message translates to:
-  /// **'My role & duties'**
+  /// **'My role'**
   String get moduleSectionTasks;
 
   /// No description provided for @moduleSectionTasksOf.
   ///
   /// In en, this message translates to:
-  /// **'{name} — role & duties'**
+  /// **'{name} — role'**
   String moduleSectionTasksOf(String name);
 
   /// No description provided for @moduleJobDescription.
@@ -2977,36 +2989,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Job description'**
   String get moduleJobDescription;
-
-  /// No description provided for @moduleNoTasks.
-  ///
-  /// In en, this message translates to:
-  /// **'No tasks are defined for this role yet'**
-  String get moduleNoTasks;
-
-  /// No description provided for @moduleAssignedTasks.
-  ///
-  /// In en, this message translates to:
-  /// **'Assigned duties'**
-  String get moduleAssignedTasks;
-
-  /// No description provided for @moduleAssignedTasksCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} of {total} duties'**
-  String moduleAssignedTasksCount(int count, int total);
-
-  /// No description provided for @moduleNoAssignedTasks.
-  ///
-  /// In en, this message translates to:
-  /// **'No duties assigned yet'**
-  String get moduleNoAssignedTasks;
-
-  /// No description provided for @moduleNoAssignedTasksMine.
-  ///
-  /// In en, this message translates to:
-  /// **'You have not been handed any duty from this role\'s list yet'**
-  String get moduleNoAssignedTasksMine;
 
   /// No description provided for @moduleTasksSection.
   ///
@@ -3023,13 +3005,13 @@ abstract class AppLocalizations {
   /// No description provided for @moduleTasksFileHint.
   ///
   /// In en, this message translates to:
-  /// **'The whole file\'s work — every member sees the same list'**
+  /// **'The whole file\'s work — its members divide it among themselves'**
   String get moduleTasksFileHint;
 
   /// No description provided for @moduleTasksRole.
   ///
   /// In en, this message translates to:
-  /// **'My role\'s duties'**
+  /// **'Role duties'**
   String get moduleTasksRole;
 
   /// No description provided for @moduleTasksRoleOf.
@@ -3044,53 +3026,11 @@ abstract class AppLocalizations {
   /// **'Attached to the post, not the person — replacing the holder leaves them standing'**
   String get moduleTasksRoleHint;
 
-  /// No description provided for @moduleTasksPersonal.
-  ///
-  /// In en, this message translates to:
-  /// **'My personal duties'**
-  String get moduleTasksPersonal;
-
-  /// No description provided for @moduleTasksPersonalOf.
-  ///
-  /// In en, this message translates to:
-  /// **'{name} — personal duties'**
-  String moduleTasksPersonalOf(String name);
-
-  /// No description provided for @moduleTasksPersonalHint.
-  ///
-  /// In en, this message translates to:
-  /// **'By exception — seen only by the person named and whoever runs the file'**
-  String get moduleTasksPersonalHint;
-
   /// No description provided for @moduleTasksNone.
   ///
   /// In en, this message translates to:
-  /// **'This file has no duties yet'**
+  /// **'This file has no duties written yet'**
   String get moduleTasksNone;
-
-  /// No description provided for @moduleTasksNoneMine.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing in this file is owed by you'**
-  String get moduleTasksNoneMine;
-
-  /// No description provided for @moduleTasksProgress.
-  ///
-  /// In en, this message translates to:
-  /// **'{done}/{total}'**
-  String moduleTasksProgress(int done, int total);
-
-  /// No description provided for @moduleTasksMine.
-  ///
-  /// In en, this message translates to:
-  /// **'Mine'**
-  String get moduleTasksMine;
-
-  /// No description provided for @moduleTasksAll.
-  ///
-  /// In en, this message translates to:
-  /// **'Everything'**
-  String get moduleTasksAll;
 
   /// No description provided for @taskStateNotStarted.
   ///
@@ -3110,59 +3050,11 @@ abstract class AppLocalizations {
   /// **'Done'**
   String get taskStateDone;
 
-  /// No description provided for @moduleTaskUpdate.
-  ///
-  /// In en, this message translates to:
-  /// **'Update state'**
-  String get moduleTaskUpdate;
-
-  /// No description provided for @moduleTaskState.
-  ///
-  /// In en, this message translates to:
-  /// **'State'**
-  String get moduleTaskState;
-
-  /// No description provided for @moduleTaskNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Note'**
-  String get moduleTaskNote;
-
-  /// No description provided for @moduleTaskNoteHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Anything worth saying about it?'**
-  String get moduleTaskNoteHint;
-
-  /// No description provided for @moduleTaskEvidence.
-  ///
-  /// In en, this message translates to:
-  /// **'Evidence'**
-  String get moduleTaskEvidence;
-
-  /// No description provided for @moduleTaskUpdatedBy.
-  ///
-  /// In en, this message translates to:
-  /// **'{name} · {date}'**
-  String moduleTaskUpdatedBy(String name, String date);
-
   /// No description provided for @moduleTaskDue.
   ///
   /// In en, this message translates to:
   /// **'Due {date}'**
   String moduleTaskDue(String date);
-
-  /// No description provided for @moduleTaskStateSaved.
-  ///
-  /// In en, this message translates to:
-  /// **'State updated'**
-  String get moduleTaskStateSaved;
-
-  /// No description provided for @moduleTaskReadOnly.
-  ///
-  /// In en, this message translates to:
-  /// **'You may not update this duty'**
-  String get moduleTaskReadOnly;
 
   /// No description provided for @moduleTaskAdd.
   ///
@@ -3185,26 +3077,8 @@ abstract class AppLocalizations {
   /// No description provided for @moduleTaskDeleteConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Delete this duty? Its state and whatever was filed against it go with it.'**
+  /// **'Delete this duty from the file\'s list?'**
   String get moduleTaskDeleteConfirm;
-
-  /// No description provided for @moduleTaskDeleted.
-  ///
-  /// In en, this message translates to:
-  /// **'Duty deleted'**
-  String get moduleTaskDeleted;
-
-  /// No description provided for @moduleTaskCreated.
-  ///
-  /// In en, this message translates to:
-  /// **'Duty added'**
-  String get moduleTaskCreated;
-
-  /// No description provided for @moduleTaskSaved.
-  ///
-  /// In en, this message translates to:
-  /// **'Duty saved'**
-  String get moduleTaskSaved;
 
   /// No description provided for @moduleTaskScope.
   ///
@@ -3221,7 +3095,7 @@ abstract class AppLocalizations {
   /// No description provided for @moduleTaskScopeFileHint.
   ///
   /// In en, this message translates to:
-  /// **'Every member of the file sees it'**
+  /// **'The whole file\'s — members share it among themselves'**
   String get moduleTaskScopeFileHint;
 
   /// No description provided for @moduleTaskScopeRole.
@@ -3233,32 +3107,14 @@ abstract class AppLocalizations {
   /// No description provided for @moduleTaskScopeRoleHint.
   ///
   /// In en, this message translates to:
-  /// **'Whoever holds the post sees it'**
+  /// **'What holding the post means, whoever holds it'**
   String get moduleTaskScopeRoleHint;
-
-  /// No description provided for @moduleTaskScopePersonal.
-  ///
-  /// In en, this message translates to:
-  /// **'Personal duty'**
-  String get moduleTaskScopePersonal;
-
-  /// No description provided for @moduleTaskScopePersonalHint.
-  ///
-  /// In en, this message translates to:
-  /// **'One person sees it'**
-  String get moduleTaskScopePersonalHint;
 
   /// No description provided for @moduleTaskRoleLabel.
   ///
   /// In en, this message translates to:
   /// **'Role'**
   String get moduleTaskRoleLabel;
-
-  /// No description provided for @moduleTaskPersonLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Employee'**
-  String get moduleTaskPersonLabel;
 
   /// No description provided for @moduleTaskTitleLabel.
   ///
@@ -3278,24 +3134,6 @@ abstract class AppLocalizations {
   /// **'Description'**
   String get moduleTaskDescriptionLabel;
 
-  /// No description provided for @moduleTaskStageLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Stage'**
-  String get moduleTaskStageLabel;
-
-  /// No description provided for @moduleTaskNoStage.
-  ///
-  /// In en, this message translates to:
-  /// **'No stage'**
-  String get moduleTaskNoStage;
-
-  /// No description provided for @moduleTaskDueLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Due date'**
-  String get moduleTaskDueLabel;
-
   /// No description provided for @moduleTaskNoDue.
   ///
   /// In en, this message translates to:
@@ -3308,17 +3146,221 @@ abstract class AppLocalizations {
   /// **'Choose a role'**
   String get moduleTaskPickRole;
 
-  /// No description provided for @moduleTaskPickPerson.
+  /// No description provided for @navTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'My tasks'**
+  String get navTasks;
+
+  /// No description provided for @navTasksSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your own list, and what was assigned to you'**
+  String get navTasksSubtitle;
+
+  /// No description provided for @tasksTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My tasks'**
+  String get tasksTitle;
+
+  /// No description provided for @tasksOwnSection.
+  ///
+  /// In en, this message translates to:
+  /// **'My own tasks'**
+  String get tasksOwnSection;
+
+  /// No description provided for @tasksOwnHint.
+  ///
+  /// In en, this message translates to:
+  /// **'You wrote these for yourself — edit, delete and move them freely'**
+  String get tasksOwnHint;
+
+  /// No description provided for @tasksAssignedSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned to me'**
+  String get tasksAssignedSection;
+
+  /// No description provided for @tasksAssignedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Written for you — you change only how they are going'**
+  String get tasksAssignedHint;
+
+  /// No description provided for @tasksIAssignedSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned by me'**
+  String get tasksIAssignedSection;
+
+  /// No description provided for @tasksIAssignedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What you wrote onto other people\'s lists, followed up from here'**
+  String get tasksIAssignedHint;
+
+  /// No description provided for @tasksEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks yet'**
+  String get tasksEmpty;
+
+  /// No description provided for @tasksEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your first task with the button below'**
+  String get tasksEmptyHint;
+
+  /// No description provided for @tasksNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New task'**
+  String get tasksNew;
+
+  /// No description provided for @tasksAssign.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign a task'**
+  String get tasksAssign;
+
+  /// No description provided for @navTasksManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Task assignment'**
+  String get navTasksManage;
+
+  /// No description provided for @navTasksManageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Write tasks onto other people\'s lists, and follow them up'**
+  String get navTasksManageSubtitle;
+
+  /// No description provided for @tasksManageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Task assignment'**
+  String get tasksManageTitle;
+
+  /// No description provided for @tasksManageEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You have assigned nothing yet'**
+  String get tasksManageEmpty;
+
+  /// No description provided for @tasksManageEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign a task with the button below — its owner is told, and changes only how it is going'**
+  String get tasksManageEmptyHint;
+
+  /// No description provided for @taskPickPerson.
   ///
   /// In en, this message translates to:
   /// **'Choose an employee'**
-  String get moduleTaskPickPerson;
+  String get taskPickPerson;
 
-  /// No description provided for @moduleTaskCatalogNote.
+  /// No description provided for @taskAssignedBy.
   ///
   /// In en, this message translates to:
-  /// **'Defined on the file type — edited in master data'**
-  String get moduleTaskCatalogNote;
+  /// **'Assigned by {name}'**
+  String taskAssignedBy(String name);
+
+  /// No description provided for @taskAssignedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'For {name}'**
+  String taskAssignedTo(String name);
+
+  /// No description provided for @taskTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Task'**
+  String get taskTitleLabel;
+
+  /// No description provided for @taskDescriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get taskDescriptionLabel;
+
+  /// No description provided for @taskDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Due {date}'**
+  String taskDue(String date);
+
+  /// No description provided for @taskNoDue.
+  ///
+  /// In en, this message translates to:
+  /// **'No date'**
+  String get taskNoDue;
+
+  /// No description provided for @taskState.
+  ///
+  /// In en, this message translates to:
+  /// **'State'**
+  String get taskState;
+
+  /// No description provided for @taskNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get taskNote;
+
+  /// No description provided for @taskNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Anything worth saying about it?'**
+  String get taskNoteHint;
+
+  /// No description provided for @taskEvidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Evidence'**
+  String get taskEvidence;
+
+  /// No description provided for @taskUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Update state'**
+  String get taskUpdate;
+
+  /// No description provided for @taskStateSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'State updated'**
+  String get taskStateSaved;
+
+  /// No description provided for @taskReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned to you — only its state is yours to change'**
+  String get taskReadOnly;
+
+  /// No description provided for @taskEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit task'**
+  String get taskEdit;
+
+  /// No description provided for @taskDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete task'**
+  String get taskDelete;
+
+  /// No description provided for @taskDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this task? Whatever was filed against it goes with it.'**
+  String get taskDeleteConfirm;
+
+  /// No description provided for @taskProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done}/{total}'**
+  String taskProgress(int done, int total);
 
   /// No description provided for @moduleTeamPick.
   ///

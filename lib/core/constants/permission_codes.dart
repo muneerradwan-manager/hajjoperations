@@ -54,9 +54,9 @@ class PermissionCodes {
   static const modulesActivate = 'modules.activate';
   static const modulesMembers = 'modules.members';
 
-  /// Writing duties onto a file, and setting the state of any duty anywhere in
-  /// it. NOT what an ordinary member needs to move his own work along — that is
-  /// membership, not a grant, and the database decides it per scope (0083).
+  /// Writing the descriptive duty lists onto a file — the file's own and its
+  /// roles'. Since 0105 that is ALL this code is: the lists carry no states,
+  /// and the personal tasks moved out of the files entirely (see [tasksAssign]).
   static const modulesTasks = 'modules.tasks';
 
   static const modulesReports = 'modules.reports';
@@ -82,6 +82,13 @@ class PermissionCodes {
   /// member would see the places of his own files — so this decides who may
   /// open the PAGE, not what is on it.
   static const mapView = 'map.view';
+
+  // ------------------------------------------------------------------ tasks
+  /// Writing a task onto ANOTHER person's list (0105). Not what anyone needs
+  /// for their own list — that is not a grant at all, everyone holds it by
+  /// existing. The personal task system has no relation to the operational
+  /// files, which is why this does not live under `modules.`.
+  static const tasksAssign = 'tasks.assign';
 
   // --------------------------------------------------------------- check-in
   //

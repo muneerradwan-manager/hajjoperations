@@ -17,24 +17,10 @@ enum ModuleDetailStatus { loading, ready, error }
 /// A role someone holds here, and the places they hold it in. One person may
 /// run three towers under the same file, so the places are a list.
 class RoleHere {
-  const RoleHere({
-    required this.role,
-    this.places = const [],
-    this.taskIds = const {},
-    this.tasks = const [],
-  });
+  const RoleHere({required this.role, this.places = const []});
 
   final ModuleRole role;
   final List<LocalizedName> places;
-
-  /// The duties handed to this person in this role, for a role whose list is a
-  /// menu. Gathered across every place they hold it.
-  final Set<String> taskIds;
-
-  /// What this person is actually answerable for: the standing duties of the
-  /// post, plus his share of whatever is handed out — resolved against the type,
-  /// which knows whether the menu is the role's own or the file's.
-  final List<RoleTask> tasks;
 }
 
 class ModuleDetailState extends Equatable {
@@ -48,8 +34,7 @@ class ModuleDetailState extends Equatable {
     this.reports = const [],
     this.myRatings = const {},
     this.myRatingSummary = RatingSummary.none,
-    this.board = ModuleTaskBoard.empty,
-    this.showAllTasks = false,
+    this.taskList = ModuleTaskList.empty,
     this.viewAsProfileId,
     this.error,
   });
@@ -77,15 +62,10 @@ class ModuleDetailState extends Equatable {
   /// And what the viewer received here — an average and a count, never names.
   final RatingSummary myRatingSummary;
 
-  /// The duties in force here for [focusProfileId] — the file's, then those of
-  /// every post he holds, then whatever was written for him by name. Assembled
-  /// by the database (`module_task_board`, 0083); see [ModuleTaskBoard].
-  final ModuleTaskBoard board;
-
-  /// Whether the board was asked for the WHOLE file rather than one man's share
-  /// of it. Only whoever runs the file gets anything extra for it — the widened
-  /// query is still read through the same RLS as the narrow one.
-  final bool showAllTasks;
+  /// The descriptive duty lists written on this file (0105): the file's own
+  /// and each post's. Everyone in the file reads the same lists — there is
+  /// nothing per-person left to assemble.
+  final ModuleTaskList taskList;
 
   /// Whether this file is finished and open for its people to rate each other.
   /// A file with no end date is never open, even switched off: nobody has
@@ -219,11 +199,9 @@ class ModuleDetailState extends Equatable {
     if (id == null || type == null) return const [];
 
     final places = <String, List<LocalizedName>>{};
-    final duties = <String, Set<String>>{};
     for (final m in members) {
       if (m.profileId != id) continue;
       places.putIfAbsent(m.roleId, () => []);
-      (duties[m.roleId] ??= {}).addAll(m.taskIds);
     }
     for (final node in nodes) {
       final level = type.levelById(node.levelId);
@@ -235,7 +213,6 @@ class ModuleDetailState extends Equatable {
       for (final m in node.members) {
         if (m.profileId != id) continue;
         final list = places.putIfAbsent(m.roleId, () => []);
-        (duties[m.roleId] ??= {}).addAll(m.taskIds);
         if (name != null && !list.any((p) => p.ar == name.ar)) list.add(name);
       }
     }
@@ -243,12 +220,7 @@ class ModuleDetailState extends Equatable {
     return [
       for (final role in type.allRoles)
         if (places.containsKey(role.id))
-          RoleHere(
-            role: role,
-            places: places[role.id]!,
-            taskIds: duties[role.id] ?? const {},
-            tasks: type.dutiesOf(role, duties[role.id] ?? const {}),
-          ),
+          RoleHere(role: role, places: places[role.id]!),
     ];
   }
 
@@ -278,8 +250,7 @@ class ModuleDetailState extends Equatable {
     reports,
     myRatings,
     myRatingSummary,
-    board,
-    showAllTasks,
+    taskList,
     viewAsProfileId,
     error,
   ];
@@ -338,24 +309,15 @@ class ModuleDetailCubit extends SafeCubit<ModuleDetailState> {
 
   // ------------------------------------------------------------------ duties
 
-  Future<ModuleTaskBoard> _fetchBoard() async => ModuleTaskBoard(
-    lines: await _repo.fetchTaskBoard(
-      moduleId: moduleId,
-      profileId: viewAsProfileId,
-      all: state.showAllTasks,
-    ),
-  );
-
-  /// Re-reads the duties alone. The rest of the page — the tree, the roster,
-  /// the reports — cannot have moved because somebody ticked a duty, and
+  /// Re-reads the duty lists alone. The rest of the page — the tree, the
+  /// roster, the reports — cannot have moved because a duty was reworded, and
   /// reloading it would blink the whole screen for one line of it.
-  Future<void> _reloadBoard() async {
-    emit(_copyWith(board: await _fetchBoard()));
+  Future<void> _reloadTasks() async {
+    emit(_copyWith(taskList: await _repo.fetchModuleTasks(moduleId)));
   }
 
   ModuleDetailState _copyWith({
-    ModuleTaskBoard? board,
-    bool? showAllTasks,
+    ModuleTaskList? taskList,
     Map<String, int>? myRatings,
   }) => ModuleDetailState(
     status: state.status,
@@ -367,84 +329,19 @@ class ModuleDetailCubit extends SafeCubit<ModuleDetailState> {
     reports: state.reports,
     myRatings: myRatings ?? state.myRatings,
     myRatingSummary: state.myRatingSummary,
-    board: board ?? state.board,
-    showAllTasks: showAllTasks ?? state.showAllTasks,
+    taskList: taskList ?? state.taskList,
     viewAsProfileId: state.viewAsProfileId,
     error: state.error,
   );
 
-  /// Switches between "my duties here" and every duty in the file. Only ever
-  /// offered to whoever runs it; the database narrows the answer again for
-  /// anyone else who asks.
-  Future<void> setShowAllTasks(bool all) async {
-    if (all == state.showAllTasks) return;
-    emit(_copyWith(showAllTasks: all));
-    emit(_copyWith(board: await _fetchBoard()));
-  }
-
-  /// Moves one duty along, with whatever note and evidence came with it.
-  ///
-  /// Kept for sending later if the network is what stopped it. This is the
-  /// write a man makes standing in front of the thing he is reporting on, and
-  /// it is the one the whole season is read back from.
-  Future<SaveOutcome> setTaskState(
-    ModuleTaskLine line,
-    TaskState newState, {
-    String? note,
-    List<PendingAttachment> attachments = const [],
-    List<StoredAttachment> removed = const [],
-  }) async {
-    try {
-      final sent = await sendOrQueue(
-        send: () async {
-          // The state row first: the evidence is stored under its id, and
-          // storage will not accept a file until it exists.
-          final statusId = await _repo.setTaskState(
-            moduleId: moduleId,
-            state: newState,
-            typeTaskId: line.typeTaskId,
-            moduleTaskId: line.moduleTaskId,
-            nodeId: line.nodeId,
-            profileId: line.profileId,
-            note: note,
-          );
-          if (attachments.isNotEmpty || removed.isNotEmpty) {
-            await _repo.setTaskAttachments(
-              moduleId: moduleId,
-              statusId: statusId,
-              attachments: attachments,
-              removed: removed,
-            );
-          }
-        },
-        kind: ModuleOutbox.taskState,
-        payload: ModuleOutbox.taskStatePayload(
-          moduleId: moduleId,
-          state: newState,
-          line: line,
-          note: note,
-          removed: removed,
-        ),
-        label: line.title.ar,
-        attachments: attachments,
-      );
-      if (sent) await _reloadBoard();
-      return sent ? const SaveOutcome.sent() : const SaveOutcome.queued();
-    } catch (e) {
-      return SaveOutcome.failed(e.toString());
-    }
-  }
-
-  /// Writes a duty onto this file — the third scope, and the two exceptional
-  /// halves of the other two. Returns null on success, else the failure.
+  /// Writes a duty onto this file's description of its work. Returns null on
+  /// success, else the failure.
   Future<String?> createTask({
     required TaskScope scope,
     required String titleAr,
     String? titleEn,
     String? descriptionAr,
     String? roleId,
-    String? profileId,
-    String? groupId,
     DateTime? dueOn,
   }) async {
     try {
@@ -455,11 +352,9 @@ class ModuleDetailCubit extends SafeCubit<ModuleDetailState> {
         titleEn: titleEn,
         descriptionAr: descriptionAr,
         roleId: roleId,
-        profileId: profileId,
-        groupId: groupId,
         dueOn: dueOn,
       );
-      await _reloadBoard();
+      await _reloadTasks();
       return null;
     } catch (e) {
       return e.toString();
@@ -471,7 +366,6 @@ class ModuleDetailCubit extends SafeCubit<ModuleDetailState> {
     required String titleAr,
     String? titleEn,
     String? descriptionAr,
-    String? groupId,
     DateTime? dueOn,
   }) async {
     try {
@@ -480,10 +374,9 @@ class ModuleDetailCubit extends SafeCubit<ModuleDetailState> {
         titleAr: titleAr,
         titleEn: titleEn,
         descriptionAr: descriptionAr,
-        groupId: groupId,
         dueOn: dueOn,
       );
-      await _reloadBoard();
+      await _reloadTasks();
       return null;
     } catch (e) {
       return e.toString();
@@ -493,7 +386,7 @@ class ModuleDetailCubit extends SafeCubit<ModuleDetailState> {
   Future<String?> deleteTask(String id) async {
     try {
       await _repo.deleteFileTask(id);
-      await _reloadBoard();
+      await _reloadTasks();
       return null;
     } catch (e) {
       return e.toString();
@@ -529,9 +422,8 @@ class ModuleDetailCubit extends SafeCubit<ModuleDetailState> {
       final summary = module.hasEnded
           ? await _repo.fetchMyRatingSummary(moduleId)
           : RatingSummary.none;
-      // The duties of the file, of the posts held in it, and of the man — one
-      // call, because only the database can work out the middle one.
-      final board = await _fetchBoard();
+      // The file's description of its work: its own list and its posts'.
+      final taskList = await _repo.fetchModuleTasks(moduleId);
 
       emit(
         ModuleDetailState(
@@ -544,8 +436,7 @@ class ModuleDetailCubit extends SafeCubit<ModuleDetailState> {
           reports: reports,
           myRatings: ratings,
           myRatingSummary: summary,
-          board: board,
-          showAllTasks: state.showAllTasks,
+          taskList: taskList,
           viewAsProfileId: viewAsProfileId,
         ),
       );

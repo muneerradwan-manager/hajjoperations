@@ -25,20 +25,14 @@ class ModulesRepository {
       'module_types(name_ar, name_en, end_condition_ar, end_condition_en), '
       'seasons(hijri_year)';
 
-  /// A type's whole schema: its fields, the levels of its tree, the duties of
-  /// the file itself and the stages they fall into, and every role with the
-  /// duties that belong to that post.
-  ///
-  /// `module_type_tasks` is embedded twice on purpose, once down each of the two
-  /// paths that reach it — a duty belongs either to the file or to one of its
-  /// roles, so neither embed sees the other's rows.
+  /// A type's whole schema: its fields, the levels of its tree, and its roles.
+  /// No task catalog since 0105 — duties are written on the season's file, by
+  /// hand, or they do not exist.
   static const _typeColumns =
       '*, '
       'module_type_fields(*), '
       'module_type_levels(*), '
-      'module_type_task_groups(*), '
-      'module_type_tasks(*), '
-      'module_type_roles(*, module_type_tasks(*))';
+      'module_type_roles(*)';
 
   // ------------------------------------------------------------- type catalog
 
@@ -287,150 +281,26 @@ class ModulesRepository {
   /// [all] widens it to every post at every place and everyone's personal
   /// duties — the whole file at once, for whoever runs it. RLS is unchanged by
   /// it: asking for everything gets a member exactly what he could see anyway.
-  Future<List<ModuleTaskLine>> fetchTaskBoard({
-    required String moduleId,
-    String? profileId,
-    bool all = false,
-  }) async {
-    final rows = await supabase.rpc(
-      'module_task_board',
-      params: {
-        'p_module_id': moduleId,
-        'p_profile_id': profileId,
-        'p_all': all,
-      },
-    );
-    final lines = ((rows as List?) ?? const [])
-        .cast<Map<String, dynamic>>()
-        .map(ModuleTaskLine.fromMap)
-        .toList();
-
-    // The evidence, in one round trip for the whole board. Only lines that
-    // somebody has already touched can carry any — the rest have no state row
-    // for an attachment to hang off.
-    final statusIds = [
-      for (final line in lines)
-        if (line.statusId != null) line.statusId!,
-    ];
-    if (statusIds.isEmpty) return lines;
-
-    final files = await supabase
-        .from('module_task_attachments')
+  /// The duty lists written on this file (0105): description, not tracking.
+  /// Ordered file-first, then by hand order, so every reader gets the same
+  /// page.
+  Future<ModuleTaskList> fetchModuleTasks(String moduleId) async {
+    final rows = await supabase
+        .from('module_tasks')
         .select()
-        .inFilter('status_id', statusIds)
-        .order('sort_order');
-    if ((files as List).isEmpty) return lines;
-
-    final byStatus = <String, List<StoredAttachment>>{};
-    for (final row in files.cast<Map<String, dynamic>>()) {
-      (byStatus[row['status_id'] as String] ??= []).add(
-        StoredAttachment.fromMap(row),
-      );
-    }
-    return [
-      for (final line in lines)
-        if (byStatus[line.statusId] case final attachments?)
-          line.withAttachments(attachments)
-        else
-          line,
-    ];
-  }
-
-  /// Moves one duty along, and returns the id of the row that holds its state
-  /// — which is also where its evidence is stored, so the caller cannot upload
-  /// anything until the row exists.
-  ///
-  /// Through an RPC rather than a plain upsert because who may do this is three
-  /// rules, one per scope, and only one of them is a permission: a member of
-  /// the file may move a file duty, the holder of a post may move his post's,
-  /// and a man may move his own. The function checks all three (0083).
-  Future<String> setTaskState({
-    required String moduleId,
-    required TaskState state,
-    String? typeTaskId,
-    String? moduleTaskId,
-    String? nodeId,
-    String? profileId,
-    String? note,
-  }) async {
-    final id = await supabase.rpc(
-      'set_module_task_state',
-      params: {
-        'p_module_id': moduleId,
-        'p_state': state.dbName,
-        'p_type_task_id': typeTaskId,
-        'p_module_task_id': moduleTaskId,
-        'p_node_id': nodeId,
-        'p_profile_id': profileId,
-        'p_note': note,
-      },
+        .eq('module_id', moduleId)
+        .order('scope', ascending: true)
+        .order('sort_order')
+        .order('title_ar');
+    return ModuleTaskList(
+      tasks: (rows as List)
+          .map((r) => ModuleTask.fromMap(r as Map<String, dynamic>))
+          .toList(),
     );
-    return id as String;
   }
 
-  /// Files evidence against a duty whose state row already exists, and takes
-  /// back whatever was removed. [statusId] comes from [setTaskState].
-  Future<void> setTaskAttachments({
-    required String moduleId,
-    required String statusId,
-    List<PendingAttachment> attachments = const [],
-    List<StoredAttachment> removed = const [],
-  }) async {
-    for (final attachment in removed) {
-      await supabase
-          .from('module_task_attachments')
-          .delete()
-          .eq('id', attachment.id);
-      await supabase.storage.from(_bucket).remove([attachment.path]);
-    }
-    if (attachments.isEmpty) return;
-
-    // Where the next one starts, so filing twice does not overwrite what is
-    // already there — two photos off one camera roll can share a name.
-    final existing = await supabase
-        .from('module_task_attachments')
-        .select('sort_order')
-        .eq('status_id', statusId)
-        .order('sort_order', ascending: false)
-        .limit(1);
-    var next =
-        ((existing as List).firstOrNull as Map<String, dynamic>?)?['sort_order']
-                as int? ??
-            -1;
-
-    final rows = <Map<String, dynamic>>[];
-    for (final attachment in attachments) {
-      next++;
-      final path =
-          '$moduleId/tasks/$statusId/${next}_'
-          '${storageKey(attachment.name, fallback: '$next')}';
-      await supabase.storage
-          .from(_bucket)
-          .upload(
-            path,
-            attachment.file,
-            fileOptions: FileOptions(
-              upsert: true,
-              contentType: attachment.mimeType,
-            ),
-          );
-      rows.add({
-        'status_id': statusId,
-        'kind': attachment.kind.name,
-        'path': path,
-        'name': attachment.name,
-        'mime_type': attachment.mimeType,
-        'size_bytes': attachment.file.lengthSync(),
-        'sort_order': next,
-      });
-    }
-    await supabase.from('module_task_attachments').insert(rows);
-  }
-
-  /// Writes a duty onto ONE file of ONE season — the exception the standing
-  /// catalog did not foresee. [scope] decides what the rest of the arguments
-  /// mean: a role duty names a post, a personal one names a man, a file duty
-  /// names neither.
+  /// Writes a duty onto ONE file of ONE season. [scope] decides what [roleId]
+  /// means: a role duty names a post, a file duty names nothing.
   Future<void> createFileTask({
     required String moduleId,
     required TaskScope scope,
@@ -438,16 +308,12 @@ class ModulesRepository {
     String? titleEn,
     String? descriptionAr,
     String? roleId,
-    String? profileId,
-    String? groupId,
     DateTime? dueOn,
   }) async {
     await supabase.from('module_tasks').insert({
       'module_id': moduleId,
       'scope': scope.dbName,
       'role_id': scope == TaskScope.role ? roleId : null,
-      'profile_id': scope == TaskScope.personal ? profileId : null,
-      'group_id': groupId,
       'title_ar': titleAr,
       'title_en': (titleEn == null || titleEn.isEmpty) ? null : titleEn,
       'description_ar': (descriptionAr == null || descriptionAr.isEmpty)
@@ -458,16 +324,14 @@ class ModulesRepository {
     });
   }
 
-  /// Corrects a duty written on this file. Its scope is not among the arguments
-  /// on purpose: moving a duty from one man to the whole file is not an edit,
-  /// it is a different duty, and the state already recorded against it was
-  /// recorded about something else.
+  /// Corrects a duty written on this file. Its scope is not among the
+  /// arguments on purpose: moving a duty from a post to the whole file is not
+  /// an edit, it is a different duty.
   Future<void> updateFileTask({
     required String id,
     required String titleAr,
     String? titleEn,
     String? descriptionAr,
-    String? groupId,
     DateTime? dueOn,
   }) async {
     await supabase
@@ -478,16 +342,12 @@ class ModulesRepository {
           'description_ar': (descriptionAr == null || descriptionAr.isEmpty)
               ? null
               : descriptionAr,
-          'group_id': groupId,
           'due_on': dueOn == null ? null : _asDate(dueOn),
           'updated_at': DateTime.now().toUtc().toIso8601String(),
         })
         .eq('id', id);
   }
 
-  /// Removes a duty written on this file, and every state recorded against it
-  /// (`on delete cascade`). Catalog duties cannot be reached from here: they
-  /// belong to the type, and to every season of it.
   Future<void> deleteFileTask(String id) async {
     await supabase.from('module_tasks').delete().eq('id', id);
   }
@@ -570,10 +430,7 @@ class ModulesRepository {
         // profiles via `assigned_by`, and a bare `profiles(...)` is ambiguous.
         // The city comes along too: tapping a member opens his record, and it
         // is read from the row already in hand rather than fetched again.
-        .select(
-          '*, module_node_members(*, module_assigned_tasks(task_id), '
-          'profiles:profile_id($profileEmbeds))',
-        )
+        .select('*, module_node_members(*, profiles:profile_id($profileEmbeds))')
         .eq('module_id', moduleId)
         .order('sort_order');
     return (rows as List)
@@ -638,14 +495,11 @@ class ModulesRepository {
   // --------------------------------------------------------------- members
 
   /// The people holding a role on the file itself, rather than on one of its
-  /// nodes — the whole roster of a file with no tree, and each one's duties.
+  /// nodes — the whole roster of a file with no tree.
   Future<List<ModuleMember>> fetchMembers(String moduleId) async {
     final rows = await supabase
         .from('module_members')
-        .select(
-          '*, module_assigned_tasks(task_id), '
-          'profiles:profile_id($profileEmbeds)',
-        )
+        .select('*, profiles:profile_id($profileEmbeds)')
         .eq('module_id', moduleId);
     final members = (rows as List)
         .map((r) => ModuleMember.fromMap(r as Map<String, dynamic>))
@@ -784,43 +638,6 @@ class ModulesRepository {
             'module_id': moduleId,
             'role_id': roleId,
             'profile_id': id,
-            'assigned_by': supabase.auth.currentUser?.id,
-          },
-      ]);
-    }
-  }
-
-  /// Hands one member the duties that are his, and takes back the ones that are
-  /// no longer. Diffed rather than wiped and rewritten so that who assigned what,
-  /// and when, survives an unrelated edit.
-  Future<void> setAssignedTasks({
-    required String memberId,
-    required Set<String> taskIds,
-  }) async {
-    final existing = await supabase
-        .from('module_assigned_tasks')
-        .select('task_id')
-        .eq('member_id', memberId);
-    final current = (existing as List)
-        .map((r) => r['task_id'] as String)
-        .toSet();
-
-    final removed = current.difference(taskIds);
-    if (removed.isNotEmpty) {
-      await supabase
-          .from('module_assigned_tasks')
-          .delete()
-          .eq('member_id', memberId)
-          .inFilter('task_id', removed.toList());
-    }
-
-    final added = taskIds.difference(current);
-    if (added.isNotEmpty) {
-      await supabase.from('module_assigned_tasks').insert([
-        for (final id in added)
-          {
-            'member_id': memberId,
-            'task_id': id,
             'assigned_by': supabase.auth.currentUser?.id,
           },
       ]);

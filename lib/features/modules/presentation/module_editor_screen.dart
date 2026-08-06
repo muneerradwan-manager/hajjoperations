@@ -22,7 +22,6 @@ import 'employee_picker_screen.dart';
 import 'widgets/cadence_label.dart';
 import 'widgets/module_field_input.dart';
 import 'widgets/node_editor_sheet.dart';
-import 'widgets/picker_sheet.dart';
 
 /// Where every step of the editor stops widening.
 ///
@@ -156,49 +155,6 @@ class _ViewState extends State<_View> {
     if (result == null || !mounted) return;
 
     final error = await cubit.setRoleMembers(role.id, result);
-    if (!mounted) return;
-    if (error != null) {
-      _say(error);
-      return;
-    }
-    _dirty = true;
-  }
-
-  /// Hands one member his share of the duties open to him — or takes them all
-  /// back, which leaves him in the file with none, and is allowed.
-  ///
-  /// What is open to him is his role's own list and the file's, whichever the
-  /// type declares, laid out in the stages the work happens in.
-  Future<void> _pickTasks(ModuleRole role, ModuleMember member) async {
-    if (!_canStaff) {
-      _say(context.l10n.permissionDenied);
-      return;
-    }
-    final cubit = context.read<ModuleEditorCubit>();
-    final type = cubit.state.type;
-    final l = context.l10n;
-    if (type == null) return;
-
-    final result = await showPickerSheet(
-      context,
-      title: member.profile?.fullName ?? role.name.of(context),
-      multiple: true,
-      selected: member.taskIds,
-      emptyMessage: l.moduleNoTasks,
-      options: [
-        for (final (stage, tasks) in type.byStage(type.assignableFor(role)))
-          for (final task in tasks)
-            PickerOption(
-              id: task.id,
-              label: task.title.of(context),
-              subtitle: task.description?.of(context),
-              group: stage?.name.of(context),
-            ),
-      ],
-    );
-    if (result == null || !mounted) return;
-
-    final error = await cubit.setMemberTasks(member.id, result);
     if (!mounted) return;
     if (error != null) {
       _say(error);
@@ -439,7 +395,6 @@ class _ViewState extends State<_View> {
             EditorStep.teams => _TeamsStep(
               state: state,
               onPickTeam: _pickTeam,
-              onPickTasks: _pickTasks,
             ),
           },
         },
@@ -919,22 +874,15 @@ class _TowersStep extends StatelessWidget {
   }
 }
 
-/// The second and last step of a file with no tree — its teams. Each team is
-/// filled from the season's participants, and each person on it is then handed
-/// the duties that are actually his, out of the list his team owns.
-///
-/// Handing him none is a real answer, not an unfinished one: he is on the team,
-/// and the team's job description already says what that means.
+/// The second and last step of a file with no tree — its teams, each filled
+/// from the season's participants. Who owes what is not decided here: since
+/// 0105 duties are the file's descriptive lists, and each person's tracked
+/// work lives on their own list outside the files.
 class _TeamsStep extends StatelessWidget {
-  const _TeamsStep({
-    required this.state,
-    required this.onPickTeam,
-    required this.onPickTasks,
-  });
+  const _TeamsStep({required this.state, required this.onPickTeam});
 
   final ModuleEditorState state;
   final void Function(ModuleRole role) onPickTeam;
-  final void Function(ModuleRole role, ModuleMember member) onPickTasks;
 
   @override
   Widget build(BuildContext context) {
@@ -958,11 +906,7 @@ class _TeamsStep extends StatelessWidget {
             _TeamCard(
               role: role,
               members: state.membersOf(role.id),
-              // How much there is to hand out — the role's own list plus the
-              // file's, which is where this type keeps all of its duties.
-              menuSize: type.assignableFor(role).length,
               onPick: () => onPickTeam(role),
-              onPickTasks: (member) => onPickTasks(role, member),
             ),
             const SizedBox(height: AppSpacing.md),
           ],
@@ -972,24 +916,17 @@ class _TeamsStep extends StatelessWidget {
   }
 }
 
-/// One team: who is on it, and what each of them was handed.
+/// One team: who is on it.
 class _TeamCard extends StatelessWidget {
   const _TeamCard({
     required this.role,
     required this.members,
-    required this.menuSize,
     required this.onPick,
-    required this.onPickTasks,
   });
 
   final ModuleRole role;
   final List<ModuleMember> members;
-
-  /// How many duties there are to hand out here, for the "3 of 15" on each row.
-  final int menuSize;
-
   final VoidCallback onPick;
-  final void Function(ModuleMember member) onPickTasks;
 
   @override
   Widget build(BuildContext context) {
@@ -1034,14 +971,7 @@ class _TeamCard extends StatelessWidget {
             for (final member in members)
               Padding(
                 padding: const EdgeInsets.only(top: AppSpacing.md),
-                child: _TeamMemberRow(
-                  member: member,
-                  menuSize: menuSize,
-                  // Nothing to hand out, nothing to open: a type whose duties
-                  // the Administration has not written yet would otherwise
-                  // offer a row that leads to an empty list.
-                  onTap: menuSize == 0 ? null : () => onPickTasks(member),
-                ),
+                child: _TeamMemberRow(member: member),
               ),
           const SizedBox(height: AppSpacing.md),
           OutlinedButton.icon(
@@ -1055,75 +985,35 @@ class _TeamCard extends StatelessWidget {
   }
 }
 
-/// One person on a team, and how much of its list is his. Tapping opens the
-/// list to hand him more of it, or take some back.
+/// One person on a team.
 class _TeamMemberRow extends StatelessWidget {
-  const _TeamMemberRow({
-    required this.member,
-    required this.menuSize,
-    required this.onTap,
-  });
+  const _TeamMemberRow({required this.member});
 
   final ModuleMember member;
-  final int menuSize;
-
-  /// Null when there is nothing to hand out — the row then states who is here
-  /// and stops, rather than offering a list that does not exist.
-  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final l = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
     final profile = member.profile;
-    final assigned = member.taskIds.length;
-    final hasMenu = menuSize > 0;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(AppRadius.sm),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-        child: Row(
-          children: [
-            ProfileAvatar(
-              photoUrl: profile?.photoUrl,
-              name: profile?.fullName ?? '',
-              radius: 18,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      child: Row(
+        children: [
+          ProfileAvatar(
+            photoUrl: profile?.photoUrl,
+            name: profile?.fullName ?? '',
+            radius: 18,
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              (profile?.fullName.isEmpty ?? true) ? '—' : profile!.fullName,
+              style: Theme.of(context).textTheme.titleSmall,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    (profile?.fullName.isEmpty ?? true)
-                        ? '—'
-                        : profile!.fullName,
-                    style: Theme.of(context).textTheme.titleSmall,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (hasMenu) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      assigned == 0
-                          ? l.moduleNoAssignedTasks
-                          : l.moduleAssignedTasksCount(assigned, menuSize),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: assigned == 0
-                            ? scheme.onSurfaceVariant
-                            : scheme.primary,
-                        fontStyle: assigned == 0 ? FontStyle.italic : null,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            if (hasMenu) Icon(AppIcons.tasks, size: 18, color: scheme.primary),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

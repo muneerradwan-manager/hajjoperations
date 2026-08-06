@@ -334,13 +334,8 @@ class _ModuleTasksDataset extends ExportDataset {
   @override
   List<ExportColumn> get columns => [
     ExportColumn(key: 'title', label: _n('المهمة', 'Duty')),
-    ExportColumn(key: 'state', label: _n('الحالة', 'State')),
     ExportColumn(key: 'scope', label: _n('النطاق', 'Scope')),
     ExportColumn(key: 'due_on', label: _n('تاريخ الاستحقاق', 'Due on')),
-    ExportColumn(key: 'note', label: _n('الملاحظة', 'Note')),
-    ExportColumn(key: 'updated_by', label: _n('آخر من حدّثها', 'Last updated by')),
-    ExportColumn(key: 'updated_at', label: _n('تاريخ التحديث', 'Updated at')),
-    ExportColumn(key: 'attachments', label: _n('عدد المرفقات', 'Attachments'), byDefault: false),
     ExportColumn(key: 'description', label: _n('الوصف', 'Description'), byDefault: false),
   ];
 
@@ -352,35 +347,21 @@ class _ModuleTasksDataset extends ExportDataset {
     final moduleId = request.option('module');
     if (moduleId == null) return [];
 
-    // `all` on purpose: an export of "the duties of this file" that quietly
-    // meant "mine" would be read as the file's state by whoever received it.
-    // What the reader may not see, the database withholds anyway.
-    final lines = await ModulesRepository().fetchTaskBoard(
-      moduleId: moduleId,
-      all: true,
-    );
+    // Description only, since 0105: the lists carry no states and nobody's
+    // name. What people track is their own list, outside the files.
+    final list = await ModulesRepository().fetchModuleTasks(moduleId);
     final l = request.l;
 
     return [
-      for (final line in lines)
+      for (final task in list.tasks)
         {
-          'title': request.text(line.title),
-          'state': switch (line.state) {
-            TaskState.notStarted => l.taskStateNotStarted,
-            TaskState.inProgress => l.taskStateInProgress,
-            TaskState.done => l.taskStateDone,
-          },
-          'scope': switch (line.scope) {
+          'title': request.text(task.title),
+          'scope': switch (task.scope) {
             TaskScope.file => l.moduleTaskScopeFile,
             TaskScope.role => l.moduleTaskScopeRole,
-            TaskScope.personal => l.moduleTaskScopePersonal,
           },
-          'due_on': ExportValues.date(line.dueOn),
-          'note': ExportValues.text(line.note),
-          'updated_by': ExportValues.text(line.updatedByName),
-          'updated_at': ExportValues.moment(line.updatedAt),
-          'attachments': ExportValues.number(line.attachments.length),
-          'description': request.text(line.description),
+          'due_on': ExportValues.date(task.dueOn),
+          'description': request.text(task.description),
         },
     ];
   }

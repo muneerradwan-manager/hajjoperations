@@ -626,6 +626,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permMapView => 'Open the season map';
 
   @override
+  String get perm_tasks => 'Tasks';
+
+  @override
+  String get permTasksAssign => 'Assign tasks to other people';
+
+  @override
   String permissionRequires(String names) {
     return 'Requires: $names';
   }
@@ -1575,33 +1581,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moduleSectionInfo => 'File information';
 
   @override
-  String get moduleSectionTasks => 'My role & duties';
+  String get moduleSectionTasks => 'My role';
 
   @override
   String moduleSectionTasksOf(String name) {
-    return '$name — role & duties';
+    return '$name — role';
   }
 
   @override
   String get moduleJobDescription => 'Job description';
-
-  @override
-  String get moduleNoTasks => 'No tasks are defined for this role yet';
-
-  @override
-  String get moduleAssignedTasks => 'Assigned duties';
-
-  @override
-  String moduleAssignedTasksCount(int count, int total) {
-    return '$count of $total duties';
-  }
-
-  @override
-  String get moduleNoAssignedTasks => 'No duties assigned yet';
-
-  @override
-  String get moduleNoAssignedTasksMine =>
-      'You have not been handed any duty from this role\'s list yet';
 
   @override
   String get moduleTasksSection => 'Duties';
@@ -1611,10 +1599,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moduleTasksFileHint =>
-      'The whole file\'s work — every member sees the same list';
+      'The whole file\'s work — its members divide it among themselves';
 
   @override
-  String get moduleTasksRole => 'My role\'s duties';
+  String get moduleTasksRole => 'Role duties';
 
   @override
   String moduleTasksRoleOf(String name) {
@@ -1626,33 +1614,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Attached to the post, not the person — replacing the holder leaves them standing';
 
   @override
-  String get moduleTasksPersonal => 'My personal duties';
-
-  @override
-  String moduleTasksPersonalOf(String name) {
-    return '$name — personal duties';
-  }
-
-  @override
-  String get moduleTasksPersonalHint =>
-      'By exception — seen only by the person named and whoever runs the file';
-
-  @override
-  String get moduleTasksNone => 'This file has no duties yet';
-
-  @override
-  String get moduleTasksNoneMine => 'Nothing in this file is owed by you';
-
-  @override
-  String moduleTasksProgress(int done, int total) {
-    return '$done/$total';
-  }
-
-  @override
-  String get moduleTasksMine => 'Mine';
-
-  @override
-  String get moduleTasksAll => 'Everything';
+  String get moduleTasksNone => 'This file has no duties written yet';
 
   @override
   String get taskStateNotStarted => 'Not started';
@@ -1664,35 +1626,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get taskStateDone => 'Done';
 
   @override
-  String get moduleTaskUpdate => 'Update state';
-
-  @override
-  String get moduleTaskState => 'State';
-
-  @override
-  String get moduleTaskNote => 'Note';
-
-  @override
-  String get moduleTaskNoteHint => 'Anything worth saying about it?';
-
-  @override
-  String get moduleTaskEvidence => 'Evidence';
-
-  @override
-  String moduleTaskUpdatedBy(String name, String date) {
-    return '$name · $date';
-  }
-
-  @override
   String moduleTaskDue(String date) {
     return 'Due $date';
   }
-
-  @override
-  String get moduleTaskStateSaved => 'State updated';
-
-  @override
-  String get moduleTaskReadOnly => 'You may not update this duty';
 
   @override
   String get moduleTaskAdd => 'Add a duty';
@@ -1705,16 +1641,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moduleTaskDeleteConfirm =>
-      'Delete this duty? Its state and whatever was filed against it go with it.';
-
-  @override
-  String get moduleTaskDeleted => 'Duty deleted';
-
-  @override
-  String get moduleTaskCreated => 'Duty added';
-
-  @override
-  String get moduleTaskSaved => 'Duty saved';
+      'Delete this duty from the file\'s list?';
 
   @override
   String get moduleTaskScope => 'Scope';
@@ -1723,25 +1650,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moduleTaskScopeFile => 'File duty';
 
   @override
-  String get moduleTaskScopeFileHint => 'Every member of the file sees it';
+  String get moduleTaskScopeFileHint =>
+      'The whole file\'s — members share it among themselves';
 
   @override
   String get moduleTaskScopeRole => 'Role duty';
 
   @override
-  String get moduleTaskScopeRoleHint => 'Whoever holds the post sees it';
-
-  @override
-  String get moduleTaskScopePersonal => 'Personal duty';
-
-  @override
-  String get moduleTaskScopePersonalHint => 'One person sees it';
+  String get moduleTaskScopeRoleHint =>
+      'What holding the post means, whoever holds it';
 
   @override
   String get moduleTaskRoleLabel => 'Role';
-
-  @override
-  String get moduleTaskPersonLabel => 'Employee';
 
   @override
   String get moduleTaskTitleLabel => 'Duty';
@@ -1753,26 +1673,133 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moduleTaskDescriptionLabel => 'Description';
 
   @override
-  String get moduleTaskStageLabel => 'Stage';
-
-  @override
-  String get moduleTaskNoStage => 'No stage';
-
-  @override
-  String get moduleTaskDueLabel => 'Due date';
-
-  @override
   String get moduleTaskNoDue => 'No date';
 
   @override
   String get moduleTaskPickRole => 'Choose a role';
 
   @override
-  String get moduleTaskPickPerson => 'Choose an employee';
+  String get navTasks => 'My tasks';
 
   @override
-  String get moduleTaskCatalogNote =>
-      'Defined on the file type — edited in master data';
+  String get navTasksSubtitle => 'Your own list, and what was assigned to you';
+
+  @override
+  String get tasksTitle => 'My tasks';
+
+  @override
+  String get tasksOwnSection => 'My own tasks';
+
+  @override
+  String get tasksOwnHint =>
+      'You wrote these for yourself — edit, delete and move them freely';
+
+  @override
+  String get tasksAssignedSection => 'Assigned to me';
+
+  @override
+  String get tasksAssignedHint =>
+      'Written for you — you change only how they are going';
+
+  @override
+  String get tasksIAssignedSection => 'Assigned by me';
+
+  @override
+  String get tasksIAssignedHint =>
+      'What you wrote onto other people\'s lists, followed up from here';
+
+  @override
+  String get tasksEmpty => 'No tasks yet';
+
+  @override
+  String get tasksEmptyHint => 'Write your first task with the button below';
+
+  @override
+  String get tasksNew => 'New task';
+
+  @override
+  String get tasksAssign => 'Assign a task';
+
+  @override
+  String get navTasksManage => 'Task assignment';
+
+  @override
+  String get navTasksManageSubtitle =>
+      'Write tasks onto other people\'s lists, and follow them up';
+
+  @override
+  String get tasksManageTitle => 'Task assignment';
+
+  @override
+  String get tasksManageEmpty => 'You have assigned nothing yet';
+
+  @override
+  String get tasksManageEmptyHint =>
+      'Assign a task with the button below — its owner is told, and changes only how it is going';
+
+  @override
+  String get taskPickPerson => 'Choose an employee';
+
+  @override
+  String taskAssignedBy(String name) {
+    return 'Assigned by $name';
+  }
+
+  @override
+  String taskAssignedTo(String name) {
+    return 'For $name';
+  }
+
+  @override
+  String get taskTitleLabel => 'Task';
+
+  @override
+  String get taskDescriptionLabel => 'Description';
+
+  @override
+  String taskDue(String date) {
+    return 'Due $date';
+  }
+
+  @override
+  String get taskNoDue => 'No date';
+
+  @override
+  String get taskState => 'State';
+
+  @override
+  String get taskNote => 'Note';
+
+  @override
+  String get taskNoteHint => 'Anything worth saying about it?';
+
+  @override
+  String get taskEvidence => 'Evidence';
+
+  @override
+  String get taskUpdate => 'Update state';
+
+  @override
+  String get taskStateSaved => 'State updated';
+
+  @override
+  String get taskReadOnly =>
+      'Assigned to you — only its state is yours to change';
+
+  @override
+  String get taskEdit => 'Edit task';
+
+  @override
+  String get taskDelete => 'Delete task';
+
+  @override
+  String get taskDeleteConfirm =>
+      'Delete this task? Whatever was filed against it goes with it.';
+
+  @override
+  String taskProgress(int done, int total) {
+    return '$done/$total';
+  }
 
   @override
   String get moduleTeamPick => 'Choose members';

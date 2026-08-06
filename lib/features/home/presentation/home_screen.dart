@@ -59,6 +59,9 @@ import 'widgets/dashboard_card.dart';
 /// complaint is a thing said about a person.
 const _generalPalette = <Accent>[
   Accent.green,
+  // The second: the person's own task list — work, like the files above it,
+  // but theirs alone.
+  Accent.gold,
   Accent.goldSoft,
   Accent.red,
   // The fourth: an evaluation somebody was asked to write. Red again, because
@@ -237,6 +240,18 @@ class _HomeScreenState extends State<HomeScreen> {
               title: l.navApprovals,
               subtitle: l.navApprovalsSubtitle,
               onTap: () => context.push(Routes.approvals),
+            ),
+          // Beside the permissions, and for the same reason: writing a task
+          // onto somebody's list is an act aimed at a PERSON, and whoever came
+          // here came looking for him. Not on the files shelf — this system
+          // has no relation to the operational files (0105).
+          if (session.can(PermissionCodes.tasksAssign))
+            (
+              group: _AdminGroup.people,
+              icon: AppIcons.tasks,
+              title: l.navTasksManage,
+              subtitle: l.navTasksManageSubtitle,
+              onTap: () => context.push(Routes.tasksManage),
             ),
           // With the people rather than on a shelf of its own: what a man may
           // do is a fact about the man, and somebody who came here to change it
@@ -428,6 +443,16 @@ class _HomeScreenState extends State<HomeScreen> {
         color: _generalPalette[0].of(context),
         onTap: () => context.push(Routes.modules),
       ),
+      // Gated by nothing: everyone owns a task list by existing (0105), and
+      // what was assigned to them arrived by name, not by grant. No relation
+      // to the operational files — that is the whole point of the card.
+      DashboardCard(
+        icon: AppIcons.tasks,
+        title: l.navTasks,
+        subtitle: l.navTasksSubtitle,
+        color: _generalPalette[1].of(context),
+        onTap: () => context.push(Routes.tasks),
+      ),
       // Published to everybody, and gated by nothing: مواعيد الوجبات is not
       // an assignment, it is information the whole mission needs. Reading is
       // open to any approved account; entering one is what needs a permission.
@@ -435,7 +460,7 @@ class _HomeScreenState extends State<HomeScreen> {
         icon: AppIcons.reports,
         title: l.navReports,
         subtitle: l.navReportsSubtitle,
-        color: _generalPalette[1].of(context),
+        color: _generalPalette[2].of(context),
         onTap: () => context.push(Routes.reports),
       ),
       // Gated by nothing, and that is the point: complaining is not a
@@ -447,7 +472,7 @@ class _HomeScreenState extends State<HomeScreen> {
         icon: AppIcons.complaints,
         title: l.navMyComplaints,
         subtitle: l.navMyComplaintsSubtitle,
-        color: _generalPalette[2].of(context),
+        color: _generalPalette[3].of(context),
         onTap: () => context.push(Routes.complaints),
       ),
       // Gated by nothing, like the three above it, and for a reason of its
@@ -461,7 +486,7 @@ class _HomeScreenState extends State<HomeScreen> {
         icon: AppIcons.evaluations,
         title: l.navEvaluations,
         subtitle: l.navEvaluationsSubtitle,
-        color: _generalPalette[3].of(context),
+        color: _generalPalette[4].of(context),
         onTap: () => context.push(Routes.evaluations),
       ),
       // No tile for the profile: the greeting panel above already carries the

@@ -11,6 +11,7 @@ import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../modules/data/module_outbox.dart';
+import '../../tasks/data/tasks_outbox.dart';
 
 /// What the app is holding on the person's behalf, and the two things he is
 /// allowed to decide about it.
@@ -87,7 +88,10 @@ class _EntryCard extends StatelessWidget {
     final text = Theme.of(context).textTheme;
 
     final kind = switch (entry.kind) {
-      ModuleOutbox.taskState => l.outboxKindTaskState,
+      TasksOutbox.state => l.outboxKindTaskState,
+      // The pre-0105 name, kept matchable: an entry queued by last week's
+      // build still deserves its label even though nothing writes it now.
+      'module.task_state' => l.outboxKindTaskState,
       ModuleOutbox.report => l.outboxKindReport,
       // A kind this build does not know — an entry written by a newer one, or
       // an operation since removed. Named by its key rather than hidden: the

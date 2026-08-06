@@ -31,7 +31,6 @@ class ModuleMember {
     required this.profileId,
     this.moduleId,
     this.nodeId,
-    this.taskIds = const {},
     this.profile,
   });
 
@@ -45,12 +44,6 @@ class ModuleMember {
   /// Set for a role held on a sector or a tower; null for a file-level role.
   final String? nodeId;
 
-  /// The duties this person was handed here, for a role whose task list is a
-  /// menu rather than a standing one ([ModuleRole.tasksAreAssigned]). Empty
-  /// both when nothing was handed out and when there was nothing to hand out —
-  /// the role says which.
-  final Set<String> taskIds;
-
   /// Joined when the query embeds `profiles(...)`.
   final Profile? profile;
 
@@ -62,11 +55,6 @@ class ModuleMember {
       profileId: map['profile_id'] as String,
       moduleId: map['module_id'] as String?,
       nodeId: map['node_id'] as String?,
-      taskIds: {
-        for (final t in ((map['module_assigned_tasks'] as List?) ?? const [])
-            .cast<Map<String, dynamic>>())
-          t['task_id'] as String,
-      },
       profile: joined is Map<String, dynamic> ? Profile.fromMap(joined) : null,
     );
   }

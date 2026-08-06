@@ -159,6 +159,7 @@ class EmployeePickerCubit extends SafeCubit<EmployeePickerState> {
     this._repo, {
     required this.seasonId,
     Set<String> selected = const {},
+    this.exclude = const {},
   }) : super(EmployeePickerState(selected: {...selected})) {
     _fetch();
     _loadFilterOptions();
@@ -168,12 +169,31 @@ class EmployeePickerCubit extends SafeCubit<EmployeePickerState> {
   final ProfileRepository _profiles = ProfileRepository();
   final String seasonId;
 
+  /// Who this caller may not choose. Applied here rather than in the query
+  /// because it is one id in a list of forty and the function is shared with
+  /// every other caller, none of which excludes anybody.
+  final Set<String> exclude;
+
+  List<AssignableEmployee> _allowed(List<AssignableEmployee> people) =>
+      exclude.isEmpty
+      ? people
+      : [
+          for (final person in people)
+            if (!exclude.contains(person.profile.id)) person,
+        ];
+
   static const _pageSize = 40;
 
   Timer? _debounce;
 
   /// Guards against an older, slower search overwriting a newer one.
   int _generation = 0;
+
+  /// How many rows the DATABASE has handed over for the current search — which
+  /// is what the next page's offset is measured from. Not the same as the
+  /// number on screen once [exclude] has dropped one: paging by what survived
+  /// would ask for row 39 again and show it twice.
+  int _fetched = 0;
 
   @override
   Future<void> close() {
@@ -283,7 +303,7 @@ class EmployeePickerCubit extends SafeCubit<EmployeePickerState> {
     final generation = ++_generation;
     emit(state.copyWith(status: PickerStatus.loading, error: null));
     try {
-      final people = await _repo.searchAssignableEmployees(
+      final page = await _repo.searchAssignableEmployees(
         seasonId: seasonId,
         query: state.query,
         isExternal: state.filter.isExternal,
@@ -293,12 +313,17 @@ class EmployeePickerCubit extends SafeCubit<EmployeePickerState> {
         limit: _pageSize,
       );
       if (isClosed || generation != _generation) return;
+      _fetched = page.length;
+      final people = _allowed(page);
       emit(
         state.copyWith(
           status: PickerStatus.ready,
           people: people,
           known: {..._remember(state, people)},
-          hasMore: people.length == _pageSize,
+          // Measured on what the DATABASE returned, not on what survived the
+          // exclusion: a full page with one name dropped is still a full page,
+          // and there is more behind it.
+          hasMore: page.length == _pageSize,
         ),
       );
     } catch (e) {
@@ -329,13 +354,15 @@ class EmployeePickerCubit extends SafeCubit<EmployeePickerState> {
         cityId: state.cityId,
         onlyFree: state.onlyFree,
         limit: _pageSize,
-        offset: state.people.length,
+        offset: _fetched,
       );
       if (isClosed || generation != _generation) return;
+      _fetched += more.length;
+      final arrivals = _allowed(more);
       emit(
         state.copyWith(
-          people: [...state.people, ...more],
-          known: {..._remember(state, more)},
+          people: [...state.people, ...arrivals],
+          known: {..._remember(state, arrivals)},
           hasMore: more.length == _pageSize,
           loadingMore: false,
         ),

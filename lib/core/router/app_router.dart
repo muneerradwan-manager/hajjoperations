@@ -35,6 +35,8 @@ import '../../features/status/presentation/pending_screen.dart';
 import '../../features/status/presentation/rejected_screen.dart';
 import '../../features/status/presentation/splash_screen.dart';
 import '../../features/status/presentation/suspended_screen.dart';
+import '../../features/tasks/presentation/tasks_manage_screen.dart';
+import '../../features/tasks/presentation/tasks_screen.dart';
 import '../animations/animations.dart';
 import '../constants/permission_codes.dart';
 import 'go_router_refresh_stream.dart';
@@ -106,6 +108,17 @@ abstract class Routes {
   /// OWN arrivals never needed a grant and still does not; this is the room's
   /// view of everybody's.
   static const presence = '/presence';
+
+  /// One person's task list (0105). Unguarded on purpose: everyone owns a
+  /// list by existing, and what was assigned to them arrives by name, not by
+  /// grant.
+  static const tasks = '/tasks';
+
+  /// Writing tasks onto OTHER people's lists, and following them up. Guarded
+  /// — see [sectionGuards]. A separate door from [tasks] rather than a button
+  /// on it: that page is a person's work, this one is authority over other
+  /// people's, and the two were never the same screen.
+  static const tasksManage = '/tasks/manage';
 }
 
 /// What each administered section asks of whoever tries to open it.
@@ -174,6 +187,11 @@ final sectionGuards = <String, bool Function(SessionState)>{
   // otherwise go — which is exactly the case a guard is for.
   Routes.export: (s) => s.can(PermissionCodes.exportData),
   Routes.seasonMap: (s) => s.can(PermissionCodes.mapView),
+
+  // Assigning tasks to other people. `/tasks` — a person's own list — is
+  // deliberately not in this table, for the same reason `/complaints` is not:
+  // owning a list is not a permission somebody grants.
+  Routes.tasksManage: (s) => s.can(PermissionCodes.tasksAssign),
 };
 
 GoRouter buildRouter(SessionCubit session) {
@@ -352,6 +370,16 @@ GoRouter buildRouter(SessionCubit session) {
         path: Routes.seasonMap,
         pageBuilder: (c, s) =>
             fadeThroughPage(key: s.pageKey, child: const SeasonMapScreen()),
+      ),
+      GoRoute(
+        path: Routes.tasks,
+        pageBuilder: (c, s) =>
+            fadeThroughPage(key: s.pageKey, child: const TasksScreen()),
+      ),
+      GoRoute(
+        path: Routes.tasksManage,
+        pageBuilder: (c, s) =>
+            fadeThroughPage(key: s.pageKey, child: const TasksManageScreen()),
       ),
       GoRoute(
         path: Routes.reports,

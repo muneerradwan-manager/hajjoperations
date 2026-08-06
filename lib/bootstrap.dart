@@ -20,6 +20,7 @@ import 'core/supabase/secure_session_storage.dart';
 import 'features/checkin/data/check_in_outbox.dart';
 import 'features/incidents/data/incidents_outbox.dart';
 import 'features/modules/data/module_outbox.dart';
+import 'features/tasks/data/tasks_outbox.dart';
 import 'features/notifications/data/push_service.dart';
 import 'features/prayer_times/application/prayer_scheduler.dart';
 import 'firebase_options.dart';
@@ -82,6 +83,7 @@ Future<void> _installOutbox() async {
       reconnects: platformReconnects(),
     );
     ModuleOutbox.register(outbox);
+    TasksOutbox.register(outbox);
     CheckInOutbox.register(outbox);
     IncidentsOutbox.register(outbox);
     Outbox.instance = outbox;

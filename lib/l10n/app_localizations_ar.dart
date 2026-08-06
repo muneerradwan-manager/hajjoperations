@@ -624,6 +624,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get permMapView => 'فتح خريطة الموسم';
 
   @override
+  String get perm_tasks => 'المهام';
+
+  @override
+  String get permTasksAssign => 'إسناد مهام إلى الآخرين';
+
+  @override
   String permissionRequires(String names) {
     return 'يتطلب: $names';
   }
@@ -1571,33 +1577,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get moduleSectionInfo => 'معلومات الملف';
 
   @override
-  String get moduleSectionTasks => 'دوري ومهامي';
+  String get moduleSectionTasks => 'دوري في الملف';
 
   @override
   String moduleSectionTasksOf(String name) {
-    return '$name — الدور والمهام';
+    return '$name — الدور';
   }
 
   @override
   String get moduleJobDescription => 'الوصف الوظيفي';
-
-  @override
-  String get moduleNoTasks => 'لا توجد مهام معرّفة لهذا الدور بعد';
-
-  @override
-  String get moduleAssignedTasks => 'المهام المسندة';
-
-  @override
-  String moduleAssignedTasksCount(int count, int total) {
-    return '$count من $total مهام';
-  }
-
-  @override
-  String get moduleNoAssignedTasks => 'لم تُسند إليه مهام بعد';
-
-  @override
-  String get moduleNoAssignedTasksMine =>
-      'لم تُسند إليك مهام من قائمة هذا الدور بعد';
 
   @override
   String get moduleTasksSection => 'المهام';
@@ -1606,10 +1594,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get moduleTasksFile => 'مهام الملف';
 
   @override
-  String get moduleTasksFileHint => 'تخصّ الملف كاملاً، ويراها كل أعضائه';
+  String get moduleTasksFileHint =>
+      'تخصّ الملف كاملاً — يتقاسمها أعضاؤه فيما بينهم';
 
   @override
-  String get moduleTasksRole => 'مهام دوري';
+  String get moduleTasksRole => 'مهام الدور';
 
   @override
   String moduleTasksRoleOf(String name) {
@@ -1621,33 +1610,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'مرتبطة بالدور لا بالشخص — تبقى كما هي إذا تغيّر من يشغله';
 
   @override
-  String get moduleTasksPersonal => 'مهامي الشخصية';
-
-  @override
-  String moduleTasksPersonalOf(String name) {
-    return 'مهام $name الشخصية';
-  }
-
-  @override
-  String get moduleTasksPersonalHint =>
-      'مهام استثنائية لا يراها إلا صاحبها ومن يدير الملف';
-
-  @override
-  String get moduleTasksNone => 'لا توجد مهام في هذا الملف بعد';
-
-  @override
-  String get moduleTasksNoneMine => 'لا توجد مهام تخصّك في هذا الملف';
-
-  @override
-  String moduleTasksProgress(int done, int total) {
-    return '$done/$total';
-  }
-
-  @override
-  String get moduleTasksMine => 'مهامي';
-
-  @override
-  String get moduleTasksAll => 'كل المهام';
+  String get moduleTasksNone => 'لم تُكتب مهام على هذا الملف بعد';
 
   @override
   String get taskStateNotStarted => 'لم تبدأ';
@@ -1659,35 +1622,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get taskStateDone => 'منجزة';
 
   @override
-  String get moduleTaskUpdate => 'تحديث الحالة';
-
-  @override
-  String get moduleTaskState => 'الحالة';
-
-  @override
-  String get moduleTaskNote => 'ملاحظة';
-
-  @override
-  String get moduleTaskNoteHint => 'ما الذي يستحق أن يُقال عنها؟';
-
-  @override
-  String get moduleTaskEvidence => 'دليل الإنجاز';
-
-  @override
-  String moduleTaskUpdatedBy(String name, String date) {
-    return '$name · $date';
-  }
-
-  @override
   String moduleTaskDue(String date) {
     return 'الاستحقاق: $date';
   }
-
-  @override
-  String get moduleTaskStateSaved => 'تم تحديث الحالة';
-
-  @override
-  String get moduleTaskReadOnly => 'لا تملك صلاحية تحديث هذه المهمة';
 
   @override
   String get moduleTaskAdd => 'إضافة مهمة';
@@ -1699,17 +1636,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get moduleTaskDelete => 'حذف المهمة';
 
   @override
-  String get moduleTaskDeleteConfirm =>
-      'حذف هذه المهمة؟ ستُحذف حالتها وما أُرفق بها معها.';
-
-  @override
-  String get moduleTaskDeleted => 'تم حذف المهمة';
-
-  @override
-  String get moduleTaskCreated => 'تمت إضافة المهمة';
-
-  @override
-  String get moduleTaskSaved => 'تم حفظ المهمة';
+  String get moduleTaskDeleteConfirm => 'حذف هذه المهمة من قائمة الملف؟';
 
   @override
   String get moduleTaskScope => 'نطاق المهمة';
@@ -1718,25 +1645,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get moduleTaskScopeFile => 'مهمة ملف';
 
   @override
-  String get moduleTaskScopeFileHint => 'يراها جميع أعضاء الملف';
+  String get moduleTaskScopeFileHint =>
+      'للملف كاملاً — يتقاسمها الأعضاء فيما بينهم';
 
   @override
   String get moduleTaskScopeRole => 'مهمة دور';
 
   @override
-  String get moduleTaskScopeRoleHint => 'يراها كل من يشغل هذا الدور';
-
-  @override
-  String get moduleTaskScopePersonal => 'مهمة شخصية';
-
-  @override
-  String get moduleTaskScopePersonalHint => 'يراها موظف واحد فقط';
+  String get moduleTaskScopeRoleHint =>
+      'ما يعنيه شغل هذا الدور، أياً كان من يشغله';
 
   @override
   String get moduleTaskRoleLabel => 'الدور';
-
-  @override
-  String get moduleTaskPersonLabel => 'الموظف';
 
   @override
   String get moduleTaskTitleLabel => 'عنوان المهمة';
@@ -1748,26 +1668,129 @@ class AppLocalizationsAr extends AppLocalizations {
   String get moduleTaskDescriptionLabel => 'الوصف';
 
   @override
-  String get moduleTaskStageLabel => 'المرحلة';
-
-  @override
-  String get moduleTaskNoStage => 'بلا مرحلة';
-
-  @override
-  String get moduleTaskDueLabel => 'تاريخ الاستحقاق';
-
-  @override
   String get moduleTaskNoDue => 'بلا تاريخ';
 
   @override
   String get moduleTaskPickRole => 'اختر الدور';
 
   @override
-  String get moduleTaskPickPerson => 'اختر الموظف';
+  String get navTasks => 'مهامي';
 
   @override
-  String get moduleTaskCatalogNote =>
-      'مهمة معرّفة في نوع الملف — تُعدَّل من البيانات المرجعية';
+  String get navTasksSubtitle => 'قائمتك الخاصة، وما أُسند إليك';
+
+  @override
+  String get tasksTitle => 'مهامي';
+
+  @override
+  String get tasksOwnSection => 'مهامي الخاصة';
+
+  @override
+  String get tasksOwnHint => 'كتبتها لنفسك — لك تعديلها وحذفها وتحريكها كاملاً';
+
+  @override
+  String get tasksAssignedSection => 'مُسندة إليّ';
+
+  @override
+  String get tasksAssignedHint => 'كُتبت لك — لا تملك عليها سوى تغيير حالتها';
+
+  @override
+  String get tasksIAssignedSection => 'أسندتُها لغيري';
+
+  @override
+  String get tasksIAssignedHint => 'ما كتبته على قوائم الآخرين، وتتابعه من هنا';
+
+  @override
+  String get tasksEmpty => 'لا مهام بعد';
+
+  @override
+  String get tasksEmptyHint => 'اكتب مهمتك الأولى بالزر في الأسفل';
+
+  @override
+  String get tasksNew => 'مهمة جديدة';
+
+  @override
+  String get tasksAssign => 'إسناد مهمة';
+
+  @override
+  String get navTasksManage => 'إسناد المهام';
+
+  @override
+  String get navTasksManageSubtitle =>
+      'كتابة المهام على قوائم الآخرين ومتابعتها';
+
+  @override
+  String get tasksManageTitle => 'إسناد المهام';
+
+  @override
+  String get tasksManageEmpty => 'لم تُسند شيئاً بعد';
+
+  @override
+  String get tasksManageEmptyHint =>
+      'أسنِد مهمة بالزر في الأسفل — يُبلَّغ صاحبها، ولا يملك عليها سوى تغيير حالتها';
+
+  @override
+  String get taskPickPerson => 'اختر الموظف';
+
+  @override
+  String taskAssignedBy(String name) {
+    return 'أسندها: $name';
+  }
+
+  @override
+  String taskAssignedTo(String name) {
+    return 'إلى: $name';
+  }
+
+  @override
+  String get taskTitleLabel => 'المهمة';
+
+  @override
+  String get taskDescriptionLabel => 'الوصف';
+
+  @override
+  String taskDue(String date) {
+    return 'الاستحقاق: $date';
+  }
+
+  @override
+  String get taskNoDue => 'بلا تاريخ';
+
+  @override
+  String get taskState => 'الحالة';
+
+  @override
+  String get taskNote => 'ملاحظة';
+
+  @override
+  String get taskNoteHint => 'ما الذي يستحق أن يُقال عنها؟';
+
+  @override
+  String get taskEvidence => 'دليل الإنجاز';
+
+  @override
+  String get taskUpdate => 'تحديث الحالة';
+
+  @override
+  String get taskStateSaved => 'تم تحديث الحالة';
+
+  @override
+  String get taskReadOnly =>
+      'مهمة مُسندة إليك — لا تملك عليها سوى تغيير حالتها';
+
+  @override
+  String get taskEdit => 'تعديل المهمة';
+
+  @override
+  String get taskDelete => 'حذف المهمة';
+
+  @override
+  String get taskDeleteConfirm => 'حذف هذه المهمة؟ سيُحذف ما أُرفق بها معها.';
+
+  @override
+  String taskProgress(int done, int total) {
+    return '$done/$total';
+  }
 
   @override
   String get moduleTeamPick => 'اختيار الأعضاء';

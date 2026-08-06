@@ -89,6 +89,7 @@ Future<List<AssignableEmployee>?> showMultiEmployeePicker(
   required String title,
   required String seasonId,
   required List<AssignableEmployee> selected,
+  Set<String> exclude = const {},
 }) {
   return Navigator.of(context).push<List<AssignableEmployee>>(
     fadeThroughRoute(
@@ -97,6 +98,7 @@ Future<List<AssignableEmployee>?> showMultiEmployeePicker(
         seasonId: seasonId,
         selected: {for (final p in selected) p.profile.id},
         returnsPerson: true,
+        exclude: exclude,
       ),
       opaque: true,
     ),
@@ -111,6 +113,7 @@ class EmployeePickerScreen extends StatelessWidget {
     required this.selected,
     this.multiple = true,
     this.returnsPerson = false,
+    this.exclude = const {},
   });
 
   /// The role being filled — the only thing that says what this page is for.
@@ -127,6 +130,14 @@ class EmployeePickerScreen extends StatelessWidget {
   /// [showSingleEmployeePicker]; meaningless unless [multiple] is false.
   final bool returnsPerson;
 
+  /// People this particular caller may not choose — dropped from the list
+  /// rather than shown greyed, so nobody taps a name that cannot be an answer.
+  ///
+  /// Empty for filling a role: a man may perfectly well post himself. Task
+  /// assignment passes its own id, because a task assigned to its own author
+  /// is by definition not an assignment (0105).
+  final Set<String> exclude;
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -134,6 +145,7 @@ class EmployeePickerScreen extends StatelessWidget {
         ModulesRepository(),
         seasonId: seasonId,
         selected: selected,
+        exclude: exclude,
       ),
       child: _View(
         title: title,
