@@ -121,6 +121,55 @@ void main() {
     );
   });
 
+  test('every code the app names is seeded by some migration', () {
+    // The other direction, and it was open until 0098 needed it.
+    //
+    // `PermissionCodes` is what the app asks `session.can` about, and the
+    // session's set comes from rows in `permissions`. A constant added in Dart
+    // and never inserted in SQL therefore reads as "nobody holds this" — the
+    // button never appears, the guard never opens, and NOTHING reports it. Same
+    // silent class as a retired code, approached from the other side: one is a
+    // clause that can never be true, the other a code nobody can ever be
+    // granted.
+    //
+    // A lint over the SQL text, like its neighbour above. It cannot say whether
+    // anybody was granted a code; it can say whether the code exists to grant,
+    // and that is the mistake that gets made.
+    final dart = File(
+      'lib/core/constants/permission_codes.dart',
+    ).readAsStringSync();
+
+    // `static const someName = 'section.thing';`
+    final declared = RegExp(r"static\s+const\s+\w+\s*=\s*'([^']+)'")
+        .allMatches(dart)
+        .map((m) => m.group(1)!)
+        .where((code) => code.contains('.'))
+        .toSet();
+
+    expect(
+      declared,
+      isNotEmpty,
+      reason: 'no codes were found — the pattern has drifted and this test is '
+          'passing vacuously',
+    );
+
+    final seeded = <String>{};
+    for (final file in migrations) {
+      final sql = withoutComments(file.readAsStringSync());
+      for (final match in RegExp(r"'([a-z_]+\.[a-z_]+)'").allMatches(sql)) {
+        seeded.add(match.group(1)!);
+      }
+    }
+
+    final missing = declared.difference(seeded).toList()..sort();
+    expect(
+      missing,
+      isEmpty,
+      reason: 'named in Dart, seeded nowhere — so nobody can ever hold it and '
+          'the screens behind it are dark:\n  ${missing.join('\n  ')}',
+    );
+  });
+
   test('the retired codes are the ones 0073 is known to have retired', () {
     // Pins the list. If a later migration retires something else this fails,
     // which is the moment to check that nothing was left resting on it.

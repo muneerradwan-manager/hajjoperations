@@ -3262,6 +3262,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get seasonMapEmpty => 'No members';
 
   @override
+  String get seasonMapUncoded => 'Cannot be checked into';
+
+  @override
   String get seasonMapPosted => 'Posted here';
 
   @override
@@ -3417,8 +3420,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'The camera could not be opened — the permission may be refused';
 
   @override
-  String get checkInUsePositionInstead =>
-      'Record my arrival by position instead';
+  String get checkInNoCameraHint =>
+      'Checking in needs the code and your location together, so there is no way to do it without a camera';
 
   @override
   String get checkInTitle => 'Check in';
@@ -3427,10 +3430,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checkInAction => 'Record my arrival';
 
   @override
-  String get checkInScan => 'Scan a code';
+  String get checkInSubtitle =>
+      'Scan the code fixed to the hotel or camp while you are standing there';
 
   @override
-  String get checkInHere => 'I am here';
+  String get checkInScan => 'Scan the code';
 
   @override
   String get checkInNoteHint => 'Note (optional)';
@@ -3439,56 +3443,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checkInDone => 'Your arrival was recorded';
 
   @override
+  String checkInDoneAt(String place, String metres) {
+    return 'Recorded — $place, $metres m away';
+  }
+
+  @override
   String get checkInQueued =>
       'Saved on the device — it will be recorded when the network returns';
 
   @override
-  String get checkInWrongFile => 'That code belongs to a different file';
-
-  @override
-  String get checkInNotMember => 'You are not a member of this file';
-
-  @override
-  String get checkInPlaceUnknown => 'The file itself';
-
-  @override
-  String get checkInMethodQr => 'Code';
-
-  @override
-  String get checkInMethodGps => 'Position';
-
-  @override
-  String get checkInMethodManual => 'Manual';
-
-  @override
   String checkInDistance(String metres) {
-    return '$metres m from the recorded position';
+    return '$metres m away';
   }
 
   @override
-  String get checkInDistanceUnknown => 'No position recorded for this place';
+  String get checkInNotApproved =>
+      'Your account is not approved yet, so you cannot check in';
 
   @override
-  String get checkInFarFromPlace =>
-      'Far from the recorded position — worth a look';
+  String get checkInNotAPlace => 'That code does not belong to a current place';
 
   @override
-  String get checkInWhichPlace => 'Where are you?';
+  String get checkInNeedsAPosition =>
+      'Not recorded: turn location on, then scan the code again';
 
   @override
-  String get checkInPickAPlaceFirst =>
-      'Choose the place above, or scan the code fixed to it';
+  String get checkInCodeExpired =>
+      'This code is no longer valid — look for the new one put up in its place';
 
   @override
-  String get checkInNeedsAPlace =>
-      'Not recorded: choose the place, scan the code, or turn location on';
+  String get checkInPlaceHasNoLocation =>
+      'This place has no location set, so how near you are cannot be checked. Tell the administration.';
 
   @override
-  String get checkInNoPlaces => 'No places in this file can carry a code';
+  String get checkInTooFar =>
+      'You are too far from this place — you must be at it to check in';
 
   @override
-  String get checkInNoPlacesHint =>
-      'A code is fixed to a real place — a tower or a camp. This file has none drawn yet.';
+  String get checkInCodesDenied => 'You may not view place codes';
+
+  @override
+  String get checkInRotateDenied => 'You may not regenerate place codes';
 
   @override
   String get checkInQrTitle => 'Place code';
@@ -3501,24 +3496,62 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checkInQrPrint => 'Print or share';
 
   @override
+  String get checkInQrShare => 'Share';
+
+  @override
+  String get checkInQrCard => 'Check-in code';
+
+  @override
+  String checkInQrRotatedAt(String when) {
+    return 'Last regenerated: $when';
+  }
+
+  @override
+  String get checkInQrNoLocation =>
+      'This place has no location — nobody can check in here until one is set';
+
+  @override
+  String get checkInQrRotate => 'Regenerate the code';
+
+  @override
+  String get checkInQrRotateConfirm =>
+      'Every printed code for this place stops working immediately. The new one must be printed and put up before anybody can check in here.';
+
+  @override
+  String get checkInQrRotated => 'Regenerated — print it and put it up now';
+
+  @override
+  String get checkInQrPrintAll => 'Print the list\'s codes';
+
+  @override
+  String get checkInQrPrintingAll => 'Preparing the codes…';
+
+  @override
   String get presenceTitle => 'Who is in place now';
+
+  @override
+  String get presenceSubtitle =>
+      'The latest arrivals across the season\'s places';
 
   @override
   String get presenceEmpty => 'Nobody has checked in yet';
 
   @override
   String get presenceEmptyHint =>
-      'The last twelve hours of arrivals appear here';
+      'Whoever scans a place code while standing at it appears here';
 
   @override
-  String presenceSuspectCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count records worth a look',
-      one: '1 record worth a look',
-    );
-    return '$_temp0';
+  String get presenceWindow4h => '4 hours';
+
+  @override
+  String get presenceWindow12h => '12 hours';
+
+  @override
+  String get presenceWindow24h => '24 hours';
+
+  @override
+  String presenceCounts(int people, int places) {
+    return '$people people in $places places';
   }
 
   @override

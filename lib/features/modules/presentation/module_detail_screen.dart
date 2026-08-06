@@ -21,9 +21,6 @@ import '../../../core/widgets/profile_avatar.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
-import '../../checkin/presentation/check_in_sheet.dart';
-import '../../checkin/presentation/place_codes_screen.dart';
-import '../../checkin/presentation/presence_screen.dart';
 // The two screens link to each other — a file lists its people, and a person
 // lists his files. Dart allows the cycle; the alternative is a router constant
 // that hides which screen is actually being opened.
@@ -196,23 +193,17 @@ class _ViewState extends State<_View> {
         widget.fromOffice && session.can(PermissionCodes.modulesActivate);
     final canMembers =
         widget.fromOffice && session.can(PermissionCodes.modulesMembers);
-    // Gated on `fromOffice` like the rest, and it was not always: the argument
-    // for leaving it open was that presence is "about the file itself", the
-    // same trust as reading what the members filed.
+    // Presence and the place codes used to live on this page — a roll under the
+    // menu, an "I am here" button on the bar, a list of codes to print. All
+    // three have gone, and not because they were unwanted.
     //
-    // That argument answered the wrong question. The trust is right — a man who
-    // may read the reports may read the roll — but this page is reached down
-    // two corridors, and WHICH corridor is what the page is for. Under عام a
-    // file is a man's own posting and every control on it should be about his
-    // own part in it: where he is, what he owes. Under الإدارة it is the
-    // season's paperwork and the controls are about running it: who is in
-    // place, what the codes are, who may be added.
-    //
-    // Leaving the roll on the عام page put "who is where" beside "I am here" —
-    // one of them a supervisor's question, the other a member's answer — on the
-    // screen a member opens to look at his own tower.
-    final canSeePresence =
-        widget.fromOffice && session.can(PermissionCodes.modulesReports);
+    // A place stopped being part of a file in 0095: a برج is an entry of the
+    // hotels list, chosen here, belonging to the season. 0098 followed the
+    // place. An arrival is now a fact about the HOTEL — true whoever asks,
+    // whichever file mentions it, and readable for a hotel in المدينة that
+    // stands in no file at all. So the code is on the hotel's own page, the
+    // roll is one board across the season (`/presence`), and filing an arrival
+    // is `/check-in`, which is nowhere near the paperwork.
 
     return BlocBuilder<ModuleDetailCubit, ModuleDetailState>(
       builder: (context, state) {
@@ -233,71 +224,15 @@ class _ViewState extends State<_View> {
                     l.modulesTitle,
               ),
               actions: [
-                // Checking in is the one action here a member takes about
-                // HIMSELF, so it sits on the bar rather than under the menu —
-                // it is pressed standing at a gate, often one-handed, and a
-                // thing pressed in that position should not be two taps deep.
-                //
-                // Under عام only. Not because the office may not check in —
-                // whoever runs a file may well be standing in one of its towers
-                // — but because he does that on his OWN posting, which is the
-                // same file down the other corridor. Offering it here too would
-                // put a personal act among the controls for running the season,
-                // and it is the personal act that has to be unmissable.
-                //
-                // And only while the file is actually running: reporting an
-                // arrival at a file that has ended records nothing anybody will
-                // read.
-                if (!widget.fromOffice && (module?.isRunning ?? false))
-                  IconButton(
-                    tooltip: l.checkInTitle,
-                    onPressed: () => showCheckInSheet(
-                      context,
-                      moduleId: context.read<ModuleDetailCubit>().moduleId,
-                    ),
-                    icon: const Icon(AppIcons.checkIn),
-                  ),
-                if ((canEdit || canDelete || canSeePresence) && module != null)
+                if ((canEdit || canDelete) && module != null)
                   OverflowMenu(
                     actions: [
-                      if (canSeePresence)
-                        MenuAction(
-                          icon: AppIcons.checkIn,
-                          label: l.presenceTitle,
-                          onSelected: () => Navigator.of(context).push(
-                            fadeThroughRoute(
-                              (_) => PresenceScreen(
-                                moduleId:
-                                    context.read<ModuleDetailCubit>().moduleId,
-                              ),
-                            ),
-                          ),
-                        ),
-                      if (canEdit) ...[
+                      if (canEdit)
                         MenuAction(
                           icon: AppIcons.edit,
                           label: l.commonEdit,
                           onSelected: () => _edit(module),
                         ),
-                        // Behind the same door as editing: preparing the codes
-                        // is setting the file up, not working in it.
-                        MenuAction(
-                          icon: AppIcons.qrCode,
-                          label: l.checkInQrTitle,
-                          onSelected: () => Navigator.of(context).push(
-                            fadeThroughRoute(
-                              (_) => BlocProvider.value(
-                                // The same cubit, not a second one: the list of
-                                // places is this page's own state, already
-                                // loaded, and refetching it would show an empty
-                                // screen for a beat on a phone in a hotel lobby.
-                                value: context.read<ModuleDetailCubit>(),
-                                child: const PlaceCodesScreen(),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
                       if (canDelete)
                         MenuAction(
                           icon: AppIcons.delete,

@@ -14,6 +14,7 @@ class ReferenceSet {
     this.fields = const [],
     this.items = const [],
     this.isSeasonScoped = false,
+    this.isPlace = false,
   });
 
   final String id;
@@ -25,6 +26,14 @@ class ReferenceSet {
   /// Whether an entry of this set belongs to one season. The hotels and the
   /// clusters are contracted per year; the cities simply exist.
   final bool isSeasonScoped;
+
+  /// Whether an entry of this set is somewhere a person STANDS — a فندق, a
+  /// مخيم. Those carry a check-in code; a قطاع, a مركز and a تكتل are
+  /// arrangements on paper and carry nothing (0098).
+  ///
+  /// Not the same question as `ModuleLevel.isPlace`, which decides what the map
+  /// draws. A level may be a pin while drawing from a list nobody checks in at.
+  final bool isPlace;
 
   /// The entries to CHOOSE from in [seasonId] — this season's for a scoped set,
   /// all of them otherwise.
@@ -103,6 +112,9 @@ class ReferenceSet {
     fields: fields,
     items: items ?? this.items,
     isSeasonScoped: isSeasonScoped,
+    // Every level goes through here while a set is narrowed, so anything left
+    // out is not "defaulted" — it is ERASED, silently, on the way through.
+    isPlace: isPlace,
   );
 
   factory ReferenceSet.fromMap(Map<String, dynamic> map) {
@@ -129,6 +141,7 @@ class ReferenceSet {
       fields: fields.map(ModuleField.fromMap).toList(),
       items: items,
       isSeasonScoped: (map['is_season_scoped'] as bool?) ?? false,
+      isPlace: (map['is_place'] as bool?) ?? false,
     );
   }
 }

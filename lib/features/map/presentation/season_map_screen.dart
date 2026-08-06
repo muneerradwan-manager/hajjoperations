@@ -30,7 +30,11 @@ Color _conditionColour(ColorScheme scheme, PlaceCondition condition) =>
       PlaceCondition.incident => scheme.error,
       PlaceCondition.unmanned => scheme.tertiary,
       PlaceCondition.manned => scheme.primary,
+      // Both drawn in the muted outline colour, because neither is anybody's
+      // fault: one has nobody posted to it and the other cannot carry a code.
+      // They differ in what to DO, which the words below say.
       PlaceCondition.empty => scheme.outline,
+      PlaceCondition.uncoded => scheme.outline,
     };
 
 String _conditionLabel(AppLocalizations l, PlaceCondition condition) =>
@@ -39,6 +43,7 @@ String _conditionLabel(AppLocalizations l, PlaceCondition condition) =>
       PlaceCondition.unmanned => l.seasonMapUnmanned,
       PlaceCondition.manned => l.seasonMapManned,
       PlaceCondition.empty => l.seasonMapEmpty,
+      PlaceCondition.uncoded => l.seasonMapUncoded,
     };
 
 /// The season on one map.
@@ -650,6 +655,7 @@ class _Legend extends StatelessWidget {
                 PlaceCondition.unmanned,
                 PlaceCondition.incident,
                 PlaceCondition.empty,
+                PlaceCondition.uncoded,
               ])
                 _Key(
                   colour: _conditionColour(scheme, condition),

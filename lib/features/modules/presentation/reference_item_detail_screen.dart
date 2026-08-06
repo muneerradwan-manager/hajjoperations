@@ -13,6 +13,7 @@ import '../../../core/widgets/overflow_menu.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
+import '../../checkin/presentation/place_code_card.dart';
 import '../application/reference_data_cubit.dart';
 import '../domain/map_location.dart';
 import '../domain/module_type.dart';
@@ -117,6 +118,24 @@ class ReferenceItemDetailScreen extends StatelessWidget {
                           ),
                     ],
                   ),
+                  // The code fixed to this place, for whoever may print it.
+                  // Draws nothing at all otherwise — a card explaining that you
+                  // may not see the code is a card telling you there is one.
+                  //
+                  // Here rather than on an operational file's page, which is
+                  // where it used to be: a hotel belongs to the season and not
+                  // to whichever file happens to mention it, and one in
+                  // المدينة belongs to no file at all (0098).
+                  if (set.isPlace) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    PlaceCodeCard(
+                      itemId: item.id,
+                      placeName: item.name.of(context),
+                      // What tells two "المخيم رقم ١٦" apart in a stack of
+                      // paper: the list, and the city or مشعر it is in.
+                      subtitle: _placeSubtitle(context, state, set, item),
+                    ),
+                  ],
                   // What has been put INSIDE this entry, where something can be.
                   // A تكتل holds مجموعات and they add up to a number of their
                   // own; nothing else in the master data nests yet.
@@ -246,6 +265,28 @@ List<Widget> _dependentCards(
       );
   }
   return cards;
+}
+
+/// What tells one place's poster from another's in a stack of paper.
+///
+/// The list's name, and — where the entry has one — whatever divides that list:
+/// a hotel's city, a camp's مشعر. Read from the schema rather than named here,
+/// so a list that divides some other way needs nothing written for it. Whoever
+/// is putting forty near-identical black squares up needs this, and a code on
+/// the wrong gate is the one mistake that makes the whole register lie.
+String _placeSubtitle(
+  BuildContext context,
+  ReferenceDataState state,
+  ReferenceSet set,
+  ReferenceItem item,
+) {
+  final parts = <String>[set.name.of(context)];
+  final dividing = set.dividingField();
+  if (dividing != null) {
+    final shown = _display(context, state, dividing, item);
+    if (shown.isNotEmpty) parts.add(shown);
+  }
+  return parts.join(' — ');
 }
 
 /// Kinds whose value is something to act on rather than something to read.

@@ -1,10 +1,8 @@
-import 'dart:io';
-
 import 'package:equatable/equatable.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/bloc/safe_cubit.dart';
+import '../../../core/share/shareable.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/export_catalog.dart';
 import '../data/export_runner.dart';
@@ -198,20 +196,14 @@ class ExportCubit extends SafeCubit<ExportState> {
   /// share or download takes them from memory. Written as a fallback on the
   /// failure rather than as a check on `kIsWeb`, because the thing that matters
   /// is whether a directory can be had, not which platform is asking.
-  Future<XFile> _asShareable(ExportFile file) async {
-    try {
-      final directory = await getTemporaryDirectory();
-      final path = '${directory.path}/${file.name}';
-      await File(path).writeAsBytes(file.bytes, flush: true);
-      return XFile(path, mimeType: file.format.mimeType);
-    } catch (_) {
-      return XFile.fromData(
-        file.bytes,
-        name: file.name,
-        mimeType: file.format.mimeType,
-      );
-    }
-  }
+  /// Moved to `core/share/shareable.dart` when the place-code card needed the
+  /// same fallback; kept here as one line so the call sites below read as they
+  /// did.
+  Future<XFile> _asShareable(ExportFile file) => asShareable(
+    file.bytes,
+    name: file.name,
+    mimeType: file.format.mimeType,
+  );
 
   /// Builds the file and hands it to the platform's share sheet.
   ///

@@ -23,7 +23,15 @@ enum PlaceCondition {
 
   /// Nobody is posted here at all. The place exists in the file and has not
   /// been staffed.
-  empty;
+  empty,
+
+  /// Nobody CAN report arriving here: the node stands on no master-data entry,
+  /// so there is nothing to fix a code to (0098).
+  ///
+  /// Without this such a place read as [unmanned] — a coloured pin accusing
+  /// nobody of anything, since no arrival could ever be counted against it. The
+  /// answer is not to look for the man; it is to give the node an entry.
+  uncoded;
 
   /// Whether it is worth the operations room's attention.
   bool get wantsAttention =>
@@ -43,6 +51,7 @@ class MapPlace {
     this.posted = 0,
     this.present = 0,
     this.openIncidents = 0,
+    this.canCheckIn = true,
   });
 
   /// Null for a hotel that is not a node in any file — most of المدينة. It is
@@ -75,10 +84,21 @@ class MapPlace {
 
   final int openIncidents;
 
+  /// Whether an arrival can be recorded here at all.
+  ///
+  /// False for a node that names no master-data entry: a code is fixed to a
+  /// hotel or a camp, and a node standing on neither has nothing to carry one.
+  final bool canCheckIn;
+
   PlaceCondition get condition {
     if (openIncidents > 0) return PlaceCondition.incident;
     if (posted == 0) return PlaceCondition.empty;
-    return present > 0 ? PlaceCondition.manned : PlaceCondition.unmanned;
+    if (present > 0) return PlaceCondition.manned;
+    // Checked AFTER `manned`, deliberately. A count above zero settles the
+    // question whatever the flag says, and a place that somehow has arrivals
+    // recorded against it plainly can be checked into.
+    if (!canCheckIn) return PlaceCondition.uncoded;
+    return PlaceCondition.unmanned;
   }
 
   static MapPlace fromRow(Map<String, dynamic> map) => MapPlace(
@@ -98,6 +118,7 @@ class MapPlace {
     posted: (map['posted'] as num?)?.toInt() ?? 0,
     present: (map['present'] as num?)?.toInt() ?? 0,
     openIncidents: (map['open_incidents'] as num?)?.toInt() ?? 0,
+    canCheckIn: (map['can_check_in'] as bool?) ?? true,
   );
 }
 

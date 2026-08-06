@@ -37,12 +37,25 @@ String friendlyErrorL(AppLocalizations l, String? raw) {
   // sending, so these are the belt behind the braces; `complaint_locked` is the
   // one that genuinely reaches a person, when somebody closed the thread while
   // they were typing into it.
-  // The check-in guard (0094). The sheet blocks this before sending — the
-  // button is dead until a place is named — so this is the belt behind the
-  // braces: an outbox entry queued by an older build, or a file whose places
-  // were deleted between the pick and the send.
-  if (s.contains('check_in_needs_a_place')) return l.checkInNeedsAPlace;
-  if (s.contains('check_in_node_mismatch')) return l.checkInWrongFile;
+  // The six refusals of 0098, in the order the server checks them — each one
+  // the most actionable thing that could be said at that point.
+  //
+  // Two of them the app also raises itself, as bare codes rather than as
+  // exceptions: `check_in_needs_a_position`, because a check-in with no fix
+  // cannot succeed later and must not be queued, and `check_in_too_far`, which
+  // the phone decides for itself when the network is gone. One sentence answers
+  // both the local refusal and the server's, which is the point of naming them
+  // the same thing.
+  if (s.contains('check_in_needs_a_position')) return l.checkInNeedsAPosition;
+  if (s.contains('check_in_too_far')) return l.checkInTooFar;
+  if (s.contains('check_in_code_expired')) return l.checkInCodeExpired;
+  if (s.contains('check_in_place_has_no_location')) {
+    return l.checkInPlaceHasNoLocation;
+  }
+  if (s.contains('check_in_not_a_place')) return l.checkInNotAPlace;
+  if (s.contains('check_in_not_approved')) return l.checkInNotApproved;
+  if (s.contains('check_in_codes_denied')) return l.checkInCodesDenied;
+  if (s.contains('check_in_rotate_denied')) return l.checkInRotateDenied;
   if (s.contains('complaint_locked')) return l.complaintLocked;
   if (s.contains('complaint_body_required')) return l.complaintBodyRequired;
   if (s.contains('complaint_target_missing') ||

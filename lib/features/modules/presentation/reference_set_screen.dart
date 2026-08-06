@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:printing/printing.dart';
 
 import '../../../core/animations/animations.dart';
 import '../../../core/constants/permission_codes.dart';
@@ -13,6 +14,8 @@ import '../../../core/widgets/overflow_menu.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
+import '../../checkin/data/check_in_repository.dart';
+import '../../checkin/presentation/place_code_screen.dart';
 import '../application/reference_data_cubit.dart';
 import '../domain/module_type.dart';
 import '../domain/reference_item.dart';
@@ -106,6 +109,76 @@ class _ReferenceSetScreenState extends State<ReferenceSetScreen> {
     }
 
     return divisions;
+  }
+
+  /// Every code of this list, one to a page.
+  ///
+  /// The secrets are fetched here rather than carried in the list's own state:
+  /// `ReferenceDataCubit` holds every set with every entry and is loaded on a
+  /// screen most people open to read a phone number. Pulling every secret in
+  /// the season into it, for everybody holding the permission, so that a menu
+  /// item can exist is how a printable secret becomes a downloadable one.
+  ///
+  /// A place whose code cannot be read is skipped rather than failing the
+  /// batch — and the count reported at the end says how many were skipped, so
+  /// nobody walks away believing he has forty stickers when he has thirty-one.
+  Future<void> _printCodes(
+    BuildContext context,
+    ReferenceSet set,
+    List<ReferenceItem> items,
+  ) async {
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final state = context.read<ReferenceDataCubit>().state;
+    final repo = CheckInRepository();
+
+    final pages =
+        <({String payload, String placeName, String? subtitle})>[];
+    final failure = await runBlocking(context, () async {
+      for (final item in items) {
+        final found = await repo.fetchCode(item.id);
+        if (found == null) continue;
+        pages.add((
+          payload: found.code.encode(),
+          placeName: found.placeName,
+          subtitle: _subtitleFor(state, set, item),
+        ));
+      }
+      return null;
+    }, message: l.checkInQrPrintingAll);
+
+    if (failure != null || pages.isEmpty) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l.referenceEmpty)));
+      return;
+    }
+
+    await Printing.layoutPdf(
+      onLayout: (format) => placeCodeBook(format: format, places: pages),
+      name: 'place-codes',
+    );
+  }
+
+  /// The list, and whatever divides it — a hotel's city, a camp's مشعر. Read
+  /// from the schema so nothing here has to know what either is.
+  String _subtitleFor(
+    ReferenceDataState state,
+    ReferenceSet set,
+    ReferenceItem item,
+  ) {
+    final parts = <String>[set.name.ar];
+    final dividing = set.dividingField();
+    final value = dividing == null ? null : item.data[dividing.key];
+    if (dividing != null && value != null) {
+      final target = state
+          .setById(dividing.referenceSetId ?? '')
+          ?.items
+          .where((i) => i.id == value)
+          .firstOrNull;
+      if (target != null) parts.add(target.name.ar);
+    }
+    return parts.join(' — ');
   }
 
   /// Copies another season's entries into this one. They arrive as copies and
@@ -283,6 +356,26 @@ class _ReferenceSetScreenState extends State<ReferenceSetScreen> {
                           icon: AppIcons.download,
                           label: l.referenceImport,
                           onSelected: () => _import(context, set),
+                        ),
+                      // Sit down once with a printer and come away with the
+                      // season's whole stock of stickers. This replaces the
+                      // per-file code list 0098 removed, and is strictly more
+                      // useful than it was: a list is every hotel the season
+                      // contracted, not one file's towers — including the ones
+                      // in المدينة that stand in no file at all.
+                      //
+                      // Doing it one place at a time is an afternoon's work,
+                      // and an afternoon's work is the kind that gets
+                      // half-finished — which leaves gates with no code and a
+                      // register with holes in exactly the places nobody got
+                      // round to.
+                      if (set.isPlace &&
+                          all.isNotEmpty &&
+                          session.can(PermissionCodes.checkinCodes))
+                        MenuAction(
+                          icon: AppIcons.qrCode,
+                          label: l.checkInQrPrintAll,
+                          onSelected: () => _printCodes(context, set, all),
                         ),
                       if (canDelete && all.isNotEmpty)
                         MenuAction(

@@ -61,6 +61,28 @@ class PermissionCodes {
 
   static const modulesReports = 'modules.reports';
 
+  // --------------------------------------------------------------- check-in
+  //
+  // Filing your OWN arrival needs no code at all, and that is deliberate: a
+  // system in which only certain people may report where they are is a system
+  // that does not know where anybody is. Standing at the place with its code in
+  // front of you is the credential (0098).
+
+  /// Reading who is present, everywhere. Somebody's own arrivals are always
+  /// readable to him without this — the policy's `profile_id = auth.uid()`
+  /// clause covers that.
+  static const checkinBoard = 'checkin.board';
+
+  /// Seeing, printing and sharing the codes. The secret is printable, so who
+  /// may read it is exactly who may print it.
+  static const checkinCodes = 'checkin.codes';
+
+  /// Regenerating one, which stops every poster already on a wall from working.
+  /// A different trust from printing, the way `reports.publish` is a different
+  /// trust from `reports.edit` — and it requires [checkinCodes], since voiding
+  /// forty posters means being able to see them first.
+  static const checkinRotate = 'checkin.rotate';
+
   // -------------------------------------------------------------- reference
   static const referenceView = 'reference.view';
   static const referenceEdit = 'reference.edit';

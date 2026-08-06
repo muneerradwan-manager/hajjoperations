@@ -11,9 +11,21 @@ import '../logging/app_logger.dart';
 /// has arrived at a camp in Mina, where the location service may be off, the
 /// permission refused, or the sky simply not visible from inside a tent.
 ///
-/// So every way of failing collapses to null, and the caller records the
-/// arrival regardless. A check-in with no coordinates is a weaker record than
-/// one with them, and a far stronger record than none.
+/// So every way of failing collapses to null rather than to an exception. What
+/// the CALLER does with the null has changed, and the change is worth naming
+/// here because this comment used to promise the opposite: a check-in with no
+/// position is not a weaker record any more, it is refused (0098). Enforcing
+/// proximity is what keeps the season map from painting green pins off arrivals
+/// that could have been filed from another city — and enforcing it means a fix
+/// is no longer optional evidence but the thing being checked.
+///
+/// This function still refuses to throw. Null is an answer the caller must
+/// handle, not a failure to report.
+///
+/// [currentFix] is the same thing narrowed to the three numbers anybody
+/// actually uses, so a caller can be handed a position in a test without
+/// building a whole `Position` — and so the check-in flow does not depend on
+/// geolocator's types to state its own rules.
 Future<Position?> currentPositionOrNull({
   Duration timeout = const Duration(seconds: 12),
 }) async {
@@ -47,4 +59,18 @@ Future<Position?> currentPositionOrNull({
     AppLogger.info('location', 'no fix — $error');
     return null;
   }
+}
+
+/// Where the phone says it is, and what it thinks that is worth.
+typedef Fix = ({double latitude, double longitude, double? accuracy});
+
+/// [currentPositionOrNull], as the three numbers a caller uses.
+Future<Fix?> currentFix() async {
+  final position = await currentPositionOrNull();
+  if (position == null) return null;
+  return (
+    latitude: position.latitude,
+    longitude: position.longitude,
+    accuracy: position.accuracy,
+  );
 }

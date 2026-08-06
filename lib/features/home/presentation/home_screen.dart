@@ -348,6 +348,17 @@ class _HomeScreenState extends State<HomeScreen> {
               subtitle: l.incidentsEmptyHint,
               onTap: () => context.push(Routes.incidents),
             ),
+          // Beside the map, and for the same reason: both are the season seen
+          // whole while it is still happening. The map says where the places
+          // are and this says who is in them.
+          if (session.can(PermissionCodes.checkinBoard))
+            (
+              group: _AdminGroup.oversight,
+              icon: AppIcons.checkIn,
+              title: l.presenceTitle,
+              subtitle: l.presenceSubtitle,
+              onTap: () => context.push(Routes.presence),
+            ),
           // The two halves of التقييم, and they are deliberately two tiles
           // rather than one section with a switch. The paper and the marks are
           // different trusts: whoever writes the questions need not read
@@ -576,6 +587,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   PrayerTimesCard(),
                   SizedBox(height: AppSpacing.sm),
+                  // Beside the emergency button, and beneath it, because they
+                  // are the two things a man does standing in a place rather
+                  // than sitting with the app: say he has arrived, and say
+                  // something has gone wrong. Both are pressed one-handed, and
+                  // neither should be somewhere he has to go and find.
+                  //
+                  // Ungated. Filing your own arrival needs no grant — the code
+                  // on the wall and the phone's position are the credential, and
+                  // a system in which only certain people may report where they
+                  // are is a system that does not know where anybody is.
+                  _CheckInButton(),
+                  SizedBox(height: AppSpacing.sm),
                   _RaiseIncidentButton(),
                 ],
               );
@@ -628,6 +651,23 @@ class _HomeScreenState extends State<HomeScreen> {
 /// hides the last row of whatever it happens to be over, and hides a different
 /// row at every window width. Here it has one place, and a person learns it
 /// once.
+/// Reporting that you have arrived somewhere.
+///
+/// Tonal rather than filled, and above the red one: this is the ordinary daily
+/// act and that is the emergency. A screen with two equally loud buttons has
+/// none.
+class _CheckInButton extends StatelessWidget {
+  const _CheckInButton();
+
+  @override
+  Widget build(BuildContext context) => FilledButton.tonalIcon(
+    style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+    onPressed: () => context.push(Routes.checkIn),
+    icon: const Icon(AppIcons.qrCode, size: 20),
+    label: Text(context.l10n.checkInAction),
+  );
+}
+
 class _RaiseIncidentButton extends StatelessWidget {
   const _RaiseIncidentButton();
 

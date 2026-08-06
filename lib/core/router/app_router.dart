@@ -15,6 +15,8 @@ import '../../features/evaluations/application/evaluations_cubit.dart';
 import '../../features/evaluations/presentation/evaluation_forms_screen.dart';
 import '../../features/evaluations/presentation/evaluations_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/checkin/presentation/check_in_screen.dart';
+import '../../features/checkin/presentation/presence_board_screen.dart';
 import '../../features/incidents/presentation/incidents_screen.dart';
 import '../../features/map/presentation/season_map_screen.dart';
 import '../../features/incidents/presentation/raise_incident_screen.dart';
@@ -91,6 +93,17 @@ abstract class Routes {
   /// only to whoever runs files. A guard here would either lock a member out
   /// of a map of his own camp, or be a second, weaker copy of that rule.
   static const seasonMap = '/map';
+
+  /// Reporting that you have arrived somewhere. Unguarded, for `/incident`'s
+  /// reason: a system in which only certain people may report where they are is
+  /// a system that does not know where anybody is. What stands in the way is
+  /// physical — the code on the wall and the phone's position — not a grant.
+  static const checkIn = '/check-in';
+
+  /// Who is present, everywhere. Guarded — see [_sectionGuards]. Reading your
+  /// OWN arrivals never needed a grant and still does not; this is the room's
+  /// view of everybody's.
+  static const presence = '/presence';
 }
 
 /// What each administered section asks of whoever tries to open it.
@@ -147,6 +160,11 @@ final sectionGuards = <String, bool Function(SessionState)>{
   // is `/incident` and is deliberately not in this table: anybody may say that
   // something has gone wrong.
   Routes.incidents: (s) => s.can(PermissionCodes.incidentsReceive),
+
+  // Who is where, across the season. Filing your own arrival is `/check-in` and
+  // is deliberately not in this table, for the same reason raising an incident
+  // is not.
+  Routes.presence: (s) => s.can(PermissionCodes.checkinBoard),
 };
 
 GoRouter buildRouter(SessionCubit session) {
@@ -303,6 +321,23 @@ GoRouter buildRouter(SessionCubit session) {
         path: Routes.incidents,
         pageBuilder: (c, s) =>
             fadeThroughPage(key: s.pageKey, child: const IncidentsScreen()),
+      ),
+      GoRoute(
+        path: Routes.checkIn,
+        pageBuilder: (c, s) =>
+            fadeThroughPage(key: s.pageKey, child: const CheckInScreen()),
+      ),
+      GoRoute(
+        path: Routes.presence,
+        pageBuilder: (c, s) => fadeThroughPage(
+          key: s.pageKey,
+          // `place` narrows the board to one entry — how the map's pin and a
+          // hotel's page reach it. Absent, it is the whole season.
+          child: PresenceBoardScreen(
+            itemId: s.uri.queryParameters['place'],
+            placeName: s.uri.queryParameters['name'],
+          ),
+        ),
       ),
       GoRoute(
         path: Routes.seasonMap,

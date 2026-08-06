@@ -4,108 +4,257 @@ import '../../../core/bloc/safe_cubit.dart';
 import '../../../core/offline/outbox.dart';
 import '../../../core/offline/save_outcome.dart';
 import '../../../core/utils/device_position.dart';
+import '../../../core/utils/network_error.dart';
 import '../data/check_in_outbox.dart';
 import '../data/check_in_repository.dart';
 import '../domain/check_in.dart';
 
 enum PresenceStatus { loading, ready, error }
 
+/// One place on the board, with everybody the last twelve hours put in it.
+typedef PresenceGroup = ({String itemId, String placeName, String? groupName,
+    List<PresenceLine> lines});
+
 class PresenceState extends Equatable {
   const PresenceState({
     this.status = PresenceStatus.loading,
     this.lines = const [],
+    this.hiddenGroups = const {},
+    this.window = const Duration(hours: 12),
+    this.query = '',
     this.error,
   });
 
   final PresenceStatus status;
   final List<PresenceLine> lines;
+
+  /// Held as what is HIDDEN, for the reason the map holds it that way: a group
+  /// that appears later — a مشعر used for the first time this morning — must
+  /// arrive visible, not wait to be noticed.
+  final Set<String> hiddenGroups;
+
+  final Duration window;
+  final String query;
   final String? error;
 
-  /// The ones worth a second look — far from where the file says the place is,
-  /// after the phone's own margin of error has been allowed for.
-  List<PresenceLine> get suspect =>
-      [for (final line in lines) if (line.isFarFromPlace) line];
+  /// Every group present, in the order they were met.
+  List<String> get groups {
+    final seen = <String>[];
+    for (final line in lines) {
+      final name = line.groupName ?? line.setName ?? '—';
+      if (!seen.contains(name)) seen.add(name);
+    }
+    return seen;
+  }
+
+  bool _keeps(PresenceLine line) {
+    final group = line.groupName ?? line.setName ?? '—';
+    if (hiddenGroups.contains(group)) return false;
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return true;
+    return line.fullName.toLowerCase().contains(q) ||
+        line.placeName.toLowerCase().contains(q);
+  }
+
+  /// The board as it is read: by PLACE, not by person. The room's question is
+  /// "who is in this hotel", and a flat list of names sorted by time answers a
+  /// question nobody asked.
+  List<PresenceGroup> get byPlace {
+    final order = <String>[];
+    final held = <String, List<PresenceLine>>{};
+    for (final line in lines) {
+      if (!_keeps(line)) continue;
+      if (!held.containsKey(line.itemId)) order.add(line.itemId);
+      held.putIfAbsent(line.itemId, () => []).add(line);
+    }
+    return [
+      for (final id in order)
+        (
+          itemId: id,
+          placeName: held[id]!.first.placeName,
+          groupName: held[id]!.first.groupName,
+          lines: held[id]!,
+        ),
+    ];
+  }
+
+  int get showing => byPlace.fold(0, (n, g) => n + g.lines.length);
+
+  PresenceState copyWith({
+    PresenceStatus? status,
+    List<PresenceLine>? lines,
+    Set<String>? hiddenGroups,
+    Duration? window,
+    String? query,
+    String? error,
+  }) => PresenceState(
+    status: status ?? this.status,
+    lines: lines ?? this.lines,
+    hiddenGroups: hiddenGroups ?? this.hiddenGroups,
+    window: window ?? this.window,
+    query: query ?? this.query,
+    error: error ?? this.error,
+  );
 
   @override
-  List<Object?> get props => [status, lines, error];
+  List<Object?> get props => [
+    status,
+    lines,
+    hiddenGroups,
+    window,
+    query,
+    error,
+  ];
 }
 
-/// Reading who is where in one file.
+/// Reading who is where, across the whole season.
 class PresenceCubit extends SafeCubit<PresenceState> {
-  PresenceCubit(this._repo, this.moduleId) : super(const PresenceState()) {
+  PresenceCubit(this._repo, {this.itemId}) : super(const PresenceState()) {
     load();
   }
 
-  final CheckInRepository _repo;
-  final String moduleId;
+  /// For tests that need a fixed board without a network behind it.
+  PresenceCubit.forTest(super.initial)
+    : _repo = CheckInRepository(),
+      itemId = null;
 
-  Future<void> load({DateTime? since}) async {
+  final CheckInRepository _repo;
+
+  /// Set when the board was opened from one place rather than from the shelf.
+  final String? itemId;
+
+  Future<void> load() async {
     try {
-      final lines = await _repo.fetchPresence(moduleId: moduleId, since: since);
-      emit(PresenceState(status: PresenceStatus.ready, lines: lines));
+      final lines = await _repo.fetchPresence(
+        since: DateTime.now().subtract(state.window),
+        itemId: itemId,
+      );
+      emit(state.copyWith(status: PresenceStatus.ready, lines: lines));
     } catch (e) {
-      emit(PresenceState(status: PresenceStatus.error, error: e.toString()));
+      emit(state.copyWith(status: PresenceStatus.error, error: e.toString()));
     }
   }
+
+  void setQuery(String value) => emit(state.copyWith(query: value));
+
+  Future<void> setWindow(Duration value) async {
+    emit(state.copyWith(window: value));
+    await load();
+  }
+
+  void toggleGroup(String group) {
+    final hidden = {...state.hiddenGroups};
+    if (!hidden.remove(group)) hidden.add(group);
+    emit(state.copyWith(hiddenGroups: hidden));
+  }
+
+  void showAllGroups() => emit(state.copyWith(hiddenGroups: const {}));
 }
 
 /// Reporting an arrival.
 ///
-/// Not a screen's cubit — a plain object with one method, used from the scanner
-/// sheet and from the file page alike. Both do exactly the same thing and must
-/// keep doing exactly the same thing: take a fix, then hand the whole act to
-/// the outbox.
+/// Not a screen's cubit — one act, with one method, so that the ordering rules
+/// below live in exactly one place.
 abstract final class CheckIn {
-  /// Records that the caller arrived. Never throws for want of a network.
+  /// Records that the caller arrived at the place the scanned code names.
   ///
-  /// The order matters and is the reason this is not two lines at the call
-  /// site. The POSITION IS TAKEN FIRST, before anything is sent, so that what
-  /// is recorded is where the man was when he pressed the button — not where
-  /// the phone happened to be when the queue finally drained, which may be a
-  /// different camp or a hotel in Makkah hours later.
-  static Future<SaveOutcome> arrive({
-    required String moduleId,
-    String? nodeId,
-    required CheckInMethod method,
+  /// Three rules, and each is here rather than at a call site because getting
+  /// any of them wrong is silent:
+  ///
+  /// 1. **The position is taken first**, before anything is sent, so what is
+  ///    recorded is where the man was when he pressed — not where the phone was
+  ///    when the queue finally drained, hours later and possibly in another
+  ///    city.
+  /// 2. **No position is refused immediately and never queued.** Since 0098 the
+  ///    server will not accept a positionless check-in at all, so queueing one
+  ///    would tell him it was kept and throw it away later. There is nothing to
+  ///    wait for.
+  /// 3. **The poster's own coordinates are consulted only when the network is
+  ///    gone.** They are on the poster so an offline phone can refuse honestly
+  ///    rather than queue a lie — but they are a COPY, and a copy goes stale.
+  ///    If they were checked before every send, an administrator correcting a
+  ///    pin in the master data would make every sticker already on a wall start
+  ///    refusing men standing in exactly the right place, the poster's old
+  ///    numbers outvoting the server's new ones. Online the server is
+  ///    authoritative and fresh; the copy is consulted only when there is
+  ///    nothing better, which is the one case it was printed for.
+  /// The receipt rides beside the outcome rather than inside it: [SaveOutcome]
+  /// is shared by five features and none of the others has anything to say on
+  /// success. Null when the arrival was queued or refused — there is no place
+  /// name to report until the server has named one.
+  /// [fix] is injectable for the same reason [repository] is: the three rules
+  /// above are all about what happens for a particular position and a
+  /// particular failure, and a rule that can only be exercised by standing in
+  /// Mina with the network off is a rule nothing guards.
+  static Future<({SaveOutcome outcome, CheckInReceipt? receipt})> arrive({
+    required PlaceCode code,
     String? note,
     CheckInRepository? repository,
+    Future<Fix?> Function()? fix,
   }) async {
     final repo = repository ?? CheckInRepository();
-    final position = await currentPositionOrNull();
+    final position = await (fix ?? currentFix)();
 
-    // A scan with a fix beside it is still a scan: the code is what identified
-    // the place, and the coordinates are the corroboration. Only an arrival
-    // with nothing to identify the place BUT the coordinates is a `gps` one.
-    final resolved = switch (method) {
-      CheckInMethod.manual when position != null => CheckInMethod.gps,
-      _ => method,
-    };
+    // Rule 2.
+    if (position == null) {
+      return (
+        outcome: const SaveOutcome.failed('check_in_needs_a_position'),
+        receipt: null,
+      );
+    }
 
     try {
-      final sent = await sendOrQueue(
-        send: () => repo.checkIn(
-          moduleId: moduleId,
-          nodeId: nodeId,
-          method: resolved,
-          latitude: position?.latitude,
-          longitude: position?.longitude,
-          accuracy: position?.accuracy,
-          note: note,
-        ),
+      final receipt = await repo.checkIn(
+        itemId: code.itemId,
+        secret: code.secret,
+        latitude: position.latitude,
+        longitude: position.longitude,
+        accuracy: position.accuracy,
+        note: note,
+      );
+      return (outcome: const SaveOutcome.sent(), receipt: receipt);
+    } catch (error) {
+      // A refusal is the server's answer and must be shown, not swallowed —
+      // the same rule `Outbox.sendOrQueue` states for every other write.
+      if (!looksLikeNetworkFailure(error)) {
+        return (outcome: SaveOutcome.failed(error.toString()), receipt: null);
+      }
+
+      // Rule 3: only now.
+      if (code.canCheckLocally) {
+        final distance = CheckInRules.metresBetween(
+          position.latitude,
+          position.longitude,
+          code.latitude!,
+          code.longitude!,
+        );
+        if (CheckInRules.tooFar(
+          distance: distance,
+          accuracy: position.accuracy,
+          radius: code.radiusM!,
+        )) {
+          return (
+            outcome: const SaveOutcome.failed('check_in_too_far'),
+            receipt: null,
+          );
+        }
+      }
+
+      if (!Outbox.isInstalled) {
+        return (outcome: SaveOutcome.failed(error.toString()), receipt: null);
+      }
+      await Outbox.instance.add(
         kind: CheckInOutbox.kind,
         payload: CheckInOutbox.payload(
-          moduleId: moduleId,
-          nodeId: nodeId,
-          method: resolved,
-          latitude: position?.latitude,
-          longitude: position?.longitude,
-          accuracy: position?.accuracy,
+          itemId: code.itemId,
+          secret: code.secret,
+          latitude: position.latitude,
+          longitude: position.longitude,
+          accuracy: position.accuracy,
           note: note,
         ),
       );
-      return sent ? const SaveOutcome.sent() : const SaveOutcome.queued();
-    } catch (e) {
-      return SaveOutcome.failed(e.toString());
+      return (outcome: const SaveOutcome.queued(), receipt: null);
     }
   }
 }

@@ -156,6 +156,9 @@ void main() {
         // The operations room's register of urgent reports. RAISING one is
         // `/incident` and is deliberately NOT here — see the open list below.
         '/incidents',
+        // Who is present, across the season. FILING your own arrival is
+        // `/check-in` and is deliberately not here, for the same reason.
+        '/presence',
       });
     });
 
@@ -175,6 +178,13 @@ void main() {
       // list: a system in which only certain people may report that a bus has
       // broken down is a system that does not find out about the bus. Reading
       // everyone's is `/incidents`, and that one IS guarded.
+      // /check-in is the same argument said about presence: a system in which
+      // only certain people may report where they are is a system that does not
+      // know where anybody is. What stands in the way there is physical — the
+      // code on the wall and the phone's own position (0098) — and a grant on
+      // top of that would only stop the honest. Reading everyone's is
+      // `/presence`, and that one IS guarded.
+      // /map is unguarded too, and narrowed by its RPC instead.
       for (final open in [
         '/modules',
         '/reports',
@@ -182,6 +192,8 @@ void main() {
         '/complaints',
         '/evaluations',
         '/incident',
+        '/check-in',
+        '/map',
         '/',
       ]) {
         expect(

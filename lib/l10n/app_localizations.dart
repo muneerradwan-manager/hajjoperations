@@ -5756,6 +5756,12 @@ abstract class AppLocalizations {
   /// **'No members'**
   String get seasonMapEmpty;
 
+  /// No description provided for @seasonMapUncoded.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot be checked into'**
+  String get seasonMapUncoded;
+
   /// No description provided for @seasonMapPosted.
   ///
   /// In en, this message translates to:
@@ -6014,11 +6020,11 @@ abstract class AppLocalizations {
   /// **'The camera could not be opened — the permission may be refused'**
   String get checkInNoCamera;
 
-  /// No description provided for @checkInUsePositionInstead.
+  /// No description provided for @checkInNoCameraHint.
   ///
   /// In en, this message translates to:
-  /// **'Record my arrival by position instead'**
-  String get checkInUsePositionInstead;
+  /// **'Checking in needs the code and your location together, so there is no way to do it without a camera'**
+  String get checkInNoCameraHint;
 
   /// No description provided for @checkInTitle.
   ///
@@ -6032,17 +6038,17 @@ abstract class AppLocalizations {
   /// **'Record my arrival'**
   String get checkInAction;
 
+  /// No description provided for @checkInSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the code fixed to the hotel or camp while you are standing there'**
+  String get checkInSubtitle;
+
   /// No description provided for @checkInScan.
   ///
   /// In en, this message translates to:
-  /// **'Scan a code'**
+  /// **'Scan the code'**
   String get checkInScan;
-
-  /// No description provided for @checkInHere.
-  ///
-  /// In en, this message translates to:
-  /// **'I am here'**
-  String get checkInHere;
 
   /// No description provided for @checkInNoteHint.
   ///
@@ -6056,95 +6062,71 @@ abstract class AppLocalizations {
   /// **'Your arrival was recorded'**
   String get checkInDone;
 
+  /// No description provided for @checkInDoneAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded — {place}, {metres} m away'**
+  String checkInDoneAt(String place, String metres);
+
   /// No description provided for @checkInQueued.
   ///
   /// In en, this message translates to:
   /// **'Saved on the device — it will be recorded when the network returns'**
   String get checkInQueued;
 
-  /// No description provided for @checkInWrongFile.
-  ///
-  /// In en, this message translates to:
-  /// **'That code belongs to a different file'**
-  String get checkInWrongFile;
-
-  /// No description provided for @checkInNotMember.
-  ///
-  /// In en, this message translates to:
-  /// **'You are not a member of this file'**
-  String get checkInNotMember;
-
-  /// No description provided for @checkInPlaceUnknown.
-  ///
-  /// In en, this message translates to:
-  /// **'The file itself'**
-  String get checkInPlaceUnknown;
-
-  /// No description provided for @checkInMethodQr.
-  ///
-  /// In en, this message translates to:
-  /// **'Code'**
-  String get checkInMethodQr;
-
-  /// No description provided for @checkInMethodGps.
-  ///
-  /// In en, this message translates to:
-  /// **'Position'**
-  String get checkInMethodGps;
-
-  /// No description provided for @checkInMethodManual.
-  ///
-  /// In en, this message translates to:
-  /// **'Manual'**
-  String get checkInMethodManual;
-
   /// No description provided for @checkInDistance.
   ///
   /// In en, this message translates to:
-  /// **'{metres} m from the recorded position'**
+  /// **'{metres} m away'**
   String checkInDistance(String metres);
 
-  /// No description provided for @checkInDistanceUnknown.
+  /// No description provided for @checkInNotApproved.
   ///
   /// In en, this message translates to:
-  /// **'No position recorded for this place'**
-  String get checkInDistanceUnknown;
+  /// **'Your account is not approved yet, so you cannot check in'**
+  String get checkInNotApproved;
 
-  /// No description provided for @checkInFarFromPlace.
+  /// No description provided for @checkInNotAPlace.
   ///
   /// In en, this message translates to:
-  /// **'Far from the recorded position — worth a look'**
-  String get checkInFarFromPlace;
+  /// **'That code does not belong to a current place'**
+  String get checkInNotAPlace;
 
-  /// No description provided for @checkInWhichPlace.
+  /// No description provided for @checkInNeedsAPosition.
   ///
   /// In en, this message translates to:
-  /// **'Where are you?'**
-  String get checkInWhichPlace;
+  /// **'Not recorded: turn location on, then scan the code again'**
+  String get checkInNeedsAPosition;
 
-  /// No description provided for @checkInPickAPlaceFirst.
+  /// No description provided for @checkInCodeExpired.
   ///
   /// In en, this message translates to:
-  /// **'Choose the place above, or scan the code fixed to it'**
-  String get checkInPickAPlaceFirst;
+  /// **'This code is no longer valid — look for the new one put up in its place'**
+  String get checkInCodeExpired;
 
-  /// No description provided for @checkInNeedsAPlace.
+  /// No description provided for @checkInPlaceHasNoLocation.
   ///
   /// In en, this message translates to:
-  /// **'Not recorded: choose the place, scan the code, or turn location on'**
-  String get checkInNeedsAPlace;
+  /// **'This place has no location set, so how near you are cannot be checked. Tell the administration.'**
+  String get checkInPlaceHasNoLocation;
 
-  /// No description provided for @checkInNoPlaces.
+  /// No description provided for @checkInTooFar.
   ///
   /// In en, this message translates to:
-  /// **'No places in this file can carry a code'**
-  String get checkInNoPlaces;
+  /// **'You are too far from this place — you must be at it to check in'**
+  String get checkInTooFar;
 
-  /// No description provided for @checkInNoPlacesHint.
+  /// No description provided for @checkInCodesDenied.
   ///
   /// In en, this message translates to:
-  /// **'A code is fixed to a real place — a tower or a camp. This file has none drawn yet.'**
-  String get checkInNoPlacesHint;
+  /// **'You may not view place codes'**
+  String get checkInCodesDenied;
+
+  /// No description provided for @checkInRotateDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'You may not regenerate place codes'**
+  String get checkInRotateDenied;
 
   /// No description provided for @checkInQrTitle.
   ///
@@ -6164,11 +6146,71 @@ abstract class AppLocalizations {
   /// **'Print or share'**
   String get checkInQrPrint;
 
+  /// No description provided for @checkInQrShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get checkInQrShare;
+
+  /// No description provided for @checkInQrCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in code'**
+  String get checkInQrCard;
+
+  /// No description provided for @checkInQrRotatedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Last regenerated: {when}'**
+  String checkInQrRotatedAt(String when);
+
+  /// No description provided for @checkInQrNoLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'This place has no location — nobody can check in here until one is set'**
+  String get checkInQrNoLocation;
+
+  /// No description provided for @checkInQrRotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate the code'**
+  String get checkInQrRotate;
+
+  /// No description provided for @checkInQrRotateConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Every printed code for this place stops working immediately. The new one must be printed and put up before anybody can check in here.'**
+  String get checkInQrRotateConfirm;
+
+  /// No description provided for @checkInQrRotated.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerated — print it and put it up now'**
+  String get checkInQrRotated;
+
+  /// No description provided for @checkInQrPrintAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Print the list\'s codes'**
+  String get checkInQrPrintAll;
+
+  /// No description provided for @checkInQrPrintingAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing the codes…'**
+  String get checkInQrPrintingAll;
+
   /// No description provided for @presenceTitle.
   ///
   /// In en, this message translates to:
   /// **'Who is in place now'**
   String get presenceTitle;
+
+  /// No description provided for @presenceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The latest arrivals across the season\'s places'**
+  String get presenceSubtitle;
 
   /// No description provided for @presenceEmpty.
   ///
@@ -6179,14 +6221,32 @@ abstract class AppLocalizations {
   /// No description provided for @presenceEmptyHint.
   ///
   /// In en, this message translates to:
-  /// **'The last twelve hours of arrivals appear here'**
+  /// **'Whoever scans a place code while standing at it appears here'**
   String get presenceEmptyHint;
 
-  /// No description provided for @presenceSuspectCount.
+  /// No description provided for @presenceWindow4h.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 record worth a look} other{{count} records worth a look}}'**
-  String presenceSuspectCount(int count);
+  /// **'4 hours'**
+  String get presenceWindow4h;
+
+  /// No description provided for @presenceWindow12h.
+  ///
+  /// In en, this message translates to:
+  /// **'12 hours'**
+  String get presenceWindow12h;
+
+  /// No description provided for @presenceWindow24h.
+  ///
+  /// In en, this message translates to:
+  /// **'24 hours'**
+  String get presenceWindow24h;
+
+  /// No description provided for @presenceCounts.
+  ///
+  /// In en, this message translates to:
+  /// **'{people} people in {places} places'**
+  String presenceCounts(int people, int places);
 
   /// No description provided for @exportTitle.
   ///

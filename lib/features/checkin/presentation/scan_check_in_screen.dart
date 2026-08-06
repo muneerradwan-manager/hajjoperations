@@ -47,7 +47,7 @@ class _ScanCheckInScreenState extends State<ScanCheckInScreen> {
   void _onDetect(BarcodeCapture capture) {
     if (_done) return;
     for (final barcode in capture.barcodes) {
-      final code = CheckInCode.parse(barcode.rawValue);
+      final code = PlaceCode.parse(barcode.rawValue);
       if (code == null) continue;
       _done = true;
       Navigator.of(context).pop(code);
@@ -118,9 +118,11 @@ class _ScanCheckInScreenState extends State<ScanCheckInScreen> {
 
 /// No camera, or the permission refused.
 ///
-/// It offers the way out rather than only the bad news: an arrival can still be
-/// reported by position alone, and a man standing at a gate with a refused
-/// camera permission should not have to work that out for himself.
+/// It used to offer the way out — report by position alone — and there is no
+/// way out any more. Since 0098 a check-in is a code AND a position, so a
+/// refused camera permission means this man cannot file an arrival at all until
+/// he grants it. Saying so plainly is the only honest screen; the old button
+/// would now close onto a sheet that has been deleted.
 class _CameraUnavailable extends StatelessWidget {
   const _CameraUnavailable({required this.error});
 
@@ -144,10 +146,16 @@ class _CameraUnavailable extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white),
               ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                l.checkInNoCameraHint,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white70, fontSize: 13),
+              ),
               const SizedBox(height: AppSpacing.lg),
               FilledButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: Text(l.checkInUsePositionInstead),
+                child: Text(l.commonBack),
               ),
             ],
           ),

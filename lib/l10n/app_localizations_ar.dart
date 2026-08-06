@@ -3284,6 +3284,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get seasonMapEmpty => 'بلا أعضاء';
 
   @override
+  String get seasonMapUncoded => 'لا يمكن تسجيل الوصول هنا';
+
+  @override
   String get seasonMapPosted => 'مُسنَد إليه';
 
   @override
@@ -3426,7 +3429,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get checkInScanTitle => 'امسح رمز الموقع';
+  String get checkInScanTitle => 'امسح رمز المكان';
 
   @override
   String get checkInScanHint => 'وجّه الكاميرا إلى الرمز الملصق على المكان';
@@ -3438,7 +3441,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get checkInNoCamera => 'تعذّر فتح الكاميرا — قد تكون الصلاحية مرفوضة';
 
   @override
-  String get checkInUsePositionInstead => 'سجّل وصولي بالموقع بدلاً من ذلك';
+  String get checkInNoCameraHint =>
+      'تسجيل الوصول يحتاج مسح الرمز وتفعيل الموقع معاً، فلا سبيل إليه بلا كاميرا';
 
   @override
   String get checkInTitle => 'تسجيل الوصول';
@@ -3447,10 +3451,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get checkInAction => 'سجّل وصولي';
 
   @override
-  String get checkInScan => 'مسح رمز';
+  String get checkInSubtitle =>
+      'امسح الرمز الملصق على الفندق أو المخيم وأنت واقف عنده';
 
   @override
-  String get checkInHere => 'أنا هنا';
+  String get checkInScan => 'مسح الرمز';
 
   @override
   String get checkInNoteHint => 'ملاحظة (اختياري)';
@@ -3459,54 +3464,45 @@ class AppLocalizationsAr extends AppLocalizations {
   String get checkInDone => 'سُجّل وصولك';
 
   @override
-  String get checkInQueued => 'حُفظ على الجهاز — سيُسجَّل عند عودة الشبكة';
-
-  @override
-  String get checkInWrongFile => 'هذا الرمز يخصّ ملفاً آخر';
-
-  @override
-  String get checkInNotMember => 'لست عضواً في هذا الملف';
-
-  @override
-  String get checkInPlaceUnknown => 'الملف نفسه';
-
-  @override
-  String get checkInMethodQr => 'رمز';
-
-  @override
-  String get checkInMethodGps => 'موقع';
-
-  @override
-  String get checkInMethodManual => 'يدوي';
-
-  @override
-  String checkInDistance(String metres) {
-    return 'على بعد $metres م من الموقع المسجّل';
+  String checkInDoneAt(String place, String metres) {
+    return 'سُجّل وصولك — $place، على بعد $metres م';
   }
 
   @override
-  String get checkInDistanceUnknown => 'لا موقع مسجّل للمكان';
+  String get checkInQueued => 'حُفظ على الجهاز — سيُسجَّل عند عودة الشبكة';
 
   @override
-  String get checkInFarFromPlace => 'بعيد عن الموقع المسجّل — يستحق المراجعة';
+  String checkInDistance(String metres) {
+    return 'على بعد $metres م';
+  }
 
   @override
-  String get checkInWhichPlace => 'أين أنت؟';
+  String get checkInNotApproved => 'حسابك غير معتمد بعد، فلا يمكن تسجيل الوصول';
 
   @override
-  String get checkInPickAPlaceFirst =>
-      'حدّد المكان أعلاه، أو امسح الرمز الملصق عليه';
+  String get checkInNotAPlace => 'هذا الرمز لا يخصّ مكاناً قائماً';
 
   @override
-  String get checkInNeedsAPlace =>
-      'لم يُسجَّل: حدّد المكان، أو امسح الرمز، أو فعّل خدمة الموقع';
+  String get checkInNeedsAPosition =>
+      'لم يُسجَّل: فعّل خدمة الموقع ثم امسح الرمز من جديد';
 
   @override
-  String get checkInNoPlaces => 'لا أماكن يمكن ترميزها في هذا الملف';
+  String get checkInCodeExpired =>
+      'هذا الرمز لم يعد صالحاً — ابحث عن الرمز الجديد الملصق مكانه';
 
   @override
-  String get checkInNoPlacesHint =>
-      'الرمز يُلصق على مكان قائم — برج أو مخيم. هذا الملف لم تُرسم أبراجه بعد.';
+  String get checkInPlaceHasNoLocation =>
+      'لم يُحدَّد موقع هذا المكان بعد، فلا يمكن التحقق من قربك منه. أبلغ الإدارة.';
+
+  @override
+  String get checkInTooFar =>
+      'أنت بعيد عن هذا المكان — يجب أن تكون عنده لتسجّل وصولك';
+
+  @override
+  String get checkInCodesDenied => 'لا تملك صلاحية عرض رموز الأماكن';
+
+  @override
+  String get checkInRotateDenied => 'لا تملك صلاحية تجديد رموز الأماكن';
 
   @override
   String get checkInQrTitle => 'رمز المكان';
@@ -3519,25 +3515,60 @@ class AppLocalizationsAr extends AppLocalizations {
   String get checkInQrPrint => 'طباعة أو مشاركة';
 
   @override
-  String get presenceTitle => 'من في موقعه الآن';
+  String get checkInQrShare => 'مشاركة';
+
+  @override
+  String get checkInQrCard => 'رمز تسجيل الوصول';
+
+  @override
+  String checkInQrRotatedAt(String when) {
+    return 'آخر تجديد: $when';
+  }
+
+  @override
+  String get checkInQrNoLocation =>
+      'لا موقع لهذا المكان — لن يستطيع أحد تسجيل وصوله إليه حتى يُحدَّد';
+
+  @override
+  String get checkInQrRotate => 'تجديد الرمز';
+
+  @override
+  String get checkInQrRotateConfirm =>
+      'سيتوقف كل رمز مطبوع لهذا المكان عن العمل فوراً. لا بدّ من طباعة الرمز الجديد وإلصاقه قبل أن يتمكّن أحد من تسجيل وصوله هنا.';
+
+  @override
+  String get checkInQrRotated => 'جُدّد الرمز — اطبعه وألصقه الآن';
+
+  @override
+  String get checkInQrPrintAll => 'طباعة رموز القائمة';
+
+  @override
+  String get checkInQrPrintingAll => 'يجري تجهيز الرموز…';
+
+  @override
+  String get presenceTitle => 'من في مكانه الآن';
+
+  @override
+  String get presenceSubtitle => 'آخر تسجيلات الوصول في أماكن الموسم';
 
   @override
   String get presenceEmpty => 'لم يسجّل أحد وصوله بعد';
 
   @override
-  String get presenceEmptyHint => 'تظهر هنا آخر تسجيلات الوصول خلال ١٢ ساعة';
+  String get presenceEmptyHint => 'يظهر هنا من مسح رمز مكان وهو واقف عنده';
 
   @override
-  String presenceSuspectCount(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count تسجيلاً يستحق المراجعة',
-      few: '$count تسجيلات تستحق المراجعة',
-      two: 'تسجيلان يستحقان المراجعة',
-      one: 'تسجيل واحد يستحق المراجعة',
-    );
-    return '$_temp0';
+  String get presenceWindow4h => '٤ ساعات';
+
+  @override
+  String get presenceWindow12h => '١٢ ساعة';
+
+  @override
+  String get presenceWindow24h => '٢٤ ساعة';
+
+  @override
+  String presenceCounts(int people, int places) {
+    return '$people شخصاً في $places مكاناً';
   }
 
   @override
