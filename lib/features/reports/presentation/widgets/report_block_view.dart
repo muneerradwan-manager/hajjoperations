@@ -6,6 +6,7 @@ import '../../../../core/theme/glass_tokens.dart';
 import '../../../../core/widgets/glass.dart';
 import '../../../modules/domain/module_type.dart';
 import '../../domain/report_block.dart';
+import '../../domain/table_cells.dart';
 import 'report_field_card.dart';
 import 'report_table.dart';
 
@@ -22,6 +23,7 @@ class ReportBlockView extends StatelessWidget {
     super.key,
     required this.block,
     this.expandedColumns = const [],
+    this.tableText = const TableText(),
   });
 
   final ReportBlock block;
@@ -34,6 +36,11 @@ class ReportBlockView extends StatelessWidget {
   /// leaf widget has no business fetching. Empty for a table that does not
   /// expand, which is every ordinary one.
   final List<String> expandedColumns;
+
+  /// How a stored cell becomes the text a reader sees — the reference-name
+  /// resolver, the time-range sentence, the date format. Defaulted to identity
+  /// so a widget test can pump a block without master data behind it.
+  final TableText tableText;
 
   @override
   Widget build(BuildContext context) {
@@ -136,7 +143,11 @@ class ReportBlockView extends StatelessWidget {
         );
 
       case ReportBlockKind.table:
-        return _WrittenTable(block: block, expanded: expandedColumns);
+        return _WrittenTable(
+          block: block,
+          expanded: expandedColumns,
+          text: tableText,
+        );
     }
   }
 }
@@ -153,30 +164,58 @@ class ReportBlockView extends StatelessWidget {
 /// once against the rows it covers. Those two were the whole reason توزيع
 /// الوجبات and مواعيد الوجبات needed types of their own.
 class _WrittenTable extends StatelessWidget {
-  const _WrittenTable({required this.block, required this.expanded});
+  const _WrittenTable({
+    required this.block,
+    required this.expanded,
+    required this.text,
+  });
 
   final ReportBlock block;
   final List<String> expanded;
+  final TableText text;
 
   @override
-  Widget build(BuildContext context) => ReportTable(
-    columns: block.effectiveColumns(expanded),
-    rows: block.rows,
-    // Only the TYPED columns can span. A generated one holds a count per
-    // تكتل, and two clusters that happen to have the same number are not one
-    // merged cell — they are a coincidence this would hide.
-    //
-    // Mapped through `effectiveIndexOf`, because the marks were ticked against
-    // the typed columns and the table is drawn against the spliced ones: a
-    // distribution table puts thirteen clusters between النسبة and المجموع, and
-    // an unmapped index would merge a cluster's count instead of the date.
-    spans: {
-      for (var i = 0; i < block.columns.length; i++)
-        if (block.spansAt(i)) block.effectiveIndexOf(i, expanded.length),
-    },
-    tagged: {
-      for (var i = 0; i < block.columns.length; i++)
-        if (block.tagsAt(i)) block.effectiveIndexOf(i, expanded.length),
-    },
-  );
+  Widget build(BuildContext context) {
+    // Resolution happens HERE, before ReportTable ever sees the rows, and the
+    // placement is load-bearing. ReportTable MEASURES its text to choose
+    // between the grid, the side-scroller and the stacked cards — and a
+    // 36-character uuid measures roughly eight times wider than the name it
+    // stands for, so an unresolved reference cell would not merely read badly,
+    // it would push the whole table into the wrong layout.
+    final typed = block.tableColumns;
+    final at = block.expandAt ?? typed.length;
+    final effective = <TableColumn>[
+      ...typed.take(at),
+      for (var i = 0; i < expanded.length; i++)
+        TableColumn(id: 'x$i', label: expanded[i], kind: block.expandKind),
+      ...typed.skip(at),
+    ];
+
+    return ReportTable(
+      columns: [for (final c in effective) c.label],
+      rows: [
+        for (final row in block.rows)
+          [
+            for (var i = 0; i < effective.length; i++)
+              drawCell(effective[i], i < row.length ? row[i] : '', text),
+          ],
+      ],
+      // Only the TYPED columns can span. A generated one holds a count per
+      // تكتل, and two clusters that happen to have the same number are not one
+      // merged cell — they are a coincidence this would hide.
+      //
+      // Mapped through `effectiveIndexOf`, because the marks were ticked
+      // against the typed columns and the table is drawn against the spliced
+      // ones: an unmapped index would merge a cluster's count instead of the
+      // date.
+      spans: {
+        for (var i = 0; i < typed.length; i++)
+          if (typed[i].span) block.effectiveIndexOf(i, expanded.length),
+      },
+      tagged: {
+        for (var i = 0; i < effective.length; i++)
+          if (effective[i].kind == TableColumnKind.tags) i,
+      },
+    );
+  }
 }

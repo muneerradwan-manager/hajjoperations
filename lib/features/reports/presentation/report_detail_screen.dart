@@ -19,6 +19,7 @@ import '../../modules/domain/module_type.dart';
 import '../application/report_detail_cubit.dart';
 import '../data/reports_repository.dart';
 import '../domain/report.dart';
+import '../domain/table_cells.dart';
 import '../domain/report_type.dart';
 import 'report_editor_screen.dart';
 import 'widgets/report_block_view.dart';
@@ -258,6 +259,27 @@ class _Body extends StatelessWidget {
                       for (final item in state.expansionOf(block))
                         item.name.of(context),
                     ],
+                    // What a stored cell means on this page: a reference id
+                    // becomes its entry's name, a canonical time range becomes
+                    // the localized sentence, an ISO date is formatted.
+                    //
+                    // The name is looked up across ALL of the set's entries —
+                    // not this season's — for the reason reference_item.dart
+                    // states about towers: a document written last season
+                    // still has to render.
+                    tableText: TableText(
+                      referenceName: (code, id) =>
+                          state
+                              .setByCode(code)
+                              ?.items
+                              .where((i) => i.id == id)
+                              .firstOrNull
+                              ?.name
+                              .of(context) ??
+                          '',
+                      timeRange: l.reportTimeRange,
+                      date: (iso) => formatDate(DateTime.tryParse(iso)),
+                    ),
                   ),
                 ],
 
