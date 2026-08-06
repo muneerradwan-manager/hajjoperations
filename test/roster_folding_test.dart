@@ -1,9 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hajjoperations/features/modules/presentation/module_detail_screen.dart';
 
-/// Folding the sectors of a large file.
+/// Folding the groups of a large file.
 ///
-/// A file with four sectors is one page and should stay one page. توزيع أعضاء
+/// A group is a قطاع on a file with a tree and a role on one without. Ten of
+/// the fifteen types have no tree at all — الطوافة والنقل, الإعاشة المركزية,
+/// الطيران المركزي and the rest are a roster and nothing else — so while this
+/// governed sectors only, it reached the minority of the files and left the
+/// majority as one unbroken wall of faces.
+///
+/// A file with four groups is one page and should stay one page. توزيع أعضاء
 /// مكاتب البعثة على مخيمات منى runs to hundreds across a dozen, and there the
 /// roster is not something a reader READS — it is something he scrolls PAST to
 /// reach the reports and the duties under it.
@@ -13,7 +19,7 @@ void main() {
   group('a small file', () {
     test('is open, because there is nothing to scroll past', () {
       expect(
-        sectorIsOpen(
+        groupIsOpen(
           filtering: false,
           foldByDefault: false,
           movedByReader: false,
@@ -24,7 +30,7 @@ void main() {
 
     test('and the reader may still shut a sector', () {
       expect(
-        sectorIsOpen(
+        groupIsOpen(
           filtering: false,
           foldByDefault: false,
           movedByReader: true,
@@ -37,7 +43,7 @@ void main() {
   group('a large file', () {
     test('starts folded', () {
       expect(
-        sectorIsOpen(
+        groupIsOpen(
           filtering: false,
           foldByDefault: true,
           movedByReader: false,
@@ -48,7 +54,7 @@ void main() {
 
     test('and the reader may open the one he wants', () {
       expect(
-        sectorIsOpen(
+        groupIsOpen(
           filtering: false,
           foldByDefault: true,
           movedByReader: true,
@@ -69,7 +75,7 @@ void main() {
       for (final moved in [false, true]) {
         for (final foldByDefault in [false, true]) {
           expect(
-            sectorIsOpen(
+            groupIsOpen(
               filtering: true,
               foldByDefault: foldByDefault,
               movedByReader: moved,
@@ -92,12 +98,12 @@ void main() {
     //
     // Same reader, same gesture, on either side of the threshold.
     expect(
-      sectorIsOpen(filtering: false, foldByDefault: false, movedByReader: true),
+      groupIsOpen(filtering: false, foldByDefault: false, movedByReader: true),
       isFalse,
       reason: 'he shut it while the file was small',
     );
     expect(
-      sectorIsOpen(filtering: false, foldByDefault: true, movedByReader: true),
+      groupIsOpen(filtering: false, foldByDefault: true, movedByReader: true),
       isTrue,
       reason: 'the same flag now means he opened it, which is what he would '
           'have meant on a page that started folded',

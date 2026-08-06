@@ -395,14 +395,20 @@ class _BodyState extends State<_Body> {
   /// search box. Files that need one have tens or hundreds.
   static const _worthFiltering = 10;
 
-  /// Above this the sectors start folded.
+  /// Above this the groups start folded — the قطاعات of a file with a tree, and
+  /// the teams of one without.
   ///
   /// A file with four sectors reads as one page and should stay one page. توزيع
   /// أعضاء مكاتب البعثة على مخيمات منى runs to hundreds across a dozen
   /// sectors, and there the roster is not something a reader is READING — it is
   /// something he is scrolling PAST to reach the reports and the duties under
-  /// it. Folded, the same page is a list of sectors he can open the one he
+  /// it. Folded, the same page is a list of groups he can open the one he
   /// wants; unfolded, it is a minute of thumb.
+  ///
+  /// Measured over the WHOLE file rather than per group, so that a five-man
+  /// team in a two-hundred-man file folds with everything around it. A page
+  /// where some headings fold and others do not, on a rule the reader cannot
+  /// see, reads as a bug rather than as a rule.
   ///
   /// Higher than [_worthFiltering] on purpose. A search box earns its place
   /// well before folding does: at fifteen people you want to find a name, and
@@ -411,21 +417,31 @@ class _BodyState extends State<_Body> {
 
   _RosterFilter _filter = const _RosterFilter();
 
-  /// The sectors the reader has moved AGAINST the default, by id.
+  /// The groups the reader has moved AGAINST the default, by id.
+  ///
+  /// A group is a قطاع on a file with a tree and a role on one without —
+  /// different rows, one gesture, one memory. Both are uuids from different
+  /// tables, so one set holds them without ambiguity.
   ///
   /// Storing the exception rather than the state is what lets the default
   /// change underneath without stranding anything: a file that crosses
   /// [_worthFolding] because somebody was added does not suddenly re-open every
-  /// sector the reader had shut, and one that drops below it does not shut the
+  /// group the reader had shut, and one that drops below it does not shut the
   /// ones he had opened.
   final _foldedAgainstDefault = <String>{};
 
-  bool _sectorIsOpen(String sectorId, {required bool foldByDefault}) =>
-      sectorIsOpen(
+  bool _groupIsOpen(String groupId, {required bool foldByDefault}) =>
+      groupIsOpen(
         filtering: _filter.isActive,
         foldByDefault: foldByDefault,
-        movedByReader: _foldedAgainstDefault.contains(sectorId),
+        movedByReader: _foldedAgainstDefault.contains(groupId),
       );
+
+  void _toggle(String groupId) => setState(() {
+    if (!_foldedAgainstDefault.remove(groupId)) {
+      _foldedAgainstDefault.add(groupId);
+    }
+  });
 
   ModuleDetailState get state => widget.state;
   OperationalModule get module => widget.module;
@@ -694,8 +710,23 @@ class _BodyState extends State<_Body> {
 
       // Roles held on the file itself — the entire roster of a file with
       // no tree, and each member's share of his team's duties.
+      //
+      // Folded on the same terms as a قطاع, and for the same reason. Ten of the
+      // fifteen types have no tree at all — الطوافة والنقل, الإعاشة المركزية,
+      // الطيران المركزي — so a rule that only reached sectors was reaching the
+      // minority of the files while the majority stayed a single unbroken wall
+      // of faces.
       for (final role in type?.roles ?? const <ModuleRole>[])
-        _RoleRosterCard(state: state, role: role, filter: _filter),
+        _RoleRosterCard(
+          state: state,
+          role: role,
+          filter: _filter,
+          isOpen: _groupIsOpen(
+            role.id,
+            foldByDefault: state.peopleCount >= _worthFolding,
+          ),
+          onToggle: _filter.isActive ? null : () => _toggle(role.id),
+        ),
 
       if (type?.hasTree ?? true)
         if (sectorLevel == null || sectors.isEmpty)
@@ -730,20 +761,14 @@ class _BodyState extends State<_Body> {
               level: sectorLevel,
               sector: sector,
               filter: _filter,
-              isOpen: _sectorIsOpen(
+              isOpen: _groupIsOpen(
                 sector.id,
                 foldByDefault: state.peopleCount >= _worthFolding,
               ),
               // Folding is never offered while a filter is running: with the
-              // sectors forced open, a chevron that appears to close one would
+              // groups forced open, a chevron that appears to close one would
               // either lie or hide a match.
-              onToggle: _filter.isActive
-                  ? null
-                  : () => setState(() {
-                      if (!_foldedAgainstDefault.remove(sector.id)) {
-                        _foldedAgainstDefault.add(sector.id);
-                      }
-                    }),
+              onToggle: _filter.isActive ? null : () => _toggle(sector.id),
             )
       else if (state.members.isEmpty)
         GlassCard(
@@ -1007,11 +1032,19 @@ class _RoleRosterCard extends StatelessWidget {
     required this.state,
     required this.role,
     this.filter = const _RosterFilter(),
+    this.isOpen = true,
+    this.onToggle,
   });
 
   final ModuleDetailState state;
   final ModuleRole role;
   final _RosterFilter filter;
+
+  /// Whether this team's people are drawn at all.
+  final bool isOpen;
+
+  /// Null where folding is not on offer — a small file, or a live filter.
+  final VoidCallback? onToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -1028,7 +1061,18 @@ class _RoleRosterCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: AppSpacing.sm),
-        SectionHeader(role.name.of(context), icon: AppIcons.roles),
+        SectionHeader(
+          role.name.of(context),
+          icon: AppIcons.roles,
+          trailing: onToggle == null
+              ? null
+              : _FoldToggle(
+                  isOpen: isOpen,
+                  count: members.length,
+                  onPressed: onToggle!,
+                ),
+        ),
+        if (!isOpen) const SizedBox(height: AppSpacing.sm),
         // ONE card for the team, with its people as tiles inside it — the same
         // shape a برج has always had, and now the shape every roster on this
         // screen has. It used to be a card per person, which put a hairline and
@@ -1039,25 +1083,27 @@ class _RoleRosterCard extends StatelessWidget {
         // grid now measures the box INSIDE a card, two paddings narrower than
         // the one it used to get, and asking for the full width here would drop
         // a column exactly where the tree beside it keeps one.
-        GlassCard(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: AdaptiveGrid(
-            minTileWidth: _kNestedMemberWidth,
-            spacing: AppSpacing.lg,
-            equalHeights: false,
-            children: [
-              for (final member in members)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _MemberTile(member: member),
-                    ..._duties(context, member.taskIds),
-                  ],
-                ),
-            ],
+        if (isOpen) ...[
+          GlassCard(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: AdaptiveGrid(
+              minTileWidth: _kNestedMemberWidth,
+              spacing: AppSpacing.lg,
+              equalHeights: false,
+              children: [
+                for (final member in members)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _MemberTile(member: member),
+                      ..._duties(context, member.taskIds),
+                    ],
+                  ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.md),
+        ],
       ],
     );
   }
@@ -1206,23 +1252,28 @@ class _SectorCard extends StatelessWidget {
   }
 }
 
-/// Whether one sector's people are drawn.
+/// Whether one group's people are drawn.
+///
+/// A group is a قطاع on a file with a tree and a role on one without. Ten of
+/// the fifteen types have no tree — الطوافة والنقل, الإعاشة المركزية, الطيران
+/// المركزي and the rest are a roster and nothing else — so this governing only
+/// sectors meant it governed the minority of the files.
 ///
 /// Top-level and public so it can be tested without standing a whole file page
 /// up: it is three booleans and one of them is a correctness rule rather than a
 /// preference.
 ///
-/// **A live filter forces every sector open.** That is not a convenience. A
-/// name matching inside a folded sector would be found by the search, counted
-/// in "showing 3 of 120" at the top of the page, and then be nowhere on the
-/// screen — a search that reports a result it does not show is worse than one
-/// that finds nothing.
+/// **A live filter forces every group open.** That is not a convenience. A name
+/// matching inside a folded group would be found by the search, counted in
+/// "showing 3 of 120" at the top of the page, and then be nowhere on the screen
+/// — a search that reports a result it does not show is worse than one that
+/// finds nothing.
 ///
 /// [movedByReader] records the EXCEPTION rather than the state, which is what
 /// lets the default change underneath without stranding anything: a file that
 /// crosses the folding threshold because one person was added does not re-open
-/// every sector the reader had shut.
-bool sectorIsOpen({
+/// every group the reader had shut.
+bool groupIsOpen({
   required bool filtering,
   required bool foldByDefault,
   required bool movedByReader,
