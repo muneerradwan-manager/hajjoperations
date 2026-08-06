@@ -80,7 +80,7 @@ void main() {
         'columns': ['البند', 'العدد'],
       });
 
-      expect(block.spans, isEmpty);
+      expect(block.tableColumns.any((c) => c.span), isFalse);
       expect(block.spansAt(0), isFalse);
     });
 

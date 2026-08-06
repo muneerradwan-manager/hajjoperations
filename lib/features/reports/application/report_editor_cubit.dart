@@ -15,10 +15,16 @@ import '../domain/table_columns.dart';
 enum EditorStatus { loading, ready, saving, error }
 
 /// A block being written, before it has an id of its own.
-class DraftBlock {
+///
+/// Everything a table block means comes from [TableBlockData], shared with
+/// [ReportBlock] — the mixin exists because these two once duplicated seven
+/// getters, drifted by exactly one (`expandAt`), and the editor spent a
+/// release writing cells at indices the reader did not draw them at.
+class DraftBlock with TableBlockData {
   DraftBlock(this.kind, {Map<String, dynamic>? data}) : data = {...?data};
 
   final ReportBlockKind kind;
+  @override
   final Map<String, dynamic> data;
 
   String get text => data['text']?.toString() ?? '';
@@ -27,54 +33,14 @@ class DraftBlock {
     for (final i in (data['items'] as List?) ?? const []) '$i',
   ];
 
-  List<String> get columns => [
-    for (final c in (data['columns'] as List?) ?? const []) '$c',
-  ];
-
-  List<List<String>> get rows => [
-    for (final r in (data['rows'] as List?) ?? const [])
-      [for (final c in (r as List? ?? const [])) '$c'],
-  ];
-
-  /// Mirrors [ReportBlock.expandSetCode] and [ReportBlock.spansAt] — the draft
-  /// and the saved block read the same jsonb, and a getter that existed on one
-  /// and not the other is how an editor and a reader come to disagree about
-  /// what a document says.
-  String? get expandSetCode {
-    final code = data['expand']?.toString().trim();
-    return (code == null || code.isEmpty) ? null : code;
+  bool spansAt(int column) {
+    final cols = tableColumns;
+    return column < cols.length && cols[column].span;
   }
 
-  List<bool> get spans => [
-    for (final s in (data['spans'] as List?) ?? const []) s == true,
-  ];
-
-  bool spansAt(int column) => column < spans.length ? spans[column] : false;
-
-  List<bool> get tags => [
-    for (final t in (data['tags'] as List?) ?? const []) t == true,
-  ];
-
-  bool tagsAt(int column) => column < tags.length ? tags[column] : false;
-
-  /// Where among the typed columns the generated ones are spliced. Mirrors
-  /// [ReportBlock.expandAt] — this getter was MISSING from the draft, which is
-  /// half of how the editor came to write cells at the wrong index: it read the
-  /// generated block as sitting at the end while the reader spliced it into
-  /// the middle.
-  int? get expandAt {
-    final at = data['expand_at'];
-    if (at is int) return at.clamp(0, columns.length);
-    final parsed = int.tryParse('${at ?? ''}');
-    return parsed?.clamp(0, columns.length);
-  }
-
-  /// The index a typed column is stored at, once the generated ones are
-  /// spliced in. Mirrors [ReportBlock.effectiveIndexOf].
-  int effectiveIndexOf(int typedColumn, int expandedCount) {
-    if (expandSetCode == null || expandedCount == 0) return typedColumn;
-    final at = expandAt ?? columns.length;
-    return typedColumn < at ? typedColumn : typedColumn + expandedCount;
+  bool tagsAt(int column) {
+    final cols = tableColumns;
+    return column < cols.length && cols[column].kind == TableColumnKind.tags;
   }
 }
 

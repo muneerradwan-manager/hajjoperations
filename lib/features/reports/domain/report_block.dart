@@ -4,6 +4,14 @@
 /// fills them. A general one is written, so its content is a sequence of these:
 /// a heading, some prose, a list, a table, a link, a code, in whatever order
 /// the thing being said needs.
+library;
+
+import 'table_block_data.dart';
+import 'table_column.dart';
+
+export 'table_block_data.dart';
+export 'table_column.dart';
+
 enum ReportBlockKind {
   heading,
   subheading,
@@ -43,7 +51,7 @@ enum ReportBlockKind {
 }
 
 /// One block of a written report.
-class ReportBlock {
+class ReportBlock with TableBlockData {
   const ReportBlock({
     required this.id,
     required this.kind,
@@ -53,6 +61,7 @@ class ReportBlock {
 
   final String id;
   final ReportBlockKind kind;
+  @override
   final Map<String, dynamic> data;
   final int sortOrder;
 
@@ -66,100 +75,18 @@ class ReportBlock {
       if ('$i'.trim().isNotEmpty) '$i',
   ];
 
-  /// The headings somebody typed. Not necessarily all the headings the table
-  /// HAS — see [expandSetCode].
-  List<String> get columns => [
-    for (final c in (data['columns'] as List?) ?? const []) '$c',
-  ];
-
-  /// A master-data list whose entries become one column each, appended after
-  /// the typed ones. Null for an ordinary table.
-  ///
-  /// This is the whole reason توزيع الوجبات needed a report TYPE of its own
-  /// before: 0068 declared one column that expanded into one per تكتل, so a
-  /// season with a new cluster got a new column without anybody editing
-  /// anything. A table whose cluster names were typed by hand goes stale the
-  /// moment a تكتل is added, silently — which is the failure that made a
-  /// hand-written table an unacceptable substitute.
-  ///
-  /// Stored as the set's CODE rather than its id, so a document written this
-  /// season still resolves next season: the entries differ, the list does not.
-  String? get expandSetCode {
-    final code = data['expand']?.toString().trim();
-    return (code == null || code.isEmpty) ? null : code;
+  /// Whether one typed column merges equal consecutive cells downward, and
+  /// whether it holds a list. Thin wrappers over [tableColumns], kept because
+  /// the reader asks per index and the mixin thinks in columns.
+  bool spansAt(int column) {
+    final cols = tableColumns;
+    return column < cols.length && cols[column].span;
   }
 
-  /// Which typed columns merge equal consecutive cells downward.
-  ///
-  /// مواعيد الوجبات prints the date once against its three meals rather than
-  /// three times, and a table that cannot do that is a table somebody will
-  /// rebuild in Word. Indexed against [columns]; anything beyond it is false.
-  List<bool> get spans => [
-    for (final s in (data['spans'] as List?) ?? const []) s == true,
-  ];
-
-  bool spansAt(int column) =>
-      column < spans.length ? spans[column] : false;
-
-  /// Which typed columns hold a LIST rather than a sentence.
-  ///
-  /// مكونات الوجبات is nine items per meal, stored one per line because that is
-  /// how the published document prints them. Nine lines down a column makes the
-  /// row nine lines tall and leaves the rest of the table in a stripe of white;
-  /// read as tags they flow across the width they are given. Told rather than
-  /// guessed, because a paragraph in a table has newlines in it too and is not
-  /// a list.
-  List<bool> get tags => [
-    for (final t in (data['tags'] as List?) ?? const []) t == true,
-  ];
-
-  bool tagsAt(int column) => column < tags.length ? tags[column] : false;
-
-  /// Where among the typed columns the generated ones are inserted.
-  ///
-  /// Null means at the end, which is what an ordinary table wants. توزيع
-  /// الوجبات wants them in the MIDDLE: التاريخ، الوجبة، النسبة، then a column
-  /// per تكتل, then المجموع — because the total is the sum across the clusters
-  /// and belongs after the things it totals. Appending blindly would move it,
-  /// which changes a published document's shape for no reason anybody asked
-  /// for.
-  int? get expandAt {
-    final at = data['expand_at'];
-    if (at is int) return at.clamp(0, columns.length);
-    final parsed = int.tryParse('${at ?? ''}');
-    return parsed?.clamp(0, columns.length);
+  bool tagsAt(int column) {
+    final cols = tableColumns;
+    return column < cols.length && cols[column].kind == TableColumnKind.tags;
   }
-
-  /// Every heading the table actually has, given the season's entries.
-  ///
-  /// [expanded] is what [expandSetCode] resolved to — passed in rather than
-  /// looked up, because the block does not know about repositories and the same
-  /// block is rendered by an editor that has the sets loaded and by a reader
-  /// that has them loaded too.
-  List<String> effectiveColumns(List<String> expanded) {
-    if (expandSetCode == null || expanded.isEmpty) return columns;
-    final at = expandAt ?? columns.length;
-    return [...columns.take(at), ...expanded, ...columns.skip(at)];
-  }
-
-  /// Where a typed column ends up once the generated ones are spliced in.
-  ///
-  /// `spans` and `tags` are indexed against the TYPED columns, because that is
-  /// what a person ticked in the editor. The table is drawn against the
-  /// effective ones. Without this the marks land on whatever happens to sit at
-  /// that position after the splice — a merge on a cluster's count instead of
-  /// on the date.
-  int effectiveIndexOf(int typedColumn, int expandedCount) {
-    if (expandSetCode == null || expandedCount == 0) return typedColumn;
-    final at = expandAt ?? columns.length;
-    return typedColumn < at ? typedColumn : typedColumn + expandedCount;
-  }
-
-  /// Rows as they are stored: a list of lists, one value per column.
-  List<List<String>> get rows => [
-    for (final r in (data['rows'] as List?) ?? const [])
-      [for (final c in (r as List? ?? const [])) '$c'],
-  ];
 
   /// Whether there is anything to draw. An empty block is not an error — it is
   /// a line somebody added and did not fill — so it is skipped rather than
