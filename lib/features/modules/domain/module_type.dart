@@ -196,8 +196,8 @@ class ModuleRole {
 /// One level of a module type's tree: القطاع, then البرج/الفندق inside it.
 ///
 /// [referenceSetId] is what a node at this level *is*. A tower is a hotel taken
-/// from the hotels list; a sector has no list — it is a division of this file
-/// alone, so it is named when it is created ("القطاع الأول").
+/// from the hotels list, a مخيم is an entry of the camps list. Since 0095 every
+/// level of every type has one: nothing is authored inside a file.
 class ModuleLevel {
   const ModuleLevel({
     required this.id,
@@ -205,6 +205,7 @@ class ModuleLevel {
     required this.name,
     required this.depth,
     this.referenceSetId,
+    this.referenceFilter,
     this.secondaryReferenceSetId,
     this.isPlace = false,
     this.fields = const [],
@@ -218,6 +219,18 @@ class ModuleLevel {
   /// 1 is the outermost level; each level nests inside the one before it.
   final int depth;
   final String? referenceSetId;
+
+  /// The slice of [referenceSetId] this level may draw from, or null for all of
+  /// it — which is every level but the camps and the centres.
+  ///
+  /// One مخيمات list serves both مشاعر, because a camp is a camp; but المخيم
+  /// رقم 11 at منى and المخيم رقم 11 at عرفات are a kilometre apart, and
+  /// offering the منى file both is offering it a mistake that no later rule can
+  /// catch — the row would be perfectly well-formed and simply false.
+  ///
+  /// Matched by containment against the entry's own `data`, the same way the
+  /// server's `@>` reads it: every key here must be present and equal.
+  final Map<String, dynamic>? referenceFilter;
 
   /// A second list a node here is TIED to, as opposed to what it is: a برج is a
   /// فندق, and it belongs to a تكتل. Null for a level that ties to nothing,
@@ -245,8 +258,10 @@ class ModuleLevel {
   /// The roles held at this level, in the order they are filled.
   final List<ModuleRole> roles;
 
-  /// Whether a node here is picked from master data (a hotel) or named by hand
-  /// (a sector).
+  /// Whether a node here is picked from master data (a hotel) or named by hand.
+  ///
+  /// False everywhere since 0095. Kept because a type added later may still
+  /// want a rung that is a division of one file and of nothing else.
   bool get isNamedByHand => referenceSetId == null;
 
   ModuleLevel withRolesAndFields(
@@ -258,6 +273,7 @@ class ModuleLevel {
     name: name,
     depth: depth,
     referenceSetId: referenceSetId,
+    referenceFilter: referenceFilter,
     secondaryReferenceSetId: secondaryReferenceSetId,
     // Every level goes through here while a type is parsed, so anything left
     // out is not "defaulted" — it is ERASED, silently, on the way in.
@@ -272,6 +288,7 @@ class ModuleLevel {
     name: LocalizedName.fromMap(map),
     depth: (map['depth'] as int?) ?? 1,
     referenceSetId: map['reference_set_id'] as String?,
+    referenceFilter: (map['reference_filter'] as Map?)?.cast<String, dynamic>(),
     secondaryReferenceSetId: map['secondary_reference_set_id'] as String?,
     isPlace: (map['is_place'] as bool?) ?? false,
   );

@@ -3404,6 +3404,18 @@ abstract class AppLocalizations {
   /// **'Entry deleted'**
   String get referenceItemDeleted;
 
+  /// No description provided for @referenceDivisionAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get referenceDivisionAll;
+
+  /// No description provided for @referenceDivisionNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Unclassified'**
+  String get referenceDivisionNone;
+
   /// No description provided for @referenceEmpty.
   ///
   /// In en, this message translates to:
@@ -5743,6 +5755,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No members'**
   String get seasonMapEmpty;
+
+  /// No description provided for @seasonMapPosted.
+  ///
+  /// In en, this message translates to:
+  /// **'Posted here'**
+  String get seasonMapPosted;
+
+  /// No description provided for @seasonMapPresent.
+  ///
+  /// In en, this message translates to:
+  /// **'Checked in'**
+  String get seasonMapPresent;
+
+  /// No description provided for @seasonMapOpenIncidents.
+  ///
+  /// In en, this message translates to:
+  /// **'Open incidents'**
+  String get seasonMapOpenIncidents;
+
+  /// No description provided for @seasonMapInFile.
+  ///
+  /// In en, this message translates to:
+  /// **'In the operational file'**
+  String get seasonMapInFile;
+
+  /// No description provided for @seasonMapCopyCoordinates.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy coordinates'**
+  String get seasonMapCopyCoordinates;
+
+  /// No description provided for @seasonMapCoordinatesCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Coordinates copied'**
+  String get seasonMapCoordinatesCopied;
 
   /// No description provided for @seasonMapPlaces.
   ///

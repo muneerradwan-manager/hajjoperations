@@ -1836,6 +1836,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get referenceItemDeleted => 'تم حذف العنصر';
 
   @override
+  String get referenceDivisionAll => 'الكل';
+
+  @override
+  String get referenceDivisionNone => 'بلا تصنيف';
+
+  @override
   String get referenceEmpty => 'لا توجد عناصر بعد';
 
   @override
@@ -3276,6 +3282,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get seasonMapEmpty => 'بلا أعضاء';
+
+  @override
+  String get seasonMapPosted => 'مُسنَد إليه';
+
+  @override
+  String get seasonMapPresent => 'سجّل وصوله';
+
+  @override
+  String get seasonMapOpenIncidents => 'بلاغ مفتوح';
+
+  @override
+  String get seasonMapInFile => 'ضمن الملف التشغيلي';
+
+  @override
+  String get seasonMapCopyCoordinates => 'نسخ الإحداثيات';
+
+  @override
+  String get seasonMapCoordinatesCopied => 'نُسخت الإحداثيات';
 
   @override
   String get seasonMapPlaces => 'الأماكن';

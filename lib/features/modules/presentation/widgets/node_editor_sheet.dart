@@ -116,11 +116,16 @@ class _NodeEditorSheetState extends State<_NodeEditorSheet> {
 
   Future<void> _pickEntry() async {
     final l = context.l10n;
-    // This season's hotels only. The set still holds every season's — a tower
-    // saved last year has to keep resolving to its name — but you cannot pick
-    // one of them for a tower this year.
+    // This season's hotels only, and only this level's slice of the list. The
+    // set still holds every season's — a tower saved last year has to keep
+    // resolving to its name — but you cannot pick one of them for a tower this
+    // year; and since 0095 one مخيمات list serves both مشاعر, so the منى file
+    // is offered منى's camps and not عرفات's.
     final items =
-        widget.referenceSet?.itemsForSeason(widget.seasonId) ??
+        widget.referenceSet?.itemsToOffer(
+          widget.seasonId,
+          filter: widget.level.referenceFilter,
+        ) ??
         const <ReferenceItem>[];
     final result = await showPickerSheet(
       context,

@@ -32,6 +32,14 @@ class ReferenceSetScreen extends StatefulWidget {
   State<ReferenceSetScreen> createState() => _ReferenceSetScreenState();
 }
 
+/// One tab: what it is called, and which entries fall under it.
+class _Division {
+  const _Division({required this.label, required this.items});
+
+  final String label;
+  final List<ReferenceItem> items;
+}
+
 class _ReferenceSetScreenState extends State<ReferenceSetScreen> {
   String _query = '';
 
@@ -40,6 +48,64 @@ class _ReferenceSetScreenState extends State<ReferenceSetScreen> {
     if (q.isEmpty) return true;
     return item.name.of(context).toLowerCase().contains(q) ||
         item.data.values.any((v) => '$v'.toLowerCase().contains(q));
+  }
+
+  /// The tabs this list is read through, or a single unnamed one when it has no
+  /// natural division.
+  ///
+  /// The groups are decided from EVERY entry and only then narrowed by the
+  /// search, so that typing does not make tabs appear and vanish under the
+  /// finger. A tab whose entries are all filtered out stays, and says so.
+  ///
+  /// الكل comes first, and «بلا تصنيف» last and only when it has something in
+  /// it. Between them those two mean no entry can be invisible — which is the
+  /// one state a management screen may never be in, since an entry nobody can
+  /// see is an entry nobody can correct.
+  List<_Division> _divide(
+    BuildContext context,
+    ReferenceDataState state,
+    ReferenceSet set,
+    List<ReferenceItem> all,
+  ) {
+    final shown = all.where((i) => _matches(context, i)).toList();
+    final field = set.copyWith(items: all).dividingField();
+    final target = state.setById(field?.referenceSetId ?? '');
+    if (field == null || target == null) {
+      return [_Division(label: '', items: shown)];
+    }
+
+    final l = context.l10n;
+    final divisions = <_Division>[
+      _Division(label: l.referenceDivisionAll, items: shown),
+    ];
+
+    // In the target list's own order, not in the order the entries happen to
+    // mention them: مكة before المدينة because the master list says so.
+    for (final group in target.items) {
+      if (!all.any((i) => i.data[field.key] == group.id)) continue;
+      divisions.add(
+        _Division(
+          label: group.name.of(context),
+          items: shown.where((i) => i.data[field.key] == group.id).toList(),
+        ),
+      );
+    }
+
+    final unclassified = shown
+        .where(
+          (i) => !target.items.any((g) => g.id == i.data[field.key]),
+        )
+        .toList();
+    final anyUnclassified = all.any(
+      (i) => !target.items.any((g) => g.id == i.data[field.key]),
+    );
+    if (anyUnclassified) {
+      divisions.add(
+        _Division(label: l.referenceDivisionNone, items: unclassified),
+      );
+    }
+
+    return divisions;
   }
 
   /// Copies another season's entries into this one. They arrive as copies and
@@ -186,101 +252,162 @@ class _ReferenceSetScreenState extends State<ReferenceSetScreen> {
 
         // This season's entries, for a set that is scoped to one. The hotels of
         // 1447 are not the hotels of 1448.
-        final items = state
-            .visibleItems(set.id)
-            .where((i) => _matches(context, i))
-            .toList();
+        final all = state.visibleItems(set.id).toList();
+        final divisions = _divide(context, state, set, all);
+        final divided = divisions.length > 1;
 
-        return Scaffold(
-          extendBodyBehindAppBar: true,
-          appBar: GlassAppBar(
-            title: Text(set.name.of(context)),
-            actions: [
-              // Importing a season and emptying the list are not two glyphs to
-              // tell apart on a title bar when one of them destroys the list.
-              // Behind one overflow icon they are words, and the dangerous one
-              // sits under a divider.
-              OverflowMenu(
+        // Rebuilt whenever the tabs themselves change — a مشعر used for the
+        // first time, a season imported — because a TabController outlives its
+        // length otherwise and asks for a tab that is no longer there.
+        return DefaultTabController(
+          key: ValueKey(divisions.map((d) => d.label).join('|')),
+          length: divisions.length,
+          child: Builder(
+            builder: (context) => Scaffold(
+              extendBodyBehindAppBar: true,
+              appBar: GlassAppBar(
+                title: Text(set.name.of(context)),
                 actions: [
-                  // Only a season-scoped list has anything to import: the
-                  // cities do not start over each year.
-                  if (canImport && set.isSeasonScoped && state.season != null)
-                    MenuAction(
-                      icon: AppIcons.download,
-                      label: l.referenceImport,
-                      onSelected: () => _import(context, set),
-                    ),
-                  if (canDelete && items.isNotEmpty)
-                    MenuAction(
-                      icon: AppIcons.delete,
-                      label: l.referenceDeleteAll,
-                      isDestructive: true,
-                      onSelected: () => _deleteAll(context, set, items),
-                    ),
-                ],
-              ),
-            ],
-          ),
-          floatingActionButton: canEdit
-              ? FloatingActionButton.extended(
-                  onPressed: () => showReferenceItemForm(context, set: set),
-                  icon: const Icon(AppIcons.add),
-                  label: Text(l.referenceAddItem),
-                )
-              : null,
-          body: ResponsivePage(
-            builder: (context, size) => Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    size.gutter,
-                    MediaQuery.paddingOf(context).top + kToolbarHeight,
-                    size.gutter,
-                    AppSpacing.sm,
-                  ),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 460),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: l.commonSearch,
-                        prefixIcon: const Icon(AppIcons.search),
-                      ),
-                      onChanged: (v) => setState(() => _query = v),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: items.isEmpty
-                      ? EmptyState(
-                          icon: AppIcons.referenceData,
-                          title: l.referenceEmpty,
-                        )
-                      // A set is every hotel, every cluster — long enough to
-                      // page in as it is reached.
-                      : AdaptiveGridView(
-                          onRefresh: () =>
-                              context.read<ReferenceDataCubit>().load(),
-                          padding: EdgeInsets.fromLTRB(
-                            size.gutter,
-                            0,
-                            size.gutter,
-                            AppSpacing.xxl * 2 +
-                                MediaQuery.viewPaddingOf(context).bottom,
-                          ),
-                          minTileWidth: 320,
-                          itemCount: items.length,
-                          itemBuilder: (context, i) => FadeSlideIn(
-                            delay: Duration(milliseconds: 30 * (i < 8 ? i : 8)),
-                            child: _ItemCard(set: set, item: items[i]),
+                  // Importing a season and emptying the list are not two glyphs
+                  // to tell apart on a title bar when one of them destroys the
+                  // list. Behind one overflow icon they are words, and the
+                  // dangerous one sits under a divider.
+                  OverflowMenu(
+                    actions: [
+                      // Only a season-scoped list has anything to import: the
+                      // cities do not start over each year.
+                      if (canImport &&
+                          set.isSeasonScoped &&
+                          state.season != null)
+                        MenuAction(
+                          icon: AppIcons.download,
+                          label: l.referenceImport,
+                          onSelected: () => _import(context, set),
+                        ),
+                      if (canDelete && all.isNotEmpty)
+                        MenuAction(
+                          icon: AppIcons.delete,
+                          label: l.referenceDeleteAll,
+                          isDestructive: true,
+                          // The tab in front of the reader, not the whole set.
+                          // Same rule the search already followed: what "all"
+                          // means is what is on the screen, and emptying مكة
+                          // must not take المدينة with it. Read at the tap
+                          // rather than at build, so the menu needs no listener.
+                          onSelected: () => _deleteAll(
+                            context,
+                            set,
+                            divisions[DefaultTabController.of(
+                              context,
+                            ).index.clamp(0, divisions.length - 1)].items,
                           ),
                         ),
+                    ],
+                  ),
+                ],
+              ),
+              floatingActionButton: canEdit
+                  ? FloatingActionButton.extended(
+                      onPressed: () => showReferenceItemForm(context, set: set),
+                      icon: const Icon(AppIcons.add),
+                      label: Text(l.referenceAddItem),
+                    )
+                  : null,
+              body: ResponsivePage(
+                builder: (context, size) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        size.gutter,
+                        MediaQuery.paddingOf(context).top + kToolbarHeight,
+                        size.gutter,
+                        AppSpacing.sm,
+                      ),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 460),
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText: l.commonSearch,
+                            prefixIcon: const Icon(AppIcons.search),
+                          ),
+                          onChanged: (v) => setState(() => _query = v),
+                        ),
+                      ),
+                    ),
+                    if (divided)
+                      TabBar(
+                        // Scrollable and left-aligned: two tabs stretched
+                        // across a desk monitor read as two buttons nobody
+                        // grouped, and a fourth would not fit a phone.
+                        isScrollable: true,
+                        tabAlignment: TabAlignment.start,
+                        padding: EdgeInsets.symmetric(horizontal: size.gutter),
+                        tabs: [
+                          for (final division in divisions)
+                            Tab(text: '${division.label} · ${division.items.length}'),
+                        ],
+                      ),
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          for (final division in divisions)
+                            _DivisionList(
+                              set: set,
+                              items: division.items,
+                              gutter: size.gutter,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         );
       },
+    );
+  }
+}
+
+/// One tab's worth of the list.
+class _DivisionList extends StatelessWidget {
+  const _DivisionList({
+    required this.set,
+    required this.items,
+    required this.gutter,
+  });
+
+  final ReferenceSet set;
+  final List<ReferenceItem> items;
+  final double gutter;
+
+  @override
+  Widget build(BuildContext context) {
+    if (items.isEmpty) {
+      return EmptyState(
+        icon: AppIcons.referenceData,
+        title: context.l10n.referenceEmpty,
+      );
+    }
+
+    // A set is every hotel, every cluster — long enough to page in as it is
+    // reached.
+    return AdaptiveGridView(
+      onRefresh: () => context.read<ReferenceDataCubit>().load(),
+      padding: EdgeInsets.fromLTRB(
+        gutter,
+        0,
+        gutter,
+        AppSpacing.xxl * 2 + MediaQuery.viewPaddingOf(context).bottom,
+      ),
+      minTileWidth: 320,
+      itemCount: items.length,
+      itemBuilder: (context, i) => FadeSlideIn(
+        delay: Duration(milliseconds: 30 * (i < 8 ? i : 8)),
+        child: _ItemCard(set: set, item: items[i]),
+      ),
     );
   }
 }

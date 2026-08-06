@@ -36,6 +36,66 @@ class ReferenceSet {
     return items.where((i) => i.seasonId == seasonId).toList();
   }
 
+  /// The entries to CHOOSE from when the asker may only have part of the list.
+  ///
+  /// Two narrowings, asking different questions, and both apply: which season's
+  /// camps, and then which مشعر's. Since 0095 one مخيمات list serves both
+  /// مشاعر — a camp is a camp — but المخيم رقم 11 at منى and المخيم رقم 11 at
+  /// عرفات are a kilometre apart, and offering the منى file both is offering it
+  /// a mistake nothing downstream can catch: the row would be perfectly
+  /// well-formed and simply false.
+  ///
+  /// [filter] comes from `module_type_levels.reference_filter` and is matched
+  /// by containment, exactly as the server's `@>` would read it: every key
+  /// present and equal. An unknown key therefore narrows to nothing rather than
+  /// being ignored — a level asking for a slice that does not exist should show
+  /// an empty picker, not the whole list.
+  List<ReferenceItem> itemsToOffer(
+    String? seasonId, {
+    Map<String, dynamic>? filter,
+  }) {
+    final scoped = itemsForSeason(seasonId);
+    if (filter == null || filter.isEmpty) return scoped;
+
+    return scoped
+        .where(
+          (item) =>
+              filter.entries.every((want) => item.data[want.key] == want.value),
+        )
+        .toList();
+  }
+
+  /// The field this list already falls into groups by, or null if it has none
+  /// worth showing.
+  ///
+  /// Not declared anywhere. It falls out of the schema: a list whose entries
+  /// each POINT at an entry of another list is a list that is already divided,
+  /// and the division is the thing pointed at. الفنادق carry a city, المخيمات
+  /// and المراكز carry a مشعر. A list added next season that carries something
+  /// similar is divided too, with nothing written for it.
+  ///
+  /// [atMost] is what keeps this from being silly. المجموعات point at a hotel,
+  /// and thirty tabs is not a division of anything — it is the list again, laid
+  /// sideways and harder to read. Two or three is a division; thirty is a
+  /// coincidence of shape.
+  ///
+  /// Counted over entries that EXIST rather than over the target list, because
+  /// what matters is how many groups a reader would actually meet: a cities
+  /// list of fourteen that only two hotels ever name is still two tabs.
+  ModuleField? dividingField({int atMost = 6}) {
+    for (final field in fields) {
+      if (field.kind != ModuleFieldKind.reference) continue;
+      if (field.referenceSetId == null) continue;
+      final values = items
+          .map((i) => i.data[field.key])
+          .whereType<String>()
+          .where((v) => v.isNotEmpty)
+          .toSet();
+      if (values.length >= 2 && values.length <= atMost) return field;
+    }
+    return null;
+  }
+
   ReferenceSet copyWith({List<ReferenceItem>? items}) => ReferenceSet(
     id: id,
     code: code,

@@ -1839,6 +1839,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get referenceItemDeleted => 'Entry deleted';
 
   @override
+  String get referenceDivisionAll => 'All';
+
+  @override
+  String get referenceDivisionNone => 'Unclassified';
+
+  @override
   String get referenceEmpty => 'No entries yet';
 
   @override
@@ -3254,6 +3260,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seasonMapEmpty => 'No members';
+
+  @override
+  String get seasonMapPosted => 'Posted here';
+
+  @override
+  String get seasonMapPresent => 'Checked in';
+
+  @override
+  String get seasonMapOpenIncidents => 'Open incidents';
+
+  @override
+  String get seasonMapInFile => 'In the operational file';
+
+  @override
+  String get seasonMapCopyCoordinates => 'Copy coordinates';
+
+  @override
+  String get seasonMapCoordinatesCopied => 'Coordinates copied';
 
   @override
   String get seasonMapPlaces => 'Places';
