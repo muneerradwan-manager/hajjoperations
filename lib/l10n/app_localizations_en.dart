@@ -575,6 +575,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permComplaintsDelete => 'Delete a complaint';
 
   @override
+  String get perm_evaluations => 'Evaluations';
+
+  @override
+  String get permEvaluationsView => 'View every evaluation and its marks';
+
+  @override
+  String get permEvaluationsTemplates => 'Build and edit the evaluation forms';
+
+  @override
+  String get permEvaluationsAssign =>
+      'Open an evaluation and name its evaluator';
+
+  @override
+  String get permEvaluationsDelete => 'Delete an evaluation';
+
+  @override
+  String get perm_incidents => 'Urgent reports';
+
+  @override
+  String get permIncidentsReceive => 'Receive and read every urgent report';
+
+  @override
+  String get permIncidentsHandle => 'Take on an urgent report and close it';
+
+  @override
+  String get perm_checkin => 'Check-in';
+
+  @override
+  String get permCheckinBoard => 'Read everyone\'s attendance record';
+
+  @override
+  String get permCheckinCodes => 'View, print and share place codes';
+
+  @override
+  String get permCheckinRotate =>
+      'Regenerate a place code, voiding every printed copy';
+
+  @override
+  String get perm_export => 'Data export';
+
+  @override
+  String get permExportData =>
+      'Export any dataset, including data you cannot open on screen';
+
+  @override
+  String get perm_map => 'Season map';
+
+  @override
+  String get permMapView => 'Open the season map';
+
+  @override
   String permissionRequires(String names) {
     return 'Requires: $names';
   }
@@ -1796,6 +1847,21 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get referenceShelfPlaces => 'Places';
+
+  @override
+  String get referenceShelfStructure => 'File divisions';
+
+  @override
+  String get referenceShelfMission => 'The mission';
+
+  @override
+  String get referenceShelfReports => 'Report inputs';
+
+  @override
+  String get referenceShelfOther => 'Other';
 
   @override
   String get referenceDataTitle => 'Master data';
@@ -3527,7 +3593,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checkInQrPrintingAll => 'Preparing the codes…';
 
   @override
-  String get presenceTitle => 'Who is in place now';
+  String get presenceTitle => 'Attendance record';
 
   @override
   String get presenceSubtitle =>

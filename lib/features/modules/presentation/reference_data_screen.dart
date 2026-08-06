@@ -9,6 +9,7 @@ import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
+import '../../../l10n/app_localizations.dart';
 import '../application/reference_data_cubit.dart';
 import '../../seasons/data/seasons_repository.dart';
 import '../data/modules_repository.dart';
@@ -68,12 +69,19 @@ class _View extends StatelessWidget {
               gutter: size.gutter,
               onRefresh: () => context.read<ReferenceDataCubit>().load(),
               children: [
-                AdaptiveGrid(
-                  minTileWidth: 300,
-                  children: staggered([
-                    for (final set in state.sets) _SetCard(set: set),
-                  ]),
-                ),
+                for (final shelf in _shelve(state.sets)) ...[
+                  SectionHeader(
+                    _shelfTitle(l, shelf.section),
+                    icon: _shelfIcon(shelf.section),
+                  ),
+                  AdaptiveGrid(
+                    minTileWidth: 300,
+                    children: staggered([
+                      for (final set in shelf.sets) _SetCard(set: set),
+                    ]),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
               ],
             ),
           );
@@ -82,6 +90,51 @@ class _View extends StatelessWidget {
     );
   }
 }
+
+/// One shelf and the lists on it.
+typedef _Shelf = ({String? section, List<ReferenceSet> sets});
+
+/// The order the shelves are read in.
+///
+/// Fixed here rather than sorted alphabetically, because the sequence is an
+/// argument: the ground first, then the divisions drawn on it, then the people
+/// who work there, then the vocabularies a report is filled from. It runs from
+/// the most concrete to the most abstract, which is the order somebody looking
+/// for a list will guess.
+///
+/// Anything not on this list — a section a later migration invents, or a set
+/// nobody filed — falls to the end under "other". Never hidden: a list nobody
+/// can find is a list nobody can correct.
+const _shelfOrder = ['places', 'structure', 'mission', 'reports'];
+
+List<_Shelf> _shelve(List<ReferenceSet> sets) {
+  final held = <String?, List<ReferenceSet>>{};
+  for (final set in sets) {
+    final key = _shelfOrder.contains(set.section) ? set.section : null;
+    held.putIfAbsent(key, () => []).add(set);
+  }
+  return [
+    for (final section in _shelfOrder)
+      if (held[section] != null) (section: section, sets: held[section]!),
+    if (held[null] != null) (section: null, sets: held[null]!),
+  ];
+}
+
+String _shelfTitle(AppLocalizations l, String? section) => switch (section) {
+  'places' => l.referenceShelfPlaces,
+  'structure' => l.referenceShelfStructure,
+  'mission' => l.referenceShelfMission,
+  'reports' => l.referenceShelfReports,
+  _ => l.referenceShelfOther,
+};
+
+IconData _shelfIcon(String? section) => switch (section) {
+  'places' => AppIcons.location,
+  'structure' => AppIcons.modules,
+  'mission' => AppIcons.participants,
+  'reports' => AppIcons.tasks,
+  _ => AppIcons.referenceData,
+};
 
 class _SetCard extends StatelessWidget {
   const _SetCard({required this.set});

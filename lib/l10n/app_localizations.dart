@@ -1178,6 +1178,102 @@ abstract class AppLocalizations {
   /// **'Delete a complaint'**
   String get permComplaintsDelete;
 
+  /// No description provided for @perm_evaluations.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluations'**
+  String get perm_evaluations;
+
+  /// No description provided for @permEvaluationsView.
+  ///
+  /// In en, this message translates to:
+  /// **'View every evaluation and its marks'**
+  String get permEvaluationsView;
+
+  /// No description provided for @permEvaluationsTemplates.
+  ///
+  /// In en, this message translates to:
+  /// **'Build and edit the evaluation forms'**
+  String get permEvaluationsTemplates;
+
+  /// No description provided for @permEvaluationsAssign.
+  ///
+  /// In en, this message translates to:
+  /// **'Open an evaluation and name its evaluator'**
+  String get permEvaluationsAssign;
+
+  /// No description provided for @permEvaluationsDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete an evaluation'**
+  String get permEvaluationsDelete;
+
+  /// No description provided for @perm_incidents.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent reports'**
+  String get perm_incidents;
+
+  /// No description provided for @permIncidentsReceive.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive and read every urgent report'**
+  String get permIncidentsReceive;
+
+  /// No description provided for @permIncidentsHandle.
+  ///
+  /// In en, this message translates to:
+  /// **'Take on an urgent report and close it'**
+  String get permIncidentsHandle;
+
+  /// No description provided for @perm_checkin.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in'**
+  String get perm_checkin;
+
+  /// No description provided for @permCheckinBoard.
+  ///
+  /// In en, this message translates to:
+  /// **'Read everyone\'s attendance record'**
+  String get permCheckinBoard;
+
+  /// No description provided for @permCheckinCodes.
+  ///
+  /// In en, this message translates to:
+  /// **'View, print and share place codes'**
+  String get permCheckinCodes;
+
+  /// No description provided for @permCheckinRotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate a place code, voiding every printed copy'**
+  String get permCheckinRotate;
+
+  /// No description provided for @perm_export.
+  ///
+  /// In en, this message translates to:
+  /// **'Data export'**
+  String get perm_export;
+
+  /// No description provided for @permExportData.
+  ///
+  /// In en, this message translates to:
+  /// **'Export any dataset, including data you cannot open on screen'**
+  String get permExportData;
+
+  /// No description provided for @perm_map.
+  ///
+  /// In en, this message translates to:
+  /// **'Season map'**
+  String get perm_map;
+
+  /// No description provided for @permMapView.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the season map'**
+  String get permMapView;
+
   /// No description provided for @permissionRequires.
   ///
   /// In en, this message translates to:
@@ -3331,6 +3427,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =0{Confirm with nobody chosen} =1{Confirm 1 person} other{Confirm {count} people}}'**
   String modulePickerConfirm(int count);
+
+  /// No description provided for @referenceShelfPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Places'**
+  String get referenceShelfPlaces;
+
+  /// No description provided for @referenceShelfStructure.
+  ///
+  /// In en, this message translates to:
+  /// **'File divisions'**
+  String get referenceShelfStructure;
+
+  /// No description provided for @referenceShelfMission.
+  ///
+  /// In en, this message translates to:
+  /// **'The mission'**
+  String get referenceShelfMission;
+
+  /// No description provided for @referenceShelfReports.
+  ///
+  /// In en, this message translates to:
+  /// **'Report inputs'**
+  String get referenceShelfReports;
+
+  /// No description provided for @referenceShelfOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get referenceShelfOther;
 
   /// No description provided for @referenceDataTitle.
   ///
@@ -6203,7 +6329,7 @@ abstract class AppLocalizations {
   /// No description provided for @presenceTitle.
   ///
   /// In en, this message translates to:
-  /// **'Who is in place now'**
+  /// **'Attendance record'**
   String get presenceTitle;
 
   /// No description provided for @presenceSubtitle.

@@ -15,6 +15,7 @@ class ReferenceSet {
     this.items = const [],
     this.isSeasonScoped = false,
     this.isPlace = false,
+    this.section,
   });
 
   final String id;
@@ -34,6 +35,17 @@ class ReferenceSet {
   /// Not the same question as `ModuleLevel.isPlace`, which decides what the map
   /// draws. A level may be a pin while drawing from a list nobody checks in at.
   final bool isPlace;
+
+  /// Which shelf this list is shown under (0101), or null for the trailing
+  /// "other" one.
+  ///
+  /// A KEY, not a label: the wording is in the app because a shelf title is
+  /// content in two languages. The grouping itself is editorial — nothing in
+  /// the schema says a فندق and a مخيم belong together while a مركز belongs
+  /// elsewhere — so it lives in the database rather than in Dart, and a list
+  /// added by a future migration names its own shelf instead of waiting for
+  /// somebody to edit this app.
+  final String? section;
 
   /// The entries to CHOOSE from in [seasonId] — this season's for a scoped set,
   /// all of them otherwise.
@@ -115,6 +127,7 @@ class ReferenceSet {
     // Every level goes through here while a set is narrowed, so anything left
     // out is not "defaulted" — it is ERASED, silently, on the way through.
     isPlace: isPlace,
+    section: section,
   );
 
   factory ReferenceSet.fromMap(Map<String, dynamic> map) {
@@ -142,6 +155,7 @@ class ReferenceSet {
       items: items,
       isSeasonScoped: (map['is_season_scoped'] as bool?) ?? false,
       isPlace: (map['is_place'] as bool?) ?? false,
+      section: map['section'] as String?,
     );
   }
 }

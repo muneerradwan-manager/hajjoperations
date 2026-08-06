@@ -574,6 +574,55 @@ class AppLocalizationsAr extends AppLocalizations {
   String get permComplaintsDelete => 'حذف الشكاوى';
 
   @override
+  String get perm_evaluations => 'التقييمات';
+
+  @override
+  String get permEvaluationsView => 'عرض جميع التقييمات ودرجاتها';
+
+  @override
+  String get permEvaluationsTemplates => 'إنشاء نماذج التقييم وتعديلها';
+
+  @override
+  String get permEvaluationsAssign => 'فتح تقييم وتسمية من يملؤه';
+
+  @override
+  String get permEvaluationsDelete => 'حذف التقييمات';
+
+  @override
+  String get perm_incidents => 'البلاغات العاجلة';
+
+  @override
+  String get permIncidentsReceive => 'استقبال البلاغات العاجلة وقراءتها';
+
+  @override
+  String get permIncidentsHandle => 'تولّي بلاغ عاجل وإغلاقه';
+
+  @override
+  String get perm_checkin => 'تسجيل الوصول';
+
+  @override
+  String get permCheckinBoard => 'قراءة سجل دوام الجميع';
+
+  @override
+  String get permCheckinCodes => 'عرض رموز الأماكن وطباعتها ومشاركتها';
+
+  @override
+  String get permCheckinRotate => 'تجديد رمز مكان — يُبطل كل نسخة مطبوعة منه';
+
+  @override
+  String get perm_export => 'تصدير البيانات';
+
+  @override
+  String get permExportData =>
+      'تصدير أي نوع من البيانات، بما لا يستطيع فتحه على الشاشة';
+
+  @override
+  String get perm_map => 'خريطة الموسم';
+
+  @override
+  String get permMapView => 'فتح خريطة الموسم';
+
+  @override
   String permissionRequires(String names) {
     return 'يتطلب: $names';
   }
@@ -1793,6 +1842,21 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get referenceShelfPlaces => 'الأماكن';
+
+  @override
+  String get referenceShelfStructure => 'تقسيمات الملفات';
+
+  @override
+  String get referenceShelfMission => 'البعثة';
+
+  @override
+  String get referenceShelfReports => 'مدخلات التقارير';
+
+  @override
+  String get referenceShelfOther => 'أخرى';
 
   @override
   String get referenceDataTitle => 'البيانات المرجعية';
@@ -3546,7 +3610,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get checkInQrPrintingAll => 'يجري تجهيز الرموز…';
 
   @override
-  String get presenceTitle => 'من في مكانه الآن';
+  String get presenceTitle => 'سجل الدوام';
 
   @override
   String get presenceSubtitle => 'آخر تسجيلات الوصول في أماكن الموسم';

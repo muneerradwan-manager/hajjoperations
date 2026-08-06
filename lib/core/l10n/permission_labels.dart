@@ -14,6 +14,11 @@ String permissionLabel(AppLocalizations l, String code) => switch (code) {
   'permissions' => l.perm_permissions,
   'audit' => l.perm_audit,
   'complaints' => l.perm_complaints,
+  'evaluations' => l.perm_evaluations,
+  'incidents' => l.perm_incidents,
+  'checkin' => l.perm_checkin,
+  'export' => l.perm_export,
+  'map' => l.perm_map,
   // Actions
   'employees.view' => l.permEmployeesView,
   'employees.create' => l.permEmployeesCreate,
@@ -58,5 +63,21 @@ String permissionLabel(AppLocalizations l, String code) => switch (code) {
   'complaints.lock' => l.permComplaintsLock,
   'complaints.dismiss' => l.permComplaintsDismiss,
   'complaints.delete' => l.permComplaintsDelete,
+  'evaluations.view' => l.permEvaluationsView,
+  'evaluations.templates' => l.permEvaluationsTemplates,
+  'evaluations.assign' => l.permEvaluationsAssign,
+  'evaluations.delete' => l.permEvaluationsDelete,
+  'incidents.receive' => l.permIncidentsReceive,
+  'incidents.handle' => l.permIncidentsHandle,
+  'checkin.board' => l.permCheckinBoard,
+  'checkin.codes' => l.permCheckinCodes,
+  'checkin.rotate' => l.permCheckinRotate,
+  'export.data' => l.permExportData,
+  'map.view' => l.permMapView,
+  // The fallback is the CODE, and it is the reason this went unnoticed for
+  // three migrations: an unlabelled grant does not fail, it renders as
+  // `evaluations.templates` in a list of Arabic sentences and reads as
+  // something half-built. `test/permission_labels_test.dart` now walks
+  // PermissionCodes and refuses any that falls through to here.
   _ => code,
 };
