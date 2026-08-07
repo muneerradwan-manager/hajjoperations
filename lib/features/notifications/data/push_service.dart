@@ -79,6 +79,42 @@ class PushService {
     importance: Importance.high,
   );
 
+  /// The alarm channel, and the reason it is separate from [_channel].
+  ///
+  /// An urgent report (0088) and a routine posting are the same object to
+  /// Android unless they are told apart here, and one channel means they can
+  /// only ever be silenced together. A man who mutes the app because it tells
+  /// him about every circular has also muted the bus on the road to Arafat.
+  ///
+  /// So: its own channel, `Importance.max` — which is what makes Android put
+  /// the notification on screen rather than in the shade — and
+  /// [AndroidNotificationCategory.alarm], which carries it through Do Not
+  /// Disturb's "alarms only". The prayer alarms reach for the same category two
+  /// files away, for the same reason.
+  ///
+  /// Created at start-up rather than on first use. A channel is only made when
+  /// the app runs, and the message this one carries is precisely the one that
+  /// arrives when the app is NOT running — so the first alarm would land on a
+  /// channel that does not exist yet, and Android would file it under
+  /// Miscellaneous with the sound off.
+  ///
+  /// English name, deliberately, and the same argument as the prayer channels:
+  /// a channel's name is fixed at creation, so a reader who later switches the
+  /// app's language would find the old name frozen in the system settings with
+  /// no way to correct it.
+  static const _urgentChannel = AndroidNotificationChannel(
+    'incidents',
+    'Urgent reports',
+    description: 'Emergencies raised from the field. Do not silence.',
+    importance: Importance.max,
+  );
+
+  /// The value of `data.type` that makes a push an emergency. One spelling,
+  /// used by the payload `raise_incident` writes, by the Edge Function that
+  /// picks the channel, and by the foreground mirror below — three places that
+  /// must agree, and now cannot drift.
+  static const incidentType = 'incident';
+
   /// Whether there is a Firebase to talk to at all.
   ///
   /// False on a platform this project was never configured for — the app runs
@@ -132,11 +168,12 @@ class PushService {
     _local.onTap(_claimTap);
     await _local.ensureReady();
 
-    await _local.plugin
+    final android = _local.plugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.createNotificationChannel(_channel);
+        >();
+    await android?.createNotificationChannel(_channel);
+    await android?.createNotificationChannel(_urgentChannel);
 
     FirebaseMessaging.onMessage.listen(_showForeground);
     FirebaseMessaging.instance.onTokenRefresh.listen((_) => _upsertToken());
@@ -299,16 +336,23 @@ class PushService {
   void _showForeground(RemoteMessage message) {
     final n = message.notification;
     if (n == null) return;
+    // The foreground mirror has to make the same choice the server made for the
+    // background case, off the same key — otherwise an emergency that arrives
+    // while the app happens to be open is the one that comes in quietly.
+    final urgent = message.data['type'] == incidentType;
+    final channel = urgent ? _urgentChannel : _channel;
     _local.plugin.show(
       id: n.hashCode,
       title: n.title,
       body: n.body,
-      notificationDetails: const NotificationDetails(
+      notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
-          'general',
-          'General',
-          importance: Importance.high,
-          priority: Priority.high,
+          channel.id,
+          channel.name,
+          channelDescription: channel.description,
+          importance: urgent ? Importance.max : Importance.high,
+          priority: urgent ? Priority.max : Priority.high,
+          category: urgent ? AndroidNotificationCategory.alarm : null,
         ),
       ),
       // What the push was about, carried across so that this notification can

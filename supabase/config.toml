@@ -415,3 +415,15 @@ enabled = true
 # declarative_schema_path = "./database"
 # JSON string passed through to pg-delta SQL formatting.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":80,\"commaStyle\":\"trailing\"}"
+
+# The push function is called by the DATABASE as well as by signed-in users
+# (migration 0107), and the gateway's JWT check cannot let that through: a
+# Supabase publishable/secret key is not a JWT, so the trigger's call would be
+# refused before the function could look at it.
+#
+# Nothing is opened by turning it off. `send-notification` has always
+# authenticated its own caller and still does — an approved user holding the
+# grant that matches the send's shape, or a bearer of the exact service key held
+# in Vault. The gateway check was never what protected it.
+[functions.send-notification]
+verify_jwt = false

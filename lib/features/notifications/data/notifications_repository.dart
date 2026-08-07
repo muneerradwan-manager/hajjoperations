@@ -171,8 +171,6 @@ class NotificationsRepository {
       }
       await supabase.from('notification_attachments').insert(rows);
     }
-
-    await _push({'recipient_id': recipientId, 'title': title, 'body': body});
   }
 
   /// Sends to everyone holding a role anywhere in [moduleId].
@@ -198,16 +196,6 @@ class NotificationsRepository {
             as String;
 
     await _uploadAttachments(groupId, attachments);
-    await _push({
-      'topic': PushTopics.module(moduleId),
-      'title': title,
-      'body': body,
-      // The same two keys the inbox row carries, so a tap from the phone's tray
-      // arrives at the file the message is about — exactly as a tap inside the
-      // app does. `broadcast_to_module` writes them into the row; this is the
-      // copy that travels with the push, and the two have to agree.
-      'data': {'type': 'module_broadcast', 'module_id': moduleId},
-    });
   }
 
   /// Sends to every working account, or to one season's participants.
@@ -229,7 +217,6 @@ class NotificationsRepository {
             as String;
 
     await _uploadAttachments(groupId, attachments);
-    await _push({'topic': PushTopics.all, 'title': title, 'body': body});
   }
 
   /// Uploads once, under the group. Every recipient reads the same file.
@@ -267,13 +254,25 @@ class NotificationsRepository {
     await supabase.from('notification_attachments').insert(rows);
   }
 
-  /// Best effort, always: the inbox row is the source of truth and a failed
-  /// push must never lose the message.
-  Future<void> _push(Map<String, dynamic> body) async {
-    try {
-      await supabase.functions.invoke('send-notification', body: body);
-    } catch (_) {}
-  }
+  // Nothing here pushes any more, and that is the point of migration 0107.
+  //
+  // This class used to call `send-notification` itself after each of the three
+  // sends above. It worked, and it was the ONLY thing in the system that ever
+  // reached a phone — so the nine places where the DATABASE writes a
+  // notification (an incident, an escalation at 3am, a task assignment, a
+  // complaint, an evaluation, a posting) woke nobody. The inbox filled and
+  // waited to be found.
+  //
+  // A trigger on `notifications` now pushes every row, whoever wrote it, once
+  // per `group_id` — so this had to go, or every manual send would ring twice.
+  // Push became the server's job in full, which is what §17.3 always said it
+  // should be.
+  //
+  // One consequence worth stating: the push is queued when the ROW is written,
+  // which for a send carrying attachments is a moment before the upload
+  // finishes. Nothing is lost by that — the notification names its group and
+  // the inbox reads attachments when it opens, long after — but the order is no
+  // longer "attachments, then tell". It is "tell, then attachments".
 }
 
 /// The FCM topics this app uses. Kept beside the sender so the name a broadcast
