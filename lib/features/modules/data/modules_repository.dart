@@ -652,7 +652,56 @@ class ModulesRepository {
   /// `reference_set_fields` points at `reference_sets` twice — once for the set
   /// it belongs to, once for the set a reference field targets — and PostgREST
   /// rejects the embed as ambiguous.
+  /// The whole catalog, held per process for [_setsTtl].
+  ///
+  /// Nine call sites reach for this — both module cubits, both report cubits,
+  /// the reference screen and three exports — and most of them run while
+  /// moving between screens that were already showing the same names. It is
+  /// the largest read in the app by a distance, because it carries EVERY
+  /// entry of every list: `reference_items(*)`, unfiltered, deliberately.
+  ///
+  /// Deliberately, and this is worth writing down because it looks like the
+  /// obvious thing to optimise. 0040 states the rule that forbids it:
+  ///
+  ///   > the PICKER offers the entries of this season; the RESOLVER knows all.
+  ///
+  /// A tower in a 1448 file points at a 1448 hotel row, and opening that file
+  /// while 1447 is current must still print the hotel's NAME. Narrowing this
+  /// query by season would turn every older file into a screen of raw uuids —
+  /// the exact failure 0104 had to migrate its way out of. The season filter
+  /// belongs where it already is, in `ReferenceSet.itemsForSeason`, which the
+  /// pickers call and the resolvers do not.
+  ///
+  /// So the fix for the size is not to fetch less of it. It is to fetch it
+  /// less often.
+  static List<ReferenceSet>? _setsCache;
+  static DateTime? _setsFetchedAt;
+  static const _setsTtl = Duration(minutes: 5);
+
+  /// Drops the cached catalog, so the next read goes to the server.
+  ///
+  /// Called by every write below. A time-to-live alone is right for the report
+  /// catalog next door — nobody edits report types from inside the app — but
+  /// these lists are typed IN the app, on a screen whose whole purpose is
+  /// editing them. Waiting up to five minutes to see the hotel you just added
+  /// is not a stale cache, it is a screen that ignored you.
+  static void invalidateReferenceSets() {
+    _setsCache = null;
+    _setsFetchedAt = null;
+  }
+
   Future<List<ReferenceSet>> fetchReferenceSets({bool activeOnly = true}) async {
+    // Cached whole and filtered after, never the other way round: `activeOnly`
+    // is a view of the same catalog, and caching the two variants separately
+    // would double the reads it exists to avoid — and let them disagree.
+    final cache = _setsCache;
+    final at = _setsFetchedAt;
+    if (cache != null &&
+        at != null &&
+        DateTime.now().difference(at) < _setsTtl) {
+      return _applyActiveOnly(cache, activeOnly);
+    }
+
     final rows = await supabase
         .from('reference_sets')
         .select('*, reference_items(*)')
@@ -676,6 +725,19 @@ class ModulesRepository {
           }),
         )
         .toList();
+
+    // The FULL catalog is what is kept — retired entries included. They are a
+    // view away for a caller that wants them, and a resolver reading an older
+    // file needs the entry that was retired last season to still have a name.
+    _setsCache = sets;
+    _setsFetchedAt = DateTime.now();
+    return _applyActiveOnly(sets, activeOnly);
+  }
+
+  static List<ReferenceSet> _applyActiveOnly(
+    List<ReferenceSet> sets,
+    bool activeOnly,
+  ) {
     if (!activeOnly) return sets;
     return [
       for (final s in sets)
@@ -704,6 +766,7 @@ class ModulesRepository {
         'p_to_season': toSeasonId,
       },
     );
+    invalidateReferenceSets();
     return (copied as num?)?.toInt() ?? 0;
   }
 
@@ -724,6 +787,11 @@ class ModulesRepository {
       'copy_module_sectors',
       params: {'p_from_module': fromModuleId, 'p_to_module': toModuleId},
     );
+    // Sectors have been reference entries since 0095, so copying them into
+    // another file writes rows this cache holds. Invalidated even though the
+    // call reads as being about nodes — the cheap wrong answer here is a
+    // picker that cannot see the sector somebody just imported.
+    invalidateReferenceSets();
     return (copied as num?)?.toInt() ?? 0;
   }
 
@@ -742,6 +810,7 @@ class ModulesRepository {
       // Null for a set that is not season-scoped — a city belongs to no year.
       'season_id': seasonId,
     });
+    invalidateReferenceSets();
   }
 
   Future<void> updateReferenceItem({
@@ -758,6 +827,7 @@ class ModulesRepository {
           'data': data,
         })
         .eq('id', id);
+    invalidateReferenceSets();
   }
 
   /// Deletes an entry outright. A database trigger refuses the delete when a
@@ -765,6 +835,7 @@ class ModulesRepository {
   /// built from cannot vanish underneath it.
   Future<void> deleteReferenceItem(String id) async {
     await supabase.from('reference_items').delete().eq('id', id);
+    invalidateReferenceSets();
   }
 
   // -------------------------------------------------------------- storage

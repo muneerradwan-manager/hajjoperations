@@ -101,13 +101,26 @@ class _AppViewState extends State<_AppView> {
   /// on screen, and only then, because it is the inbox that knows how to open
   /// what the notification was about — and how to say so honestly when the file
   /// has since been deleted.
+  ///
+  /// It arrives via the HOME PAGE, and that is not a detour.
+  ///
+  /// `go` REPLACES the stack. Sent straight to the inbox, a cold start from a
+  /// tap produced a single page with nothing underneath it — so the back
+  /// gesture, the one every reader tries first, left the app entirely. Whoever
+  /// was woken at 3am by an urgent report read it, pressed back, and was on
+  /// their launcher: to get anywhere in the app they had to open it again.
+  ///
+  /// So the stack is built rather than jumped to: home, then the inbox on top
+  /// of it. Back now means back, and the app the notification opened is the app
+  /// they are left standing in.
   void _deliverTap() {
     if (!mounted) return;
     if (PushService.instance.pendingTap.value == null) return;
     if (context.read<SessionCubit>().state.status != SessionStatus.approved) {
       return;
     }
-    _router.go(Routes.notifications);
+    _router.go(Routes.home);
+    _router.push(Routes.notifications);
   }
 
   @override
