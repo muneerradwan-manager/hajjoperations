@@ -3674,6 +3674,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get presenceEmpty => 'Nobody has checked in yet';
 
   @override
+  String get presenceTabPresent => 'Present';
+
+  @override
+  String get presenceTabGaps => 'Not checked in';
+
+  @override
+  String get presenceGapsEmpty => 'Every post is confirmed';
+
+  @override
+  String get presenceGapsEmptyHint =>
+      'No post at a place is without a check-in within the chosen window';
+
+  @override
+  String get presenceGapNeverSeen => 'Never checked in';
+
+  @override
+  String presenceGapLastSeen(String time) {
+    return 'Last seen $time';
+  }
+
+  @override
+  String presenceGapCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count posts',
+      one: '1 post',
+      zero: 'none',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get presenceEmptyHint =>
       'Whoever scans a place code while standing at it appears here';
 

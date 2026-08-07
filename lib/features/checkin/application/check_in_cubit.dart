@@ -19,6 +19,8 @@ class PresenceState extends Equatable {
   const PresenceState({
     this.status = PresenceStatus.loading,
     this.lines = const [],
+    this.gaps = const [],
+    this.showingGaps = false,
     this.hiddenGroups = const {},
     this.window = const Duration(hours: 12),
     this.query = '',
@@ -27,6 +29,18 @@ class PresenceState extends Equatable {
 
   final PresenceStatus status;
   final List<PresenceLine> lines;
+
+  /// Posts that are manned on paper and unconfirmed in the world.
+  ///
+  /// Held beside [lines] rather than on a screen of their own, because they are
+  /// the same fact read from the other side and the room switches between the
+  /// two questions constantly: "who is in this hotel" and "who should be and
+  /// is not" are asked one after the other, by the same person, about the same
+  /// place, inside the same minute.
+  final List<PresenceGap> gaps;
+
+  /// Which of the two the board is currently showing.
+  final bool showingGaps;
 
   /// Held as what is HIDDEN, for the reason the map holds it that way: a group
   /// that appears later — a مشعر used for the first time this morning — must
@@ -80,9 +94,32 @@ class PresenceState extends Equatable {
 
   int get showing => byPlace.fold(0, (n, g) => n + g.lines.length);
 
+  /// The gaps as they are read: worst first, which the database already
+  /// ordered them by — never seen, then longest quiet. The only thing done to
+  /// them here is the search box, and deliberately not the group filter: a
+  /// group is derived from a check-in's place on the board, and a man who has
+  /// never checked in has no such row to derive one from. Hiding him by a
+  /// filter he cannot be measured against is how an absence disappears twice.
+  List<PresenceGap> get shownGaps {
+    final q = query.trim().toLowerCase();
+    if (q.isEmpty) return gaps;
+    return [
+      for (final gap in gaps)
+        if (gap.fullName.toLowerCase().contains(q) ||
+            gap.placeName.toLowerCase().contains(q))
+          gap,
+    ];
+  }
+
+  /// How many posts are unconfirmed — the number the toggle carries, and the
+  /// one worth seeing before deciding which half of the board to read.
+  int get gapCount => gaps.length;
+
   PresenceState copyWith({
     PresenceStatus? status,
     List<PresenceLine>? lines,
+    List<PresenceGap>? gaps,
+    bool? showingGaps,
     Set<String>? hiddenGroups,
     Duration? window,
     String? query,
@@ -90,6 +127,8 @@ class PresenceState extends Equatable {
   }) => PresenceState(
     status: status ?? this.status,
     lines: lines ?? this.lines,
+    gaps: gaps ?? this.gaps,
+    showingGaps: showingGaps ?? this.showingGaps,
     hiddenGroups: hiddenGroups ?? this.hiddenGroups,
     window: window ?? this.window,
     query: query ?? this.query,
@@ -100,6 +139,8 @@ class PresenceState extends Equatable {
   List<Object?> get props => [
     status,
     lines,
+    gaps,
+    showingGaps,
     hiddenGroups,
     window,
     query,
@@ -125,17 +166,34 @@ class PresenceCubit extends SafeCubit<PresenceState> {
 
   Future<void> load() async {
     try {
-      final lines = await _repo.fetchPresence(
-        since: DateTime.now().subtract(state.window),
-        itemId: itemId,
+      // Both halves, together. The window means the same thing to each — "seen
+      // within this" and "not seen within this" — so reading them apart would
+      // let one be a few seconds older than the other and let a name appear on
+      // both at once, which is the one thing a board like this must never do.
+      final both = await Future.wait([
+        _repo.fetchPresence(
+          since: DateTime.now().subtract(state.window),
+          itemId: itemId,
+        ),
+        _repo.fetchGaps(within: state.window, itemId: itemId),
+      ]);
+      emit(
+        state.copyWith(
+          status: PresenceStatus.ready,
+          lines: both[0] as List<PresenceLine>,
+          gaps: both[1] as List<PresenceGap>,
+        ),
       );
-      emit(state.copyWith(status: PresenceStatus.ready, lines: lines));
     } catch (e) {
       emit(state.copyWith(status: PresenceStatus.error, error: e.toString()));
     }
   }
 
   void setQuery(String value) => emit(state.copyWith(query: value));
+
+  /// Turns the board over. No re-read: both halves are already in hand, and a
+  /// spinner between two answers to the same question reads as two screens.
+  void showGaps(bool value) => emit(state.copyWith(showingGaps: value));
 
   Future<void> setWindow(Duration value) async {
     emit(state.copyWith(window: value));

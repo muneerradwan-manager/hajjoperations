@@ -13,6 +13,8 @@ import '../../../core/widgets/states.dart';
 import '../application/check_in_cubit.dart';
 import '../data/check_in_repository.dart';
 import '../domain/check_in.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../core/widgets/info_section.dart';
 
 /// Who is present, across the whole season.
 ///
@@ -66,6 +68,7 @@ class _View extends StatelessWidget {
           }
 
           final places = state.byPlace;
+          final gaps = state.shownGaps;
 
           return ResponsivePage(
             builder: (context, size) => Column(
@@ -80,8 +83,24 @@ class _View extends StatelessWidget {
                   ),
                   child: _Filters(state: state, cubit: cubit),
                 ),
+                // The board turns over rather than opening a second screen.
+                // "Who is in this hotel" and "who should be and is not" are
+                // asked one after the other, by the same person, about the same
+                // place, inside the same minute — and the count rides on the
+                // tab because seeing that it is zero is often the whole errand.
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    size.gutter,
+                    AppSpacing.sm,
+                    size.gutter,
+                    0,
+                  ),
+                  child: _SideToggle(state: state, cubit: cubit),
+                ),
                 Expanded(
-                  child: places.isEmpty
+                  child: state.showingGaps
+                      ? _GapsList(gaps: gaps, gutter: size.gutter, onRefresh: cubit.load)
+                      : places.isEmpty
                       ? EmptyState(
                           icon: AppIcons.checkIn,
                           title: l.presenceEmpty,
@@ -298,6 +317,189 @@ class _Line extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Which side of the board is showing.
+///
+/// A segmented control rather than tabs: there are exactly two, they are
+/// answers to one question, and the count on the second is the reason anybody
+/// presses it. Tabs would put that count in a bar the reader has to look up at;
+/// here it is on the thing they are deciding whether to press.
+class _SideToggle extends StatelessWidget {
+  const _SideToggle({required this.state, required this.cubit});
+
+  final PresenceState state;
+  final PresenceCubit cubit;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final gaps = state.gapCount;
+
+    return SegmentedButton<bool>(
+      segments: [
+        ButtonSegment(
+          value: false,
+          icon: const Icon(AppIcons.checkIn, size: 16),
+          label: Text(l.presenceTabPresent),
+        ),
+        ButtonSegment(
+          value: true,
+          // Coloured only when there is something to colour. A permanent red
+          // badge reading zero teaches the reader that the colour means
+          // nothing, which is exactly what it must not mean the morning it
+          // reads eleven.
+          icon: Icon(
+            AppIcons.warning,
+            size: 16,
+            color: gaps > 0 ? scheme.error : null,
+          ),
+          label: Text(
+            gaps > 0 ? '${l.presenceTabGaps} ($gaps)' : l.presenceTabGaps,
+          ),
+        ),
+      ],
+      selected: {state.showingGaps},
+      showSelectedIcon: false,
+      onSelectionChanged: (s) => cubit.showGaps(s.first),
+    );
+  }
+}
+
+/// The posts nobody has confirmed, worst first.
+///
+/// Ordered by the database — never seen, then longest quiet — and left in that
+/// order here. The top of this list is where the room starts telephoning.
+class _GapsList extends StatelessWidget {
+  const _GapsList({
+    required this.gaps,
+    required this.gutter,
+    required this.onRefresh,
+  });
+
+  final List<PresenceGap> gaps;
+  final double gutter;
+  final Future<void> Function() onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+
+    if (gaps.isEmpty) {
+      return EmptyState(
+        icon: AppIcons.checkIn,
+        title: l.presenceGapsEmpty,
+        message: l.presenceGapsEmptyHint,
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: ListView.builder(
+        padding: EdgeInsets.fromLTRB(
+          gutter,
+          AppSpacing.md,
+          gutter,
+          AppSpacing.xxl + MediaQuery.viewPaddingOf(context).bottom,
+        ),
+        itemCount: gaps.length,
+        itemBuilder: (context, i) => FadeSlideIn(
+          delay: Duration(milliseconds: 30 * (i < 8 ? i : 8)),
+          child: _GapCard(gap: gaps[i]),
+        ),
+      ),
+    );
+  }
+}
+
+/// One unconfirmed post, and the telephone that answers it.
+class _GapCard extends StatelessWidget {
+  const _GapCard({required this.gap});
+
+  final PresenceGap gap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+
+    // Never seen is the sharper of the two and is coloured as such. A man nine
+    // hours quiet may be asleep after a night shift; a man who has never
+    // checked in at all may never have been given the code, which is a thing
+    // somebody has to go and fix rather than a thing to wonder about.
+    final never = gap.neverSeen;
+    final when = never
+        ? l.presenceGapNeverSeen
+        : l.presenceGapLastSeen(
+            DateFormat(
+              'MM/dd HH:mm',
+              Localizations.localeOf(context).toString(),
+            ).format(gap.lastSeen!),
+          );
+
+    final phone = gap.phoneSa?.trim().isNotEmpty == true
+        ? gap.phoneSa!
+        : (gap.phoneSy ?? '');
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: GlassCard(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(gap.fullName, style: text.titleSmall),
+                  const SizedBox(height: 2),
+                  Text(
+                    [
+                      gap.placeName,
+                      if (gap.roleName case final r? when r.isNotEmpty) r,
+                    ].join(' · '),
+                    style: text.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    when,
+                    style: text.labelSmall?.copyWith(
+                      color: never ? scheme.error : scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // The telephone, because every row here is a name somebody is about
+            // to ring. Absent when there is no number rather than drawn dead:
+            // a button that does nothing is worse than no button.
+            if (phone.isNotEmpty) ...[
+              const SizedBox(width: AppSpacing.sm),
+              if (InfoAction.whatsAppUri(phone) case final uri?)
+                IconButton(
+                  tooltip: context.l10n.contactWhatsApp,
+                  onPressed: () =>
+                      launchUrl(uri, mode: LaunchMode.externalApplication),
+                  icon: const Icon(AppIcons.whatsApp),
+                  color: scheme.primary,
+                ),
+              IconButton(
+                tooltip: l.incidentCall,
+                onPressed: () => launchUrl(InfoAction.call.uriFor(phone)),
+                icon: const Icon(AppIcons.phoneSy),
+                color: scheme.primary,
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

@@ -6470,6 +6470,48 @@ abstract class AppLocalizations {
   /// **'Nobody has checked in yet'**
   String get presenceEmpty;
 
+  /// No description provided for @presenceTabPresent.
+  ///
+  /// In en, this message translates to:
+  /// **'Present'**
+  String get presenceTabPresent;
+
+  /// No description provided for @presenceTabGaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Not checked in'**
+  String get presenceTabGaps;
+
+  /// No description provided for @presenceGapsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Every post is confirmed'**
+  String get presenceGapsEmpty;
+
+  /// No description provided for @presenceGapsEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No post at a place is without a check-in within the chosen window'**
+  String get presenceGapsEmptyHint;
+
+  /// No description provided for @presenceGapNeverSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'Never checked in'**
+  String get presenceGapNeverSeen;
+
+  /// No description provided for @presenceGapLastSeen.
+  ///
+  /// In en, this message translates to:
+  /// **'Last seen {time}'**
+  String presenceGapLastSeen(String time);
+
+  /// No description provided for @presenceGapCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{none} =1{1 post} other{{count} posts}}'**
+  String presenceGapCount(int count);
+
   /// No description provided for @presenceEmptyHint.
   ///
   /// In en, this message translates to:

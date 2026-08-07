@@ -23,6 +23,21 @@ void main() {
   /// layers below actually produce. See `network_error.dart`.
   Object networkDown() => const SocketException('Failed host lookup');
 
+  /// Retries [read] until it answers with something, or gives up.
+  ///
+  /// For the one thing here that happens off the caller's timeline. Returns
+  /// null on timeout rather than throwing, so the failure is reported by the
+  /// expectation that asked — with its own reason — instead of by a helper.
+  Future<T?> eventually<T>(Future<T?> Function() read) async {
+    final deadline = DateTime.now().add(const Duration(seconds: 5));
+    while (DateTime.now().isBefore(deadline)) {
+      final value = await read();
+      if (value != null) return value;
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+    }
+    return null;
+  }
+
   group('the fallback', () {
     test('a live read is served live, and kept', () async {
       final read = await readWithSnapshot(
@@ -37,9 +52,13 @@ void main() {
       expect(read.savedAt, isNull, reason: 'a live read is not a saved copy');
       expect(read.isStale, isFalse);
 
-      // The keeping is unawaited, so it lands a microtask later.
-      await Future<void>.delayed(Duration.zero);
-      expect(await Snapshots.instance!.get('k'), isNotNull);
+      // Polled rather than slept past, and the distinction is the design under
+      // test: the write is deliberately NOT awaited, so that a slow disk cannot
+      // delay a live answer. A single `Duration.zero` yield passed this file on
+      // its own and failed inside the full suite, where the disk is contended —
+      // which was the test guessing at a duration the code promises nothing
+      // about. This waits for the fact instead.
+      expect(await eventually(() => Snapshots.instance!.get('k')), isNotNull);
     });
 
     test('a network failure is served from the kept answer, with its time', () async {

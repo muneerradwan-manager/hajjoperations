@@ -68,6 +68,30 @@ class CheckInRepository {
     ];
   }
 
+  /// Who is NOT where they are posted — the same fact from the other side.
+  ///
+  /// [within] is what "recently" means, and it defaults on the SERVER rather
+  /// than here so this screen and the board cannot come to disagree about it:
+  /// both leave it off and both get twelve hours.
+  ///
+  /// Postgres has no `interval` in JSON, so it travels as the string it parses
+  /// from — `'8 hours'`. Built from the number rather than handed in as free
+  /// text, because an interval that arrives as a sentence is one an interface
+  /// can get wrong in a way the type system cannot see.
+  Future<List<PresenceGap>> fetchGaps({Duration? within, String? itemId}) async {
+    final rows = await supabase.rpc(
+      'presence_gaps',
+      params: {
+        'p_within': within == null ? null : '${within.inMinutes} minutes',
+        'p_item_id': itemId,
+      },
+    );
+    return [
+      for (final row in (rows as List).cast<Map<String, dynamic>>())
+        PresenceGap.fromMap(row),
+    ];
+  }
+
   /// The code fixed to one place, with everything a poster needs.
   ///
   /// Refused outright for anybody without `checkin.codes` — the secret is

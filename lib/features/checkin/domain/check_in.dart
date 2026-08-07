@@ -255,3 +255,81 @@ class PresenceLine {
   final String? note;
   final DateTime createdAt;
 }
+
+/// A post that is manned on paper and unconfirmed in the world.
+///
+/// The exact inverse of [PresenceLine], and the one the operations room acts
+/// on. A board of arrivals is read by looking for a name and failing to find
+/// it, which works with eleven names and is a census with four hundred —
+/// nobody notices an absence by scanning a list of presences.
+///
+/// Every field here except [lastSeen] describes a POSTING: who holds which role
+/// at which place, in which file. The posting is what makes somebody expected;
+/// it is deliberately NOT what makes them allowed to check in, which 0098
+/// settled the other way. A man covering for a colleague appears on the board
+/// and is not what this list is looking for — it asks after empty posts, not
+/// after strangers.
+class PresenceGap {
+  const PresenceGap({
+    required this.profileId,
+    required this.fullName,
+    required this.itemId,
+    required this.placeName,
+    this.phoneSy,
+    this.phoneSa,
+    this.setCode,
+    this.moduleId,
+    this.moduleName,
+    this.nodeLabel,
+    this.roleName,
+    this.lastSeen,
+  });
+
+  factory PresenceGap.fromMap(Map<String, dynamic> map) => PresenceGap(
+    profileId: map['profile_id'] as String,
+    fullName: (map['full_name'] as String?) ?? '',
+    itemId: map['item_id'] as String,
+    placeName: (map['place_name'] as String?) ?? '',
+    phoneSy: map['phone_sy'] as String?,
+    phoneSa: map['phone_sa'] as String?,
+    setCode: map['set_code'] as String?,
+    moduleId: map['module_id'] as String?,
+    moduleName: map['module_name'] as String?,
+    nodeLabel: map['node_label'] as String?,
+    roleName: map['role_name'] as String?,
+    lastSeen: switch (map['last_seen']) {
+      final String at => DateTime.tryParse(at)?.toLocal(),
+      _ => null,
+    },
+  );
+
+  final String profileId;
+  final String fullName;
+
+  /// Both numbers, because every row here is a name somebody is about to ring.
+  /// A list that made the reader go and look each one up in the directory would
+  /// be adding a step to the only action it exists to provoke.
+  final String? phoneSy;
+  final String? phoneSa;
+
+  final String itemId;
+  final String placeName;
+  final String? setCode;
+
+  /// Which file the posting is in, and what the post is called there.
+  final String? moduleId;
+  final String? moduleName;
+  final String? nodeLabel;
+  final String? roleName;
+
+  /// When he was last seen at THIS place, or null if he never has been.
+  ///
+  /// The two are one answer to "is this post manned" and are still worth
+  /// telling apart, which is why this is a nullable time rather than a
+  /// duration: a man who checked in at dawn and is nine hours quiet is a
+  /// telephone call, and a man who has never checked in at all may simply never
+  /// have been given the code.
+  final DateTime? lastSeen;
+
+  bool get neverSeen => lastSeen == null;
+}

@@ -3688,6 +3688,42 @@ class AppLocalizationsAr extends AppLocalizations {
   String get presenceEmpty => 'لم يسجّل أحد وصوله بعد';
 
   @override
+  String get presenceTabPresent => 'الحاضرون';
+
+  @override
+  String get presenceTabGaps => 'لم يسجّلوا';
+
+  @override
+  String get presenceGapsEmpty => 'كل موقع مؤكَّد';
+
+  @override
+  String get presenceGapsEmptyHint =>
+      'لا منصب على مكان بلا تسجيل خلال المدة المختارة';
+
+  @override
+  String get presenceGapNeverSeen => 'لم يسجّل قط';
+
+  @override
+  String presenceGapLastSeen(String time) {
+    return 'آخر تسجيل $time';
+  }
+
+  @override
+  String presenceGapCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count موقع',
+      many: '$count موقعاً',
+      few: '$count مواقع',
+      two: 'موقعان',
+      one: 'موقع واحد',
+      zero: 'لا شيء',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get presenceEmptyHint => 'يظهر هنا من مسح رمز مكان وهو واقف عنده';
 
   @override
