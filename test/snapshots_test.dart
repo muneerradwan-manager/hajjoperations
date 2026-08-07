@@ -16,7 +16,20 @@ void main() {
 
   tearDown(() async {
     Snapshots.instance = null;
-    if (temp.existsSync()) await temp.delete(recursive: true);
+    // Best effort, and the failure it swallows is Windows-specific and real:
+    // the write under test is deliberately NOT awaited, so a `put` can still
+    // hold its file open when the test ends — and Windows refuses to delete a
+    // directory containing an open handle (`errno 32`). That surfaced as this
+    // file passing alone and failing about two runs in three inside the full
+    // suite, reported against whichever test happened to be running.
+    //
+    // A scratch directory the operating system declined to remove says nothing
+    // about the code, and systemTemp is the operating system's to sweep.
+    try {
+      if (temp.existsSync()) await temp.delete(recursive: true);
+    } on FileSystemException {
+      // Left for the OS.
+    }
   });
 
   /// A failure that reads like the network, in one of the several shapes the

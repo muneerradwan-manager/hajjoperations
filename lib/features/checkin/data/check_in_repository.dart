@@ -1,3 +1,4 @@
+import '../../../core/offline/snapshots.dart';
 import '../../../core/supabase/supabase_client.dart';
 import '../domain/check_in.dart';
 
@@ -66,6 +67,78 @@ class CheckInRepository {
       for (final row in (rows as List).cast<Map<String, dynamic>>())
         _lineFromRow(row),
     ];
+  }
+
+  /// My own arrivals, every one of them, newest first.
+  ///
+  /// Read straight off the table rather than through `presence_board`, and for
+  /// two reasons that both matter. The board answers "where is he" — one row
+  /// per person per place, `distinct on` — and a personal record is the other
+  /// question 0098 named and did not answer: everywhere I have been. Collapsing
+  /// my own history to the latest visit per hotel would delete exactly what a
+  /// record is for.
+  ///
+  /// And no permission is involved. `place_check_ins`'s own policy opens with
+  /// `profile_id = auth.uid()`, and §30.3 states it: "your own check-ins,
+  /// always, without a grant". That right has existed since 0098 and until now
+  /// the app had nowhere to spend it — the only screen that read this table was
+  /// the room's board, behind `checkin.board`.
+  ///
+  /// Kept for reading with no signal, keyed by person: this is a record
+  /// consulted standing somewhere, which is where the network is not.
+  Future<Cached<List<PresenceLine>>> fetchMyCheckIns({
+    DateTime? since,
+    String? itemId,
+  }) async {
+    final me = supabase.auth.currentUser?.id;
+    if (me == null) return const Cached([]);
+
+    return readWithSnapshot(
+      key: 'checkins.mine.$me',
+      fetch: () {
+        var query = supabase
+            .from('place_check_ins')
+            .select(
+              '*, reference_items!inner('
+              'name_ar, reference_sets!inner(code, name_ar))',
+            )
+            .eq('profile_id', me);
+        if (since != null) {
+          query = query.gte('created_at', since.toUtc().toIso8601String());
+        }
+        if (itemId != null) query = query.eq('item_id', itemId);
+        return query.order('created_at', ascending: false);
+      },
+      parse: (rows) => [
+        for (final row in ((rows as List?) ?? const [])
+            .cast<Map<String, dynamic>>())
+          _mineFromRow(row),
+      ],
+    );
+  }
+
+  /// The embedded shape of the row above, flattened into the same object the
+  /// board draws — so one card widget serves both screens.
+  PresenceLine _mineFromRow(Map<String, dynamic> row) {
+    final place = (row['reference_items'] as Map?)?.cast<String, dynamic>();
+    final set = (place?['reference_sets'] as Map?)?.cast<String, dynamic>();
+    return PresenceLine(
+      id: row['id'] as String,
+      profileId: row['profile_id'] as String,
+      // Deliberately empty. This is the reader's own record and every row on it
+      // is theirs; printing their name on each one is noise where the PLACE is
+      // the fact.
+      fullName: '',
+      itemId: row['item_id'] as String,
+      placeName: (place?['name_ar'] as String?) ?? '',
+      setCode: set?['code'] as String?,
+      setName: set?['name_ar'] as String?,
+      distanceM: (row['distance_m'] as num).toDouble(),
+      accuracyM: (row['accuracy_m'] as num?)?.toDouble(),
+      radiusM: (row['radius_m'] as num).toDouble(),
+      note: row['note'] as String?,
+      createdAt: DateTime.parse(row['created_at'] as String).toLocal(),
+    );
   }
 
   /// Who is NOT where they are posted — the same fact from the other side.

@@ -3664,6 +3664,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checkInQrPrintingAll => 'Preparing the codes…';
 
   @override
+  String get myCheckInsTitle => 'My attendance';
+
+  @override
+  String get myCheckInsEmpty => 'You have not checked in yet';
+
+  @override
+  String get myCheckInsEmptyHint =>
+      'Scan a place code while standing at it and it appears here';
+
+  @override
+  String get myCheckInsWindowDay => 'Today';
+
+  @override
+  String get myCheckInsWindowWeek => 'This week';
+
+  @override
+  String get myCheckInsWindowAll => 'All';
+
+  @override
+  String get myCheckInsAllPlaces => 'All places';
+
+  @override
+  String myCheckInsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count check-ins',
+      one: '1 check-in',
+      zero: 'no check-ins',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get presenceTitle => 'Attendance record';
 
   @override

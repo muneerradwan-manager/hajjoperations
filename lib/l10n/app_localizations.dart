@@ -6452,6 +6452,54 @@ abstract class AppLocalizations {
   /// **'Preparing the codes…'**
   String get checkInQrPrintingAll;
 
+  /// No description provided for @myCheckInsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My attendance'**
+  String get myCheckInsTitle;
+
+  /// No description provided for @myCheckInsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You have not checked in yet'**
+  String get myCheckInsEmpty;
+
+  /// No description provided for @myCheckInsEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan a place code while standing at it and it appears here'**
+  String get myCheckInsEmptyHint;
+
+  /// No description provided for @myCheckInsWindowDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get myCheckInsWindowDay;
+
+  /// No description provided for @myCheckInsWindowWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get myCheckInsWindowWeek;
+
+  /// No description provided for @myCheckInsWindowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get myCheckInsWindowAll;
+
+  /// No description provided for @myCheckInsAllPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'All places'**
+  String get myCheckInsAllPlaces;
+
+  /// No description provided for @myCheckInsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{no check-ins} =1{1 check-in} other{{count} check-ins}}'**
+  String myCheckInsCount(int count);
+
   /// No description provided for @presenceTitle.
   ///
   /// In en, this message translates to:

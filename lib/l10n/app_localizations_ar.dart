@@ -3679,6 +3679,42 @@ class AppLocalizationsAr extends AppLocalizations {
   String get checkInQrPrintingAll => 'يجري تجهيز الرموز…';
 
   @override
+  String get myCheckInsTitle => 'سجلّ حضوري';
+
+  @override
+  String get myCheckInsEmpty => 'لم تسجّل وصولك بعد';
+
+  @override
+  String get myCheckInsEmptyHint => 'امسح رمز مكان وأنت واقف عنده، فيظهر هنا';
+
+  @override
+  String get myCheckInsWindowDay => 'اليوم';
+
+  @override
+  String get myCheckInsWindowWeek => 'الأسبوع';
+
+  @override
+  String get myCheckInsWindowAll => 'الكل';
+
+  @override
+  String get myCheckInsAllPlaces => 'كل الأماكن';
+
+  @override
+  String myCheckInsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تسجيل',
+      many: '$count تسجيلاً',
+      few: '$count تسجيلات',
+      two: 'تسجيلان',
+      one: 'تسجيل واحد',
+      zero: 'لا تسجيل',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get presenceTitle => 'سجل الدوام';
 
   @override

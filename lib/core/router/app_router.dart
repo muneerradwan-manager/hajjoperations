@@ -16,6 +16,7 @@ import '../../features/evaluations/presentation/evaluation_forms_screen.dart';
 import '../../features/evaluations/presentation/evaluations_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/checkin/presentation/check_in_screen.dart';
+import '../../features/checkin/presentation/my_check_ins_screen.dart';
 import '../../features/checkin/presentation/presence_board_screen.dart';
 import '../../features/incidents/presentation/incidents_screen.dart';
 import '../../features/map/presentation/season_map_screen.dart';
@@ -103,6 +104,13 @@ abstract class Routes {
   /// a system that does not know where anybody is. What stands in the way is
   /// physical — the code on the wall and the phone's position — not a grant.
   static const checkIn = '/check-in';
+
+  /// My own arrivals. Unguarded, and that is not an oversight repeated from
+  /// [checkIn] — it is a right the database already grants: `place_check_ins`
+  /// opens its policy with `profile_id = auth.uid()`, so a person reading their
+  /// own record needs nothing from anybody. Until this route existed the app
+  /// had no way to spend that right.
+  static const myCheckIns = '/check-in/mine';
 
   /// Who is present, everywhere. Guarded — see [_sectionGuards]. Reading your
   /// OWN arrivals never needed a grant and still does not; this is the room's
@@ -353,6 +361,11 @@ GoRouter buildRouter(SessionCubit session) {
         path: Routes.checkIn,
         pageBuilder: (c, s) =>
             fadeThroughPage(key: s.pageKey, child: const CheckInScreen()),
+      ),
+      GoRoute(
+        path: Routes.myCheckIns,
+        pageBuilder: (c, s) =>
+            fadeThroughPage(key: s.pageKey, child: const MyCheckInsScreen()),
       ),
       GoRoute(
         path: Routes.presence,

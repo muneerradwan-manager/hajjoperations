@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/animations/animations.dart';
 import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/blocking_progress.dart';
@@ -89,7 +91,19 @@ class _CheckInScreenState extends State<CheckInScreen> {
     final l = context.l10n;
 
     return Scaffold(
-      appBar: GlassAppBar(title: Text(l.checkInTitle)),
+      appBar: GlassAppBar(
+        title: Text(l.checkInTitle),
+        // The record sits behind the act, which is where it is looked for: a
+        // man wondering whether last night's scan registered is standing on
+        // this screen about to scan again.
+        actions: [
+          IconButton(
+            tooltip: l.myCheckInsTitle,
+            onPressed: () => context.push(Routes.myCheckIns),
+            icon: const Icon(AppIcons.auditLog),
+          ),
+        ],
+      ),
       body: ResponsivePage(
         maxWidth: 520,
         builder: (context, size) => SinglePaneLayout(

@@ -86,7 +86,11 @@ create or replace function presence_gaps(
          ri.name_ar,
          rs.code,
          m.id,
-         coalesce(m.name, mt.name_ar),
+         -- The TYPE's name, and there is nothing else it could be: a file has
+         -- no name of its own. 0024 dropped `modules.title` when it settled the
+         -- rule that there is one file of a kind per season — so the kind IS
+         -- the identity, and `raise_incident` names a file the same way.
+         mt.name_ar,
          coalesce(n.label, ri.name_ar),
          r.name_ar,
          seen.created_at
