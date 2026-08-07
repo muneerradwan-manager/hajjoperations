@@ -46,7 +46,10 @@ class EvaluationFormsScreen extends StatelessWidget {
 class _View extends StatelessWidget {
   const _View();
 
-  Future<void> _edit(BuildContext context, [EvaluationFormSummary? form]) async {
+  Future<void> _edit(
+    BuildContext context, [
+    EvaluationFormSummary? form,
+  ]) async {
     final cubit = context.read<EvaluationFormsCubit>();
     await Navigator.of(context).push<bool>(
       fadeThroughRoute(
@@ -74,10 +77,7 @@ class _View extends StatelessWidget {
 
   /// Opening an evaluation on this form. The form is settled before the screen
   /// appears, so the first thing it asks about is the subject.
-  Future<void> _assign(
-    BuildContext context,
-    EvaluationFormSummary form,
-  ) async {
+  Future<void> _assign(BuildContext context, EvaluationFormSummary form) async {
     final l = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     final cubit = context.read<EvaluationFormsCubit>();
@@ -165,10 +165,7 @@ class _View extends StatelessWidget {
     }
   }
 
-  Future<void> _delete(
-    BuildContext context,
-    EvaluationFormSummary form,
-  ) async {
+  Future<void> _delete(BuildContext context, EvaluationFormSummary form) async {
     final l = context.l10n;
     final cubit = context.read<EvaluationFormsCubit>();
     final messenger = ScaffoldMessenger.of(context);
@@ -310,13 +307,6 @@ class _View extends StatelessWidget {
                           title: state.isNarrowed
                               ? l.evaluationsNoMatches
                               : l.evaluationFormsEmpty,
-                          action: state.isNarrowed || !canEdit
-                              ? null
-                              : FilledButton.icon(
-                                  onPressed: () => _edit(context),
-                                  icon: const Icon(AppIcons.add),
-                                  label: Text(l.evaluationFormsNew),
-                                ),
                         )
                       : ResponsivePage(
                           maxWidth: 1200,
@@ -460,7 +450,10 @@ class _FormCard extends StatelessWidget {
                   icon: const Icon(AppIcons.more),
                   itemBuilder: (_) => [
                     PopupMenuItem(value: 0, child: Text(l.commonEdit)),
-                    PopupMenuItem(value: 1, child: Text(l.evaluationFormDelete)),
+                    PopupMenuItem(
+                      value: 1,
+                      child: Text(l.evaluationFormDelete),
+                    ),
                   ],
                   onSelected: (v) => switch (v) {
                     0 => onOpen(),

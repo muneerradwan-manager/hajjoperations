@@ -30,6 +30,8 @@
   "settingsNotifications": "إشعارات هذا الجهاز",
   "settingsNotificationsHint": "إيقافها يوقف تنبيه الجهاز فقط — الإشعارات تبقى تصلك داخل التطبيق",
   "settingsLogoutConfirm": "تسجيل الخروج من هذا الجهاز؟ سيُزال الحساب من قائمة التبديل السريع، وستحتاج كلمة المرور للدخول به مرة أخرى.",
+  "settingsSolidSurfaces": "أسطح معتمة",
+  "settingsSolidSurfacesHint": "بلا شفافية ولا ضبابية — أوضح تحت الشمس، وأخفّ على الأجهزة البطيئة",
   "settingsTheme": "المظهر",
   "themeSystem": "حسب النظام",
   "themeLight": "فاتح",

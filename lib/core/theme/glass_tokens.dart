@@ -186,11 +186,24 @@ class GlassTokens extends ThemeExtension<GlassTokens> {
   static final darkSolid = GlassTokens(
     onPaper: false,
     reduced: true,
-    // The composited result of the translucent pane over the night backdrop,
-    // taken as a solid: the same tone arrived at without the read-behind.
-    fill: const Color(0xFF11201E),
-    fillStrong: const Color(0xFF0A1917),
-    fillSubtle: const Color(0xFF16241F),
+    // MEASURED against `nightMid`, not eyeballed from the translucent set.
+    //
+    // The first attempt took the composited result of the 8%-white pane over
+    // the night backdrop and called it the solid equivalent, which came out at
+    // 1.111 against the field — under the 1.15 every pane in this app is held
+    // to, so a card would have been a card-shaped nothing. The translucent
+    // version gets away with a fill that faint because the blur and the sheen
+    // are doing half the separating; take those away and the fill has to do
+    // all of it alone. 1.27 here.
+    fill: const Color(0xFF162C2A),
+    // Chrome, going DARKER rather than denser: there is no density left to
+    // spend once both are opaque, so an app bar is told apart from a card by
+    // being a shade deeper than it.
+    fillStrong: const Color(0xFF0C201F),
+    // A well, and on night a well catches MORE light than the pane it is cut
+    // into — the opposite of paper, and the same rule the translucent set is
+    // measured by.
+    fillSubtle: const Color(0xFF223B38),
     sheen: const Color(0x00000000),
     stroke: AppColors.white.withValues(alpha: 0.22),
     strokeStrong: AppColors.white.withValues(alpha: 0.38),

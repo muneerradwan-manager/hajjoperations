@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/glass_tokens.dart';
 
 /// The backdrop the whole app sits on: a mesh of colour orbs over a deep
 /// gradient, finished with a fine grain so the glass panes above it have
@@ -32,6 +33,27 @@ class AuroraBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Flat under the glass-free tokens, and it costs nothing to ask: the token
+    // set IS the mode, so nothing had to be threaded down here.
+    //
+    // Two orbs and a grain field are a picture to resolve, and this mode exists
+    // to give the eye fewer of those — under a sun the panes are opaque anyway,
+    // so what the orbs light is the gaps between cards and nothing else. The
+    // two CustomPaints also go, which is the point on a slow handset: they are
+    // repainted whenever the page behind them changes size.
+    if (context.glass.reduced) {
+      return Stack(
+        children: [
+          Positioned.fill(
+            child: ColoredBox(
+              color: isDark ? AppColors.nightMid : AppColors.paperMid,
+            ),
+          ),
+          child,
+        ],
+      );
+    }
 
     return Stack(
       children: [

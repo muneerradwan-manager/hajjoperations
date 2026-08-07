@@ -266,6 +266,18 @@ abstract class AppLocalizations {
   /// **'Log out of this device? The account leaves the quick-switch list, and signing back in will ask for the password.'**
   String get settingsLogoutConfirm;
 
+  /// No description provided for @settingsSolidSurfaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Solid surfaces'**
+  String get settingsSolidSurfaces;
+
+  /// No description provided for @settingsSolidSurfacesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No transparency or blur — clearer in sunlight, lighter on slower phones'**
+  String get settingsSolidSurfacesHint;
+
   /// No description provided for @settingsTheme.
   ///
   /// In en, this message translates to:

@@ -16,20 +16,28 @@ class AppTheme {
 
   static const _fontFamily = 'itfQomra';
 
-  // Built once per process: nothing in either theme depends on runtime state,
-  // and `_build` runs ColorScheme.fromSeed plus ~20 sub-themes — work the app
-  // shell was repeating on every rebuild that watched settings.
+  // Built once per process EACH, and there are four rather than two because
+  // the glass-free variants are a different token set rather than a runtime
+  // flag read at paint time. Nothing in any of them depends on state that
+  // changes while the app runs, and `_build` runs ColorScheme.fromSeed plus
+  // ~20 sub-themes — work the shell was once repeating on every rebuild that
+  // watched settings.
   static final ThemeData _light = _build(Brightness.light);
   static final ThemeData _dark = _build(Brightness.dark);
+  static final ThemeData _lightSolid = _build(Brightness.light, solid: true);
+  static final ThemeData _darkSolid = _build(Brightness.dark, solid: true);
 
-  static ThemeData light() => _light;
-  static ThemeData dark() => _dark;
+  /// [solid] takes the glass out: opaque panes, no blur, heavier hairlines.
+  /// One switch for two complaints — sunlight and cheap handsets — that turn
+  /// out to have one fix. See [GlassTokens.lightSolid].
+  static ThemeData light({bool solid = false}) => solid ? _lightSolid : _light;
+  static ThemeData dark({bool solid = false}) => solid ? _darkSolid : _dark;
 
   /// Mixes two palette entries. Used only to pull a brand colour towards
   /// [AppColors.black] or [AppColors.white] — never to invent a hue.
   static Color _mix(Color a, Color b, double t) => Color.lerp(a, b, t)!;
 
-  static ThemeData _build(Brightness brightness) {
+  static ThemeData _build(Brightness brightness, {bool solid = false}) {
     final isDark = brightness == Brightness.dark;
 
     // The deep greens carry enough weight on paper to be the primary; on a
@@ -123,7 +131,9 @@ class AppTheme {
           : InkSparkle.splashFactory,
     );
 
-    final glass = isDark ? GlassTokens.dark : GlassTokens.light;
+    final glass = solid
+        ? (isDark ? GlassTokens.darkSolid : GlassTokens.lightSolid)
+        : (isDark ? GlassTokens.dark : GlassTokens.light);
 
     final textTheme = base.textTheme
         .apply(bodyColor: scheme.onSurface, displayColor: scheme.onSurface)

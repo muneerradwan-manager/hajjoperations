@@ -110,13 +110,26 @@ class SettingsScreen extends StatelessWidget {
                             selected: state.themeMode == mode,
                             onTap: () => settings.setThemeMode(mode),
                           ),
+                        // Under the three, not beside them: it is not a fourth
+                        // theme. It applies to whichever of the three is
+                        // chosen — a man on a night shift under floodlights
+                        // wants the glass gone as much as one at noon does,
+                        // and a slow handset wants it gone at every hour.
+                        _SettingSwitch(
+                          title: l.settingsSolidSurfaces,
+                          hint: l.settingsSolidSurfacesHint,
+                          value: state.solidSurfaces,
+                          onChanged: settings.setSolidSurfaces,
+                        ),
                       ],
                     ),
                     InfoSection(
                       title: l.navNotifications,
                       icon: AppIcons.notifications,
                       children: [
-                        _NotificationsSwitch(
+                        _SettingSwitch(
+                          title: l.settingsNotifications,
+                          hint: l.settingsNotificationsHint,
                           value: state.notificationsEnabled,
                           onChanged: settings.setNotificationsEnabled,
                         ),
@@ -314,8 +327,8 @@ class _AccountsSectionState extends State<_AccountsSection> {
 
 /// One option in a group. Language and theme each take a single answer, so the
 /// indicator is round and only one of them is ever filled.
-/// The notifications switch, written as a plain row rather than as a
-/// [SwitchListTile].
+/// A titled switch with a line of explanation, written as a plain row rather
+/// than as a [SwitchListTile].
 ///
 /// A ListTile measures its title and subtitle at the tile's FULL width and then
 /// lays them out at the width the trailing switch leaves over — so the hint
@@ -323,15 +336,26 @@ class _AccountsSectionState extends State<_AccountsSection> {
 /// grid, where the three panes are given a shared height taken from exactly that
 /// measurement, the pane then overflows by those few pixels. Here the switch is
 /// an inflexible child of the row, so both passes see the same text width.
-class _NotificationsSwitch extends StatelessWidget {
-  const _NotificationsSwitch({required this.value, required this.onChanged});
+///
+/// Both switches on this screen need the same thing said about them: what they
+/// do is not obvious from the title alone. Push still ARRIVES when it is off —
+/// the phone simply stays quiet — and solid surfaces is not a taste, it is what
+/// to press when the screen is unreadable in the sun.
+class _SettingSwitch extends StatelessWidget {
+  const _SettingSwitch({
+    required this.title,
+    required this.hint,
+    required this.value,
+    required this.onChanged,
+  });
 
+  final String title;
+  final String hint;
   final bool value;
   final ValueChanged<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    final l = context.l10n;
     final theme = Theme.of(context);
 
     return InkWell(
@@ -345,16 +369,10 @@ class _NotificationsSwitch extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    l.settingsNotifications,
-                    style: theme.textTheme.bodyLarge,
-                  ),
+                  Text(title, style: theme.textTheme.bodyLarge),
                   const SizedBox(height: 3),
-                  // Said plainly, because the switch does less than it looks
-                  // like it does: the message still arrives, the phone just
-                  // stays quiet about it.
                   Text(
-                    l.settingsNotificationsHint,
+                    hint,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

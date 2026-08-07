@@ -11,6 +11,7 @@ class SettingsState extends Equatable {
     required this.themeMode,
     required this.locale,
     this.notificationsEnabled = true,
+    this.solidSurfaces = false,
   });
 
   final ThemeMode themeMode;
@@ -22,21 +23,41 @@ class SettingsState extends Equatable {
   /// turning it off stops the phone buzzing, it does not stop being told.
   final bool notificationsEnabled;
 
+  /// Take the glass out: opaque panes, no blur, heavier hairlines.
+  ///
+  /// One switch answering two complaints that share a fix. Outdoors in ذو
+  /// الحجة a translucent pane spends contrast the eye has already lost to
+  /// glare; and every blur is a save-layer the compositor re-reads each frame,
+  /// which on the handsets field staff actually carry is where the frame
+  /// budget goes.
+  ///
+  /// Per DEVICE rather than per account, like the theme and the language beside
+  /// it: it is about the screen in this man's hand and the sun on it, not about
+  /// who he is. The same person on a desk indoors wants it off.
+  final bool solidSurfaces;
+
   SettingsState copyWith({
     ThemeMode? themeMode,
     Locale? locale,
     bool clearLocale = false,
     bool? notificationsEnabled,
+    bool? solidSurfaces,
   }) {
     return SettingsState(
       themeMode: themeMode ?? this.themeMode,
       locale: clearLocale ? null : (locale ?? this.locale),
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+      solidSurfaces: solidSurfaces ?? this.solidSurfaces,
     );
   }
 
   @override
-  List<Object?> get props => [themeMode, locale, notificationsEnabled];
+  List<Object?> get props => [
+    themeMode,
+    locale,
+    notificationsEnabled,
+    solidSurfaces,
+  ];
 }
 
 /// Persists appearance + language choices.
@@ -47,12 +68,14 @@ class SettingsCubit extends SafeCubit<SettingsState> {
           themeMode: _readThemeMode(_prefs),
           locale: _readLocale(_prefs),
           notificationsEnabled: _prefs.getBool(_kNotifications) ?? true,
+          solidSurfaces: _prefs.getBool(_kSolidSurfaces) ?? false,
         ),
       );
 
   final SharedPreferences _prefs;
 
   static const _kTheme = 'settings.themeMode';
+  static const _kSolidSurfaces = 'settings.solidSurfaces';
 
   /// Public because the prayer scheduler reads it too: a notification raised
   /// while the app is closed has no cubit to ask what language to speak, and
@@ -104,6 +127,11 @@ class SettingsCubit extends SafeCubit<SettingsState> {
   Future<void> setThemeMode(ThemeMode mode) async {
     emit(state.copyWith(themeMode: mode));
     await _prefs.setString(_kTheme, mode.name);
+  }
+
+  Future<void> setSolidSurfaces(bool solid) async {
+    emit(state.copyWith(solidSurfaces: solid));
+    await _prefs.setBool(_kSolidSurfaces, solid);
   }
 
   /// Turning push off unsubscribes this device from every topic and forgets its

@@ -34,12 +34,21 @@ class StarRating extends StatelessWidget {
     final filled = scheme.secondary;
     final empty = scheme.onSurfaceVariant.withValues(alpha: 0.35);
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (var i = 1; i <= _count; i++)
-          _star(context, i, filled: filled, empty: empty),
-      ],
+    // Five glyphs whose whole meaning is how many of them are filled — which
+    // a screen reader is handed as five identical icons and nothing else. The
+    // row says the number once and the stars are hidden beneath it, rather than
+    // read out one by one.
+    return Semantics(
+      label: '${value.toStringAsFixed(1)} / $_count',
+      // The taps still work; it is only the reading that is taken over.
+      excludeSemantics: true,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 1; i <= _count; i++)
+            _star(context, i, filled: filled, empty: empty),
+        ],
+      ),
     );
   }
 

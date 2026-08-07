@@ -96,6 +96,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'تسجيل الخروج من هذا الجهاز؟ سيُزال الحساب من قائمة التبديل السريع، وستحتاج كلمة المرور للدخول به مرة أخرى.';
 
   @override
+  String get settingsSolidSurfaces => 'أسطح معتمة';
+
+  @override
+  String get settingsSolidSurfacesHint =>
+      'بلا شفافية ولا ضبابية — أوضح تحت الشمس، وأخفّ على الأجهزة البطيئة';
+
+  @override
   String get settingsTheme => 'المظهر';
 
   @override

@@ -3,7 +3,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../features/incidents/presentation/widgets/incident_button.dart';
 import '../theme/glass_tokens.dart';
 
 /// The primitive every frosted pane in the app is built from.
@@ -93,7 +92,12 @@ class GlassSurface extends StatelessWidget {
             ),
     );
 
-    if (blur) {
+    // `glass.blur > 0` and not merely `blur`: with the glass-free tokens the
+    // sigma is zero, and a zero-sigma BackdropFilter is not free — it is still
+    // a save-layer, so the compositor still re-reads everything behind the pane
+    // every frame to blur it by nothing. Skipping the widget is the whole
+    // performance half of that mode.
+    if (blur && glass.blur > 0) {
       content = BackdropFilter(
         filter: ui.ImageFilter.blur(
           sigmaX: strong ? glass.blurStrong : glass.blur,
@@ -273,7 +277,7 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.automaticallyImplyLeading = true,
     this.bottom,
     this.centerTitle,
-    this.showIncidentButton = true,
+    
   });
 
   final Widget? title;
@@ -295,7 +299,7 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// is one the screen written next month will not have, and nothing about the
   /// bar tells the reader which screens were the ones where pressing it would
   /// have worked.
-  final bool showIncidentButton;
+  
 
   @override
   Size get preferredSize =>
@@ -325,7 +329,7 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
       // three in the app wearing a plain bar in the error colours instead of
       // this one. The home page does — see [showIncidentButton].
       actions: [
-        if (showIncidentButton) const IncidentButton(),
+        
         ...?actions,
       ],
       leading: leading,
@@ -340,12 +344,9 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
           ? SystemUiOverlayStyle.light
           : SystemUiOverlayStyle.dark,
       flexibleSpace: ClipRect(
-        child: BackdropFilter(
-          filter: ui.ImageFilter.blur(
-            sigmaX: glass.blurStrong,
-            sigmaY: glass.blurStrong,
-          ),
-          child: DecoratedBox(
+        child: _maybeBlur(
+          glass.blurStrong,
+          DecoratedBox(
             decoration: BoxDecoration(
               gradient: glass.fillGradient(strong: true),
               border: Border(bottom: BorderSide(color: glass.stroke)),
@@ -355,6 +356,22 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
     );
   }
+}
+
+/// [child] behind a backdrop blur, or [child] itself when the sigma is zero.
+///
+/// The zero case is not an optimisation of a no-op. A `BackdropFilter` with no
+/// blur is still a save-layer: the compositor reads back everything painted
+/// beneath the pane, every frame, and applies nothing to it. Under the
+/// glass-free tokens every bar and card would keep paying that for a picture
+/// identical to not having asked — which is exactly the cost the mode exists to
+/// remove on the handsets field staff carry.
+Widget _maybeBlur(double sigma, Widget child) {
+  if (sigma <= 0) return child;
+  return BackdropFilter(
+    filter: ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+    child: child,
+  );
 }
 
 /// Small translucent label — status chips, role badges, counters.

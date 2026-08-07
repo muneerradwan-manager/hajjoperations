@@ -96,6 +96,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Log out of this device? The account leaves the quick-switch list, and signing back in will ask for the password.';
 
   @override
+  String get settingsSolidSurfaces => 'Solid surfaces';
+
+  @override
+  String get settingsSolidSurfacesHint =>
+      'No transparency or blur — clearer in sunlight, lighter on slower phones';
+
+  @override
   String get settingsTheme => 'Appearance';
 
   @override

@@ -34,46 +34,59 @@ class SelectionIndicator extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final circle = shape == SelectionShape.one;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 160),
-      curve: Curves.easeOut,
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: circle ? BoxShape.circle : BoxShape.rectangle,
-        borderRadius: circle ? null : BorderRadius.circular(size * 0.28),
-        // Empty means empty: a hollow ring over a hint of the surface, never a
-        // fill and never the accent colour. Filled and coloured is what the
-        // chosen one gets, and it must be the only thing that looks like that.
-        color: selected ? scheme.primary : scheme.surface.withValues(alpha: 0.35),
-        border: Border.all(
+    // Chosen-ness is drawn here as a fill and a tick, and read by nobody: an
+    // AnimatedContainer carries no meaning at all to a screen reader, so every
+    // picker in the app announced its rows identically whether they were
+    // selected or not.
+    //
+    // `checked` rather than a label, because it is a STATE of the row and not a
+    // thing beside it — the platform then says it in its own words and in the
+    // reader's own language, which a label written here could not do.
+    return Semantics(
+      checked: selected,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOut,
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: circle ? BoxShape.circle : BoxShape.rectangle,
+          borderRadius: circle ? null : BorderRadius.circular(size * 0.28),
+          // Empty means empty: a hollow ring over a hint of the surface, never a
+          // fill and never the accent colour. Filled and coloured is what the
+          // chosen one gets, and it must be the only thing that looks like that.
           color: selected
               ? scheme.primary
-              : scheme.onSurfaceVariant.withValues(alpha: 0.55),
-          width: selected ? 0 : 1.6,
+              : scheme.surface.withValues(alpha: 0.35),
+          border: Border.all(
+            color: selected
+                ? scheme.primary
+                : scheme.onSurfaceVariant.withValues(alpha: 0.55),
+            width: selected ? 0 : 1.6,
+          ),
         ),
-      ),
-      child: Center(
-        child: AnimatedScale(
-          scale: selected ? 1 : 0,
-          duration: const Duration(milliseconds: 160),
-          curve: Curves.easeOutBack,
-          child: circle
-              // A radio fills its centre; a checkbox takes a tick. Both in the
-              // colour that sits on primary, so the mark reads at any size.
-              ? Container(
-                  width: size * 0.42,
-                  height: size * 0.42,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
+        child: Center(
+          child: AnimatedScale(
+            scale: selected ? 1 : 0,
+            duration: const Duration(milliseconds: 160),
+            curve: Curves.easeOutBack,
+            child: circle
+                // A radio fills its centre; a checkbox takes a tick. Both in the
+                // colour that sits on primary, so the mark reads at any size.
+                ? Container(
+                    width: size * 0.42,
+                    height: size * 0.42,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: scheme.onPrimary,
+                    ),
+                  )
+                : Icon(
+                    Icons.check_rounded,
+                    size: size * 0.68,
                     color: scheme.onPrimary,
                   ),
-                )
-              : Icon(
-                  Icons.check_rounded,
-                  size: size * 0.68,
-                  color: scheme.onPrimary,
-                ),
+          ),
         ),
       ),
     );

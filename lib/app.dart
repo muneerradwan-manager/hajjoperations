@@ -137,8 +137,8 @@ class _AppViewState extends State<_AppView> {
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
+      theme: AppTheme.light(solid: settings.solidSurfaces),
+      darkTheme: AppTheme.dark(solid: settings.solidSurfaces),
       themeMode: settings.themeMode,
       locale: settings.locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,

@@ -555,7 +555,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // page has somewhere better — the full-width red button below, beside
           // check-in. Two doors to one screen, a hand's width apart, read as
           // two different things.
-          showIncidentButton: false,
+          
         ),
         // The emergency button is NOT a floating one. It sits under the prayer
         // card, in the body — see `prayer` below.

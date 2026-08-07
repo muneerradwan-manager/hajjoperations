@@ -31,6 +31,8 @@
   "settingsNotifications": "Notifications on this device",
   "settingsNotificationsHint": "Turning this off only silences the device — messages still reach your inbox",
   "settingsLogoutConfirm": "Log out of this device? The account leaves the quick-switch list, and signing back in will ask for the password.",
+  "settingsSolidSurfaces": "Solid surfaces",
+  "settingsSolidSurfacesHint": "No transparency or blur — clearer in sunlight, lighter on slower phones",
   "settingsTheme": "Appearance",
   "themeSystem": "System",
   "themeLight": "Light",

@@ -33,6 +33,13 @@ void main() {
   final backdrops = <String, (GlassTokens, Color)>{
     'paper': (GlassTokens.light, AppColors.paperMid),
     'night': (GlassTokens.dark, AppColors.nightMid),
+    // The glass-free sets, measured the same way and against the same fields —
+    // which is what the backdrop actually paints for them, since it lies flat
+    // in this mode. Opaque is not a licence to skip this: an opaque pane can
+    // still be the colour of the page it sits on, and would then be no pane at
+    // all with nothing to blame it on.
+    'paper (solid)': (GlassTokens.lightSolid, AppColors.paperMid),
+    'night (solid)': (GlassTokens.darkSolid, AppColors.nightMid),
   };
 
   backdrops.forEach((name, pair) {
@@ -87,6 +94,13 @@ void main() {
       });
 
       test('chrome is denser than a content pane', () {
+        if (glass.reduced) {
+          // Nothing to be denser THAN. Density is how much of the page below
+          // shows through, and in this mode none of it does from either — an
+          // app bar and a card are both simply opaque. The distinction the
+          // assertion is about does not exist here rather than being violated.
+          return;
+        }
         expect(
           glass.fillStrong.a,
           greaterThan(glass.fill.a),
