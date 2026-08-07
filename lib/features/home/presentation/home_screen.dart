@@ -516,6 +516,12 @@ class _HomeScreenState extends State<HomeScreen> {
           // The outbox first, and only when it has something in it. What the
           // app is still holding of yours outranks what it has been told.
           actions: const [OutboxBadge(), NotificationBell()],
+          // The one bar in the app without it. Every other screen carries the
+          // urgent report as an icon here because it has nowhere better; this
+          // page has somewhere better — the full-width red button below, beside
+          // check-in. Two doors to one screen, a hand's width apart, read as
+          // two different things.
+          showIncidentButton: false,
         ),
         // The emergency button is NOT a floating one. It sits under the prayer
         // card, in the body — see `prayer` below.

@@ -396,6 +396,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileSectionContact => 'Contact';
 
   @override
+  String get contactWhatsApp => 'Message on WhatsApp';
+
+  @override
   String get profileSectionDocuments => 'Documents';
 
   @override

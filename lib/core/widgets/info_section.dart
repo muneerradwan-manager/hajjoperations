@@ -179,10 +179,44 @@ enum InfoAction {
   Uri uriFor(String value) => Uri(
     scheme: scheme,
     // A number written "+963 11 222" dials only once the spacing is gone.
-    path: this == InfoAction.call
-        ? value.replaceAll(RegExp(r'[^0-9+]'), '')
-        : value.trim(),
+    path: this == InfoAction.call ? digitsOf(value) : value.trim(),
   );
+
+  /// A telephone number reduced to what a dialler will accept.
+  ///
+  /// Lifted out of [uriFor] because [whatsAppUri] needs the same reduction and
+  /// must not grow its own copy: the two would drift the first time somebody
+  /// stored a number with a dash in it.
+  static String digitsOf(String value) =>
+      value.replaceAll(RegExp(r'[^0-9+]'), '');
+
+  /// The same number, opened in WhatsApp instead of the dialler.
+  ///
+  /// Worth a second button rather than a replacement, because the two are not
+  /// interchangeable for this mission. Its staff carry Syrian numbers and stand
+  /// in Saudi Arabia, so a call is an international one on a foreign network and
+  /// WhatsApp is what most of these conversations actually happen on. And when
+  /// the network in Mina is too thin to hold a call, a message still goes.
+  ///
+  /// Null when there is nothing dialable in [value], so the button can simply
+  /// not be drawn.
+  ///
+  /// `wa.me` rather than the `whatsapp:` scheme: it opens the app when it is
+  /// installed and the web client when it is not, instead of failing at a
+  /// scheme nothing on the device claims. It also insists on a full
+  /// international number with no `+` and no zeros in front — a local "0999…"
+  /// reaches nobody — so a number that is not in that shape is refused here
+  /// rather than opened onto an error.
+  static Uri? whatsAppUri(String value) {
+    final digits = digitsOf(value);
+    final international = digits.startsWith('+')
+        ? digits.substring(1)
+        : digits.startsWith('00')
+        ? digits.substring(2)
+        : null;
+    if (international == null || international.length < 8) return null;
+    return Uri.parse('https://wa.me/$international');
+  }
 }
 
 /// A labelled value row with a leading icon; shows "not provided" when empty.
@@ -210,6 +244,9 @@ class InfoRow extends StatelessWidget {
     final isEmpty = value == null || value!.isEmpty;
     final shown = isEmpty ? context.l10n.profileFieldNotProvided : value!;
     final live = action != null && !isEmpty;
+    final whatsApp = action == InfoAction.call && !isEmpty
+        ? InfoAction.whatsAppUri(value!)
+        : null;
 
     final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
@@ -255,6 +292,30 @@ class InfoRow extends StatelessWidget {
               ],
             ),
           ),
+          // WhatsApp before the dialler, and that order is the claim.
+          //
+          // This mission's staff carry Syrian numbers and stand in Saudi
+          // Arabia: a call is an international one on a foreign network, and
+          // WhatsApp is where most of these conversations already happen. It is
+          // also the one that still works when the network in Mina is too thin
+          // to hold a call — a message waits and goes; a call just fails.
+          //
+          // Drawn only when the stored number is in full international form,
+          // because `wa.me` accepts nothing else. A local "0999…" would open
+          // onto an error page, which is worse than an absent button.
+          if (whatsApp case final uri?) ...[
+            const SizedBox(width: AppSpacing.sm),
+            IconButton(
+              tooltip: context.l10n.contactWhatsApp,
+              onPressed: () =>
+                  launchUrl(uri, mode: LaunchMode.externalApplication),
+              icon: const Icon(AppIcons.whatsApp, size: 18),
+              color: scheme.primary,
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(),
+              padding: EdgeInsets.zero,
+            ),
+          ],
           if (live) ...[
             const SizedBox(width: AppSpacing.sm),
             Icon(action!.icon, size: 18, color: scheme.primary),

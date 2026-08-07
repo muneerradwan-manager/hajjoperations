@@ -395,6 +395,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profileSectionContact => 'معلومات التواصل';
 
   @override
+  String get contactWhatsApp => 'مراسلة عبر واتساب';
+
+  @override
   String get profileSectionDocuments => 'المستندات';
 
   @override

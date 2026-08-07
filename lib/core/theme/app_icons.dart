@@ -113,6 +113,14 @@ class AppIcons {
   static const phoneSy = Iconsax.call;
   static const phoneSa = Iconsax.mobile;
 
+  /// Reaching the same number through WhatsApp rather than the dialler.
+  ///
+  /// A speech bubble, not a brand mark: Iconsax carries no WhatsApp glyph, and
+  /// a hand-drawn imitation of one would be both a trademark and a worse icon.
+  /// What the button does is send a MESSAGE instead of placing a call, and that
+  /// is the distinction the icon has to carry beside [phoneSy].
+  static const whatsApp = Iconsax.message_text;
+
   // Documents
   static const document = Iconsax.document_text;
   static const documentEmpty = Iconsax.document;

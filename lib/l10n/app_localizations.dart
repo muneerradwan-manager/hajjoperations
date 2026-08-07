@@ -824,6 +824,12 @@ abstract class AppLocalizations {
   /// **'Contact'**
   String get profileSectionContact;
 
+  /// No description provided for @contactWhatsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Message on WhatsApp'**
+  String get contactWhatsApp;
+
   /// No description provided for @profileSectionDocuments.
   ///
   /// In en, this message translates to:
