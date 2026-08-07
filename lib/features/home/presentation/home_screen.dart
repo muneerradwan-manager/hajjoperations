@@ -69,6 +69,11 @@ const _generalPalette = <Accent>[
   // than the complaint beside it, which is the only other tile here that is
   // about a judgement rather than about work.
   Accent.plum,
+  // The fifth: where this person has stood, and the act of saying so. Green
+  // again, and the darkest of the three — being somewhere is the most literal
+  // work on this list, and the only card here that DOES something as well as
+  // opening something.
+  Accent.greenDark,
 ];
 
 /// A shelf in الإدارة: a name, a colour, and the tiles that belong under it.
@@ -489,6 +494,31 @@ class _HomeScreenState extends State<HomeScreen> {
         color: _generalPalette[4].of(context),
         onTap: () => context.push(Routes.evaluations),
       ),
+      // Where this person has been, and the way to add to it. Two verbs on one
+      // card, and they belong together: the man about to scan a code is the
+      // same man wondering whether last night's scan registered, and until now
+      // those were a button under the prayer card and no screen at all.
+      //
+      // Gated by nothing, twice over. Filing your own arrival needs no grant —
+      // the code on the wall and the phone's position are the credential, and a
+      // system in which only certain people may report where they are is a
+      // system that does not know where anybody is. Reading your own record
+      // needs none either: `place_check_ins` opens its policy with
+      // `profile_id = auth.uid()`, and §30.3 of 0098 says so in words.
+      DashboardCard(
+        icon: AppIcons.auditLog,
+        title: l.myCheckInsTitle,
+        subtitle: l.navMyCheckInsSubtitle,
+        color: _generalPalette[5].of(context),
+        onTap: () => context.push(Routes.myCheckIns),
+        // The act, raised out of the card. It was a full-width button under the
+        // prayer card, which put it among the facts about the moment rather
+        // than among the things a person does — and left the record it produces
+        // with nowhere to live. Now the record is the card and the act is on it.
+        action: () => context.push(Routes.checkIn),
+        actionTooltip: l.checkInAction,
+        actionIcon: AppIcons.qrCode,
+      ),
       // No tile for the profile: the greeting panel above already carries the
       // user's face and name, and tapping a card with your own name on it is
       // where anyone looks for it first.
@@ -621,18 +651,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   PrayerTimesCard(),
                   SizedBox(height: AppSpacing.sm),
-                  // Beside the emergency button, and beneath it, because they
-                  // are the two things a man does standing in a place rather
-                  // than sitting with the app: say he has arrived, and say
-                  // something has gone wrong. Both are pressed one-handed, and
-                  // neither should be somewhere he has to go and find.
-                  //
-                  // Ungated. Filing your own arrival needs no grant — the code
-                  // on the wall and the phone's position are the credential, and
-                  // a system in which only certain people may report where they
-                  // are is a system that does not know where anybody is.
-                  _CheckInButton(),
-                  SizedBox(height: AppSpacing.sm),
+                  // Only the emergency now. Check-in used to sit here beside
+                  // it, on the argument that they are the two things a man does
+                  // standing in a place — which is true, and was the wrong
+                  // conclusion: an arrival produces a RECORD, and the record had
+                  // nowhere to live. It moved onto its own card in العام, with
+                  // the act raised on it, so the thing you do and the thing it
+                  // writes are one place. An emergency produces no record its
+                  // author reads, so it stays here.
                   _RaiseIncidentButton(),
                 ],
               );
@@ -672,34 +698,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-}
-
-/// The way to report something that cannot wait.
-///
-/// On the home screen of every account, always, and drawn in the error colour
-/// — the only thing on this page that is. A man who has just watched a bus
-/// break down on the road to Arafat has to reach it without looking for it,
-/// and a button he has to go and find is not an emergency button.
-///
-/// Under the prayer card rather than floating over the page: a floating button
-/// hides the last row of whatever it happens to be over, and hides a different
-/// row at every window width. Here it has one place, and a person learns it
-/// once.
-/// Reporting that you have arrived somewhere.
-///
-/// Tonal rather than filled, and above the red one: this is the ordinary daily
-/// act and that is the emergency. A screen with two equally loud buttons has
-/// none.
-class _CheckInButton extends StatelessWidget {
-  const _CheckInButton();
-
-  @override
-  Widget build(BuildContext context) => FilledButton.tonalIcon(
-    style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-    onPressed: () => context.push(Routes.checkIn),
-    icon: const Icon(AppIcons.qrCode, size: 20),
-    label: Text(context.l10n.checkInAction),
-  );
 }
 
 class _RaiseIncidentButton extends StatelessWidget {

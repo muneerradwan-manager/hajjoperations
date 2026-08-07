@@ -3664,6 +3664,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get checkInQrPrintingAll => 'Preparing the codes…';
 
   @override
+  String get navMyCheckInsSubtitle =>
+      'Where you checked in and when — and where you check in';
+
+  @override
   String get myCheckInsTitle => 'My attendance';
 
   @override

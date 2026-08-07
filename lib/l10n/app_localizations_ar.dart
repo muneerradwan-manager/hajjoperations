@@ -3679,6 +3679,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get checkInQrPrintingAll => 'يجري تجهيز الرموز…';
 
   @override
+  String get navMyCheckInsSubtitle => 'أين سجّلتَ وصولك ومتى — ومن هنا تسجّل';
+
+  @override
   String get myCheckInsTitle => 'سجلّ حضوري';
 
   @override

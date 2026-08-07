@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:hajjoperations/features/checkin/application/my_check_ins_cubit.dart';
@@ -61,5 +62,55 @@ void main() {
       CheckInWindow.week.since()!.isBefore(CheckInWindow.day.since()!),
       isTrue,
     );
+  });
+
+  group('the card on the home page', () {
+    test('the general palette has a colour for every general tile', () {
+      // The palette used to be spent exactly, and adding a sixth card without a
+      // sixth colour is a range error at build — on the home page, for
+      // everybody, on the first frame. The tiles are declared in one list and
+      // the colours in another, and nothing but this ties their lengths.
+      final home = File(
+        'lib/features/home/presentation/home_screen.dart',
+      ).readAsStringSync();
+
+      final palette = RegExp(
+        r'const _generalPalette = <Accent>\[(.*?)\];',
+        dotAll: true,
+      ).firstMatch(home)!.group(1)!;
+      final colours = RegExp(r'Accent\.\w+').allMatches(palette).length;
+
+      final highest = RegExp(r'_generalPalette\[(\d+)\]')
+          .allMatches(home)
+          .map((m) => int.parse(m.group(1)!))
+          .reduce((a, b) => a > b ? a : b);
+
+      expect(
+        highest,
+        lessThan(colours),
+        reason:
+            'a general card indexes past the end of the palette — the home '
+            'page throws on its first frame, for every account',
+      );
+    });
+
+    test('the act and the record are one card', () {
+      // Check-in used to be a full-width button under the prayer card, among
+      // the facts about the moment rather than among the things a person does —
+      // and the record it produces had nowhere to live at all. If the button
+      // comes back to the prayer column there are two doors to the same act
+      // again, which is what the card was built to end.
+      final home = File(
+        'lib/features/home/presentation/home_screen.dart',
+      ).readAsStringSync();
+
+      expect(
+        home.contains('_CheckInButton'),
+        isFalse,
+        reason: 'the act belongs on the record card, not beside the prayer times',
+      );
+      expect(home, contains('Routes.myCheckIns'));
+      expect(home, contains('actionIcon: AppIcons.qrCode'));
+    });
   });
 }

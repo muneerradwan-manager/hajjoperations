@@ -1286,6 +1286,7 @@
   "checkInQrPrintAll": "طباعة رموز القائمة",
   "checkInQrPrintingAll": "يجري تجهيز الرموز…",
 
+  "navMyCheckInsSubtitle": "أين سجّلتَ وصولك ومتى — ومن هنا تسجّل",
   "myCheckInsTitle": "سجلّ حضوري",
   "myCheckInsEmpty": "لم تسجّل وصولك بعد",
   "myCheckInsEmptyHint": "امسح رمز مكان وأنت واقف عنده، فيظهر هنا",

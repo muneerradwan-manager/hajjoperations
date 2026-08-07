@@ -6452,6 +6452,12 @@ abstract class AppLocalizations {
   /// **'Preparing the codes…'**
   String get checkInQrPrintingAll;
 
+  /// No description provided for @navMyCheckInsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Where you checked in and when — and where you check in'**
+  String get navMyCheckInsSubtitle;
+
   /// No description provided for @myCheckInsTitle.
   ///
   /// In en, this message translates to:

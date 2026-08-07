@@ -1297,6 +1297,7 @@
   "checkInQrPrintAll": "Print the list's codes",
   "checkInQrPrintingAll": "Preparing the codes…",
 
+  "navMyCheckInsSubtitle": "Where you checked in and when — and where you check in",
   "myCheckInsTitle": "My attendance",
   "myCheckInsEmpty": "You have not checked in yet",
   "myCheckInsEmptyHint": "Scan a place code while standing at it and it appears here",

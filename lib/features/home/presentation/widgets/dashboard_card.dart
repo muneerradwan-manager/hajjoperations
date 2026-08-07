@@ -16,6 +16,9 @@ class DashboardCard extends StatelessWidget {
     required this.color,
     this.onTap,
     this.badge,
+    this.action,
+    this.actionTooltip,
+    this.actionIcon,
   });
 
   final IconData icon;
@@ -26,6 +29,23 @@ class DashboardCard extends StatelessWidget {
 
   /// Optional count shown as a pill — e.g. pending approvals waiting.
   final String? badge;
+
+  /// A second thing this card can do, raised as a small floating button where
+  /// the chevron would be.
+  ///
+  /// One card, two verbs, and they are not equals: the card OPENS something and
+  /// the button DOES something. That is why the button is raised rather than
+  /// drawn flat beside the title — a lifted control reads as an act, and a card
+  /// reads as a door.
+  ///
+  /// It replaces the chevron rather than joining it. A chevron promises that
+  /// pressing here goes somewhere, which is already what the whole card
+  /// promises; leaving both would put two conflicting invitations a thumb's
+  /// width apart, and the smaller one is the one that would be pressed by
+  /// accident.
+  final VoidCallback? action;
+  final String? actionTooltip;
+  final IconData? actionIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +95,21 @@ class DashboardCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
-          const NavChevron(),
+          if (action case final act?)
+            // `heroTag: null` because this is not the screen's floating action
+            // button and there may be several on the page — Flutter throws on
+            // duplicate hero tags, and two of these cards would be two.
+            FloatingActionButton.small(
+              heroTag: null,
+              onPressed: act,
+              tooltip: actionTooltip,
+              backgroundColor: color,
+              foregroundColor: scheme.onPrimary,
+              elevation: 2,
+              child: Icon(actionIcon ?? AppIcons.add),
+            )
+          else
+            const NavChevron(),
         ],
       ),
     );
