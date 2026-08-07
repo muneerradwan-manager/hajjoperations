@@ -1334,6 +1334,8 @@
   "accountStatusRejected": "Rejected",
 
   "outboxSavedOffline": "Saved on the device — it will be sent when the network returns",
+  "offlineShowingSaved": "No network — showing a saved copy, last updated {time}",
+  "@offlineShowingSaved": { "placeholders": { "time": { "type": "String" } } },
   "outboxTitle": "Waiting to be sent",
   "outboxEmpty": "Nothing is waiting to be sent",
   "outboxEmptyHint": "Everything you wrote has reached the server",

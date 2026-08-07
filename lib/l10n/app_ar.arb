@@ -1323,6 +1323,8 @@
   "accountStatusRejected": "مرفوض",
 
   "outboxSavedOffline": "حُفظ على الجهاز — سيُرسل عند عودة الشبكة",
+  "offlineShowingSaved": "لا توجد شبكة — معروضٌ من نسخة محفوظة، آخر تحديث {time}",
+  "@offlineShowingSaved": { "placeholders": { "time": { "type": "String" } } },
   "outboxTitle": "بانتظار الإرسال",
   "outboxEmpty": "لا شيء بانتظار الإرسال",
   "outboxEmptyHint": "كل ما كتبته وصل إلى الخادم",

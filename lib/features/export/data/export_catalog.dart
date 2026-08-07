@@ -182,7 +182,11 @@ class _EmployeesDataset extends ExportDataset {
     final seasonId = request.option('season');
 
     final people = <Profile>[
-      if (kind != 'external') ...await repo.fetchPermanent(),
+      // `.data` because the read may have come off disk. An export IS allowed
+      // to be built from a saved copy — the alternative is refusing to produce
+      // a file at all with no signal — and the ordinary case here is a desk
+      // with a network, where it is live anyway.
+      if (kind != 'external') ...(await repo.fetchPermanent()).data,
       // An external belongs to a season rather than to the mission, which is
       // why the season is offered here and why leaving it off lists everyone
       // who has ever been one.

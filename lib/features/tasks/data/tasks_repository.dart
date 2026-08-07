@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/attachments/attachment.dart';
+import '../../../core/offline/snapshots.dart';
 import '../../../core/supabase/storage_key.dart';
 import '../../../core/supabase/supabase_client.dart';
 import '../domain/personal_task.dart';
@@ -25,15 +26,31 @@ class TasksRepository {
 
   /// Everything on the caller's list — written by themselves and assigned to
   /// them alike — undone work first, then by due date, then newest.
-  Future<List<PersonalTask>> fetchMine() async {
+  /// Readable with no signal, from the last good answer — see [Snapshots].
+  ///
+  /// This is the list a man checks standing somewhere, which is exactly where
+  /// the network is not. The attachments are deliberately absent from the saved
+  /// copy: they are FILES, and no cache makes a file downloadable on a phone
+  /// with no bars. Showing the tasks without them is the honest shape of what
+  /// is actually available.
+  Future<Cached<List<PersonalTask>>> fetchMine() async {
     final me = supabase.auth.currentUser?.id;
-    if (me == null) return const [];
-    final rows = await supabase
-        .from('personal_tasks')
-        .select(_embeds)
-        .eq('profile_id', me)
-        .order('created_at', ascending: false);
-    return _withAttachments(_parse(rows));
+    if (me == null) return const Cached([]);
+
+    final cached = await readWithSnapshot(
+      // Keyed by person: a shared phone must not serve one man's list to the
+      // next, even in the moment before sign-out has finished clearing it.
+      key: 'tasks.mine.$me',
+      fetch: () => supabase
+          .from('personal_tasks')
+          .select(_embeds)
+          .eq('profile_id', me)
+          .order('created_at', ascending: false),
+      parse: _parse,
+    );
+
+    if (cached.isStale) return cached;
+    return Cached(await _withAttachments(cached.data));
   }
 
   /// What the caller wrote onto other people's lists, to follow up on. Empty

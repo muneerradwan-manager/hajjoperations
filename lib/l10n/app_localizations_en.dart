@@ -3776,6 +3776,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Saved on the device — it will be sent when the network returns';
 
   @override
+  String offlineShowingSaved(String time) {
+    return 'No network — showing a saved copy, last updated $time';
+  }
+
+  @override
   String get outboxTitle => 'Waiting to be sent';
 
   @override

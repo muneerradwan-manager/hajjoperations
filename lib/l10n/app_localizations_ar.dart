@@ -3789,6 +3789,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get outboxSavedOffline => 'حُفظ على الجهاز — سيُرسل عند عودة الشبكة';
 
   @override
+  String offlineShowingSaved(String time) {
+    return 'لا توجد شبكة — معروضٌ من نسخة محفوظة، آخر تحديث $time';
+  }
+
+  @override
   String get outboxTitle => 'بانتظار الإرسال';
 
   @override

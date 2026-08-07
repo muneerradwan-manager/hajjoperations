@@ -1,3 +1,4 @@
+import '../../../core/offline/snapshots.dart';
 import '../../../core/supabase/supabase_client.dart';
 import '../../profile/data/profile_repository.dart' show profileEmbeds;
 import '../../profile/domain/profile.dart';
@@ -51,15 +52,28 @@ class EmployeesRepository {
 
   /// Permanent staff: internal + approved. Uses the permanent_employees view so
   /// the "not external, approved" rule lives in one place.
-  Future<List<Profile>> fetchPermanent() async {
-    final rows = await supabase
+  ///
+  /// Readable with no signal, from the last good answer — see [Snapshots]. This
+  /// is the mission's telephone book, and looking a colleague up is the single
+  /// most common thing anybody does on a phone standing in a place: the whole
+  /// point of the call and WhatsApp buttons on these rows is defeated if the
+  /// list they sit on cannot be opened without a network.
+  ///
+  /// Not keyed by person, unlike the task list: this is the same directory for
+  /// everyone who may see it, and it is guarded by `employees.view` at the
+  /// door. It is still dropped at sign-out with everything else, because a
+  /// shared handset must not hand the next man a staff directory he was never
+  /// shown.
+  Future<Cached<List<Profile>>> fetchPermanent() => readWithSnapshot(
+    key: 'employees.permanent',
+    fetch: () => supabase
         .from('permanent_employees')
         .select(profileEmbeds)
-        .order('first_name');
-    return (rows as List)
-        .map((r) => Profile.fromMap(r as Map<String, dynamic>))
-        .toList();
-  }
+        .order('first_name'),
+    parse: (rows) => ((rows as List?) ?? const [])
+        .map((r) => Profile.fromMap((r as Map).cast<String, dynamic>()))
+        .toList(),
+  );
 
   /// External participants: approved accounts flagged as external.
   ///

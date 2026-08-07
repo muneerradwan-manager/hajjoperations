@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../../../core/attachments/attachment.dart';
 import '../../../core/bloc/safe_cubit.dart';
 import '../../../core/offline/outbox.dart';
+import '../../../core/offline/snapshots.dart';
 import '../../../core/offline/save_outcome.dart';
 import '../../../core/supabase/supabase_client.dart';
 import '../../seasons/data/seasons_repository.dart';
@@ -19,6 +20,7 @@ class TasksState extends Equatable {
     this.assignedByMe = const [],
     this.seasonId,
     this.error,
+    this.savedAt,
   });
 
   final TasksStatus status;
@@ -36,6 +38,14 @@ class TasksState extends Equatable {
 
   final String? error;
 
+  /// When this list was last true, if it is being shown from disk.
+  ///
+  /// Null on a live read. Carrying the TIME rather than a bare `isStale` flag
+  /// is the point: "a saved copy" invites the reader to guess how old, and
+  /// standing at a gate with no signal, how old it is is the only thing they
+  /// need in order to decide whether to trust it.
+  final DateTime? savedAt;
+
   /// The viewer's own notes to themselves — full control.
   List<PersonalTask> get own => [
     for (final t in mine)
@@ -49,7 +59,14 @@ class TasksState extends Equatable {
   ];
 
   @override
-  List<Object?> get props => [status, mine, assignedByMe, seasonId, error];
+  List<Object?> get props => [
+    status,
+    mine,
+    assignedByMe,
+    seasonId,
+    error,
+    savedAt,
+  ];
 }
 
 class TasksCubit extends SafeCubit<TasksState> {
@@ -66,7 +83,15 @@ class TasksCubit extends SafeCubit<TasksState> {
 
   Future<void> load() async {
     try {
-      final mine = manage ? const <PersonalTask>[] : await _repo.fetchMine();
+      // «مهامي» is the one of the two screens read in the field, so it is the
+      // one that falls back to disk. «إسناد المهام» is desk work behind a
+      // permission — nobody assigns tasks standing in Mina — and a saved copy
+      // of what you put on other people's lists would be answering a question
+      // nobody asked with no signal.
+      final mineRead = manage
+          ? const Cached(<PersonalTask>[])
+          : await _repo.fetchMine();
+      final mine = mineRead.data;
       final assigned = manage
           ? await _repo.fetchAssignedByMe()
           : const <PersonalTask>[];
@@ -84,6 +109,7 @@ class TasksCubit extends SafeCubit<TasksState> {
           mine: mine,
           assignedByMe: assigned,
           seasonId: seasonId,
+          savedAt: mineRead.savedAt,
         ),
       );
     } catch (e) {

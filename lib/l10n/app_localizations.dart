@@ -6644,6 +6644,12 @@ abstract class AppLocalizations {
   /// **'Saved on the device — it will be sent when the network returns'**
   String get outboxSavedOffline;
 
+  /// No description provided for @offlineShowingSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'No network — showing a saved copy, last updated {time}'**
+  String offlineShowingSaved(String time);
+
   /// No description provided for @outboxTitle.
   ///
   /// In en, this message translates to:

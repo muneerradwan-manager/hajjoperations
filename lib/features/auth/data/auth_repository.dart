@@ -8,6 +8,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/logging/app_logger.dart';
+import '../../../core/offline/snapshots.dart';
 import '../../../core/supabase/supabase_client.dart';
 import '../../notifications/data/push_service.dart';
 import '../../prayer_times/application/prayer_scheduler.dart';
@@ -301,6 +302,21 @@ class AuthRepository {
   /// password uses "switch account", which revokes nothing.
   Future<void> signOut() async {
     final uid = currentUser?.id;
+
+    // The saved answers go with the session, and this is not tidiness.
+    //
+    // A phone in an operations room is shared: one man hands it to the next,
+    // who signs in as himself. The snapshots hold what the FIRST man could see
+    // — the staff directory with its telephone numbers, the roster of files he
+    // serves in — and a second man reading that out of a cache is not a stale
+    // screen, it is a leak. The keys carry the user id, so nothing would be
+    // shown to the wrong person by accident; this makes it impossible rather
+    // than unlikely, and it also means an account removed from a file cannot
+    // keep reading it from disk.
+    //
+    // Unawaited and unguarded: it never throws (see [Snapshots.clear]), and
+    // signing out must not wait on a disk.
+    unawaited(Snapshots.instance?.clear() ?? Future.value());
 
     // While the session still exists to sign the line. Awaited but bounded:
     // it carries its own timeout, and a log must never hold the door shut.

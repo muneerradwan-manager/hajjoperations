@@ -13,6 +13,7 @@ import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/info_section.dart';
 import '../../../core/widgets/overflow_menu.dart';
 import '../../../core/widgets/responsive.dart';
+import '../../../core/widgets/saved_copy_banner.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
 import '../application/tasks_cubit.dart';
@@ -89,10 +90,30 @@ class _View extends StatelessWidget {
             final own = state.own;
             final assignedToMe = state.assignedToMe;
             if (own.isEmpty && assignedToMe.isEmpty) {
-              return EmptyState(
-                icon: AppIcons.tasks,
-                title: l.tasksEmpty,
-                message: l.tasksEmptyHint,
+              // The banner rides above the empty state too, and that case is
+              // the one that most needs it: "you have nothing to do" read off a
+              // saved copy is the most confidently wrong sentence this screen
+              // can say. Empty because it was empty an hour ago is not the same
+              // fact as empty now.
+              return Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      AppSpacing.lg,
+                      AppSpacing.lg,
+                      0,
+                    ),
+                    child: SavedCopyBanner(savedAt: state.savedAt),
+                  ),
+                  Expanded(
+                    child: EmptyState(
+                      icon: AppIcons.tasks,
+                      title: l.tasksEmpty,
+                      message: l.tasksEmptyHint,
+                    ),
+                  ),
+                ],
               );
             }
 
@@ -106,6 +127,9 @@ class _View extends StatelessWidget {
                     bottom: AppSpacing.xl * 2,
                   ),
                   children: [
+                    // Draws nothing when the read was live.
+                    SavedCopyBanner(savedAt: state.savedAt),
+
                     // 1 — the viewer's own notebook.
                     if (own.isNotEmpty)
                       TaskGroupCard(

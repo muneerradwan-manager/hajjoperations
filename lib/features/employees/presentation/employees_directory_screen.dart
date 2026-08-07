@@ -11,6 +11,7 @@ import '../../../core/utils/arabic_search.dart';
 import '../../../core/widgets/employee_tile.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
+import '../../../core/widgets/saved_copy_banner.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
 import '../../profile/domain/profile.dart';
@@ -134,6 +135,19 @@ class _ViewState extends State<_View> {
               return ResponsivePage(
                 builder: (context, size) => Column(
                   children: [
+                    // Above the search box rather than inside the lists: it is
+                    // true of the whole page, and both tabs are affected —
+                    // the externals worst of all, since with no signal they
+                    // cannot be read at all and the tab shows empty.
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        size.gutter,
+                        AppSpacing.md,
+                        size.gutter,
+                        0,
+                      ),
+                      child: SavedCopyBanner(savedAt: state.savedAt),
+                    ),
                     Padding(
                       padding: EdgeInsets.fromLTRB(
                         size.gutter,

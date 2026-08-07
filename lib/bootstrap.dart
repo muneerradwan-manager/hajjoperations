@@ -16,6 +16,7 @@ import 'core/logging/error_reporting.dart';
 import 'core/offline/outbox.dart';
 import 'core/offline/outbox_store.dart';
 import 'core/offline/reconnects.dart';
+import 'core/offline/snapshots.dart';
 import 'core/supabase/secure_session_storage.dart';
 import 'features/checkin/data/check_in_outbox.dart';
 import 'features/incidents/data/incidents_outbox.dart';
@@ -94,6 +95,25 @@ Future<void> _installOutbox() async {
     // red twelve-line trace at every start-up on the web trains whoever is
     // reading the console to skip exactly the place real faults appear.
     AppLogger.info('app', 'no outbox on this platform — writes go straight out');
+  }
+}
+
+/// Brings the saved-answers store up, on the same terms as the queue above.
+///
+/// The queue keeps what a man WROTE with no signal; this keeps what he last
+/// READ, so the roster and his own list are still there when the network is
+/// not. Same failure posture, same reason: the web has no directory to keep it
+/// in, and a platform where saved answers cannot exist simply does not have
+/// them — every read there is live, and no call site has to know which platform
+/// it is on.
+///
+/// Before the first frame because the screens read it as they build; awaited
+/// because it is one `mkdir`.
+Future<void> _installSnapshots() async {
+  try {
+    Snapshots.instance = await Snapshots.open();
+  } catch (error) {
+    AppLogger.info('app', 'no saved answers on this platform — reads are live');
   }
 }
 
@@ -179,6 +199,7 @@ Future<AppDependencies> bootstrap() async {
   );
 
   await _installOutbox();
+  await _installSnapshots();
 
   final prefs = await prefsFuture;
 
