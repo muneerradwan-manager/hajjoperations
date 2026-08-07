@@ -457,6 +457,8 @@ class _HomeScreenState extends State<HomeScreen> {
         subtitle: l.navTasksSubtitle,
         color: _generalPalette[1].of(context),
         onTap: () => context.push(Routes.tasks),
+        action: () => context.push('${Routes.tasks}?compose=1'),
+        actionTooltip: l.tasksNew,
       ),
       // Published to everybody, and gated by nothing: مواعيد الوجبات is not
       // an assignment, it is information the whole mission needs. Reading is
@@ -479,6 +481,8 @@ class _HomeScreenState extends State<HomeScreen> {
         subtitle: l.navMyComplaintsSubtitle,
         color: _generalPalette[3].of(context),
         onTap: () => context.push(Routes.complaints),
+        action: () => context.push('${Routes.complaints}?compose=1'),
+        actionTooltip: l.complaintsNew,
       ),
       // Gated by nothing, like the three above it, and for a reason of its
       // own: an evaluation reaches its evaluator by NAME. There is no

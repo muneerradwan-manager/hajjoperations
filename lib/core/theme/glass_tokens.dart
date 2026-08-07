@@ -20,7 +20,18 @@ class GlassTokens extends ThemeExtension<GlassTokens> {
     required this.blur,
     required this.blurStrong,
     required this.onPaper,
+    this.reduced = false,
   });
+
+  /// Whether this is the glass-free set — see [lightSolid].
+  ///
+  /// Carried on the tokens rather than read back out of `blur == 0`, and rather
+  /// than plumbed separately to everything that needs it. The token set IS the
+  /// mode: anything with a `BuildContext` can ask `context.glass.reduced` and
+  /// get the answer, so the backdrop knows to lie flat without a setting being
+  /// threaded down to it, and a widget test can put the app in this mode by
+  /// building it with one theme.
+  final bool reduced;
 
   /// Which backdrop this set was derived against.
   ///
@@ -122,6 +133,72 @@ class GlassTokens extends ThemeExtension<GlassTokens> {
     blurStrong: 28,
   );
 
+  /// The same system with the glass taken out of it: opaque panes, no blur,
+  /// heavier hairlines.
+  ///
+  /// One switch, and it answers two different complaints that turn out to have
+  /// one fix.
+  ///
+  /// **Sunlight.** This app is read standing outdoors in Makkah in ذو الحجة. A
+  /// translucent pane works by letting the backdrop through, and in full sun
+  /// the eye is already fighting glare before it reaches the text; every
+  /// percent of backdrop coming through the card is contrast taken off the
+  /// words. Opaque is not a nicer look out there, it is the difference between
+  /// reading a name and guessing it.
+  ///
+  /// **Cheap phones.** Each blur is a save-layer: the compositor re-reads
+  /// everything behind the pane and re-blurs it, every frame. On the handsets
+  /// field staff actually carry, a screen of blurred cards is where the frame
+  /// budget goes. [blur] of zero is read by [GlassSurface] as "do not build the
+  /// filter at all" — the layer is never created, rather than created and set
+  /// to zero sigma.
+  ///
+  /// The stroke does the work the fill used to. Once a pane is opaque it no
+  /// longer separates itself from the page by tone, so the edge has to say
+  /// where it ends — which is why these are the strong hairlines rather than
+  /// the ordinary ones.
+  static final lightSolid = GlassTokens(
+    onPaper: true,
+    reduced: true,
+    // Not the page's own paper tone: a card the colour of the page behind it
+    // is not a card. White, against `paperMid`, which is the same relationship
+    // the translucent version arrives at — reached by being opaque rather than
+    // by being 80% of the way there.
+    fill: AppColors.white,
+    fillStrong: AppColors.white,
+    // A well, and on paper a well is darker. Opaque, so it is the composited
+    // tone rather than black at five percent.
+    fillSubtle: const Color(0xFFF2F0EC),
+    // No sheen. A gradient across an opaque card is a second surface for the
+    // eye to resolve, and this mode exists to give it fewer.
+    sheen: const Color(0x00000000),
+    stroke: AppColors.black.withValues(alpha: 0.24),
+    strokeStrong: AppColors.black.withValues(alpha: 0.38),
+    shadow: AppColors.black.withValues(alpha: 0.16),
+    blur: 0,
+    blurStrong: 0,
+  );
+
+  /// The night equivalent. Kept because the choice is about GLASS, not about
+  /// brightness: a man on a cheap handset wants the save-layers gone at night
+  /// too, and somebody who simply finds translucency hard to read does not
+  /// want to be moved to the light theme to escape it.
+  static final darkSolid = GlassTokens(
+    onPaper: false,
+    reduced: true,
+    // The composited result of the translucent pane over the night backdrop,
+    // taken as a solid: the same tone arrived at without the read-behind.
+    fill: const Color(0xFF11201E),
+    fillStrong: const Color(0xFF0A1917),
+    fillSubtle: const Color(0xFF16241F),
+    sheen: const Color(0x00000000),
+    stroke: AppColors.white.withValues(alpha: 0.22),
+    strokeStrong: AppColors.white.withValues(alpha: 0.38),
+    shadow: AppColors.black.withValues(alpha: 0.50),
+    blur: 0,
+    blurStrong: 0,
+  );
+
   /// Fill gradient, lit from the top-left in both modes — but by opposite
   /// means. On night the near corner is brightened; on paper it is the FAR
   /// corner that is shaded, because the near one is already white and has
@@ -174,9 +251,11 @@ class GlassTokens extends ThemeExtension<GlassTokens> {
     double? blur,
     double? blurStrong,
     bool? onPaper,
+    bool? reduced,
   }) {
     return GlassTokens(
       onPaper: onPaper ?? this.onPaper,
+      reduced: reduced ?? this.reduced,
       fill: fill ?? this.fill,
       fillStrong: fillStrong ?? this.fillStrong,
       fillSubtle: fillSubtle ?? this.fillSubtle,
@@ -196,6 +275,11 @@ class GlassTokens extends ThemeExtension<GlassTokens> {
       // A gradient runs one way or the other; there is no halfway. It flips at
       // the midpoint of the theme crossfade, under two fills that are by then
       // nearly the same colour, so nothing on screen shows the seam.
+      // Snapped rather than interpolated, like [onPaper] above it: there is
+      // no halfway between a pane you can see through and one you cannot,
+      // and a blur of nine sigma for one frame is the save-layer this mode
+      // exists to avoid.
+      reduced: t < 0.5 ? reduced : other.reduced,
       onPaper: t < 0.5 ? onPaper : other.onPaper,
       fill: Color.lerp(fill, other.fill, t)!,
       fillStrong: Color.lerp(fillStrong, other.fillStrong, t)!,

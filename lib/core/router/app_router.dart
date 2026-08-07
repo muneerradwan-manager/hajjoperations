@@ -386,8 +386,16 @@ GoRouter buildRouter(SessionCubit session) {
       ),
       GoRoute(
         path: Routes.tasks,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const TasksScreen()),
+        // `?compose=1` asks the screen to open its editor on arrival. A query
+        // parameter rather than `extra` because it survives a deep link and a
+        // restore, and because a request to write something is part of WHERE
+        // the reader asked to go.
+        pageBuilder: (c, s) => fadeThroughPage(
+          key: s.pageKey,
+          child: TasksScreen(
+            compose: s.uri.queryParameters['compose'] == '1',
+          ),
+        ),
       ),
       GoRoute(
         path: Routes.tasksManage,
@@ -467,8 +475,12 @@ GoRouter buildRouter(SessionCubit session) {
       // one is what this person filed, the other is the whole register.
       GoRoute(
         path: Routes.complaints,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const ComplaintsScreen()),
+        pageBuilder: (c, s) => fadeThroughPage(
+          key: s.pageKey,
+          child: ComplaintsScreen(
+            compose: s.uri.queryParameters['compose'] == '1',
+          ),
+        ),
       ),
       GoRoute(
         path: Routes.complaintsManage,

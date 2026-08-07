@@ -32,17 +32,46 @@ import 'widgets/task_state_widgets.dart';
 /// Assigning and managing what was assigned live behind their own door —
 /// [TasksManageScreen] — because that is authority, and this page is work.
 class TasksScreen extends StatelessWidget {
-  const TasksScreen({super.key});
+  const TasksScreen({super.key, this.compose = false});
+
+  /// Open the editor as soon as the screen is up.
+  ///
+  /// Set by the button on the home card. The composer needs this screen's
+  /// cubit, so it cannot be opened from the card directly — the card asks for
+  /// the screen AND the sheet, and the screen provides both in the right
+  /// order. A person who pressed "new task" should not have to press it again
+  /// on arrival.
+  final bool compose;
 
   @override
   Widget build(BuildContext context) => BlocProvider(
     create: (_) => TasksCubit(TasksRepository()),
-    child: const _View(),
+    child: _View(compose: compose),
   );
 }
 
-class _View extends StatelessWidget {
-  const _View();
+class _View extends StatefulWidget {
+  const _View({this.compose = false});
+
+  final bool compose;
+
+  @override
+  State<_View> createState() => _ViewState();
+}
+
+class _ViewState extends State<_View> {
+  @override
+  void initState() {
+    super.initState();
+    // After the first frame, so the sheet has a Scaffold to sit in — and once,
+    // because `initState` is the only place that is true of. Opening it in
+    // `build` would reopen it on every rebuild the list causes.
+    if (widget.compose) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _add(context);
+      });
+    }
+  }
 
   Future<void> _add(BuildContext context) async {
     await showTaskEditorSheet(context, context.read<TasksCubit>());

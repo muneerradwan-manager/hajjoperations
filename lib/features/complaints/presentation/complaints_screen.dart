@@ -29,20 +29,49 @@ import 'widgets/complaint_labels.dart';
 /// profile, because it is the one place a man looks for what is being said about
 /// him — and because it is read through the one function that redacts.
 class ComplaintsScreen extends StatelessWidget {
-  const ComplaintsScreen({super.key, this.scope = ComplaintsScope.mine});
+  const ComplaintsScreen({
+    super.key,
+    this.scope = ComplaintsScope.mine,
+    this.compose = false,
+  });
 
   final ComplaintsScope scope;
+
+  /// Open the filing form as soon as the screen is up — see [TasksScreen].
+  ///
+  /// Only ever set for [ComplaintsScope.mine]: the register scope is a reading
+  /// of everybody's, and there is nothing to compose from it.
+  final bool compose;
 
   @override
   Widget build(BuildContext context) => BlocProvider(
     create: (_) => ComplaintsCubit(ComplaintsRepository(), scope: scope),
-    child: _View(scope: scope),
+    child: _View(scope: scope, compose: compose),
   );
 }
 
-class _View extends StatelessWidget {
-  const _View({required this.scope});
+class _View extends StatefulWidget {
+  const _View({required this.scope, this.compose = false});
+
   final ComplaintsScope scope;
+  final bool compose;
+
+  @override
+  State<_View> createState() => _ViewState();
+}
+
+class _ViewState extends State<_View> {
+  ComplaintsScope get scope => widget.scope;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.compose) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _file(context);
+      });
+    }
+  }
 
   Future<void> _file(BuildContext context) async {
     final cubit = context.read<ComplaintsCubit>();
@@ -127,13 +156,7 @@ class _View extends StatelessWidget {
                               : (mine
                                     ? l.complaintsEmpty
                                     : l.complaintsEmptyAll),
-                          action: mine && !state.isNarrowed
-                              ? FilledButton.icon(
-                                  onPressed: () => _file(context),
-                                  icon: const Icon(AppIcons.add),
-                                  label: Text(l.complaintsNew),
-                                )
-                              : null,
+                          
                         )
                       : ResponsivePage(
                           maxWidth: 1200,
