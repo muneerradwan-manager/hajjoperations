@@ -5,9 +5,7 @@ import 'package:hajjoperations/features/map/domain/map_place.dart';
 import 'package:latlong2/latlong.dart';
 
 MapPlace at(String groupKey, String groupAr, String name) => MapPlace(
-  nodeId: name,
-  moduleId: 'm',
-  moduleName: groupAr,
+  itemId: name,
   placeName: name,
   position: const LatLng(21.4, 39.8),
   groupKey: groupKey,
@@ -19,8 +17,11 @@ MapPlace at(String groupKey, String groupAr, String name) => MapPlace(
 /// The four groups the mission thinks in — the camps of منى, the camps of
 /// عرفات, the hotels of مكة, the hotels of المدينة — are not written down
 /// anywhere in the app. They fall out of the data: a place drawn from the
-/// hotels list is grouped by the hotel's city, everything else by its file. A
-/// fifth appears on the day a fifth exists, and nothing has to be edited.
+/// hotels list is grouped by the hotel's city and a camp by its مشعر — both
+/// read off the entry's own `data`, so a fifth appears on the day a fifth
+/// exists and nothing has to be edited. (Until 0112 that was true of the hotels
+/// alone: everything else was grouped by the FILE it stood in, so the chips
+/// read «توزيع أعضاء مكاتب البعثة على مخيمات منى» instead of «مخيمات منى».)
 void main() {
   final season = SeasonMapState(
     status: SeasonMapStatus.ready,

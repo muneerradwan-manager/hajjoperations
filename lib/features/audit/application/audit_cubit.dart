@@ -4,6 +4,7 @@ import '../../../core/bloc/safe_cubit.dart';
 import '../data/audit_repository.dart';
 import '../domain/audit_event.dart';
 import '../domain/audit_labels.dart';
+import '../domain/audit_summary.dart';
 
 enum AuditStatus { loading, loaded, error }
 
@@ -75,6 +76,7 @@ class AuditState extends Equatable {
     this.loadingMore = false,
     this.filters = const AuditFilters(),
     this.actors = const [],
+    this.summary,
     this.error,
   });
 
@@ -86,6 +88,15 @@ class AuditState extends Equatable {
 
   /// Loaded once, lazily, when the person filter is first opened.
   final List<AuditActor> actors;
+
+  /// The shape of the same filtered set, counted server-side.
+  ///
+  /// Null while it is in flight and null if it FAILED, and the second is not an
+  /// error state: the log is readable without its summary, and taking the whole
+  /// page down because a chart could not be counted would trade the thing the
+  /// reader came for against the thing above it.
+  final AuditSummary? summary;
+
   final String? error;
 
   AuditState copyWith({
@@ -95,6 +106,7 @@ class AuditState extends Equatable {
     bool? loadingMore,
     AuditFilters? filters,
     List<AuditActor>? actors,
+    Object? summary = _keep,
     String? error,
   }) {
     return AuditState(
@@ -104,9 +116,16 @@ class AuditState extends Equatable {
       loadingMore: loadingMore ?? this.loadingMore,
       filters: filters ?? this.filters,
       actors: actors ?? this.actors,
+      // Through a sentinel, because clearing it is a thing that has to be
+      // sayable: a summary counted under the old filters, left standing over a
+      // list reloaded under the new ones, is the exact disagreement this whole
+      // arrangement exists to avoid.
+      summary: summary == _keep ? this.summary : summary as AuditSummary?,
       error: error,
     );
   }
+
+  static const _keep = Object();
 
   @override
   List<Object?> get props => [
@@ -116,6 +135,7 @@ class AuditState extends Equatable {
     loadingMore,
     filters,
     actors,
+    summary,
     error,
   ];
 }
@@ -135,7 +155,16 @@ class AuditCubit extends SafeCubit<AuditState> {
 
   Future<void> load() async {
     final seq = ++_requestSeq;
-    emit(state.copyWith(status: AuditStatus.loading, loadingMore: false));
+    // The old summary goes with the old list. It was counted under the filters
+    // that have just been replaced, and a stale chart over a fresh list reads
+    // as a disagreement nobody can resolve from the screen.
+    emit(
+      state.copyWith(
+        status: AuditStatus.loading,
+        loadingMore: false,
+        summary: null,
+      ),
+    );
     try {
       final page = await _fetch(beforeId: null);
       if (seq != _requestSeq) return;
@@ -149,6 +178,32 @@ class AuditCubit extends SafeCubit<AuditState> {
     } catch (e) {
       if (seq != _requestSeq) return;
       emit(state.copyWith(status: AuditStatus.error, error: e.toString()));
+      return;
+    }
+    // Counted after the page rather than beside it, and on its own error path.
+    // The list is what the reader opened this screen for; the summary is what
+    // sits above it, and one failing must not take the other down.
+    await _summarise(seq);
+  }
+
+  Future<void> _summarise(int seq) async {
+    final f = state.filters;
+    try {
+      final summary = await _repo.fetchSummary(
+        actorId: f.actor?.id,
+        actions: f.action == null ? null : [f.action!.name],
+        tables: f.tables,
+        from: f.from,
+        to: f.to?.add(const Duration(days: 1)),
+        query: f.query.trim().isEmpty ? null : f.query.trim(),
+      );
+      if (seq != _requestSeq) return;
+      emit(state.copyWith(summary: summary));
+    } catch (_) {
+      if (seq != _requestSeq) return;
+      // Left absent. The header simply does not appear, which is honest — it
+      // was never a claim the log could not be read without.
+      emit(state.copyWith(summary: null));
     }
   }
 

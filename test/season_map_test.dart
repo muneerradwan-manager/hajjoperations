@@ -4,12 +4,10 @@ import 'package:hajjoperations/features/map/domain/map_place.dart';
 import 'package:latlong2/latlong.dart';
 
 MapPlace place({int posted = 0, int present = 0, int incidents = 0}) => MapPlace(
-  nodeId: 'n1',
-  moduleId: 'm1',
-  moduleName: 'توزيع الأعضاء على مخيمات منى',
+  itemId: 'i1',
   placeName: 'المخيم رقم ١٤',
   position: const LatLng(21.41, 39.89),
-  groupKey: 'type:mina_camp_assignment',
+  groupKey: 'camps:mina',
   groupName: const LocalizedName(ar: 'مخيمات منى', en: 'Mina camps'),
   posted: posted,
   present: present,
@@ -105,15 +103,15 @@ void main() {
     });
   });
 
-  group('a hotel that is nowhere in any file', () {
+  group('a place no file has staffed', () {
     // Most of المدينة. That file organises people by شركة الخدمة, which is a
     // company and not somewhere anybody stands, so its hotels are master data
     // and nothing else. Leaving them off the map because no member has been
-    // posted to them would hide the city.
+    // posted to them would hide the city — and since 0112 the same is true of a
+    // camp on the season's list that no file has turned into a node, which the
+    // old map left off entirely.
     final loose = MapPlace.fromRow({
-      'node_id': null,
-      'module_id': null,
-      'module_name': null,
+      'item_id': 'i-zamzam',
       'place_name': 'زمزم بولمان',
       'group_key': 'hotels:المدينة المنورة',
       'group_ar': 'فنادق المدينة المنورة',
@@ -130,10 +128,11 @@ void main() {
       expect(loose.position.latitude, 24.4563);
     });
 
-    test('it belongs to no file, and says so rather than pretending', () {
-      // The screen reads this to decide that tapping it cannot open a file.
-      expect(loose.moduleId, isNull);
-      expect(loose.nodeId, isNull);
+    test('it is the master-data entry, and nothing about a file', () {
+      // The id a check-in is recorded against and a code is fixed to (0098) —
+      // not a node's and not a module's. Those were carried until 0112 and were
+      // never read by anything but the sheet that printed the file's name.
+      expect(loose.itemId, 'i-zamzam');
     });
 
     test('it is empty rather than unmanned', () {
@@ -148,9 +147,7 @@ void main() {
   group('reading a row back', () {
     test('the counts arrive as counts', () {
       final read = MapPlace.fromRow({
-        'node_id': 'n7',
-        'module_id': 'm3',
-        'module_name': 'الإسكان',
+        'item_id': 'i7',
         'place_name': 'فندق الأنصار',
         'lat': 21.4,
         'lng': 39.8,
@@ -166,8 +163,7 @@ void main() {
 
     test('missing counts read as zero, not as null', () {
       final read = MapPlace.fromRow({
-        'node_id': 'n7',
-        'module_id': 'm3',
+        'item_id': 'i7',
         'lat': 21.4,
         'lng': 39.8,
       });

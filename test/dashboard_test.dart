@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hajjoperations/core/theme/chart_palette.dart';
+import 'package:hajjoperations/core/widgets/charts.dart';
+import 'package:hajjoperations/core/widgets/responsive.dart';
 import 'package:hajjoperations/features/dashboard/domain/dashboard_stats.dart';
-import 'package:hajjoperations/features/dashboard/presentation/widgets/charts.dart';
 
 void main() {
   group('what the reader is allowed to ask', () {
@@ -198,7 +199,7 @@ void main() {
     });
   });
 
-  group('SplitBar', () {
+  group('DonutChart', () {
     Widget wrap(Widget child) => MaterialApp(
       home: Scaffold(body: SizedBox(width: 400, child: child)),
     );
@@ -218,7 +219,8 @@ void main() {
 
       await tester.pumpWidget(
         wrap(
-          const SplitBar(
+          const DonutChart(
+            otherLabel: 'Other',
             slices: [
               ChartSlice(label: 'Internal', value: 30),
               ChartSlice(label: 'External', value: 12),
@@ -226,11 +228,13 @@ void main() {
           ),
         ),
       );
+      await tester.pump(const Duration(milliseconds: 400));
       final withBoth = colourOfFirstLegendDot(tester);
 
       await tester.pumpWidget(
         wrap(
-          const SplitBar(
+          const DonutChart(
+            otherLabel: 'Other',
             slices: [
               ChartSlice(label: 'Internal', value: 30),
               ChartSlice(label: 'External', value: 0),
@@ -238,7 +242,7 @@ void main() {
           ),
         ),
       );
-      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
 
       expect(colourOfFirstLegendDot(tester), withBoth);
       // And the empty one is gone from the legend rather than sitting there
@@ -246,12 +250,12 @@ void main() {
       expect(find.text('External'), findsNothing);
     });
 
-    testWidgets('every segment carries its name and its number', (
-      tester,
-    ) async {
+    testWidgets('every wedge carries its name and its number', (tester) async {
       await tester.pumpWidget(
         wrap(
-          const SplitBar(
+          const DonutChart(
+            otherLabel: 'Other',
+            centerLabel: 'Total',
             slices: [
               ChartSlice(label: 'Administrative', value: 8),
               ChartSlice(label: 'Religious', value: 5),
@@ -260,6 +264,7 @@ void main() {
           ),
         ),
       );
+      await tester.pump(const Duration(milliseconds: 400));
 
       // Never colour alone: the chart survives a photocopier.
       for (final label in ['Administrative', 'Religious', 'Medical']) {
@@ -268,6 +273,177 @@ void main() {
       for (final n in ['8', '5', '2']) {
         expect(find.text(n), findsOneWidget);
       }
+      // And the hole carries the whole.
+      expect(find.text('15'), findsOneWidget);
+      expect(find.text('Total'), findsOneWidget);
+    });
+
+    testWidgets('a fourth category folds into one wedge, by declared order', (
+      tester,
+    ) async {
+      // The palette has three measured slots and is never cycled. The fold runs
+      // by the order the categories were NAMED rather than by size, so a
+      // category shrinking cannot change what a colour means — which is the
+      // same rule as the zero case above, applied at the other end.
+      await tester.pumpWidget(
+        wrap(
+          const DonutChart(
+            otherLabel: 'Other',
+            slices: [
+              ChartSlice(label: 'First', value: 10),
+              ChartSlice(label: 'Second', value: 8),
+              ChartSlice(label: 'Third', value: 5),
+              ChartSlice(label: 'Fourth', value: 3),
+            ],
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('First'), findsOneWidget);
+      expect(find.text('Second'), findsOneWidget);
+      expect(find.text('Third'), findsNothing);
+      expect(find.text('Fourth'), findsNothing);
+      // The tail, summed and named once.
+      expect(find.text('Other'), findsOneWidget);
+      expect(find.text('8'), findsNWidgets(2)); // Second's 8, and 5 + 3.
+    });
+
+    testWidgets('a whole that is entirely zero draws a ring, not a crash', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          const DonutChart(
+            otherLabel: 'Other',
+            slices: [
+              ChartSlice(label: 'Internal', value: 0),
+              ChartSlice(label: 'External', value: 0),
+            ],
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Internal'), findsNothing);
+    });
+  });
+
+  group('the plotted marks', () {
+    // fl_chart lays itself out against the space it is given and animates on
+    // arrival. These are not appearance tests — they are the check that each
+    // mark survives being built, at both ends of its data, inside the pane the
+    // dashboard actually puts it in.
+    Widget wrap(Widget child) => MaterialApp(
+      home: Scaffold(body: SizedBox(width: 400, height: 300, child: child)),
+    );
+
+    testWidgets('a trend draws its series, and says so when there is none', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(
+          TrendChart(
+            emptyLabel: 'Nothing filed',
+            labelForDay: (d) => '${d.day}',
+            points: [
+              for (var i = 0; i < 30; i++)
+                TrendPoint(day: DateTime(2026, 7, i + 1), value: i % 5),
+            ],
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(tester.takeException(), isNull);
+      expect(find.text('Nothing filed'), findsNothing);
+
+      await tester.pumpWidget(
+        wrap(const TrendChart(emptyLabel: 'Nothing filed', points: [])),
+      );
+      await tester.pump();
+      expect(find.text('Nothing filed'), findsOneWidget);
+    });
+
+    testWidgets('a distribution keeps the place of a rating nobody gave', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap(const StarBars(counts: [0, 0, 1, 2, 4])));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(tester.takeException(), isNull);
+      // Five columns on the axis, including the two nobody gave: a missing bar
+      // would say the rating does not exist.
+      for (final star in ['1', '2', '3', '4', '5']) {
+        expect(find.text(star), findsWidgets);
+      }
+    });
+
+    testWidgets('a gauge states its share and clamps a bad one', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(const GaugeRing(value: 0.75, label: '30 of 40 opened')),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('75%'), findsOneWidget);
+
+      // A share over one is a bug upstream, not a ring drawn twice round.
+      await tester.pumpWidget(wrap(const GaugeRing(value: 1.4, label: 'x')));
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.text('100%'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a sparkline needs three points to be a shape', (tester) async {
+      await tester.pumpWidget(
+        wrap(const Sparkline(values: [1, 2], color: Color(0xFF00897B))),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a tile carrying a plot can still be levelled with its row', (
+      tester,
+    ) async {
+      // The headline tiles share a row and are forced to one height, which
+      // means every one of them is asked for its INTRINSIC height — and a
+      // chart cannot answer that question: it measures itself against the space
+      // it is handed. The fixed box around every plot is what makes the
+      // question answerable, and this is the test that it stays there.
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 800,
+              child: AdaptiveGrid(
+                minTileWidth: 200,
+                children: [
+                  StatTile(
+                    label: 'Reports',
+                    value: '412',
+                    icon: Icons.description,
+                    color: const Color(0xFF00897B),
+                    caption: 'from 12 authors',
+                    spark: const [1, 4, 2, 9, 3, 6],
+                  ),
+                  StatTile(
+                    label: 'Files',
+                    value: '18',
+                    icon: Icons.folder,
+                    color: const Color(0xFFA8801A),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('412'), findsOneWidget);
     });
   });
 

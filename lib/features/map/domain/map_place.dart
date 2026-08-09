@@ -21,17 +21,9 @@ enum PlaceCondition {
   /// Somebody is there and nothing is outstanding.
   manned,
 
-  /// Nobody is posted here at all. The place exists in the file and has not
-  /// been staffed.
-  empty,
-
-  /// Nobody CAN report arriving here: the node stands on no master-data entry,
-  /// so there is nothing to fix a code to (0098).
-  ///
-  /// Without this such a place read as [unmanned] — a coloured pin accusing
-  /// nobody of anything, since no arrival could ever be counted against it. The
-  /// answer is not to look for the man; it is to give the node an entry.
-  uncoded;
+  /// Nobody is posted here at all. The place exists on the season's list and no
+  /// file has staffed it.
+  empty;
 
   /// Whether it is worth the operations room's attention.
   bool get wantsAttention =>
@@ -39,11 +31,15 @@ enum PlaceCondition {
 }
 
 /// One place of the season, as the map draws it.
+///
+/// A place, and not a node of a file. It stopped being one in 0095 and the map
+/// caught up in 0112 — which is where the file's name, the file's id and the
+/// node's id went: a hotel does not belong to an operational file, several
+/// files may post people to one camp, and a pin drawn per node put two of them
+/// on the same spot.
 class MapPlace {
   const MapPlace({
-    required this.nodeId,
-    required this.moduleId,
-    required this.moduleName,
+    required this.itemId,
     required this.placeName,
     required this.position,
     required this.groupKey,
@@ -51,13 +47,12 @@ class MapPlace {
     this.posted = 0,
     this.present = 0,
     this.openIncidents = 0,
-    this.canCheckIn = true,
   });
 
-  /// Null for a hotel that is not a node in any file — most of المدينة. It is
-  /// still a place the mission's pilgrims are in, and still worth drawing.
-  final String? nodeId;
-  final String? moduleId;
+  /// The master-data entry this place IS — a row of the hotels list or the
+  /// camps list. The same id a check-in is recorded against and a place code is
+  /// fixed to (0098).
+  final String itemId;
 
   /// Which of the season's four groups this belongs to — the camps of منى, the
   /// camps of عرفات, the hotels of مكة, the hotels of المدينة.
@@ -67,9 +62,6 @@ class MapPlace {
   final String groupKey;
 
   final LocalizedName groupName;
-
-  /// The file this place belongs to — "توزيع الأعضاء على مخيمات منى".
-  final String moduleName;
 
   /// The place itself — "المخيم رقم ١٤", "فندق الأنصار".
   final String placeName;
@@ -84,27 +76,20 @@ class MapPlace {
 
   final int openIncidents;
 
-  /// Whether an arrival can be recorded here at all.
-  ///
-  /// False for a node that names no master-data entry: a code is fixed to a
-  /// hotel or a camp, and a node standing on neither has nothing to carry one.
-  final bool canCheckIn;
-
+  /// There is no "cannot be checked into" any more, and the flag that carried
+  /// it is gone with the node branch of `season_map`. It meant a node standing
+  /// on no master-data entry — nothing to fix a sticker to. Every pin is now an
+  /// entry, and 0098 seeds a code for every entry of a place list by trigger,
+  /// so the state cannot arise.
   PlaceCondition get condition {
     if (openIncidents > 0) return PlaceCondition.incident;
     if (posted == 0) return PlaceCondition.empty;
     if (present > 0) return PlaceCondition.manned;
-    // Checked AFTER `manned`, deliberately. A count above zero settles the
-    // question whatever the flag says, and a place that somehow has arrivals
-    // recorded against it plainly can be checked into.
-    if (!canCheckIn) return PlaceCondition.uncoded;
     return PlaceCondition.unmanned;
   }
 
   static MapPlace fromRow(Map<String, dynamic> map) => MapPlace(
-    nodeId: map['node_id'] as String?,
-    moduleId: map['module_id'] as String?,
-    moduleName: (map['module_name'] as String?) ?? '',
+    itemId: map['item_id'] as String,
     placeName: (map['place_name'] as String?) ?? '',
     position: LatLng(
       (map['lat'] as num).toDouble(),
@@ -118,7 +103,6 @@ class MapPlace {
     posted: (map['posted'] as num?)?.toInt() ?? 0,
     present: (map['present'] as num?)?.toInt() ?? 0,
     openIncidents: (map['open_incidents'] as num?)?.toInt() ?? 0,
-    canCheckIn: (map['can_check_in'] as bool?) ?? true,
   );
 }
 

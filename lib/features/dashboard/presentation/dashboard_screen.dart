@@ -8,6 +8,7 @@ import '../../../core/l10n/permission_labels.dart';
 import '../../../core/theme/app_accents.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
+import '../../../core/widgets/charts.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
@@ -15,7 +16,6 @@ import '../../../l10n/app_localizations.dart';
 import '../application/dashboard_cubit.dart';
 import '../data/dashboard_repository.dart';
 import '../domain/dashboard_stats.dart';
-import 'widgets/charts.dart';
 
 /// The season, from above.
 ///
@@ -126,9 +126,11 @@ class _View extends StatelessWidget {
           ),
         ),
         _cards([
-          _Card(
-            title: l.dashboardInternal,
-            child: SplitBar(
+          ChartCard(
+            title: l.dashboardInternalSplit,
+            child: DonutChart(
+              otherLabel: l.chartOther,
+              centerLabel: l.dashboardParticipants,
               slices: [
                 ChartSlice(
                   label: l.dashboardInternal,
@@ -141,18 +143,22 @@ class _View extends StatelessWidget {
               ],
             ),
           ),
-          _Card(
+          ChartCard(
             title: l.dashboardByMission,
-            child: SplitBar(
+            child: DonutChart(
+              otherLabel: l.chartOther,
+              centerLabel: l.chartTotal,
               slices: [
                 for (final m in stats.people!.byMission)
                   ChartSlice(label: _label(context, m), value: m.count),
               ],
             ),
           ),
-          _Card(
+          ChartCard(
             title: l.dashboardByGender,
-            child: SplitBar(
+            child: DonutChart(
+              otherLabel: l.chartOther,
+              centerLabel: l.chartTotal,
               slices: [
                 for (final g in stats.people!.byGender)
                   ChartSlice(label: _gender(l, g.key), value: g.count),
@@ -160,7 +166,7 @@ class _View extends StatelessWidget {
             ),
           ),
           if (stats.people!.byJobTitle.isNotEmpty)
-            _Card(
+            ChartCard(
               title: l.dashboardByJobTitle,
               child: RankedBars(
                 slices: [
@@ -219,9 +225,11 @@ class _View extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         _cards([
-          _Card(
+          ChartCard(
             title: l.dashboardActiveDraft,
-            child: SplitBar(
+            child: DonutChart(
+              otherLabel: l.chartOther,
+              centerLabel: l.dashboardFiles,
               slices: [
                 ChartSlice(
                   label: l.moduleActiveSection,
@@ -235,7 +243,7 @@ class _View extends StatelessWidget {
             ),
           ),
           if (stats.modules!.byType.isNotEmpty)
-            _Card(
+            ChartCard(
               title: l.dashboardByType,
               child: RankedBars(
                 slices: [
@@ -254,7 +262,7 @@ class _View extends StatelessWidget {
         ),
         _cards([
           if (stats.reports != null)
-            _Card(
+            ChartCard(
               title: l.dashboardReportsTrend,
               child: TrendChart(
                 emptyLabel: l.dashboardReportsEmpty,
@@ -266,7 +274,7 @@ class _View extends StatelessWidget {
               ),
             ),
           if (stats.ratings != null)
-            _Card(
+            ChartCard(
               title: l.dashboardRatingDistribution,
               trailing: stats.ratings!.average == null
                   ? null
@@ -320,9 +328,11 @@ class _View extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         _cards([
-          _Card(
+          ChartCard(
             title: l.dashboardCentralSplit,
-            child: SplitBar(
+            child: DonutChart(
+              otherLabel: l.chartOther,
+              centerLabel: l.chartTotal,
               slices: [
                 ChartSlice(
                   label: l.dashboardCentralPublished,
@@ -336,7 +346,7 @@ class _View extends StatelessWidget {
             ),
           ),
           if (stats.centralReports!.byType.isNotEmpty)
-            _Card(
+            ChartCard(
               title: l.dashboardCentralByType,
               child: RankedBars(
                 slices: [
@@ -368,6 +378,9 @@ class _View extends StatelessWidget {
               caption: l.dashboardNotifAllTime(
                 stats.notifications!.totalMessages,
               ),
+              spark: [
+                for (final d in stats.notifications!.series) d.count,
+              ],
             ),
             StatTile(
               label: l.dashboardNotifRecipients,
@@ -375,19 +388,11 @@ class _View extends StatelessWidget {
               icon: AppIcons.participants,
               color: Accent.greenDeep.of(context),
             ),
-            if (stats.notifications!.readShare != null)
-              StatTile(
-                label: l.dashboardNotifReadShare,
-                value:
-                    '${(stats.notifications!.readShare! * 100).round()}%',
-                icon: AppIcons.view,
-                color: Accent.gold.of(context),
-              ),
           ]),
         ),
         const SizedBox(height: AppSpacing.md),
         _cards([
-          _Card(
+          ChartCard(
             title: l.dashboardNotifTrend,
             child: TrendChart(
               emptyLabel: l.dashboardNotifTrendEmpty,
@@ -398,6 +403,21 @@ class _View extends StatelessWidget {
               ],
             ),
           ),
+          // A share of a whole gets a ring rather than a fourth tile: "68%"
+          // printed as a number is a number, and the question a reader is
+          // actually asking — is most of it read, or hardly any of it — is a
+          // question about a proportion, which is a shape.
+          if (stats.notifications!.readShare != null)
+            ChartCard(
+              title: l.dashboardNotifReadShare,
+              child: GaugeRing(
+                value: stats.notifications!.readShare!,
+                label: l.dashboardNotifReadOf(
+                  stats.notifications!.read,
+                  stats.notifications!.recipients,
+                ),
+              ),
+            ),
         ]),
       ],
 
@@ -430,9 +450,11 @@ class _View extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         _cards([
-          _Card(
+          ChartCard(
             title: l.dashboardRefSeasonSplit,
-            child: SplitBar(
+            child: DonutChart(
+              otherLabel: l.chartOther,
+              centerLabel: l.dashboardRefItems,
               slices: [
                 ChartSlice(
                   label: l.dashboardRefSeasonItems,
@@ -446,7 +468,7 @@ class _View extends StatelessWidget {
             ),
           ),
           if (stats.reference!.bySet.isNotEmpty)
-            _Card(
+            ChartCard(
               title: l.dashboardRefBySet,
               child: RankedBars(
                 slices: [
@@ -493,7 +515,7 @@ class _View extends StatelessWidget {
         if (stats.permissions!.bySection.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.md),
           _cards([
-            _Card(
+            ChartCard(
               title: l.dashboardPermBySection,
               child: RankedBars(
                 slices: [
@@ -520,7 +542,7 @@ class _View extends StatelessWidget {
         // Four states, which is one more than colour can carry — so this is a
         // ranked list in one hue, with the name at the start of each row.
         _cards([
-          _Card(
+          ChartCard(
             title: l.dashboardSectionQueue,
             child: RankedBars(
               slices: [
@@ -580,6 +602,10 @@ class _View extends StatelessWidget {
           icon: AppIcons.trend,
           color: Accent.gold.of(context),
           caption: l.dashboardReportsCaption(stats.reports!.authors),
+          // The one headline number with a shape behind it. "412 reports" and
+          // "412 reports, none of them since Thursday" are different facts, and
+          // the tile can carry the second without being asked.
+          spark: [for (final d in stats.reports!.series) d.count],
         ),
       if (stats.ratings != null)
         StatTile(
@@ -680,43 +706,6 @@ class _SeasonFilter extends StatelessWidget {
           onChanged: (v) =>
               v == null ? null : context.read<DashboardCubit>().selectSeason(v),
         ),
-      ),
-    );
-  }
-}
-
-/// A titled pane around one chart. The title names the series, which is what
-/// lets a single-series chart go without a legend.
-class _Card extends StatelessWidget {
-  const _Card({required this.title, required this.child, this.trailing});
-
-  final String title;
-  final Widget child;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    return GlassCard(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              ?trailing,
-            ],
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          child,
-        ],
       ),
     );
   }

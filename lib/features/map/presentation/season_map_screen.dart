@@ -30,11 +30,9 @@ Color _conditionColour(ColorScheme scheme, PlaceCondition condition) =>
       PlaceCondition.incident => scheme.error,
       PlaceCondition.unmanned => scheme.tertiary,
       PlaceCondition.manned => scheme.primary,
-      // Both drawn in the muted outline colour, because neither is anybody's
-      // fault: one has nobody posted to it and the other cannot carry a code.
-      // They differ in what to DO, which the words below say.
+      // The muted outline colour, because it is nobody's fault: the place is on
+      // the season's list and no file has staffed it.
       PlaceCondition.empty => scheme.outline,
-      PlaceCondition.uncoded => scheme.outline,
     };
 
 String _conditionLabel(AppLocalizations l, PlaceCondition condition) =>
@@ -43,7 +41,6 @@ String _conditionLabel(AppLocalizations l, PlaceCondition condition) =>
       PlaceCondition.unmanned => l.seasonMapUnmanned,
       PlaceCondition.manned => l.seasonMapManned,
       PlaceCondition.empty => l.seasonMapEmpty,
-      PlaceCondition.uncoded => l.seasonMapUncoded,
     };
 
 /// The season on one map.
@@ -431,19 +428,11 @@ class _PlaceSheet extends StatelessWidget {
               ),
             ],
           ),
-          // A hotel that stands in no file has no roster to belong to — most of
-          // المدينة is in that position, since the file there is organised by
-          // service company and not by building.
-          if (place.moduleName.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              l.seasonMapInFile,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
-            ),
-            Text(place.moduleName, style: theme.textTheme.bodyMedium),
-          ],
+          // No «ضمن الملف التشغيلي» line. A place is not in a file — it stopped
+          // being one in 0095 — and the sheet used to answer a tap on a camp in
+          // منى with «توزيع أعضاء مكاتب البعثة على مخيمات منى», which was the
+          // name of a file that happens to post people here. What IS true of
+          // the place is the three counts above.
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [
@@ -659,7 +648,6 @@ class _Legend extends StatelessWidget {
                 PlaceCondition.unmanned,
                 PlaceCondition.incident,
                 PlaceCondition.empty,
-                PlaceCondition.uncoded,
               ])
                 _Key(
                   colour: _conditionColour(scheme, condition),

@@ -98,17 +98,18 @@ const _generalPalette = <Accent>[
 /// Four shelves, four families — see the note at the head of this file. Adding
 /// a tile means naming its shelf and nothing else.
 enum _AdminGroup {
-  /// The paperwork itself: the season's files, the reports drawn from them, the
-  /// blank forms the office writes, and the complaints register. Green, the
-  /// mission's own work.
+  /// The paperwork itself: the season's operational files, the decisions drawn
+  /// from them, and the blank forms the office writes. Green, the mission's own
+  /// work.
   ///
-  /// The complaints belong here rather than on the shelf below because of what
-  /// is DONE with them. A register that is replied to, dismissed and locked is
-  /// a standing file being worked through, not a record being looked back at.
+  /// Everything here is paper this office ISSUES. That is the line the
+  /// complaints register turned out to be on the wrong side of — see where it
+  /// stands now, and why.
   files(Accent.greenDeep),
 
-  /// Everybody with an account, and what each of them may do. Red, which is
-  /// what red is for here.
+  /// Everybody with an account: who they are, whether they are let in at all,
+  /// what they may do, what they are told to do — and what has been said about
+  /// them. Red, which is what red is for here.
   people(Accent.red),
 
   /// The year, and the lists everything else is built from.
@@ -120,8 +121,10 @@ enum _AdminGroup {
   /// It used to be described as the shelf that only ever looks BACK, and two of
   /// the things on it have since left for that reason — the complaints and the
   /// evaluations register are both worked through rather than read after the
-  /// fact. What remains is the season seen whole, plus the one screen here that
-  /// is read while it is still happening.
+  /// fact. (The complaints went on to leave their landing place too, for a
+  /// second reason; the note beside the tile has it.) What remains is the
+  /// season seen whole, plus the one screen here that is read while it is still
+  /// happening.
   oversight(Accent.plum);
 
   const _AdminGroup(this.accent);
@@ -248,6 +251,41 @@ class _HomeScreenState extends State<HomeScreen> {
               subtitle: l.navApprovalsSubtitle,
               onTap: () => context.push(Routes.approvals),
             ),
+          // Directly beside the account queue, because they are the same JOB.
+          //
+          // The whole register is oversight work; filing one and reading your
+          // own are not — those are everybody's, and stand below under العام
+          // beside the rest of a person's own work.
+          //
+          // It has now moved twice, and the second move corrects the reasoning
+          // of the first. Leaving الإشراف والسجلات was right: that shelf is
+          // what you read AFTER the fact, and a complaint register is worked
+          // THROUGH — replied to, dismissed, locked. But "worked through" does
+          // not pick out الملفات; it picks out a QUEUE OF CASES, and this app
+          // has exactly one other — اعتماد الحسابات, on this shelf. Two queues
+          // with the same rhythm on two different shelves was the mistake.
+          //
+          // Three things settle it. الملفات والقرارات والتعميمات names three
+          // kinds of paper the OFFICE writes, and a complaint arrives from
+          // outside that pen — filing it there mixes what we issue with what
+          // reaches us. What a complaint escalates INTO lands on a person and
+          // on their account (§24: a rule here can suspend one with no human in
+          // the loop), and accounts are what this shelf governs. And whoever
+          // opens it opens the staff directory and the approvals queue in the
+          // same sitting, not the operational files.
+          //
+          // The honest objection is that a complaint may be about a hotel or a
+          // file rather than a person. It may — but somebody still has to
+          // answer for it, and this shelf already carries إسناد المهام, which
+          // is neither a person nor a permission.
+          if (session.can(PermissionCodes.complaintsView))
+            (
+              group: _AdminGroup.people,
+              icon: AppIcons.complaints,
+              title: l.navComplaints,
+              subtitle: l.navComplaintsSubtitle,
+              onTap: () => context.push(Routes.complaintsManage),
+            ),
           // Beside the permissions, and for the same reason: writing a task
           // onto somebody's list is an act aimed at a PERSON, and whoever came
           // here came looking for him. Not on the files shelf — this system
@@ -307,24 +345,6 @@ class _HomeScreenState extends State<HomeScreen> {
               title: l.navAuditLog,
               subtitle: l.navAuditLogSubtitle,
               onTap: () => context.push(Routes.auditLog),
-            ),
-          // The whole register, which is oversight and belongs here. Filing one
-          // and reading your own are not — those are everybody's, and stand
-          // below under العام beside the rest of a person's own work.
-          // إدارة الشكاوى sits with the paperwork, not on the oversight shelf.
-          //
-          // It moved because of what the shelf is FOR: الإشراف والسجلات is what
-          // you read after the fact — the numbers from above, the acts in
-          // order. A complaint register is not read that way. It is worked
-          // THROUGH — replied to, dismissed, locked — which makes it one of the
-          // office's standing files, beside the reports and the blank forms.
-          if (session.can(PermissionCodes.complaintsView))
-            (
-              group: _AdminGroup.files,
-              icon: AppIcons.complaints,
-              title: l.navComplaints,
-              subtitle: l.navComplaintsSubtitle,
-              onTap: () => context.push(Routes.complaintsManage),
             ),
           // The season drawn. It belongs on the oversight shelf beside the
           // dashboard and for the same reason — both are the season seen whole

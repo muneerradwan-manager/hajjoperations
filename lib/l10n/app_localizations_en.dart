@@ -2114,6 +2114,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get auditEmptyBody => 'Every change made in the app is recorded here.';
 
   @override
+  String get auditPulseTitle => 'Activity';
+
+  @override
+  String get auditPulseByAction => 'By kind of act';
+
+  @override
+  String get auditPulseEmpty => 'Nothing happened in this window';
+
+  @override
+  String auditPulseEvents(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count events',
+      one: '1 event',
+      zero: 'no events',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String auditPulseActors(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people',
+      one: '1 person',
+      zero: 'nobody',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get auditSearchHint => 'Search by person or record…';
 
   @override
@@ -2185,6 +2218,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navDashboardSubtitle => 'The season from above';
 
   @override
+  String get chartOther => 'Other';
+
+  @override
+  String get chartTotal => 'Total';
+
+  @override
   String get dashboardTitle => 'Dashboard';
 
   @override
@@ -2238,6 +2277,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dashboardNotifReadShare => 'Read rate';
+
+  @override
+  String dashboardNotifReadOf(int read, int total) {
+    return '$read of $total opened';
+  }
 
   @override
   String get dashboardNotifTrend => 'Messages, last 30 days';
@@ -2306,6 +2350,9 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get dashboardInternalSplit => 'Mission and outside';
 
   @override
   String get dashboardInternal => 'Of the mission';
@@ -3419,9 +3466,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get seasonMapEmpty => 'No members';
 
   @override
-  String get seasonMapUncoded => 'Cannot be checked into';
-
-  @override
   String get seasonMapPosted => 'Posted here';
 
   @override
@@ -3429,9 +3473,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seasonMapOpenIncidents => 'Open incidents';
-
-  @override
-  String get seasonMapInFile => 'In the operational file';
 
   @override
   String get seasonMapCopyCoordinates => 'Copy coordinates';
@@ -3455,7 +3496,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seasonMapEmptyStateHint =>
-      'A place appears here once its position is set on the operational file';
+      'A place appears here once its position is set on the hotels or camps list';
 
   @override
   String get incidentTitle => 'Urgent report';

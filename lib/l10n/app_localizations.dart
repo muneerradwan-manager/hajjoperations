@@ -3890,6 +3890,36 @@ abstract class AppLocalizations {
   /// **'Every change made in the app is recorded here.'**
   String get auditEmptyBody;
 
+  /// No description provided for @auditPulseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get auditPulseTitle;
+
+  /// No description provided for @auditPulseByAction.
+  ///
+  /// In en, this message translates to:
+  /// **'By kind of act'**
+  String get auditPulseByAction;
+
+  /// No description provided for @auditPulseEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing happened in this window'**
+  String get auditPulseEmpty;
+
+  /// No description provided for @auditPulseEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{no events} =1{1 event} other{{count} events}}'**
+  String auditPulseEvents(int count);
+
+  /// No description provided for @auditPulseActors.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{nobody} =1{1 person} other{{count} people}}'**
+  String auditPulseActors(int count);
+
   /// No description provided for @auditSearchHint.
   ///
   /// In en, this message translates to:
@@ -4028,6 +4058,18 @@ abstract class AppLocalizations {
   /// **'The season from above'**
   String get navDashboardSubtitle;
 
+  /// No description provided for @chartOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get chartOther;
+
+  /// No description provided for @chartTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get chartTotal;
+
   /// No description provided for @dashboardTitle.
   ///
   /// In en, this message translates to:
@@ -4135,6 +4177,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Read rate'**
   String get dashboardNotifReadShare;
+
+  /// No description provided for @dashboardNotifReadOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{read} of {total} opened'**
+  String dashboardNotifReadOf(int read, int total);
 
   /// No description provided for @dashboardNotifTrend.
   ///
@@ -4249,6 +4297,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =0{nobody withdrew} =1{and one withdrew} other{and {count} withdrew}}'**
   String dashboardWithdrawnCaption(int count);
+
+  /// No description provided for @dashboardInternalSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Mission and outside'**
+  String get dashboardInternalSplit;
 
   /// No description provided for @dashboardInternal.
   ///
@@ -6044,12 +6098,6 @@ abstract class AppLocalizations {
   /// **'No members'**
   String get seasonMapEmpty;
 
-  /// No description provided for @seasonMapUncoded.
-  ///
-  /// In en, this message translates to:
-  /// **'Cannot be checked into'**
-  String get seasonMapUncoded;
-
   /// No description provided for @seasonMapPosted.
   ///
   /// In en, this message translates to:
@@ -6067,12 +6115,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open incidents'**
   String get seasonMapOpenIncidents;
-
-  /// No description provided for @seasonMapInFile.
-  ///
-  /// In en, this message translates to:
-  /// **'In the operational file'**
-  String get seasonMapInFile;
 
   /// No description provided for @seasonMapCopyCoordinates.
   ///
@@ -6113,7 +6155,7 @@ abstract class AppLocalizations {
   /// No description provided for @seasonMapEmptyStateHint.
   ///
   /// In en, this message translates to:
-  /// **'A place appears here once its position is set on the operational file'**
+  /// **'A place appears here once its position is set on the hotels or camps list'**
   String get seasonMapEmptyStateHint;
 
   /// No description provided for @incidentTitle.

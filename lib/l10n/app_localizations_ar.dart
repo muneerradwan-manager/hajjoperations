@@ -2107,6 +2107,45 @@ class AppLocalizationsAr extends AppLocalizations {
   String get auditEmptyBody => 'كل تغيير يجري في التطبيق يُسجَّل هنا.';
 
   @override
+  String get auditPulseTitle => 'نبض السجلّ';
+
+  @override
+  String get auditPulseByAction => 'حسب نوع الحدث';
+
+  @override
+  String get auditPulseEmpty => 'لا أحداث في هذه المدّة';
+
+  @override
+  String auditPulseEvents(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count حدث',
+      many: '$count حدثاً',
+      few: '$count أحداث',
+      two: 'حدثان',
+      one: 'حدث واحد',
+      zero: 'لا حدث',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String auditPulseActors(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count شخص',
+      many: '$count شخصاً',
+      few: '$count أشخاص',
+      two: 'شخصان',
+      one: 'شخص واحد',
+      zero: 'لا فاعل',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get auditSearchHint => 'بحث باسم الشخص أو السجل…';
 
   @override
@@ -2178,6 +2217,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navDashboardSubtitle => 'الموسم كما يبدو من فوق';
 
   @override
+  String get chartOther => 'أخرى';
+
+  @override
+  String get chartTotal => 'الإجمالي';
+
+  @override
   String get dashboardTitle => 'لوحة المؤشرات';
 
   @override
@@ -2230,6 +2275,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get dashboardNotifReadShare => 'نسبة المقروء';
+
+  @override
+  String dashboardNotifReadOf(int read, int total) {
+    return 'فُتحت $read من $total';
+  }
 
   @override
   String get dashboardNotifTrend => 'رسائل آخر ٣٠ يوماً';
@@ -2298,6 +2348,9 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get dashboardInternalSplit => 'من البعثة ومن خارجها';
 
   @override
   String get dashboardInternal => 'من البعثة';
@@ -3436,9 +3489,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get seasonMapEmpty => 'بلا أعضاء';
 
   @override
-  String get seasonMapUncoded => 'لا يمكن تسجيل الوصول هنا';
-
-  @override
   String get seasonMapPosted => 'مُسنَد إليه';
 
   @override
@@ -3446,9 +3496,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get seasonMapOpenIncidents => 'بلاغ مفتوح';
-
-  @override
-  String get seasonMapInFile => 'ضمن الملف التشغيلي';
 
   @override
   String get seasonMapCopyCoordinates => 'نسخ الإحداثيات';
@@ -3472,7 +3519,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get seasonMapEmptyStateHint =>
-      'يظهر المكان على الخريطة حين يُحدَّد موقعه في الملف التشغيلي';
+      'يظهر المكان على الخريطة حين يُحدَّد موقعه في قائمة الفنادق أو المخيمات';
 
   @override
   String get incidentTitle => 'بلاغ عاجل';

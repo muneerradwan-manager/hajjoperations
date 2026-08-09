@@ -17,6 +17,7 @@ import '../data/audit_repository.dart';
 import '../domain/audit_event.dart';
 import '../domain/audit_labels.dart';
 import 'widgets/audit_event_sheet.dart';
+import 'widgets/audit_pulse.dart';
 import 'widgets/audit_style.dart';
 
 /// The log itself: everything that happened, newest first, narrowed by who,
@@ -254,6 +255,13 @@ class _Body extends StatelessWidget {
           24 + MediaQuery.viewPaddingOf(context).bottom,
         ),
         onRefresh: () => context.read<AuditCubit>().load(),
+        // The shape of what is being read, above what is being read — and only
+        // once it has arrived. It is counted in a second call that may still be
+        // in flight or may have failed, and neither is a reason to hold up the
+        // register or to draw an empty frame where a chart is going to be.
+        header: state.summary == null
+            ? null
+            : AuditPulse(summary: state.summary!),
         minTileWidth: 380,
         maxColumns: 2,
         spacing: 10,

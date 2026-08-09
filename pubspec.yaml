@@ -50,6 +50,12 @@ dependencies:
   share_plus: ^12.0.2
   bidi: ^2.0.13
   mobile_scanner: ^7.4.0
+  # Pinned, not caret-ranged: the chart kit in `core/theme/chart_palette.dart`
+  # and `features/dashboard/presentation/widgets/charts.dart` is built against
+  # this API, and a minor bump has moved chart classes before. MIT — chosen
+  # over syncfusion_flutter_charts, whose community licence is conditional on
+  # company revenue and headcount and would have to be re-checked every year.
+  fl_chart: 1.2.0
 
 dev_dependencies:
   flutter_test:
