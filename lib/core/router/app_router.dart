@@ -364,8 +364,15 @@ GoRouter buildRouter(SessionCubit session) {
       ),
       GoRoute(
         path: Routes.myCheckIns,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const MyCheckInsScreen()),
+        // `?compose=1` opens the scanner on arrival, exactly as it does for
+        // tasks and complaints — the one way this app is asked to write
+        // something from the home page.
+        pageBuilder: (c, s) => fadeThroughPage(
+          key: s.pageKey,
+          child: MyCheckInsScreen(
+            compose: s.uri.queryParameters['compose'] == '1',
+          ),
+        ),
       ),
       GoRoute(
         path: Routes.presence,

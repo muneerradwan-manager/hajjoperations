@@ -9,6 +9,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/widgets/creator_page.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/info_section.dart';
 import '../../../core/widgets/overflow_menu.dart';
@@ -19,6 +20,7 @@ import '../../auth/application/session_cubit.dart';
 import '../application/tasks_cubit.dart';
 import '../data/tasks_repository.dart';
 import '../domain/personal_task.dart';
+import 'task_editor_screen.dart';
 import 'widgets/task_state_widgets.dart';
 
 /// One person's task list, and nothing else's.
@@ -68,14 +70,17 @@ class _ViewState extends State<_View> {
     // `build` would reopen it on every rebuild the list causes.
     if (widget.compose) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _add(context);
+        if (mounted) _add();
       });
     }
   }
 
-  Future<void> _add(BuildContext context) async {
-    await showTaskEditorSheet(context, context.read<TasksCubit>());
-  }
+  /// One way in and one way back: the editor is a page above this list, it
+  /// says what it wrote, and closing it lands here — see [CreatorPage]. The
+  /// cubit reloads itself on a successful write, so there is nothing to do
+  /// with the answer but let the list rebuild.
+  Future<void> _add() =>
+      openTaskEditor(context, context.read<TasksCubit>());
 
   @override
   Widget build(BuildContext context) {
@@ -83,10 +88,9 @@ class _ViewState extends State<_View> {
 
     return Scaffold(
       appBar: GlassAppBar(title: Text(l.tasksTitle)),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _add(context),
-        icon: const Icon(AppIcons.add),
-        label: Text(l.tasksNew),
+      floatingActionButton: CreateFab(
+        label: l.tasksNew,
+        onPressed: _add,
       ),
       body: SafeArea(
         child: BlocBuilder<TasksCubit, TasksState>(
@@ -414,14 +418,14 @@ class _TaskSheetState extends State<_TaskSheet> {
     if (picked != null) setState(() => _added.add(picked));
   }
 
-  /// Closes this sheet and reopens the editor on the same task. Two sheets
-  /// stacked would leave a stale copy of the row underneath the one being
-  /// corrected.
+  /// Closes this sheet and opens the editor on the same task. The sheet goes
+  /// first: leaving it open under the editor page would leave a stale copy of
+  /// the row behind the correction being made to it.
   Future<void> _edit() async {
     final cubit = context.read<TasksCubit>();
     final host = Navigator.of(context);
     host.pop();
-    await showTaskEditorSheet(host.context, cubit, existing: widget.task);
+    await openTaskEditor(host.context, cubit, existing: widget.task);
   }
 
   Future<void> _delete() async {
@@ -679,210 +683,6 @@ class _AttachmentRow extends StatelessWidget {
             icon: const Icon(AppIcons.delete, size: 16),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ============================================================ writing a task
-
-/// Writes a task, or corrects one the caller holds the full pen over.
-///
-/// [existing] is null for a new one. [assignTo] names other people's lists —
-/// the assigners' door, and a LIST because one duty is routinely handed to
-/// several people in one decision; empty writes onto the caller's own.
-///
-/// The cubit is passed rather than read off [context]: this is reopened from
-/// inside the task sheet, after that sheet has been popped, and the context
-/// left standing at that moment is the Navigator's — which sits ABOVE the
-/// provider and would find nothing.
-Future<void> showTaskEditorSheet(
-  BuildContext context,
-  TasksCubit cubit, {
-  PersonalTask? existing,
-  List<(String id, String name)> assignTo = const [],
-}) async {
-  await showAppSheet<bool>(
-    context: context,
-    builder: (_) => BlocProvider.value(
-      value: cubit,
-      child: _TaskEditorSheet(existing: existing, assignTo: assignTo),
-    ),
-  );
-}
-
-class _TaskEditorSheet extends StatefulWidget {
-  const _TaskEditorSheet({this.existing, this.assignTo = const []});
-
-  final PersonalTask? existing;
-  final List<(String id, String name)> assignTo;
-
-  @override
-  State<_TaskEditorSheet> createState() => _TaskEditorSheetState();
-}
-
-class _TaskEditorSheetState extends State<_TaskEditorSheet> {
-  late final _title = TextEditingController(
-    text: widget.existing?.title ?? '',
-  );
-  late final _description = TextEditingController(
-    text: widget.existing?.description ?? '',
-  );
-  late DateTime? _dueOn = widget.existing?.dueOn;
-  bool _busy = false;
-  String? _error;
-
-  @override
-  void dispose() {
-    _title.dispose();
-    _description.dispose();
-    super.dispose();
-  }
-
-  Future<void> _save() async {
-    final l = context.l10n;
-    final title = _title.text.trim();
-    if (title.isEmpty) {
-      setState(() => _error = l.commonRequired);
-      return;
-    }
-
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    final cubit = context.read<TasksCubit>();
-    final existing = widget.existing;
-    final error = existing == null
-        ? await cubit.create(
-            title: title,
-            description: _description.text.trim(),
-            dueOn: _dueOn,
-            profileIds: {for (final (id, _) in widget.assignTo) id},
-          )
-        : await cubit.update(
-            id: existing.id,
-            title: title,
-            description: _description.text.trim(),
-            dueOn: _dueOn,
-          );
-    if (!mounted) return;
-    if (error != null) {
-      setState(() {
-        _busy = false;
-        _error = error;
-      });
-      return;
-    }
-    Navigator.of(context).pop(true);
-  }
-
-  Future<void> _pickDue() async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _dueOn ?? now,
-      firstDate: DateTime(now.year - 1),
-      lastDate: DateTime(now.year + 3),
-    );
-    if (picked != null) setState(() => _dueOn = picked);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-    final isNew = widget.existing == null;
-    final assignTo = widget.assignTo;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        0,
-        AppSpacing.lg,
-        AppSpacing.xl,
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              isNew
-                  ? (assignTo.isEmpty ? l.tasksNew : l.tasksAssign)
-                  : l.taskEdit,
-              style: text.titleLarge,
-            ),
-            // Every name, not a count: whoever is about to hand out a duty is
-            // owed the chance to notice the wrong man in the list BEFORE six
-            // people are notified, and "6 employees" gives him nothing to
-            // notice with.
-            if (assignTo.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Wrap(
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.xs,
-                children: [
-                  for (final (_, name) in assignTo)
-                    GlassBadge(
-                      label: name,
-                      icon: AppIcons.myProfile,
-                      dense: true,
-                    ),
-                ],
-              ),
-            ],
-            const SizedBox(height: AppSpacing.lg),
-
-            TextField(
-              controller: _title,
-              enabled: !_busy,
-              decoration: InputDecoration(labelText: l.taskTitleLabel),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: _description,
-              enabled: !_busy,
-              maxLines: 3,
-              decoration: InputDecoration(
-                labelText: l.taskDescriptionLabel,
-                helperText: l.commonOptional,
-                alignLabelWithHint: true,
-              ),
-            ),
-
-            const SizedBox(height: AppSpacing.md),
-            OutlinedButton.icon(
-              onPressed: _busy ? null : _pickDue,
-              icon: const Icon(AppIcons.seasons, size: 18),
-              label: Text(
-                _dueOn == null ? l.taskNoDue : l.taskDue(formatDate(_dueOn)),
-              ),
-            ),
-
-            if (_error != null) ...[
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                _error!,
-                style: text.bodySmall?.copyWith(color: scheme.error),
-              ),
-            ],
-
-            const SizedBox(height: AppSpacing.lg),
-            FilledButton.icon(
-              onPressed: _busy ? null : _save,
-              icon: _busy
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2.2),
-                    )
-                  : const Icon(AppIcons.approve),
-              label: Text(l.commonSave),
-            ),
-          ],
-        ),
       ),
     );
   }

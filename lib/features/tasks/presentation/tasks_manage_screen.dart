@@ -5,6 +5,7 @@ import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
+import '../../../core/widgets/creator_page.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
@@ -13,6 +14,7 @@ import '../../modules/presentation/employee_picker_screen.dart';
 import '../application/tasks_cubit.dart';
 import '../data/tasks_repository.dart';
 import '../domain/personal_task.dart';
+import 'task_editor_screen.dart';
 import 'tasks_screen.dart';
 
 /// Assigning tasks and following them up — the authority half of the tasks
@@ -65,7 +67,7 @@ class _View extends StatelessWidget {
     );
     if (people == null || people.isEmpty || !context.mounted) return;
 
-    await showTaskEditorSheet(
+    await openTaskEditor(
       context,
       cubit,
       assignTo: [
@@ -80,10 +82,9 @@ class _View extends StatelessWidget {
 
     return Scaffold(
       appBar: GlassAppBar(title: Text(l.tasksManageTitle)),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: CreateFab(
+        label: l.tasksAssign,
         onPressed: () => _assign(context),
-        icon: const Icon(AppIcons.add),
-        label: Text(l.tasksAssign),
       ),
       body: SafeArea(
         child: BlocBuilder<TasksCubit, TasksState>(

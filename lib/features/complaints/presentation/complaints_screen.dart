@@ -6,6 +6,7 @@ import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
+import '../../../core/widgets/creator_page.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
@@ -107,10 +108,9 @@ class _ViewState extends State<_View> {
       // where they are started. A manager who wants to file one files it as
       // anybody does.
       floatingActionButton: mine
-          ? FloatingActionButton.extended(
+          ? CreateFab(
+              label: l.complaintsNew,
               onPressed: () => _file(context),
-              icon: const Icon(AppIcons.add),
-              label: Text(l.complaintsNew),
             )
           : null,
       body: SafeArea(
@@ -149,6 +149,12 @@ class _ViewState extends State<_View> {
                 _FilterBar(state: state),
                 Expanded(
                   child: visible.isEmpty
+                      // Icon, headline, one line under it — and no button. The
+                      // way to add is the same button it is on every other
+                      // list: the one standing over the bottom of the page.
+                      // Narrowed to nothing is a different sentence from empty,
+                      // and it is answered by the filters, not by filing
+                      // another complaint.
                       ? EmptyState(
                           icon: AppIcons.complaints,
                           title: state.isNarrowed
@@ -156,7 +162,11 @@ class _ViewState extends State<_View> {
                               : (mine
                                     ? l.complaintsEmpty
                                     : l.complaintsEmptyAll),
-                          
+                          message: state.isNarrowed
+                              ? l.complaintsNoMatchesHint
+                              : (mine
+                                    ? l.complaintsEmptyHint
+                                    : l.complaintsEmptyAllHint),
                         )
                       : ResponsivePage(
                           maxWidth: 1200,

@@ -7,6 +7,7 @@ import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
+import '../../../core/widgets/creator_page.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/saved_copy_banner.dart';
@@ -14,6 +15,7 @@ import '../../../core/widgets/states.dart';
 import '../application/my_check_ins_cubit.dart';
 import '../data/check_in_repository.dart';
 import '../domain/check_in.dart';
+import 'check_in_screen.dart';
 
 /// A person's own arrivals.
 ///
@@ -27,17 +29,54 @@ import '../domain/check_in.dart';
 /// Which is the one thing he might reasonably want to check — and precisely
 /// what he is asked to account for when somebody disputes whether he was there.
 class MyCheckInsScreen extends StatelessWidget {
-  const MyCheckInsScreen({super.key});
+  const MyCheckInsScreen({super.key, this.compose = false});
+
+  /// Open the scanner as soon as the screen is up — see [TasksScreen].
+  ///
+  /// Set by the button on the home card, which now asks for the RECORD and the
+  /// act in that order rather than for the act alone. It used to point straight
+  /// at the scanner, which is why a man who scanned a code was handed back the
+  /// home page: the list his arrival had just been written onto was never on
+  /// the stack to return to.
+  final bool compose;
 
   @override
   Widget build(BuildContext context) => BlocProvider(
     create: (_) => MyCheckInsCubit(CheckInRepository()),
-    child: const _View(),
+    child: _View(compose: compose),
   );
 }
 
-class _View extends StatelessWidget {
-  const _View();
+class _View extends StatefulWidget {
+  const _View({this.compose = false});
+
+  final bool compose;
+
+  @override
+  State<_View> createState() => _ViewState();
+}
+
+class _ViewState extends State<_View> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.compose) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _record();
+      });
+    }
+  }
+
+  /// The act, above the record. Filing an arrival is a page like writing a task
+  /// or a complaint is a page — see [CreatorPage] — and it ends where the other
+  /// two end: back on the list, with the new line on it.
+  Future<void> _record() async {
+    final cubit = context.read<MyCheckInsCubit>();
+    final filed = await Navigator.of(context).push<bool>(
+      fadeThroughRoute((_) => const CheckInScreen()),
+    );
+    if (filed == true) await cubit.load();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +84,13 @@ class _View extends StatelessWidget {
 
     return Scaffold(
       appBar: GlassAppBar(title: Text(l.myCheckInsTitle)),
+      floatingActionButton: CreateFab(
+        label: l.checkInAction,
+        // The one place the verb is not "add": what this button opens is a
+        // camera, and the barcode says so before it is pressed.
+        icon: AppIcons.qrCode,
+        onPressed: _record,
+      ),
       body: SafeArea(
         child: BlocBuilder<MyCheckInsCubit, MyCheckInsState>(
           builder: (context, state) {
@@ -100,7 +146,8 @@ class _View extends StatelessWidget {
                                 size.gutter,
                                 AppSpacing.md,
                                 size.gutter,
-                                AppSpacing.xxl +
+                                // Room for the button that sits over the list.
+                                AppSpacing.xxl * 2 +
                                     MediaQuery.viewPaddingOf(context).bottom,
                               ),
                               itemCount: shown.length,

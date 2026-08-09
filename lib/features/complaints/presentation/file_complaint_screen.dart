@@ -6,8 +6,8 @@ import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
+import '../../../core/widgets/creator_page.dart';
 import '../../../core/widgets/glass.dart';
-import '../../../core/widgets/responsive.dart';
 import '../application/file_complaint_cubit.dart';
 import '../data/complaints_repository.dart';
 import '../domain/complaint.dart';
@@ -75,48 +75,22 @@ class _View extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
 
-    return Scaffold(
-      appBar: GlassAppBar(title: Text(l.complaintsNew)),
-      body: SafeArea(
-        child: BlocBuilder<FileComplaintCubit, FileComplaintState>(
-          builder: (context, state) => ResponsivePage(
-            maxWidth: 720,
-            builder: (context, size) => SinglePaneLayout(
-              gutter: size.gutter,
-              children: [
-                _TargetSection(state: state, locked: locked),
-                const SizedBox(height: AppSpacing.lg),
-                _BodySection(state: state),
-                const SizedBox(height: AppSpacing.lg),
-                _AttachmentsSection(state: state),
-              ],
-            ),
-          ),
-        ),
-      ),
-      bottomNavigationBar: BlocBuilder<FileComplaintCubit, FileComplaintState>(
-        builder: (context, state) => GlassSurface(
-          radius: 0,
-          strong: true,
-          shadow: false,
-          bordered: false,
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: FilledButton.icon(
-                onPressed: state.canSubmit ? () => _submit(context) : null,
-                icon: state.status == FileComplaintStatus.sending
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2.2),
-                      )
-                    : const Icon(AppIcons.send),
-                label: Text(l.complaintSubmit),
-              ),
-            ),
-          ),
-        ),
+    // The same chrome the task editor and the arrival wear — title above, the
+    // one decision pinned to the bottom of the window. See [CreatorPage].
+    return BlocBuilder<FileComplaintCubit, FileComplaintState>(
+      builder: (context, state) => CreatorPage(
+        title: l.complaintsNew,
+        submitLabel: l.complaintSubmit,
+        submitIcon: AppIcons.send,
+        busy: state.status == FileComplaintStatus.sending,
+        onSubmit: state.canSubmit ? () => _submit(context) : null,
+        children: [
+          _TargetSection(state: state, locked: locked),
+          const SizedBox(height: AppSpacing.lg),
+          _BodySection(state: state),
+          const SizedBox(height: AppSpacing.lg),
+          _AttachmentsSection(state: state),
+        ],
       ),
     );
   }

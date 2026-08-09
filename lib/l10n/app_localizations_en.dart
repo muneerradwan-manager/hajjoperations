@@ -1793,6 +1793,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get taskStateSaved => 'State updated';
 
   @override
+  String get taskSaved => 'Task saved';
+
+  @override
   String get taskReadOnly =>
       'Assigned to you — only its state is yours to change';
 
@@ -2606,13 +2609,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get complaintsEmpty => 'No complaints filed';
 
   @override
+  String get complaintsEmptyHint => 'File your first one with the button below';
+
+  @override
   String get complaintsEmptyAll => 'Nothing has been filed yet';
+
+  @override
+  String get complaintsEmptyAllHint =>
+      'What staff file appears here as soon as it is filed';
 
   @override
   String get complaintsAgainstMeEmpty => 'Nothing has been filed about you';
 
   @override
   String get complaintsNoMatches => 'No complaint matches this';
+
+  @override
+  String get complaintsNoMatchesHint => 'Widen the search or clear the filters';
 
   @override
   String get complaintsSearchHint => 'Search complaints';
@@ -3682,7 +3695,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get myCheckInsEmptyHint =>
-      'Scan a place code while standing at it and it appears here';
+      'Scan a place code with the button below while standing at it, and it appears here';
 
   @override
   String get myCheckInsWindowDay => 'Today';

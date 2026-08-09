@@ -1785,6 +1785,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get taskStateSaved => 'تم تحديث الحالة';
 
   @override
+  String get taskSaved => 'حُفظت المهمة';
+
+  @override
   String get taskReadOnly =>
       'مهمة مُسندة إليك — لا تملك عليها سوى تغيير حالتها';
 
@@ -2597,13 +2600,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get complaintsEmpty => 'لم تقدّم أي شكوى';
 
   @override
+  String get complaintsEmptyHint => 'قدّم شكواك الأولى بالزر في الأسفل';
+
+  @override
   String get complaintsEmptyAll => 'لم تُقدَّم أي شكوى بعد';
+
+  @override
+  String get complaintsEmptyAllHint => 'ما يقدّمه الموظفون يظهر هنا فور تقديمه';
 
   @override
   String get complaintsAgainstMeEmpty => 'لم تُقدَّم أي شكوى ضدك';
 
   @override
   String get complaintsNoMatches => 'لا شكوى تطابق هذا';
+
+  @override
+  String get complaintsNoMatchesHint => 'وسّع البحث أو أزل عوامل التصفية';
 
   @override
   String get complaintsSearchHint => 'ابحث في الشكاوى';
@@ -3695,7 +3707,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get myCheckInsEmpty => 'لم تسجّل وصولك بعد';
 
   @override
-  String get myCheckInsEmptyHint => 'امسح رمز مكان وأنت واقف عنده، فيظهر هنا';
+  String get myCheckInsEmptyHint =>
+      'امسح رمز المكان بالزر في الأسفل وأنت واقف عنده، فيظهر هنا';
 
   @override
   String get myCheckInsWindowDay => 'اليوم';

@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/animations/animations.dart';
 import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
-import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/blocking_progress.dart';
+import '../../../core/widgets/creator_page.dart';
 import '../../../core/widgets/glass.dart';
-import '../../../core/widgets/responsive.dart';
 import '../application/check_in_cubit.dart';
 import '../domain/check_in.dart';
 import 'scan_check_in_screen.dart';
@@ -28,6 +26,12 @@ import 'scan_check_in_screen.dart';
 /// no "I am here" now: the code proves you are looking at the sticker and the
 /// position proves the sticker is not in your pocket, and neither alone proves
 /// anything.
+///
+/// Opened from «سجلّ حضوري» and from nowhere else, the way the task editor is
+/// opened from «مهامي» — it is that list's [CreatorPage], and it pops `true`
+/// onto it when an arrival was filed. The link the other way, an icon in this
+/// bar pointing at the record, is gone with the reason for it: the record is no
+/// longer somewhere else, it is what is underneath.
 class CheckInScreen extends StatefulWidget {
   const CheckInScreen({super.key});
 
@@ -80,9 +84,14 @@ class _CheckInScreenState extends State<CheckInScreen> {
 
     // Only on success. A refused arrival leaves the note where it was, because
     // he is about to try again and retyping it is the small insult on top.
+    //
+    // `true` is the whole contract with the list underneath: it reloads, and
+    // the line just written is the first thing on it. A queued arrival is `ok`
+    // too — the man's part is finished either way, and keeping him on this
+    // page over a signal problem invites the second scan that files it twice.
     if (result.outcome.ok) {
       _note.clear();
-      if (mounted) Navigator.of(context).maybePop();
+      if (mounted) Navigator.of(context).pop(true);
     }
   }
 
@@ -90,61 +99,41 @@ class _CheckInScreenState extends State<CheckInScreen> {
   Widget build(BuildContext context) {
     final l = context.l10n;
 
-    return Scaffold(
-      appBar: GlassAppBar(
-        title: Text(l.checkInTitle),
-        // The record sits behind the act, which is where it is looked for: a
-        // man wondering whether last night's scan registered is standing on
-        // this screen about to scan again.
-        actions: [
-          IconButton(
-            tooltip: l.myCheckInsTitle,
-            onPressed: () => context.push(Routes.myCheckIns),
-            icon: const Icon(AppIcons.auditLog),
-          ),
-        ],
-      ),
-      body: ResponsivePage(
-        maxWidth: 520,
-        builder: (context, size) => SinglePaneLayout(
-          gutter: size.gutter,
-          children: [
-            FadeSlideIn(
-              child: GlassCard(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Icon(
-                      AppIcons.qrCode,
-                      size: 40,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      l.checkInSubtitle,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
+    return CreatorPage(
+      title: l.checkInTitle,
+      submitLabel: l.checkInScan,
+      submitIcon: AppIcons.qrCode,
+      onSubmit: _scan,
+      maxWidth: 520,
+      children: [
+        FadeSlideIn(
+          child: GlassCard(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Icon(
+                  AppIcons.qrCode,
+                  size: 40,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
-              ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  l.checkInSubtitle,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.lg),
-            TextField(
-              controller: _note,
-              textInputAction: TextInputAction.done,
-              decoration: InputDecoration(labelText: l.checkInNoteHint),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            FilledButton.icon(
-              onPressed: _scan,
-              icon: const Icon(AppIcons.qrCode),
-              label: Text(l.checkInScan),
-            ),
-          ],
+          ),
         ),
-      ),
+        const SizedBox(height: AppSpacing.lg),
+        TextField(
+          controller: _note,
+          textInputAction: TextInputAction.done,
+          decoration: InputDecoration(labelText: l.checkInNoteHint),
+        ),
+      ],
     );
   }
 }

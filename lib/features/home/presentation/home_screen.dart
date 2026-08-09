@@ -207,13 +207,15 @@ class _HomeScreenState extends State<HomeScreen> {
     // sorted onto their shelves — see [_AdminGroup] — after the reader's
     // permissions have decided which of them exist at all.
     final admin =
-        <({
-          _AdminGroup group,
-          IconData icon,
-          String title,
-          String subtitle,
-          VoidCallback onTap,
-        })>[
+        <
+          ({
+            _AdminGroup group,
+            IconData icon,
+            String title,
+            String subtitle,
+            VoidCallback onTap,
+          })
+        >[
           if (canManageModules)
             (
               group: _AdminGroup.files,
@@ -448,18 +450,6 @@ class _HomeScreenState extends State<HomeScreen> {
         color: _generalPalette[0].of(context),
         onTap: () => context.push(Routes.modules),
       ),
-      // Gated by nothing: everyone owns a task list by existing (0105), and
-      // what was assigned to them arrived by name, not by grant. No relation
-      // to the operational files — that is the whole point of the card.
-      DashboardCard(
-        icon: AppIcons.tasks,
-        title: l.navTasks,
-        subtitle: l.navTasksSubtitle,
-        color: _generalPalette[1].of(context),
-        onTap: () => context.push(Routes.tasks),
-        action: () => context.push('${Routes.tasks}?compose=1'),
-        actionTooltip: l.tasksNew,
-      ),
       // Published to everybody, and gated by nothing: مواعيد الوجبات is not
       // an assignment, it is information the whole mission needs. Reading is
       // open to any approved account; entering one is what needs a permission.
@@ -469,20 +459,6 @@ class _HomeScreenState extends State<HomeScreen> {
         subtitle: l.navReportsSubtitle,
         color: _generalPalette[2].of(context),
         onTap: () => context.push(Routes.reports),
-      ),
-      // Gated by nothing, and that is the point: complaining is not a
-      // permission somebody grants. This card is what a person filed and the
-      // way to file another. What was filed ABOUT them is not here — that lives
-      // on their own profile, which is where a man looks for what is being said
-      // about him, and is the one door that hands it over without a name on it.
-      DashboardCard(
-        icon: AppIcons.complaints,
-        title: l.navMyComplaints,
-        subtitle: l.navMyComplaintsSubtitle,
-        color: _generalPalette[3].of(context),
-        onTap: () => context.push(Routes.complaints),
-        action: () => context.push('${Routes.complaints}?compose=1'),
-        actionTooltip: l.complaintsNew,
       ),
       // Gated by nothing, like the three above it, and for a reason of its
       // own: an evaluation reaches its evaluator by NAME. There is no
@@ -498,6 +474,34 @@ class _HomeScreenState extends State<HomeScreen> {
         color: _generalPalette[4].of(context),
         onTap: () => context.push(Routes.evaluations),
       ),
+      // Gated by nothing: everyone owns a task list by existing (0105), and
+      // what was assigned to them arrived by name, not by grant. No relation
+      // to the operational files — that is the whole point of the card.
+      DashboardCard(
+        icon: AppIcons.tasks,
+        title: l.navTasks,
+        subtitle: l.navTasksSubtitle,
+        color: _generalPalette[1].of(context),
+        onTap: () => context.push(Routes.tasks),
+        action: () => context.push('${Routes.tasks}?compose=1'),
+        actionTooltip: l.tasksNew,
+      ),
+
+      // Gated by nothing, and that is the point: complaining is not a
+      // permission somebody grants. This card is what a person filed and the
+      // way to file another. What was filed ABOUT them is not here — that lives
+      // on their own profile, which is where a man looks for what is being said
+      // about him, and is the one door that hands it over without a name on it.
+      DashboardCard(
+        icon: AppIcons.complaints,
+        title: l.navMyComplaints,
+        subtitle: l.navMyComplaintsSubtitle,
+        color: _generalPalette[3].of(context),
+        onTap: () => context.push(Routes.complaints),
+        action: () => context.push('${Routes.complaints}?compose=1'),
+        actionTooltip: l.complaintsNew,
+      ),
+
       // Where this person has been, and the way to add to it. Two verbs on one
       // card, and they belong together: the man about to scan a code is the
       // same man wondering whether last night's scan registered, and until now
@@ -519,7 +523,11 @@ class _HomeScreenState extends State<HomeScreen> {
         // prayer card, which put it among the facts about the moment rather
         // than among the things a person does — and left the record it produces
         // with nowhere to live. Now the record is the card and the act is on it.
-        action: () => context.push(Routes.checkIn),
+        //
+        // Through the record, not past it: `?compose=1` opens the list and the
+        // scanner over it, so closing the scanner lands on the line it just
+        // wrote. The same query the other two cards ask with.
+        action: () => context.push('${Routes.myCheckIns}?compose=1'),
         actionTooltip: l.checkInAction,
         actionIcon: AppIcons.qrCode,
       ),
@@ -550,12 +558,12 @@ class _HomeScreenState extends State<HomeScreen> {
           // The outbox first, and only when it has something in it. What the
           // app is still holding of yours outranks what it has been told.
           actions: const [OutboxBadge(), NotificationBell()],
+
           // The one bar in the app without it. Every other screen carries the
           // urgent report as an icon here because it has nowhere better; this
           // page has somewhere better — the full-width red button below, beside
           // check-in. Two doors to one screen, a hand's width apart, read as
           // two different things.
-          
         ),
         // The emergency button is NOT a floating one. It sits under the prayer
         // card, in the body — see `prayer` below.
@@ -746,10 +754,7 @@ class _ShelfHeader extends StatelessWidget {
     final text = Theme.of(context).textTheme;
 
     return Padding(
-      padding: const EdgeInsets.only(
-        top: AppSpacing.sm,
-        bottom: AppSpacing.md,
-      ),
+      padding: const EdgeInsets.only(top: AppSpacing.sm, bottom: AppSpacing.md),
       child: Row(
         children: [
           Container(
@@ -771,10 +776,7 @@ class _ShelfHeader extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
-            child: Container(
-              height: 1,
-              color: color.withValues(alpha: 0.22),
-            ),
+            child: Container(height: 1, color: color.withValues(alpha: 0.22)),
           ),
         ],
       ),
@@ -899,7 +901,6 @@ class _GreetingPanel extends StatelessWidget {
         Divider(height: 1, color: scheme.outlineVariant.withValues(alpha: 0.4)),
         const SizedBox(height: AppSpacing.md),
         const _Badges(alignment: WrapAlignment.center),
-        
       ],
     );
   }

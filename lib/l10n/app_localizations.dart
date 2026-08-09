@@ -3350,6 +3350,12 @@ abstract class AppLocalizations {
   /// **'State updated'**
   String get taskStateSaved;
 
+  /// No description provided for @taskSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Task saved'**
+  String get taskSaved;
+
   /// No description provided for @taskReadOnly.
   ///
   /// In en, this message translates to:
@@ -4754,11 +4760,23 @@ abstract class AppLocalizations {
   /// **'No complaints filed'**
   String get complaintsEmpty;
 
+  /// No description provided for @complaintsEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'File your first one with the button below'**
+  String get complaintsEmptyHint;
+
   /// No description provided for @complaintsEmptyAll.
   ///
   /// In en, this message translates to:
   /// **'Nothing has been filed yet'**
   String get complaintsEmptyAll;
+
+  /// No description provided for @complaintsEmptyAllHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What staff file appears here as soon as it is filed'**
+  String get complaintsEmptyAllHint;
 
   /// No description provided for @complaintsAgainstMeEmpty.
   ///
@@ -4771,6 +4789,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No complaint matches this'**
   String get complaintsNoMatches;
+
+  /// No description provided for @complaintsNoMatchesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Widen the search or clear the filters'**
+  String get complaintsNoMatchesHint;
 
   /// No description provided for @complaintsSearchHint.
   ///
@@ -6485,7 +6509,7 @@ abstract class AppLocalizations {
   /// No description provided for @myCheckInsEmptyHint.
   ///
   /// In en, this message translates to:
-  /// **'Scan a place code while standing at it and it appears here'**
+  /// **'Scan a place code with the button below while standing at it, and it appears here'**
   String get myCheckInsEmptyHint;
 
   /// No description provided for @myCheckInsWindowDay.
