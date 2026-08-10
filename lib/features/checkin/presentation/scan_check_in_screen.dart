@@ -38,6 +38,23 @@ class _ScanCheckInScreenState extends State<ScanCheckInScreen> {
   /// each would try to pop again.
   bool _done = false;
 
+  /// The torch, asked for politely.
+  ///
+  /// `toggleTorch` throws when the controller never started, and a controller
+  /// that never started is not a rare case — it is every refused camera
+  /// permission, and every phone whose camera another app is holding. The
+  /// button sits in the bar above the screen that SAYS the camera is
+  /// unavailable, so the throw landed uncaught while the explanation was on
+  /// screen. There is nothing to tell the reader here that the page is not
+  /// already telling them.
+  Future<void> _toggleTorch() async {
+    try {
+      await _controller.toggleTorch();
+    } catch (_) {
+      // Deliberately silent.
+    }
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -65,7 +82,7 @@ class _ScanCheckInScreenState extends State<ScanCheckInScreen> {
         actions: [
           IconButton(
             tooltip: l.checkInTorch,
-            onPressed: _controller.toggleTorch,
+            onPressed: _toggleTorch,
             icon: const Icon(Icons.flashlight_on_outlined),
           ),
         ],

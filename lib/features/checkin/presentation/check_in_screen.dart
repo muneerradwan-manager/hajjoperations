@@ -99,11 +99,15 @@ class _CheckInScreenState extends State<CheckInScreen> {
   Widget build(BuildContext context) {
     final l = context.l10n;
 
+    // Reachable directly by URL, so it answers for itself rather than trusting
+    // the list to have hidden its button — see [isPlaceScannerSupported].
+    final canScan = isPlaceScannerSupported;
+
     return CreatorPage(
       title: l.checkInTitle,
       submitLabel: l.checkInScan,
       submitIcon: AppIcons.qrCode,
-      onSubmit: _scan,
+      onSubmit: canScan ? _scan : null,
       maxWidth: 520,
       children: [
         FadeSlideIn(
@@ -119,7 +123,7 @@ class _CheckInScreenState extends State<CheckInScreen> {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  l.checkInSubtitle,
+                  canScan ? l.checkInSubtitle : l.checkInPhoneOnly,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
@@ -127,12 +131,16 @@ class _CheckInScreenState extends State<CheckInScreen> {
             ),
           ),
         ),
-        const SizedBox(height: AppSpacing.lg),
-        TextField(
-          controller: _note,
-          textInputAction: TextInputAction.done,
-          decoration: InputDecoration(labelText: l.checkInNoteHint),
-        ),
+        // No note field where there is nothing to attach it to. It is the
+        // second half of an act whose first half cannot happen here.
+        if (canScan) ...[
+          const SizedBox(height: AppSpacing.lg),
+          TextField(
+            controller: _note,
+            textInputAction: TextInputAction.done,
+            decoration: InputDecoration(labelText: l.checkInNoteHint),
+          ),
+        ],
       ],
     );
   }

@@ -1,5 +1,35 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
+
+/// Whether an arrival can be filed from the device this is running on.
+///
+/// Since 0098 there is exactly one way to file one — scan the code on the wall,
+/// and let the position prove the sticker is not in your pocket. So the whole
+/// act rests on `mobile_scanner`, which declares four platforms: android, ios,
+/// macos and web. **Windows and Linux have no implementation at all**, and the
+/// failure is not a graceful one: the controller's `start()` throws
+/// `MissingPluginException` out of an async gap the widget's own `errorBuilder`
+/// never sees, so the operations-room desktop got a red screen and a stack
+/// trace where a camera should have been.
+///
+/// Web is excluded with them, for a reason of its own rather than the package's:
+/// the browser cannot be trusted to be AT the place. A desktop in the office and
+/// a tab on a laptop are the two devices least likely to be standing at a gate
+/// in منى, and the register is worth exactly as much as that assumption.
+///
+/// A button that cannot work is worse than no button — the same rule as
+/// [isGoogleSignInSupported], and the same shape. The record itself is readable
+/// everywhere: a man may look up where he has been from any screen, and only
+/// the ACT is bound to a phone.
+bool get isPlaceScannerSupported {
+  if (kIsWeb) return false;
+  return defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS ||
+      defaultTargetPlatform == TargetPlatform.macOS;
+}
+
 /// The arithmetic of "near enough", in one place because two places would
 /// disagree.
 ///

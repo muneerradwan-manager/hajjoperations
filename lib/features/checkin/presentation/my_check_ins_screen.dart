@@ -60,7 +60,11 @@ class _ViewState extends State<_View> {
   @override
   void initState() {
     super.initState();
-    if (widget.compose) {
+    // Not on a device that cannot scan — see [isPlaceScannerSupported]. The
+    // request arrives in the URL and the URL does not know what it is opening
+    // on, so honouring it on the operations-room desktop would open a camera
+    // screen that throws before it draws.
+    if (widget.compose && isPlaceScannerSupported) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _record();
       });
@@ -84,13 +88,20 @@ class _ViewState extends State<_View> {
 
     return Scaffold(
       appBar: GlassAppBar(title: Text(l.myCheckInsTitle)),
-      floatingActionButton: CreateFab(
-        label: l.checkInAction,
-        // The one place the verb is not "add": what this button opens is a
-        // camera, and the barcode says so before it is pressed.
-        icon: AppIcons.qrCode,
-        onPressed: _record,
-      ),
+      // Absent, not disabled, where there is no camera to open: a greyed button
+      // says "yours, but broken" about a thing that was never available on this
+      // device. The record below it is readable everywhere, which is the whole
+      // distinction — reading where you have been is not filing that you are
+      // here.
+      floatingActionButton: isPlaceScannerSupported
+          ? CreateFab(
+              label: l.checkInAction,
+              // The one place the verb is not "add": what this button opens is
+              // a camera, and the barcode says so before it is pressed.
+              icon: AppIcons.qrCode,
+              onPressed: _record,
+            )
+          : null,
       body: SafeArea(
         child: BlocBuilder<MyCheckInsCubit, MyCheckInsState>(
           builder: (context, state) {

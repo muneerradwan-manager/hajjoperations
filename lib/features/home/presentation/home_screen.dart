@@ -17,6 +17,7 @@ import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../auth/application/session_cubit.dart';
+import '../../checkin/domain/check_in.dart' show isPlaceScannerSupported;
 import '../../notifications/presentation/widgets/notification_bell.dart';
 import '../../outbox/presentation/widgets/outbox_badge.dart';
 import '../../prayer_times/application/prayer_times_cubit.dart';
@@ -547,7 +548,13 @@ class _HomeScreenState extends State<HomeScreen> {
         // Through the record, not past it: `?compose=1` opens the list and the
         // scanner over it, so closing the scanner lands on the line it just
         // wrote. The same query the other two cards ask with.
-        action: () => context.push('${Routes.myCheckIns}?compose=1'),
+        //
+        // The card itself stays on every platform — a man reads where he has
+        // been from whatever is in front of him — and only the ACT goes, on a
+        // machine with no camera to open. See [isPlaceScannerSupported].
+        action: isPlaceScannerSupported
+            ? () => context.push('${Routes.myCheckIns}?compose=1')
+            : null,
         actionTooltip: l.checkInAction,
         actionIcon: AppIcons.qrCode,
       ),

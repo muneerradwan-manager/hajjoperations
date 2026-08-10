@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart'
+    show debugDefaultTargetPlatformOverride, TargetPlatform;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hajjoperations/core/l10n/error_text.dart';
@@ -215,6 +217,37 @@ void main() {
         ar.checkInNeedsAPosition,
       );
       expect(friendlyErrorL(ar, 'check_in_too_far'), ar.checkInTooFar);
+    });
+  });
+
+  group('where an arrival can be filed at all', () {
+    // `mobile_scanner` declares four platforms — android, ios, macos, web —
+    // and Windows and Linux have no implementation. The failure there is not a
+    // graceful one: `start()` throws MissingPluginException out of an async gap
+    // the widget's own errorBuilder never sees, so the operations-room desktop
+    // got a red screen where a camera should have been.
+    tearDown(() => debugDefaultTargetPlatformOverride = null);
+
+    test('the desktops the app also runs on are not offered the act', () {
+      for (final platform in [TargetPlatform.windows, TargetPlatform.linux]) {
+        debugDefaultTargetPlatformOverride = platform;
+        expect(
+          isPlaceScannerSupported,
+          isFalse,
+          reason: '$platform has no scanner plugin at all',
+        );
+      }
+    });
+
+    test('the phones it is actually used on are', () {
+      for (final platform in [
+        TargetPlatform.android,
+        TargetPlatform.iOS,
+        TargetPlatform.macOS,
+      ]) {
+        debugDefaultTargetPlatformOverride = platform;
+        expect(isPlaceScannerSupported, isTrue, reason: '$platform scans');
+      }
     });
   });
 }
