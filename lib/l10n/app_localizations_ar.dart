@@ -1415,6 +1415,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get moduleStartDate => 'تاريخ بدء العمل';
 
   @override
+  String get moduleStartNote => 'ملاحظة بداية العمل';
+
+  @override
+  String get moduleStartNoteHint => 'اختياري — ما يُقال عن بداية هذا الملف';
+
+  @override
+  String get moduleEndNote => 'ملاحظة نهاية العمل';
+
+  @override
+  String get moduleEndNoteHint => 'اختياري — ما يُقال عن نهاية هذا الملف';
+
+  @override
   String get moduleReportCadence => 'التقارير';
 
   @override
@@ -1582,6 +1594,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get moduleNoLevels => 'لم تُعرّف بنية هذا النوع من الملفات بعد';
+
+  @override
+  String get moduleSectionWhen => 'مدة العمل';
+
+  @override
+  String get moduleSectionPaperwork => 'القرار والتقارير';
+
+  @override
+  String get moduleSectionTypeFields => 'بيانات هذا النوع';
+
+  @override
+  String get moduleNotesShow => 'أضف ملاحظة على البداية أو النهاية';
+
+  @override
+  String get moduleNotesHide => 'إخفاء الملاحظتين';
 
   @override
   String get moduleSectionInfo => 'معلومات الملف';
@@ -1807,6 +1834,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get moduleTeamPick => 'اختيار الأعضاء';
+
+  @override
+  String moduleTeamPickFor(String role) {
+    return 'اختيار: $role';
+  }
 
   @override
   String get moduleNoTeamMembers => 'لم يُختر أعضاء هذا الفريق بعد';
@@ -2171,6 +2203,26 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get auditFilterActor => 'الشخص';
+
+  @override
+  String get auditFilterSeason => 'الموسم';
+
+  @override
+  String get auditSeasonNone => 'بلا موسم';
+
+  @override
+  String auditSeasonCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count حدثاً',
+      few: '$count أحداث',
+      two: 'حدثان',
+      one: 'حدث واحد',
+      zero: 'لا أحداث',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get auditFilterDate => 'الفترة';
@@ -3654,6 +3706,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'امسح الرمز الملصق على الفندق أو المخيم وأنت واقف عنده';
 
   @override
+  String get checkInPhoneOnly =>
+      'تسجيل الوصول من الهاتف وحده — يحتاج كاميرا تمسح رمز المكان وأنت واقف عنده. سجلّك أدناه مقروء من أي جهاز.';
+
+  @override
   String get checkInScan => 'مسح الرمز';
 
   @override
@@ -3715,6 +3771,30 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get checkInQrShare => 'مشاركة';
+
+  @override
+  String get checkInQrShareFailed => 'تعذّرت المشاركة — استخدم الطباعة';
+
+  @override
+  String get checkInQrSave => 'حفظ على الجهاز';
+
+  @override
+  String checkInQrSaved(String path) {
+    return 'حُفظ في $path';
+  }
+
+  @override
+  String get checkInQrSaveFailed => 'تعذّر الحفظ';
+
+  @override
+  String checkInQrRotatesOn(String when) {
+    return 'يتجدّد تلقائياً: $when';
+  }
+
+  @override
+  String checkInQrRotatesSoon(String when) {
+    return 'يتجدّد تلقائياً في $when — اطبع البديل وألصقه قبل ذلك اليوم، وإلا تعذّر تسجيل الوصول هنا';
+  }
 
   @override
   String get checkInQrCard => 'رمز تسجيل الوصول';

@@ -17,6 +17,8 @@ class AuditRepository {
     DateTime? from,
     DateTime? to,
     String? query,
+    String? seasonId,
+    bool seasonless = false,
   }) async {
     final rows = await supabase.rpc(
       'audit_events',
@@ -29,6 +31,10 @@ class AuditRepository {
         'p_from': from?.toUtc().toIso8601String(),
         'p_to': to?.toUtc().toIso8601String(),
         'p_query': query,
+        // Three states from two parameters, and the precedence is the SQL's:
+        // [seasonless] wins outright, then [seasonId], then everything.
+        'p_season_id': seasonId,
+        'p_seasonless': seasonless,
       },
     );
     return (rows as List)
@@ -51,6 +57,8 @@ class AuditRepository {
     DateTime? to,
     String? query,
     int days = 30,
+    String? seasonId,
+    bool seasonless = false,
   }) async {
     final row = await supabase.rpc(
       'audit_summary',
@@ -62,9 +70,20 @@ class AuditRepository {
         'p_to': to?.toUtc().toIso8601String(),
         'p_query': query,
         'p_days': days,
+        'p_season_id': seasonId,
+        'p_seasonless': seasonless,
       },
     );
     return AuditSummary.fromMap(Map<String, dynamic>.from(row as Map));
+  }
+
+  /// The seasons the log holds lines for — the season filter's option list.
+  Future<List<AuditSeason>> fetchSeasons() async {
+    final rows = await supabase.rpc('audit_seasons');
+    return (rows as List)
+        .cast<Map<String, dynamic>>()
+        .map(AuditSeason.fromMap)
+        .toList();
   }
 
   /// Everyone who has ever done anything — the "by person" filter's options.

@@ -25,10 +25,35 @@ Future<XFile> asShareable(
 }) async {
   try {
     final directory = await getTemporaryDirectory();
-    final path = '${directory.path}/$name';
+    final path = _join(directory.path, name);
     await File(path).writeAsBytes(bytes, flush: true);
     return XFile(path, mimeType: mimeType);
   } catch (_) {
     return XFile.fromData(bytes, name: name, mimeType: mimeType);
   }
+}
+
+/// [directory] and [name] joined with the separator THIS platform uses.
+///
+/// A forward slash reads as a separator to Dart everywhere, so a path built
+/// with one is written and read back without complaint on Windows too — which
+/// is what made this look correct for as long as nobody handed the path to
+/// anything else.
+///
+/// The Windows share sheet is something else. `share_plus` passes the path
+/// straight to WinRT's `StorageFile.GetFileFromPathAsync`, and that refuses any
+/// path with a forward slash in it — `C:\…\Temp/place-code.pdf` comes back
+/// 0x80070002, FILE NOT FOUND, for a file that is sitting right there. The
+/// plugin then simply leaves the file out of the share package, so the sheet
+/// opens with nothing in it and nothing anywhere says why.
+///
+/// [Platform.pathSeparator] rather than the `path` package: this is the one
+/// join in the app, and it is not worth promoting a transitive dependency to a
+/// direct one for it.
+String _join(String directory, String name) {
+  final separator = Platform.pathSeparator;
+  final base = directory.endsWith(separator) || directory.endsWith('/')
+      ? directory.substring(0, directory.length - 1)
+      : directory;
+  return '$base$separator$name';
 }

@@ -101,3 +101,33 @@ class AuditActor extends Equatable {
   @override
   List<Object?> get props => [id];
 }
+
+/// A season the log actually holds lines for — one option of the season filter.
+///
+/// Only the seasons with something in the log are offered. 0109 prunes the log
+/// to two years, so a list built from `seasons` alone would offer 1445 and then
+/// answer "nothing" — a choice whose only possible outcome is an empty page is
+/// not a choice.
+class AuditSeason extends Equatable {
+  const AuditSeason({
+    required this.id,
+    required this.hijriYear,
+    required this.count,
+  });
+
+  final String id;
+  final int hijriYear;
+
+  /// How many lines belong to it, shown beside the year so a reader choosing
+  /// between two seasons knows which one the work is in.
+  final int count;
+
+  static AuditSeason fromMap(Map<String, dynamic> map) => AuditSeason(
+    id: map['season_id'] as String,
+    hijriYear: (map['hijri_year'] as num?)?.toInt() ?? 0,
+    count: (map['n'] as num?)?.toInt() ?? 0,
+  );
+
+  @override
+  List<Object?> get props => [id];
+}

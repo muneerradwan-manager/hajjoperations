@@ -2726,6 +2726,30 @@ abstract class AppLocalizations {
   /// **'Work starts on'**
   String get moduleStartDate;
 
+  /// No description provided for @moduleStartNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Start note'**
+  String get moduleStartNote;
+
+  /// No description provided for @moduleStartNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — what there is to say about this file\'s start'**
+  String get moduleStartNoteHint;
+
+  /// No description provided for @moduleEndNote.
+  ///
+  /// In en, this message translates to:
+  /// **'End note'**
+  String get moduleEndNote;
+
+  /// No description provided for @moduleEndNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — what there is to say about this file\'s end'**
+  String get moduleEndNoteHint;
+
   /// No description provided for @moduleReportCadence.
   ///
   /// In en, this message translates to:
@@ -2983,6 +3007,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This file type has no structure defined yet'**
   String get moduleNoLevels;
+
+  /// No description provided for @moduleSectionWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'Work period'**
+  String get moduleSectionWhen;
+
+  /// No description provided for @moduleSectionPaperwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Decision and reports'**
+  String get moduleSectionPaperwork;
+
+  /// No description provided for @moduleSectionTypeFields.
+  ///
+  /// In en, this message translates to:
+  /// **'Fields of this type'**
+  String get moduleSectionTypeFields;
+
+  /// No description provided for @moduleNotesShow.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a note to the start or the end'**
+  String get moduleNotesShow;
+
+  /// No description provided for @moduleNotesHide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide the notes'**
+  String get moduleNotesHide;
 
   /// No description provided for @moduleSectionInfo.
   ///
@@ -3391,6 +3445,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose members'**
   String get moduleTeamPick;
+
+  /// No description provided for @moduleTeamPickFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose: {role}'**
+  String moduleTeamPickFor(String role);
 
   /// No description provided for @moduleNoTeamMembers.
   ///
@@ -3973,6 +4033,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Person'**
   String get auditFilterActor;
+
+  /// No description provided for @auditFilterSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'Season'**
+  String get auditFilterSeason;
+
+  /// No description provided for @auditSeasonNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No season'**
+  String get auditSeasonNone;
+
+  /// No description provided for @auditSeasonCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No events} =1{1 event} other{{count} events}}'**
+  String auditSeasonCount(int count);
 
   /// No description provided for @auditFilterDate.
   ///
@@ -6374,6 +6452,12 @@ abstract class AppLocalizations {
   /// **'Scan the code fixed to the hotel or camp while you are standing there'**
   String get checkInSubtitle;
 
+  /// No description provided for @checkInPhoneOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrivals are filed from a phone — it takes a camera on the place\'s code while you are standing at it. Your record is readable from any device.'**
+  String get checkInPhoneOnly;
+
   /// No description provided for @checkInScan.
   ///
   /// In en, this message translates to:
@@ -6481,6 +6565,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share'**
   String get checkInQrShare;
+
+  /// No description provided for @checkInQrShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing failed — use print instead'**
+  String get checkInQrShareFailed;
+
+  /// No description provided for @checkInQrSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save to this device'**
+  String get checkInQrSave;
+
+  /// No description provided for @checkInQrSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to {path}'**
+  String checkInQrSaved(String path);
+
+  /// No description provided for @checkInQrSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the file'**
+  String get checkInQrSaveFailed;
+
+  /// No description provided for @checkInQrRotatesOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotates automatically: {when}'**
+  String checkInQrRotatesOn(String when);
+
+  /// No description provided for @checkInQrRotatesSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Rotates automatically on {when} — print the replacement and put it up before that day, or nobody can check in here'**
+  String checkInQrRotatesSoon(String when);
 
   /// No description provided for @checkInQrCard.
   ///

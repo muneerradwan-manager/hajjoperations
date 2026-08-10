@@ -481,6 +481,14 @@ class _BodyState extends State<_Body> {
               label: l.moduleStartCondition,
               value: type!.startCondition!.of(context),
             ),
+          // And what THIS file said about it, which the condition cannot: the
+          // condition is the same sentence on every file of the kind.
+          if ((module.startNote ?? '').isNotEmpty)
+            InfoRow(
+              icon: AppIcons.document,
+              label: l.moduleStartNote,
+              value: module.startNote,
+            ),
           if (module.reportCadence.asksForReports)
             InfoRow(
               icon: AppIcons.tasks,
@@ -500,6 +508,12 @@ class _BodyState extends State<_Body> {
               icon: AppIcons.pending,
               label: l.moduleEndDate,
               value: formatDate(module.endsOn),
+            ),
+          if ((module.endNote ?? '').isNotEmpty)
+            InfoRow(
+              icon: AppIcons.document,
+              label: l.moduleEndNote,
+              value: module.endNote,
             ),
           if ((module.decisionNumber ?? '').isNotEmpty)
             InfoRow(
@@ -650,16 +664,21 @@ class _BodyState extends State<_Body> {
       // الطيران المركزي — so a rule that only reached sectors was reaching the
       // minority of the files while the majority stayed a single unbroken wall
       // of faces.
-      for (final role in type?.roles ?? const <ModuleRole>[])
+      // One card per TEAM, not per post. مدير فريق الكوسترات, his معاون and
+      // the أعضاء are one team with three posts in it, and four headings said
+      // they were four groups of people who happen to have similar names. A
+      // post that belongs to no team is a group of one and reads exactly as it
+      // always did — see [ModuleType.roleGroups].
+      for (final group in type?.roleGroups ?? const <ModuleRoleGroup>[])
         _RoleRosterCard(
           state: state,
-          role: role,
+          group: group,
           filter: _filter,
           isOpen: _groupIsOpen(
-            role.id,
+            group.id,
             foldByDefault: state.peopleCount >= _worthFolding,
           ),
-          onToggle: _filter.isActive ? null : () => _toggle(role.id),
+          onToggle: _filter.isActive ? null : () => _toggle(group.id),
         ),
 
       if (type?.hasTree ?? true)
@@ -964,14 +983,17 @@ const _kNestedMemberWidth = 340.0 - AppSpacing.lg;
 class _RoleRosterCard extends StatelessWidget {
   const _RoleRosterCard({
     required this.state,
-    required this.role,
+    required this.group,
     this.filter = const _RosterFilter(),
     this.isOpen = true,
     this.onToggle,
   });
 
   final ModuleDetailState state;
-  final ModuleRole role;
+
+  /// A team and its posts, or a post standing alone. One card either way.
+  final ModuleRoleGroup group;
+
   final _RosterFilter filter;
 
   /// Whether this team's people are drawn at all.
@@ -982,27 +1004,37 @@ class _RoleRosterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final members = state
-        .membersOf(role.id)
-        .where((m) => filter.keeps(m, role))
-        .toList();
+    // Everyone in the team, post by post and in the type's declared order —
+    // the manager, then his deputy, then the members. Each tile carries the
+    // post its man is here under, which is what a single heading over three
+    // posts owes the reader; a group of ONE post is already named by its
+    // heading and repeating it on twenty tiles says the same word twenty times.
+    final tiles = <Widget>[
+      for (final role in group.roles)
+        for (final member in state.membersOf(role.id))
+          if (filter.keeps(member, role))
+            _MemberTile(
+              member: member,
+              roleName: group.namesItsPosts ? role.name.of(context) : null,
+            ),
+    ];
     // A team nobody on it matches is not an empty team — it is a team the
     // reader is not asking about, so it goes rather than showing a heading
     // over nothing.
-    if (members.isEmpty) return const SizedBox.shrink();
+    if (tiles.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: AppSpacing.sm),
         SectionHeader(
-          role.name.of(context),
+          group.name.of(context),
           icon: AppIcons.roles,
           trailing: onToggle == null
               ? null
               : _FoldToggle(
                   isOpen: isOpen,
-                  count: members.length,
+                  count: tiles.length,
                   onPressed: onToggle!,
                 ),
         ),
@@ -1024,9 +1056,7 @@ class _RoleRosterCard extends StatelessWidget {
               minTileWidth: _kNestedMemberWidth,
               spacing: AppSpacing.lg,
               equalHeights: false,
-              children: [
-                for (final member in members) _MemberTile(member: member),
-              ],
+              children: tiles,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -1102,7 +1132,20 @@ class _SectorCard extends StatelessWidget {
       children: [
         const SizedBox(height: AppSpacing.sm),
         SectionHeader(
-          sector.label ?? level.name.of(context),
+          // The entry FIRST, then the hand-typed label, then the level's own
+          // name as a last resort — the same three, in the same order, that
+          // every other place on this screen resolves a node by.
+          //
+          // Only the last two were read here, which held while a قطاع was
+          // named by hand. Since 0095 nothing is authored inside a file: a
+          // مركز is an entry of a list and its `label` is null, so every
+          // heading on مخيمات منى fell through to the level and read "المركز",
+          // over and over, with nothing to tell one from the next.
+          state.referenceItem(level.referenceSetId, sector.referenceItemId)
+                  ?.name
+                  .of(context) ??
+              sector.label ??
+              level.name.of(context),
           icon: AppIcons.roles,
           trailing: onToggle == null
               ? null

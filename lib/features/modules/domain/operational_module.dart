@@ -307,6 +307,8 @@ class OperationalModule {
     required this.seasonId,
     this.startsOn,
     this.endsOn,
+    this.startNote,
+    this.endNote,
     this.decisionNumber,
     this.data = const {},
     this.isActive = false,
@@ -332,6 +334,17 @@ class OperationalModule {
   /// is a date on one file. The condition says what will end it; the date says
   /// when it did.
   final DateTime? endsOn;
+
+  /// ملاحظة بداية العمل — what this file's start was, in the words of whoever
+  /// opened it. Optional, and usually empty.
+  ///
+  /// Not the type's [ModuleType.startCondition]: that is prose about every file
+  /// of the kind, the same sentence every season. This is one file's own.
+  final String? startNote;
+
+  /// ملاحظة نهاية العمل. Optional in the same way, and emptier still — what
+  /// there is to say about an end is usually not writable until it has happened.
+  final String? endNote;
 
   /// رقم القرار. Optional: a file is often opened before the decision that
   /// authorises it is issued, and the number arrives afterwards.
@@ -390,6 +403,8 @@ class OperationalModule {
       endsOn: map['ends_on'] == null
           ? null
           : DateTime.tryParse(map['ends_on'] as String),
+      startNote: map['start_note'] as String?,
+      endNote: map['end_note'] as String?,
       decisionNumber: map['decision_number'] as String?,
       data: Map<String, dynamic>.from(
         (map['data'] as Map?) ?? const <String, dynamic>{},

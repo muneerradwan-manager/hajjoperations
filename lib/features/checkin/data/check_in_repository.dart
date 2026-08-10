@@ -169,9 +169,12 @@ class CheckInRepository {
   ///
   /// Refused outright for anybody without `checkin.codes` — the secret is
   /// printable, so who may read it is who may print it.
-  Future<({PlaceCode code, String placeName, DateTime rotatedAt})?> fetchCode(
-    String itemId,
-  ) async {
+  /// [dueAt] is when the schedule of 0114 will rotate it by itself. Null when
+  /// the schedule is switched off, and then nothing rotates but by hand.
+  Future<
+    ({PlaceCode code, String placeName, DateTime rotatedAt, DateTime? dueAt})?
+  >
+  fetchCode(String itemId) async {
     final rows = await supabase.rpc('place_code', params: {
       'p_item_id': itemId,
     });
@@ -188,6 +191,13 @@ class CheckInRepository {
       ),
       placeName: (row['place_name'] as String?) ?? '',
       rotatedAt: DateTime.parse(row['rotated_at'] as String).toLocal(),
+      // Absent, not merely null, on a database that has not had 0114 applied —
+      // and there the honest answer is the same one the policy's own switch
+      // gives: nothing rotates on its own.
+      dueAt: switch (row['due_at']) {
+        final String at => DateTime.tryParse(at)?.toLocal(),
+        _ => null,
+      },
     );
   }
 

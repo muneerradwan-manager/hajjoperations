@@ -82,6 +82,8 @@ class ModuleEditorState extends Equatable {
     this.moduleId,
     this.startsOn,
     this.endsOn,
+    this.startNote,
+    this.endNote,
     this.decisionNumber,
     this.values = const {},
     this.pendingFiles = const {},
@@ -112,6 +114,13 @@ class ModuleEditorState extends Equatable {
   /// When it stops being live, if an end was set. Optional — most files run
   /// until their type's condition is met and nobody writes a date for it.
   final DateTime? endsOn;
+
+  /// ملاحظة بداية العمل — this file's own word about its start, where the
+  /// type's standing condition used to be printed. Optional.
+  final String? startNote;
+
+  /// ملاحظة نهاية العمل. Optional in the same way.
+  final String? endNote;
 
   /// رقم القرار, if it has been issued yet.
   final String? decisionNumber;
@@ -230,6 +239,8 @@ class ModuleEditorState extends Equatable {
     String? moduleId,
     DateTime? startsOn,
     DateTime? endsOn,
+    String? startNote,
+    String? endNote,
     String? decisionNumber,
     bool clearEndsOn = false,
     Map<String, dynamic>? values,
@@ -251,6 +262,8 @@ class ModuleEditorState extends Equatable {
       // Explicitly, because null is a value here: taking an end date off is as
       // real an edit as putting one on, and `??` cannot tell the two apart.
       endsOn: clearEndsOn ? null : (endsOn ?? this.endsOn),
+      startNote: startNote ?? this.startNote,
+      endNote: endNote ?? this.endNote,
       decisionNumber: decisionNumber ?? this.decisionNumber,
       values: values ?? this.values,
       pendingFiles: pendingFiles ?? this.pendingFiles,
@@ -272,6 +285,8 @@ class ModuleEditorState extends Equatable {
     moduleId,
     startsOn,
     endsOn,
+    startNote,
+    endNote,
     decisionNumber,
     values,
     pendingFiles,
@@ -352,6 +367,8 @@ class ModuleEditorCubit extends SafeCubit<ModuleEditorState> {
           moduleId: existing?.id,
           startsOn: existing?.startsOn,
           endsOn: existing?.endsOn,
+          startNote: existing?.startNote,
+          endNote: existing?.endNote,
           decisionNumber: existing?.decisionNumber,
           reportCadence: existing?.reportCadence ?? ReportCadence.none,
           values: Map<String, dynamic>.from(existing?.data ?? const {}),
@@ -396,6 +413,12 @@ class ModuleEditorCubit extends SafeCubit<ModuleEditorState> {
   void setDecisionNumber(String value) =>
       emit(state.copyWith(decisionNumber: value.trim()));
 
+  /// Kept whole while it is being typed — a note is prose, and trimming it on
+  /// every keystroke takes the space away before the next word arrives.
+  void setStartNote(String value) => emit(state.copyWith(startNote: value));
+
+  void setEndNote(String value) => emit(state.copyWith(endNote: value));
+
   void setValue(String key, Object? value) {
     final values = Map<String, dynamic>.from(state.values);
     if (value == null || (value is String && value.isEmpty)) {
@@ -414,6 +437,13 @@ class ModuleEditorCubit extends SafeCubit<ModuleEditorState> {
     emit(state.copyWith(pendingFiles: pending, values: values));
   }
 
+  /// Blank is nothing, not an empty string standing in for it — what a cleared
+  /// box means is that the column should hold no value at all.
+  static String? _orNull(String? value) {
+    final text = (value ?? '').trim();
+    return text.isEmpty ? null : text;
+  }
+
   /// Step 1: the file itself. Creates it on the first pass and updates it
   /// afterwards, then moves on to the sectors.
   Future<SaveResult> saveInfo() async {
@@ -423,9 +453,10 @@ class ModuleEditorCubit extends SafeCubit<ModuleEditorState> {
     final startsOn = state.startsOn;
     if (startsOn == null) return const SaveResult(SaveOutcome.missingDate);
     // An empty number is no number, not an empty string standing in for one.
-    final number = (state.decisionNumber ?? '').trim().isEmpty
-        ? null
-        : state.decisionNumber!.trim();
+    // The same for the two notes: whoever cleared one meant to say nothing.
+    final number = _orNull(state.decisionNumber);
+    final startNote = _orNull(state.startNote);
+    final endNote = _orNull(state.endNote);
 
     for (final f in type.fields.where((f) => f.isRequired)) {
       final v = state.values[f.key];
@@ -450,6 +481,8 @@ class ModuleEditorCubit extends SafeCubit<ModuleEditorState> {
             seasonId: seasonId,
             startsOn: startsOn,
             endsOn: state.endsOn,
+            startNote: startNote,
+            endNote: endNote,
             decisionNumber: number,
             reportCadence: state.reportCadence,
             data: {
@@ -474,6 +507,8 @@ class ModuleEditorCubit extends SafeCubit<ModuleEditorState> {
         id,
         startsOn: startsOn,
         endsOn: state.endsOn,
+        startNote: startNote,
+        endNote: endNote,
         decisionNumber: number,
         data: values,
         reportCadence: state.reportCadence,

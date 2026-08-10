@@ -1421,6 +1421,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get moduleStartDate => 'Work starts on';
 
   @override
+  String get moduleStartNote => 'Start note';
+
+  @override
+  String get moduleStartNoteHint =>
+      'Optional — what there is to say about this file\'s start';
+
+  @override
+  String get moduleEndNote => 'End note';
+
+  @override
+  String get moduleEndNoteHint =>
+      'Optional — what there is to say about this file\'s end';
+
+  @override
   String get moduleReportCadence => 'Reports';
 
   @override
@@ -1586,6 +1600,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moduleNoLevels => 'This file type has no structure defined yet';
+
+  @override
+  String get moduleSectionWhen => 'Work period';
+
+  @override
+  String get moduleSectionPaperwork => 'Decision and reports';
+
+  @override
+  String get moduleSectionTypeFields => 'Fields of this type';
+
+  @override
+  String get moduleNotesShow => 'Add a note to the start or the end';
+
+  @override
+  String get moduleNotesHide => 'Hide the notes';
 
   @override
   String get moduleSectionInfo => 'File information';
@@ -1816,6 +1845,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moduleTeamPick => 'Choose members';
+
+  @override
+  String moduleTeamPickFor(String role) {
+    return 'Choose: $role';
+  }
 
   @override
   String get moduleNoTeamMembers => 'No one has been put on this team yet';
@@ -2172,6 +2206,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get auditFilterActor => 'Person';
+
+  @override
+  String get auditFilterSeason => 'Season';
+
+  @override
+  String get auditSeasonNone => 'No season';
+
+  @override
+  String auditSeasonCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count events',
+      one: '1 event',
+      zero: 'No events',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get auditFilterDate => 'Period';
@@ -3632,6 +3684,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Scan the code fixed to the hotel or camp while you are standing there';
 
   @override
+  String get checkInPhoneOnly =>
+      'Arrivals are filed from a phone — it takes a camera on the place\'s code while you are standing at it. Your record is readable from any device.';
+
+  @override
   String get checkInScan => 'Scan the code';
 
   @override
@@ -3695,6 +3751,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get checkInQrShare => 'Share';
+
+  @override
+  String get checkInQrShareFailed => 'Sharing failed — use print instead';
+
+  @override
+  String get checkInQrSave => 'Save to this device';
+
+  @override
+  String checkInQrSaved(String path) {
+    return 'Saved to $path';
+  }
+
+  @override
+  String get checkInQrSaveFailed => 'Could not save the file';
+
+  @override
+  String checkInQrRotatesOn(String when) {
+    return 'Rotates automatically: $when';
+  }
+
+  @override
+  String checkInQrRotatesSoon(String when) {
+    return 'Rotates automatically on $when — print the replacement and put it up before that day, or nobody can check in here';
+  }
 
   @override
   String get checkInQrCard => 'Check-in code';

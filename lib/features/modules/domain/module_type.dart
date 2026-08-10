@@ -83,6 +83,56 @@ class ModuleField {
   );
 }
 
+/// A named group of the roles a type holds on the FILE itself — فريق الكوسترات
+/// and its manager, his deputy and its members.
+///
+/// Declared by the type (0115), never worked out from the role codes. The three
+/// coasters posts do share a prefix and grouping on it would work today and be
+/// wrong the first time a role merely starts the same way — the same argument
+/// [ModuleLevel.isPlace] makes for itself.
+///
+/// Carries no sort order: teams appear in the order their roles do, so there is
+/// no second ordering to disagree with the roles' own.
+class ModuleTeam {
+  const ModuleTeam({required this.id, required this.code, required this.name});
+
+  final String id;
+  final String code;
+  final LocalizedName name;
+
+  factory ModuleTeam.fromMap(Map<String, dynamic> map) => ModuleTeam(
+    id: map['id'] as String,
+    code: map['code'] as String,
+    name: LocalizedName.fromMap(map),
+  );
+}
+
+/// One card's worth of the file's own people: a team and its posts, or a single
+/// post that belongs to no team.
+///
+/// Both are one thing on the page. What differs is only the name at the top —
+/// the team's, or the lone role's — which is why this hands out a [name] rather
+/// than making the two screens ask which case they are in.
+class ModuleRoleGroup {
+  const ModuleRoleGroup({required this.roles, this.team});
+
+  /// The team these posts are in, or null for a post standing alone.
+  final ModuleTeam? team;
+
+  /// Never empty, and in the type's declared order.
+  final List<ModuleRole> roles;
+
+  /// Stable across rebuilds, which is what the folding state is keyed by.
+  String get id => team?.id ?? roles.first.id;
+
+  LocalizedName get name => team?.name ?? roles.first.name;
+
+  /// Whether the posts inside need naming individually. A group of one is
+  /// already named by its own heading, and repeating it on every tile beneath
+  /// says the same word twenty times.
+  bool get namesItsPosts => roles.length > 1;
+}
+
 /// A job role within a module type.
 ///
 /// No task list since 0105: what a post owes is written on the season's file
@@ -95,6 +145,7 @@ class ModuleRole {
     required this.name,
     this.description,
     this.levelId,
+    this.teamId,
     this.allowsMultiple = false,
     this.isRequired = false,
   });
@@ -112,6 +163,14 @@ class ModuleRole {
   /// whole file.
   final String? levelId;
 
+  /// The [ModuleTeam] this post belongs to (0115). Null is the ordinary case
+  /// and means the post stands alone.
+  ///
+  /// Meaningless alongside [levelId]: a role held at a level already groups
+  /// under its node, and [ModuleType.roleGroups] only ever reads this for the
+  /// roles held on the file.
+  final String? teamId;
+
   /// Roles such as "mission members" hold several people; a supervisor holds one.
   final bool allowsMultiple;
   final bool isRequired;
@@ -124,6 +183,7 @@ class ModuleRole {
         ? null
         : LocalizedName.fromMap(map, prefix: 'description'),
     levelId: map['level_id'] as String?,
+    teamId: map['team_id'] as String?,
     allowsMultiple: (map['allows_multiple'] as bool?) ?? false,
     isRequired: (map['is_required'] as bool?) ?? false,
   );
@@ -247,6 +307,7 @@ class ModuleType {
     this.fields = const [],
     this.roles = const [],
     this.levels = const [],
+    this.teams = const [],
   });
 
   final String id;
@@ -274,9 +335,50 @@ class ModuleType {
   /// its people sit on the file itself.
   final List<ModuleLevel> levels;
 
+  /// The teams this type declares — groups of the roles held on the file
+  /// itself. Empty for every type but the two of 0115.
+  final List<ModuleTeam> teams;
+
   /// Whether files of this type are built as sectors and towers, or are simply
   /// the list of the people in them.
   bool get hasTree => levels.isNotEmpty;
+
+  /// The file's own roles, gathered into what the page should draw as one card
+  /// each: a team with its posts, or a post standing alone.
+  ///
+  /// The ORDER is the roles' own, and a team takes the place of its first post
+  /// — which is why [ModuleTeam] carries no sort of its own. Two orderings
+  /// would be two things to keep agreeing, and the roles already have one that
+  /// an administrator set.
+  ///
+  /// Roles held at a level are not here at all: [roles] is already only the
+  /// file's own, and a sector supervisor groups under his sector.
+  List<ModuleRoleGroup> get roleGroups {
+    final byId = {for (final team in teams) team.id: team};
+    final groups = <ModuleRoleGroup>[];
+    // Where each team's card has been placed, so the second and third posts
+    // join the first rather than opening a card of their own.
+    final placed = <String, int>{};
+
+    for (final role in roles) {
+      final team = byId[role.teamId];
+      if (team == null) {
+        groups.add(ModuleRoleGroup(roles: [role]));
+        continue;
+      }
+      final at = placed[team.id];
+      if (at == null) {
+        placed[team.id] = groups.length;
+        groups.add(ModuleRoleGroup(team: team, roles: [role]));
+      } else {
+        groups[at] = ModuleRoleGroup(
+          team: team,
+          roles: [...groups[at].roles, role],
+        );
+      }
+    }
+    return groups;
+  }
 
   ModuleLevel? levelById(String? id) =>
       levels.where((l) => l.id == id).firstOrNull;
@@ -336,6 +438,10 @@ class ModuleType {
           : LocalizedName.fromMap(map, prefix: 'end_condition'),
       fields: fields.where((f) => f.levelId == null).toList(),
       roles: roles.where((r) => r.levelId == null).toList(),
+      teams: (((map['module_type_teams'] as List?) ?? const [])
+              .cast<Map<String, dynamic>>())
+          .map(ModuleTeam.fromMap)
+          .toList(),
       levels: [
         for (final level in levels)
           level.withRolesAndFields(

@@ -32,7 +32,11 @@ class ModulesRepository {
       '*, '
       'module_type_fields(*), '
       'module_type_levels(*), '
-      'module_type_roles(*)';
+      'module_type_roles(*), '
+      // The teams the file-level roles are gathered into (0115). Absent on a
+      // database without that migration, which reads as "no teams" — every
+      // post its own card, exactly as before.
+      'module_type_teams(*)';
 
   // ------------------------------------------------------------- type catalog
 
@@ -113,6 +117,8 @@ class ModulesRepository {
     required DateTime startsOn,
     required Map<String, dynamic> data,
     DateTime? endsOn,
+    String? startNote,
+    String? endNote,
     String? decisionNumber,
     ReportCadence? reportCadence,
   }) async {
@@ -123,6 +129,8 @@ class ModulesRepository {
           'season_id': seasonId,
           'starts_on': _asDate(startsOn),
           'ends_on': endsOn == null ? null : _asDate(endsOn),
+          'start_note': startNote,
+          'end_note': endNote,
           'decision_number': decisionNumber,
           'data': data,
           'report_cadence': (reportCadence ?? ReportCadence.none).name,
@@ -138,6 +146,8 @@ class ModulesRepository {
     required DateTime startsOn,
     required Map<String, dynamic> data,
     DateTime? endsOn,
+    String? startNote,
+    String? endNote,
     String? decisionNumber,
     ReportCadence? reportCadence,
   }) async {
@@ -146,8 +156,11 @@ class ModulesRepository {
         .update({
           'starts_on': _asDate(startsOn),
           // Written even when null: clearing an end date is a thing somebody
-          // does, and a null that is skipped is a null that never lands.
+          // does, and a null that is skipped is a null that never lands. The
+          // notes are written the same way, and for the same reason.
           'ends_on': endsOn == null ? null : _asDate(endsOn),
+          'start_note': startNote,
+          'end_note': endNote,
           'decision_number': decisionNumber,
           'data': data,
           if (reportCadence != null) 'report_cadence': reportCadence.name,

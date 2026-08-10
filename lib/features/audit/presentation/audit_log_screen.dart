@@ -20,8 +20,15 @@ import 'widgets/audit_event_sheet.dart';
 import 'widgets/audit_pulse.dart';
 import 'widgets/audit_style.dart';
 
+/// The id the "بلا موسم" option carries in the picker.
+///
+/// A picker deals in ids, and this choice has no row to name. Deliberately not
+/// a uuid and not empty: it can never collide with a season's id, and it can
+/// never be mistaken for "nothing was chosen", which is a third thing again.
+const _seasonlessId = 'seasonless';
+
 /// The log itself: everything that happened, newest first, narrowed by who,
-/// what kind of act, which section, when — and read line by line.
+/// what kind of act, which section, which season, when — and read line by line.
 class AuditLogScreen extends StatelessWidget {
   const AuditLogScreen({super.key});
 
@@ -145,6 +152,61 @@ class _ViewState extends State<_View> {
     );
   }
 
+  /// Three choices, and the third is the point.
+  ///
+  /// "بلا موسم" is not a leftover bucket — it is the accounts, the grants, the
+  /// master data and the place codes, which is most of the log and the acts
+  /// that outlive every season. A filter that could only ever narrow TO a
+  /// season would hide all of that the moment it was touched.
+  Future<void> _pickSeason() async {
+    final l = context.l10n;
+    final cubit = context.read<AuditCubit>();
+    final List<AuditSeason> seasons;
+    try {
+      seasons = await cubit.seasons();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(l.commonConnectionErrorTitle)),
+        );
+      return;
+    }
+    if (!mounted) return;
+
+    final scope = cubit.state.filters.seasonScope;
+    final result = await showPickerSheet(
+      context,
+      title: l.auditFilterSeason,
+      options: [
+        for (final season in seasons)
+          PickerOption(
+            id: season.id,
+            label: l.seasonHijriYear(season.hijriYear),
+            subtitle: l.auditSeasonCount(season.count),
+          ),
+        PickerOption(id: _seasonlessId, label: l.auditSeasonNone),
+      ],
+      selected: {
+        if (scope.isNone) _seasonlessId else ?scope.season?.id,
+      },
+    );
+    if (result == null) return;
+
+    cubit.setFilters(
+      cubit.state.filters.copyWith(
+        seasonScope: switch (result.firstOrNull) {
+          null => AuditSeasonScope.all,
+          _seasonlessId => AuditSeasonScope.none,
+          final id => AuditSeasonScope.of(
+            seasons.firstWhere((s) => s.id == id),
+          ),
+        },
+      ),
+    );
+  }
+
   Future<void> _pickDates() async {
     final cubit = context.read<AuditCubit>();
     final filters = cubit.state.filters;
@@ -187,6 +249,7 @@ class _ViewState extends State<_View> {
                       onAction: _pickAction,
                       onEntity: _pickEntity,
                       onActor: _pickActor,
+                      onSeason: _pickSeason,
                       onDates: _pickDates,
                       onClear: () => context.read<AuditCubit>().clearFilters(),
                     ),
@@ -301,6 +364,7 @@ class _FilterBar extends StatelessWidget {
     required this.onAction,
     required this.onEntity,
     required this.onActor,
+    required this.onSeason,
     required this.onDates,
     required this.onClear,
   });
@@ -310,6 +374,7 @@ class _FilterBar extends StatelessWidget {
   final VoidCallback onAction;
   final VoidCallback onEntity;
   final VoidCallback onActor;
+  final VoidCallback onSeason;
   final VoidCallback onDates;
   final VoidCallback onClear;
 
@@ -363,6 +428,17 @@ class _FilterBar extends StatelessWidget {
                 label: filters.actor?.name ?? l.auditFilterActor,
                 active: filters.actor != null,
                 onTap: onActor,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              _FilterChip(
+                label: switch (filters.seasonScope) {
+                  final s when s.isNone => l.auditSeasonNone,
+                  final s when s.season != null =>
+                    l.seasonHijriYear(s.season!.hijriYear),
+                  _ => l.auditFilterSeason,
+                },
+                active: !filters.seasonScope.isAll,
+                onTap: onSeason,
               ),
               const SizedBox(width: AppSpacing.sm),
               _FilterChip(

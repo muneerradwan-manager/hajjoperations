@@ -241,6 +241,18 @@ class _ModulesDataset extends ExportDataset {
     ExportColumn(key: 'decision_number', label: _n('رقم القرار', 'Decision number')),
     ExportColumn(key: 'starts_on', label: _n('تاريخ البدء', 'Starts on')),
     ExportColumn(key: 'ends_on', label: _n('تاريخ الانتهاء', 'Ends on')),
+    // Prose, and usually empty — offered beside their dates, but off by
+    // default: a sheet of files is read as a table of dates and states.
+    ExportColumn(
+      key: 'start_note',
+      label: _n('ملاحظة بداية العمل', 'Start note'),
+      byDefault: false,
+    ),
+    ExportColumn(
+      key: 'end_note',
+      label: _n('ملاحظة نهاية العمل', 'End note'),
+      byDefault: false,
+    ),
     ExportColumn(key: 'is_active', label: _n('مُفعَّل', 'Active')),
     ExportColumn(key: 'is_running', label: _n('قائم', 'Running'), byDefault: false),
     ExportColumn(key: 'report_cadence', label: _n('دورية التقرير', 'Report cadence'), byDefault: false),
@@ -264,6 +276,8 @@ class _ModulesDataset extends ExportDataset {
           'decision_number': ExportValues.text(module.decisionNumber),
           'starts_on': ExportValues.date(module.startsOn),
           'ends_on': ExportValues.date(module.endsOn),
+          'start_note': ExportValues.text(module.startNote),
+          'end_note': ExportValues.text(module.endNote),
           'is_active': ExportValues.yesNo(l, module.isActive),
           'is_running': ExportValues.yesNo(l, module.isRunning),
           'report_cadence': module.reportCadence.name,

@@ -12,6 +12,7 @@ class PlaceCodeState extends Equatable {
     this.code,
     this.placeName = '',
     this.rotatedAt,
+    this.dueAt,
     this.error,
   });
 
@@ -19,6 +20,12 @@ class PlaceCodeState extends Equatable {
   final PlaceCode? code;
   final String placeName;
   final DateTime? rotatedAt;
+
+  /// When the schedule of 0114 will rotate this code by itself, killing every
+  /// printed copy. Null when the schedule is off — and then the only thing that
+  /// ever changes a code is somebody pressing تجديد الرمز.
+  final DateTime? dueAt;
+
   final String? error;
 
   /// A place with no pin accepts NOTHING since 0098 — the server refuses with
@@ -29,8 +36,29 @@ class PlaceCodeState extends Equatable {
       status == PlaceCodeStatus.ready &&
       (code?.latitude == null || code?.longitude == null);
 
+  /// Whether the automatic rotation is near enough that the reprint should be
+  /// happening now rather than being noted.
+  ///
+  /// Seven days, and it is the CARD's threshold rather than the policy's: the
+  /// server warns at `warn_before_days` by notification, and this is what the
+  /// person who happened to open the page sees without one. Wider on purpose —
+  /// a line that appears the same morning the paper dies is a line that arrives
+  /// too late to act on.
+  bool get isRotatingSoon {
+    final due = dueAt;
+    if (due == null) return false;
+    return due.difference(DateTime.now()).inDays <= 7;
+  }
+
   @override
-  List<Object?> get props => [status, code, placeName, rotatedAt, error];
+  List<Object?> get props => [
+    status,
+    code,
+    placeName,
+    rotatedAt,
+    dueAt,
+    error,
+  ];
 }
 
 /// One place's code, fetched on its own.
@@ -61,6 +89,7 @@ class PlaceCodeCubit extends SafeCubit<PlaceCodeState> {
           code: found.code,
           placeName: found.placeName,
           rotatedAt: found.rotatedAt,
+          dueAt: found.dueAt,
         ),
       );
     } catch (e) {

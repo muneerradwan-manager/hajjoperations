@@ -378,7 +378,7 @@ class _ViewState extends State<_View> {
             title: friendlyError(context, state.error),
           ),
           _ => switch (state.currentStep) {
-            EditorStep.info => _InfoStep(state: state),
+            EditorStep.info => ModuleInfoStep(state: state),
             EditorStep.sectors => _NodesStep(
               state: state,
               onAdd: (level) => _editNode(level),
@@ -521,197 +521,245 @@ class _StepBar extends StatelessWidget {
 
 /// Step 1 — when the work starts, and whatever else the type asks of the file
 /// as a whole. There is no name to enter: the type is the name.
-class _InfoStep extends StatelessWidget {
-  const _InfoStep({required this.state});
+///
+/// Seven controls, and until 0113 they stood in one undivided column inside a
+/// single card: two date boxes, a number, a dropdown and a PDF picker, with
+/// nothing saying which of them belonged together and nothing to aim at but the
+/// scrollbar. What makes a form of that length findable is not fewer fields —
+/// every one of these is asked for — but landmarks, so it is laid out as the
+/// three questions it actually is:
+///
+///   * **مدة العمل** — the days the file runs between, and a note beside each;
+///   * **القرار والتقارير** — the paperwork that authorises it and what it asks
+///     of the people in it;
+///   * the type's own fields, which is where a file stops looking like every
+///     other file. Absent entirely for a type that asks for nothing further.
+///
+/// The first two are identical on every type, which is the point: whoever opens
+/// the الطوافة file and whoever opens مخيمات منى are answering the same
+/// questions in the same order and in the same places.
+///
+/// The two notes are folded away behind one line until somebody wants them.
+/// They are prose, they are optional, and most files are opened without either
+/// — two empty multi-line boxes are two thirds of the height of this step spent
+/// on the thing least often written.
+class ModuleInfoStep extends StatefulWidget {
+  const ModuleInfoStep({super.key, required this.state});
 
   final ModuleEditorState state;
+
+  @override
+  State<ModuleInfoStep> createState() => ModuleInfoStepState();
+}
+
+class ModuleInfoStepState extends State<ModuleInfoStep> {
+  /// Null until somebody presses the line. Until then the notes are open
+  /// exactly when there is something in them — coming back to a file that has
+  /// a note and being shown a form that does not mention it is how a note gets
+  /// overwritten by somebody who never knew it was there.
+  bool? _notesOpen;
+
+  Future<void> _pickStart() async {
+    final cubit = context.read<ModuleEditorCubit>();
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: widget.state.startsOn ?? now,
+      firstDate: DateTime(now.year - 2),
+      lastDate: DateTime(now.year + 5),
+    );
+    if (picked != null) cubit.setStartsOn(picked);
+  }
+
+  Future<void> _pickEnd() async {
+    final cubit = context.read<ModuleEditorCubit>();
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: widget.state.endsOn ?? widget.state.startsOn ?? now,
+      // Never before the day the work began: the database refuses that pair,
+      // and so the picker does not offer it.
+      firstDate: widget.state.startsOn ?? DateTime(now.year - 2),
+      lastDate: DateTime(now.year + 5),
+    );
+    if (picked != null) cubit.setEndsOn(picked);
+  }
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
     final scheme = Theme.of(context).colorScheme;
+    final state = widget.state;
     final type = state.type!;
     final cubit = context.read<ModuleEditorCubit>();
+
+    final written =
+        (state.startNote ?? '').isNotEmpty || (state.endNote ?? '').isNotEmpty;
+    final notesOpen = _notesOpen ?? written;
 
     return ResponsivePage(
       maxWidth: _editorMaxWidth,
       builder: (context, size) => SinglePaneLayout(
         gutter: size.gutter,
         children: staggered([
-          GlassCard(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                InkWell(
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                  onTap: () async {
-                    final now = DateTime.now();
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: state.startsOn ?? now,
-                      firstDate: DateTime(now.year - 2),
-                      lastDate: DateTime(now.year + 5),
-                    );
-                    if (picked != null) cubit.setStartsOn(picked);
-                  },
-                  child: InputDecorator(
-                    decoration: InputDecoration(
-                      labelText: '${l.moduleStartDate} *',
-                      prefixIcon: const Icon(AppIcons.seasons),
-                    ),
-                    child: Text(
-                      state.startsOn == null
-                          ? l.profileSelectDate
-                          : formatDate(state.startsOn),
-                      style: state.startsOn == null
-                          ? TextStyle(
-                              color: scheme.onSurfaceVariant,
-                              fontStyle: FontStyle.italic,
-                            )
-                          : null,
-                    ),
+          // The two dates, each above its own note, which is what puts the
+          // start and the end in a column apiece where there is room for two
+          // and keeps each note under the date it is about where there is not.
+          InfoSection(
+            title: l.moduleSectionWhen,
+            icon: AppIcons.seasons,
+            separated: false,
+            maxColumns: 2,
+            minFieldWidth: _paneFieldWidth,
+            children: [
+              _FieldGroup(
+                children: [
+                  _DateField(
+                    key: const ValueKey('starts_on'),
+                    label: '${l.moduleStartDate} *',
+                    icon: AppIcons.seasons,
+                    value: state.startsOn,
+                    placeholder: l.profileSelectDate,
+                    onTap: _pickStart,
                   ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                // Optional, and the file runs on without it. A date here is not
-                // the type's end CONDITION — that says what event closes such
-                // files; this says when this one is done.
-                InkWell(
-                  borderRadius: BorderRadius.circular(AppRadius.sm),
-                  onTap: () async {
-                    final now = DateTime.now();
-                    final start = state.startsOn ?? DateTime(now.year - 2);
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: state.endsOn ?? state.startsOn ?? now,
-                      // Never before the day the work began: the database
-                      // refuses that pair, and so the picker does not offer it.
-                      firstDate: start,
-                      lastDate: DateTime(now.year + 5),
-                    );
-                    if (picked != null) cubit.setEndsOn(picked);
-                  },
-                  child: InputDecorator(
-                    decoration: InputDecoration(
-                      labelText: l.moduleEndDate,
-                      helperText: l.moduleEndDateHint,
-                      prefixIcon: const Icon(AppIcons.pending),
-                      suffixIcon: state.endsOn == null
-                          ? null
-                          : IconButton(
-                              tooltip: l.moduleEndDateClear,
-                              icon: const Icon(AppIcons.delete, size: 18),
-                              onPressed: () => cubit.setEndsOn(null),
-                            ),
+                  // What there is to say about that date, in this file's own
+                  // words. It stands where the type's start CONDITION used to
+                  // be printed: that sentence is about every file of the kind,
+                  // the same one every season, and a form is no place to read
+                  // it.
+                  if (notesOpen)
+                    _NoteField(
+                      id: 'start_note',
+                      label: l.moduleStartNote,
+                      helper: l.moduleStartNoteHint,
+                      value: state.startNote,
+                      onChanged: cubit.setStartNote,
                     ),
-                    child: Text(
-                      state.endsOn == null
-                          ? l.moduleEndDateClear
-                          : formatDate(state.endsOn),
-                      style: state.endsOn == null
-                          ? TextStyle(
-                              color: scheme.onSurfaceVariant,
-                              fontStyle: FontStyle.italic,
-                            )
-                          : null,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextFormField(
-                  initialValue: state.decisionNumber ?? '',
-                  decoration: InputDecoration(
-                    labelText: l.moduleDecisionNumber,
-                    helperText: l.moduleDecisionNumberHint,
-                    prefixIcon: const Icon(AppIcons.file),
-                  ),
-                  onChanged: cubit.setDecisionNumber,
-                ),
-                // What the date above is the date OF. Sits under the picker
-                // rather than replacing it: somebody still has to say when the
-                // work actually began.
-                if (type.startCondition != null) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        AppIcons.seasons,
-                        size: 16,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          '${l.moduleStartCondition}: '
-                          '${type.startCondition!.of(context)}',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: scheme.onSurfaceVariant),
-                        ),
-                      ),
-                    ],
-                  ),
                 ],
-                if (type.endCondition != null) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  // Not a date and not editable: every file of this type ends
-                  // on the same event, which the type states once.
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        AppIcons.pending,
-                        size: 16,
-                        color: scheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          '${l.moduleEndCondition}: '
-                          '${type.endCondition!.of(context)}',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: scheme.onSurfaceVariant),
-                        ),
-                      ),
-                    ],
+              ),
+              _FieldGroup(
+                children: [
+                  // Optional, and the file runs on without it. A date here is
+                  // not the type's end CONDITION — that says what event closes
+                  // such files; this says when this one is done.
+                  _DateField(
+                    key: const ValueKey('ends_on'),
+                    label: l.moduleEndDate,
+                    helper: l.moduleEndDateHint,
+                    icon: AppIcons.pending,
+                    value: state.endsOn,
+                    placeholder: l.moduleEndDateClear,
+                    onTap: _pickEnd,
+                    clearTooltip: l.moduleEndDateClear,
+                    onClear: () => cubit.setEndsOn(null),
                   ),
+                  // The counterpart of the start note, and emptier still: what
+                  // there is to say about an end is usually not writable until
+                  // it has happened, which is a second visit to this step.
+                  if (notesOpen)
+                    _NoteField(
+                      id: 'end_note',
+                      label: l.moduleEndNote,
+                      helper: l.moduleEndNoteHint,
+                      value: state.endNote,
+                      onChanged: cubit.setEndNote,
+                    ),
                 ],
-                const SizedBox(height: AppSpacing.lg),
-                // Per file, not per type: the same kind of file may want a
-                // daily report one season and nothing the next.
-                DropdownButtonFormField<ReportCadence>(
-                  initialValue: state.reportCadence,
-                  isExpanded: true,
-                  decoration: InputDecoration(
-                    labelText: l.moduleReportCadence,
-                    prefixIcon: const Icon(AppIcons.tasks),
-                    helperText: l.moduleReportCadenceHint,
-                  ),
-                  items: [
-                    for (final cadence in ReportCadence.values)
-                      DropdownMenuItem(
-                        value: cadence,
-                        child: Text(cadenceLabel(context, cadence)),
-                      ),
-                  ],
-                  onChanged: (v) =>
-                      cubit.setReportCadence(v ?? ReportCadence.none),
-                ),
-                for (final field in type.fields) ...[
-                  const SizedBox(height: AppSpacing.lg),
-                  ModuleFieldInput(
-                    field: field,
-                    value: state.values[field.key],
-                    referenceSet: state.referenceSetById(field.referenceSetId),
-                    onChanged: (v) => cubit.setValue(field.key, v),
-                    onFilePicked: (file, name) =>
-                        cubit.attachFile(field.key, file, name),
-                  ),
-                ],
-              ],
+              ),
+            ],
+          ),
+          // One line instead of two empty boxes. It never hides anything
+          // written: closing it leaves both notes on the file, and a file that
+          // has one opens with them showing.
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              onPressed: () => setState(() => _notesOpen = !notesOpen),
+              icon: Icon(notesOpen ? AppIcons.approve : AppIcons.add, size: 18),
+              label: Text(notesOpen ? l.moduleNotesHide : l.moduleNotesShow),
             ),
           ),
+          const SizedBox(height: AppSpacing.sm),
+
+          InfoSection(
+            title: l.moduleSectionPaperwork,
+            icon: AppIcons.file,
+            separated: false,
+            maxColumns: 2,
+            minFieldWidth: _paneFieldWidth,
+            children: [
+              _FieldGroup(
+                children: [
+                  TextFormField(
+                    key: const ValueKey('decision_number'),
+                    initialValue: state.decisionNumber ?? '',
+                    decoration: InputDecoration(
+                      labelText: l.moduleDecisionNumber,
+                      helperText: l.moduleDecisionNumberHint,
+                      prefixIcon: const Icon(AppIcons.file),
+                    ),
+                    onChanged: cubit.setDecisionNumber,
+                  ),
+                ],
+              ),
+              _FieldGroup(
+                children: [
+                  // Per file, not per type: the same kind of file may want a
+                  // daily report one season and nothing the next.
+                  DropdownButtonFormField<ReportCadence>(
+                    initialValue: state.reportCadence,
+                    isExpanded: true,
+                    decoration: InputDecoration(
+                      labelText: l.moduleReportCadence,
+                      prefixIcon: const Icon(AppIcons.tasks),
+                      helperText: l.moduleReportCadenceHint,
+                    ),
+                    items: [
+                      for (final cadence in ReportCadence.values)
+                        DropdownMenuItem(
+                          value: cadence,
+                          child: Text(cadenceLabel(context, cadence)),
+                        ),
+                    ],
+                    onChanged: (v) =>
+                        cubit.setReportCadence(v ?? ReportCadence.none),
+                  ),
+                ],
+              ),
+            ],
+          ),
+
+          // Where a file stops resembling every other file — today the الملف
+          // الرسمي and nothing else, but a type may declare any field, and a
+          // type that declares none gets no pane rather than an empty one.
+          if (type.fields.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.md),
+            InfoSection(
+              title: l.moduleSectionTypeFields,
+              icon: AppIcons.document,
+              separated: false,
+              maxColumns: 2,
+              minFieldWidth: _paneFieldWidth,
+              children: [
+                for (final field in type.fields)
+                  _FieldGroup(
+                    children: [
+                      ModuleFieldInput(
+                        field: field,
+                        value: state.values[field.key],
+                        referenceSet: state.referenceSetById(
+                          field.referenceSetId,
+                        ),
+                        onChanged: (v) => cubit.setValue(field.key, v),
+                        onFilePicked: (file, name) =>
+                            cubit.attachFile(field.key, file, name),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ],
+
           const SizedBox(height: AppSpacing.md),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
@@ -724,6 +772,145 @@ class _InfoStep extends StatelessWidget {
           ),
         ]),
       ),
+    );
+  }
+}
+
+/// How wide a field must be before a pane on this step puts two across.
+///
+/// Higher than [InfoSection]'s own default, because these are controls rather
+/// than read-only values: a date box with a label, a helper line and a clear
+/// button crammed into 280 is worse than the same box on a line of its own.
+const _paneFieldWidth = 340.0;
+
+/// One cell of a pane: a control, and whatever belongs directly under it.
+///
+/// [InfoSection] lays its children out in columns and puts nothing between
+/// them — right for a list of values, where the hairline is the separator, and
+/// not for a form, where two boxes would touch. The breathing room is here so
+/// that it is the same whether the pane came out one column wide or two.
+class _FieldGroup extends StatelessWidget {
+  const _FieldGroup({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) const SizedBox(height: AppSpacing.md),
+            children[i],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// A date on the file: a labelled box that opens a calendar rather than a
+/// keyboard. [onClear] draws the button that takes the date off again — the
+/// start date has none, because a file cannot be saved without one.
+class _DateField extends StatelessWidget {
+  const _DateField({
+    super.key,
+    required this.label,
+    required this.icon,
+    required this.value,
+    required this.placeholder,
+    required this.onTap,
+    this.helper,
+    this.onClear,
+    this.clearTooltip,
+  });
+
+  final String label;
+  final String? helper;
+  final IconData icon;
+  final DateTime? value;
+
+  /// What stands in the box before a date is picked, in the muted italic that
+  /// says it is not a value.
+  final String placeholder;
+
+  final VoidCallback onTap;
+  final VoidCallback? onClear;
+  final String? clearTooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final empty = value == null;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppRadius.sm),
+      onTap: onTap,
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          helperText: helper,
+          prefixIcon: Icon(icon),
+          suffixIcon: empty || onClear == null
+              ? null
+              : IconButton(
+                  tooltip: clearTooltip,
+                  icon: const Icon(AppIcons.delete, size: 18),
+                  onPressed: onClear,
+                ),
+        ),
+        child: Text(
+          empty ? placeholder : formatDate(value),
+          style: empty
+              ? TextStyle(
+                  color: scheme.onSurfaceVariant,
+                  fontStyle: FontStyle.italic,
+                )
+              : null,
+        ),
+      ),
+    );
+  }
+}
+
+/// ملاحظة بداية العمل or ملاحظة نهاية العمل: free prose about one of the two
+/// dates, in this file's own words.
+///
+/// Keyed, because a pane reflows its children into a different number of
+/// columns as the window changes, and an unkeyed field carries whatever text
+/// the field that used to stand in its place was holding.
+class _NoteField extends StatelessWidget {
+  const _NoteField({
+    required this.id,
+    required this.label,
+    required this.helper,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String id;
+  final String label;
+  final String helper;
+  final String? value;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      key: ValueKey(id),
+      initialValue: value ?? '',
+      minLines: 2,
+      maxLines: 4,
+      keyboardType: TextInputType.multiline,
+      textInputAction: TextInputAction.newline,
+      decoration: InputDecoration(
+        labelText: label,
+        helperText: helper,
+        alignLabelWithHint: true,
+      ),
+      onChanged: onChanged,
     );
   }
 }
@@ -888,8 +1075,12 @@ class _TeamsStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.l10n;
     final type = state.type;
-    final roles = type?.roles ?? const <ModuleRole>[];
-    if (type == null || roles.isEmpty) {
+    // Gathered into the teams the type declares (0115): مدير فريق الكوسترات,
+    // his معاون and the أعضاء are one team with three posts to fill, and three
+    // separate cards said they were three separate teams. A post that names no
+    // team is a group of one and its card is what it always was.
+    final groups = type?.roleGroups ?? const <ModuleRoleGroup>[];
+    if (type == null || groups.isEmpty) {
       return EmptyState(icon: AppIcons.roles, title: l.moduleNoRoles);
     }
 
@@ -902,12 +1093,8 @@ class _TeamsStep extends StatelessWidget {
             l.moduleMembersCount(state.members.length),
             icon: AppIcons.participants,
           ),
-          for (final role in roles) ...[
-            _TeamCard(
-              role: role,
-              members: state.membersOf(role.id),
-              onPick: () => onPickTeam(role),
-            ),
+          for (final group in groups) ...[
+            _TeamCard(state: state, group: group, onPick: onPickTeam),
             const SizedBox(height: AppSpacing.md),
           ],
         ]),
@@ -916,22 +1103,33 @@ class _TeamsStep extends StatelessWidget {
   }
 }
 
-/// One team: who is on it.
+/// One team: its posts, and who is standing in each.
+///
+/// The card is the TEAM. Inside it each post keeps its own list and its own
+/// button — staffing is done per post, because that is what the server stores
+/// and what "معاون المدير" means — but they sit inside one frame, under one
+/// name, instead of three cards that read as three teams.
+///
+/// A group of one post is the same widget with the post's own name at the top
+/// and no sub-heading, which is exactly the card this used to be.
 class _TeamCard extends StatelessWidget {
   const _TeamCard({
-    required this.role,
-    required this.members,
+    required this.state,
+    required this.group,
     required this.onPick,
   });
 
-  final ModuleRole role;
-  final List<ModuleMember> members;
-  final VoidCallback onPick;
+  final ModuleEditorState state;
+  final ModuleRoleGroup group;
+  final void Function(ModuleRole role) onPick;
 
   @override
   Widget build(BuildContext context) {
-    final l = context.l10n;
     final scheme = Theme.of(context).colorScheme;
+    final total = group.roles.fold<int>(
+      0,
+      (n, role) => n + state.membersOf(role.id).length,
+    );
 
     return GlassCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -944,43 +1142,110 @@ class _TeamCard extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
-                  role.name.of(context),
+                  group.name.of(context),
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
+              // The whole team's headcount, so a folded-looking card still says
+              // how many people are on it.
               Text(
-                '${members.length}',
+                '$total',
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(color: scheme.primary),
               ),
             ],
           ),
-          if (members.isEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.sm),
-              child: Text(
-                l.moduleNoTeamMembers,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            )
-          else
-            for (final member in members)
-              Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.md),
-                child: _TeamMemberRow(member: member),
-              ),
-          const SizedBox(height: AppSpacing.md),
-          OutlinedButton.icon(
-            onPressed: onPick,
-            icon: const Icon(AppIcons.participants),
-            label: Text(l.moduleTeamPick),
-          ),
+          for (final role in group.roles)
+            _TeamPost(
+              role: role,
+              members: state.membersOf(role.id),
+              // Named only where there is more than one post under the
+              // heading. In a group of one the heading already said it.
+              showName: group.namesItsPosts,
+              onPick: () => onPick(role),
+            ),
         ],
       ),
+    );
+  }
+}
+
+/// One post inside a team card: what it is called, who holds it, and the button
+/// that changes that.
+class _TeamPost extends StatelessWidget {
+  const _TeamPost({
+    required this.role,
+    required this.members,
+    required this.showName,
+    required this.onPick,
+  });
+
+  final ModuleRole role;
+  final List<ModuleMember> members;
+  final bool showName;
+  final VoidCallback onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (showName)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.lg),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    role.name.of(context),
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                if (members.isNotEmpty)
+                  Text(
+                    '${members.length}',
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        if (members.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.sm),
+            child: Text(
+              l.moduleNoTeamMembers,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          )
+        else
+          for (final member in members)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.md),
+              child: _TeamMemberRow(member: member),
+            ),
+        const SizedBox(height: AppSpacing.md),
+        OutlinedButton.icon(
+          onPressed: onPick,
+          icon: const Icon(AppIcons.participants),
+          // The post's own name on the button once there is more than one of
+          // them: three identical "اختيار الأعضاء" buttons in one card is three
+          // ways to open the wrong picker.
+          label: Text(
+            showName ? l.moduleTeamPickFor(role.name.of(context)) : l.moduleTeamPick,
+          ),
+        ),
+      ],
     );
   }
 }
