@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/glass_tokens.dart';
 import '../../../../core/widgets/glass.dart';
+import 'home_pieces.dart';
 
 /// A navigation pane on the dashboard: a colour-washed glass card with a
 /// glowing icon medallion, a title and a one-line explanation of what lives
@@ -58,7 +59,7 @@ class DashboardCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
         children: [
-          _IconMedallion(icon: icon, color: color),
+          IconMedallion(icon: icon, color: color),
           const SizedBox(width: AppSpacing.lg),
           Expanded(
             child: Column(
@@ -173,7 +174,7 @@ class CompactDashboardCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _IconMedallion(icon: icon, color: color, size: 44),
+          IconMedallion(icon: icon, color: color, size: 44),
           const SizedBox(height: AppSpacing.sm),
           Text(
             title,
@@ -187,49 +188,5 @@ class CompactDashboardCard extends StatelessWidget {
     );
 
     return subtitle == null ? card : Tooltip(message: subtitle!, child: card);
-  }
-}
-
-/// Rounded-square icon holder with an outward glow in the card's accent.
-class _IconMedallion extends StatelessWidget {
-  const _IconMedallion({
-    required this.icon,
-    required this.color,
-    this.size = 50,
-  });
-
-  final IconData icon;
-  final Color color;
-
-  /// Smaller on the compact tile, where the medallion is stacked above the name
-  /// rather than set beside it and every pixel of it is height.
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            color.withValues(alpha: 0.42),
-            color.withValues(alpha: 0.16),
-          ],
-        ),
-        border: Border.all(color: color.withValues(alpha: 0.35)),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.22),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Icon(icon, color: color, size: 22),
-    );
   }
 }

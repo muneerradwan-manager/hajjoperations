@@ -3,7 +3,10 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/l10n_extension.dart';
+import '../theme/app_icons.dart';
 import '../theme/glass_tokens.dart';
+import 'app_shell_scope.dart';
 
 /// The primitive every frosted pane in the app is built from.
 ///
@@ -312,6 +315,9 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
 
     return AppBar(
       title: title,
+      leading:
+          leading ??
+          (automaticallyImplyLeading ? _shellMenuButton(context) : null),
       // The report goes FIRST, ahead of whatever the screen puts here.
       //
       // Last would have put it hard against the screen edge — easier to reach,
@@ -332,7 +338,6 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
         
         ...?actions,
       ],
-      leading: leading,
       automaticallyImplyLeading: automaticallyImplyLeading,
       bottom: bottom,
       centerTitle: centerTitle,
@@ -356,6 +361,36 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
     );
   }
+}
+
+/// The way back to the rail on a window too narrow to stand one open.
+///
+/// Drawn only when all of these are true, and each one is doing work:
+///
+///   * the bar was not told to keep its leading slot empty. A screen that says
+///     `automaticallyImplyLeading: false` means it, and the two that say it —
+///     the home grid and the pre-approval screens — each have a reason;
+///   * there is a shell above this bar at all — so the grid arrangement, the
+///     login screen and the splash are untouched;
+///   * that shell is holding the rail in a drawer rather than standing it —
+///     beside a standing rail a menu button would open nothing;
+///   * and this page has nothing to go back to. A page reached from the rail is
+///     the root of its stack and needs the menu; a page pushed from inside
+///     another one has a back arrow, and two leading affordances cannot share
+///     the slot. Back wins, because it is the one the reader came in through.
+///
+/// It replaces nothing a screen asked for: a bar given an explicit `leading`
+/// keeps it, which is how the home page's own settings button survives.
+Widget? _shellMenuButton(BuildContext context) {
+  final open = AppShellScope.maybeOf(context)?.openDrawer;
+  if (open == null) return null;
+  if (Navigator.of(context).canPop()) return null;
+
+  return IconButton(
+    tooltip: context.l10n.sidebarMenu,
+    onPressed: open,
+    icon: const Icon(AppIcons.menu),
+  );
 }
 
 /// [child] behind a backdrop blur, or [child] itself when the sigma is zero.

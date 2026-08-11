@@ -7033,6 +7033,408 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 item was not accepted} other{{count} items were not accepted}}'**
   String outboxBlockedNotice(int count);
+
+  /// No description provided for @settingsHomeLayout.
+  ///
+  /// In en, this message translates to:
+  /// **'Home screen'**
+  String get settingsHomeLayout;
+
+  /// No description provided for @settingsHomeLayoutGrid.
+  ///
+  /// In en, this message translates to:
+  /// **'Cards'**
+  String get settingsHomeLayoutGrid;
+
+  /// No description provided for @settingsHomeLayoutGridHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Every door on the page at once, on colour-coded shelves'**
+  String get settingsHomeLayoutGridHint;
+
+  /// No description provided for @settingsHomeLayoutSidebar.
+  ///
+  /// In en, this message translates to:
+  /// **'Sidebar'**
+  String get settingsHomeLayoutSidebar;
+
+  /// No description provided for @settingsHomeLayoutSidebarHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A standing column of doors, and the season\'s roadmap in their place'**
+  String get settingsHomeLayoutSidebarHint;
+
+  /// No description provided for @sidebarExpand.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand the sidebar'**
+  String get sidebarExpand;
+
+  /// No description provided for @sidebarCollapse.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse the sidebar'**
+  String get sidebarCollapse;
+
+  /// No description provided for @sidebarMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu'**
+  String get sidebarMenu;
+
+  /// No description provided for @roadmapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Operational roadmap'**
+  String get roadmapTitle;
+
+  /// No description provided for @roadmapIntroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How a season is run'**
+  String get roadmapIntroTitle;
+
+  /// No description provided for @roadmapIntroBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every other screen in this app answers where something is. This one answers when. A season is laid out below from the week before it opens to the week after it closes: five phases, each step saying what is done at it and what it is waiting on. The whole map is drawn for everybody — the steps that are not yours are marked so, because knowing that somebody had to fill in the master data before your file existed is part of knowing your own place in the season.'**
+  String get roadmapIntroBody;
+
+  /// No description provided for @roadmapOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get roadmapOpen;
+
+  /// No description provided for @roadmapLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'In the Administration\'s hands'**
+  String get roadmapLocked;
+
+  /// No description provided for @roadmapEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Open to everyone'**
+  String get roadmapEveryone;
+
+  /// No description provided for @roadmapPhaseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phase {number}'**
+  String roadmapPhaseLabel(int number);
+
+  /// No description provided for @roadmapStepsOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'{open} of {total} steps are yours'**
+  String roadmapStepsOpen(int open, int total);
+
+  /// No description provided for @roadmapPhaseSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Laying the ground'**
+  String get roadmapPhaseSetup;
+
+  /// No description provided for @roadmapPhaseSetupWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'Weeks before the season'**
+  String get roadmapPhaseSetupWhen;
+
+  /// No description provided for @roadmapPhaseSetupBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing in this app stands on its own: every file, every task and every urgent report is filed against a season and built out of the reference lists. This phase is set once a year, and everything after it rests on it.'**
+  String get roadmapPhaseSetupBody;
+
+  /// No description provided for @roadmapPhaseBuild.
+  ///
+  /// In en, this message translates to:
+  /// **'Building the work'**
+  String get roadmapPhaseBuild;
+
+  /// No description provided for @roadmapPhaseBuildWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'The month before'**
+  String get roadmapPhaseBuildWhen;
+
+  /// No description provided for @roadmapPhaseBuildBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The paperwork the season will actually be worked through: which files exist, who is in them and in what role, what each person is told to do, and what the whole mission is to be told.'**
+  String get roadmapPhaseBuildBody;
+
+  /// No description provided for @roadmapPhaseRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Running the season'**
+  String get roadmapPhaseRun;
+
+  /// No description provided for @roadmapPhaseRunWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'Dhul Hijjah itself'**
+  String get roadmapPhaseRunWhen;
+
+  /// No description provided for @roadmapPhaseRunBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The only phase most of the mission ever touches, and the only one measured in hours rather than weeks. Everything in it is open to everybody, and that is its whole character: the season is not run by the people holding permissions, it is run by whoever is standing in Mina at three in the morning.'**
+  String get roadmapPhaseRunBody;
+
+  /// No description provided for @roadmapPhaseWatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Watching it happen'**
+  String get roadmapPhaseWatch;
+
+  /// No description provided for @roadmapPhaseWatchWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'Alongside the phase above'**
+  String get roadmapPhaseWatchWhen;
+
+  /// No description provided for @roadmapPhaseWatchBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The operations room\'s half of the same days. Some of it is the season seen whole while it is still moving; the rest is read back afterwards, act by act.'**
+  String get roadmapPhaseWatchBody;
+
+  /// No description provided for @roadmapPhaseClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Closing the year'**
+  String get roadmapPhaseClose;
+
+  /// No description provided for @roadmapPhaseCloseWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'The weeks after'**
+  String get roadmapPhaseCloseWhen;
+
+  /// No description provided for @roadmapPhaseCloseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'What is harvested from a season once the buses have gone home: the marks people were asked to give, the records taken out of the app, and the year put away so the next one can be opened.'**
+  String get roadmapPhaseCloseBody;
+
+  /// No description provided for @roadmapStepSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'Name the year the Administration is working through and make it the current one. Every file, task, report and check-in that follows is filed against it, which is why nothing else in this map can be done first.'**
+  String get roadmapStepSeason;
+
+  /// No description provided for @roadmapNoteSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'Only one season is current at a time. Changing it changes what every other screen in the app is showing.'**
+  String get roadmapNoteSeason;
+
+  /// No description provided for @roadmapStepReference.
+  ///
+  /// In en, this message translates to:
+  /// **'The lists everything else is assembled from: hotels, clusters, the places of the rites, and the rest of the master data. A file names a hotel rather than describing one, so a hotel that is not on this list cannot be put in a file.'**
+  String get roadmapStepReference;
+
+  /// No description provided for @roadmapNoteReference.
+  ///
+  /// In en, this message translates to:
+  /// **'A place only becomes scannable once it is here with a position and a radius — which is what makes attendance work at all.'**
+  String get roadmapNoteReference;
+
+  /// No description provided for @roadmapStepApprovals.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody reaches the app before their account is approved. Registrations queue here, and each is admitted, refused, or left waiting.'**
+  String get roadmapStepApprovals;
+
+  /// No description provided for @roadmapStepEmployees.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is working this season: their details, their photographs and the numbers they are reached on. It is filled here once, and read from here by every other screen that has to contact somebody.'**
+  String get roadmapStepEmployees;
+
+  /// No description provided for @roadmapStepPermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'What each person may do. Being approved lets somebody in; this decides what they find once inside — and the sections nobody grants them stay both hidden and shut.'**
+  String get roadmapStepPermissions;
+
+  /// No description provided for @roadmapNotePermissions.
+  ///
+  /// In en, this message translates to:
+  /// **'A permission granted now reaches the holder when their session next refreshes — a pull on any list will do it.'**
+  String get roadmapNotePermissions;
+
+  /// No description provided for @roadmapStepFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the season\'s operational files, put people into them and give each a role. This is the step that turns a directory of staff into an organisation: a file reaches its members by assignment, and it is here that the assigning happens.'**
+  String get roadmapStepFiles;
+
+  /// No description provided for @roadmapNoteFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'A member sees a file because he was put in it, never because of a permission — which is why every file has to be built here before anybody can work one.'**
+  String get roadmapNoteFiles;
+
+  /// No description provided for @roadmapStepAssign.
+  ///
+  /// In en, this message translates to:
+  /// **'Write duties onto other people\'s lists and follow them up. Separate from the files on purpose: a task is aimed at a person, not at a folder, and most of them have no file behind them at all.'**
+  String get roadmapStepAssign;
+
+  /// No description provided for @roadmapStepForms.
+  ///
+  /// In en, this message translates to:
+  /// **'Write the evaluation papers the season will be judged with: the stages, the questions, and what each is worth. Written before anybody is asked to fill one, because the paper cannot change under a mark that has already been given.'**
+  String get roadmapStepForms;
+
+  /// No description provided for @roadmapNoteForms.
+  ///
+  /// In en, this message translates to:
+  /// **'Writing the questions and reading the answers are two different trusts, and two different permissions.'**
+  String get roadmapNoteForms;
+
+  /// No description provided for @roadmapStepCirculars.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter and publish the decisions, timetables and notices the whole mission reads — meal times, movement orders, anything that has to reach everybody at once.'**
+  String get roadmapStepCirculars;
+
+  /// No description provided for @roadmapStepMyFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'The files you were put into, and your role in each. Whatever your rank, this shows your own work: being allowed to open every file does not make every file yours.'**
+  String get roadmapStepMyFiles;
+
+  /// No description provided for @roadmapStepMyTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Your own list, and what was written onto it by somebody else. Mark a duty done as you go rather than at the end of the day — the follow-up screens read exactly this.'**
+  String get roadmapStepMyTasks;
+
+  /// No description provided for @roadmapNoteOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Written with no network, it is kept on the device and sent by itself when the network returns. Do not write it twice.'**
+  String get roadmapNoteOffline;
+
+  /// No description provided for @roadmapStepCheckIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan the code fixed at the place and your arrival is recorded there, with the time and the place on it. Your own record is yours to read from any device.'**
+  String get roadmapStepCheckIn;
+
+  /// No description provided for @roadmapNoteCheckIn.
+  ///
+  /// In en, this message translates to:
+  /// **'The phone\'s own position is checked as well as the code, so an arrival cannot be filed from the other end of the street.'**
+  String get roadmapNoteCheckIn;
+
+  /// No description provided for @roadmapStepIncident.
+  ///
+  /// In en, this message translates to:
+  /// **'Say that something has gone wrong — a coach broken down, a pilgrim lost, a hotel refusing a group — and it reaches the operations room at once. There is a red button for it on nearly every screen in the app.'**
+  String get roadmapStepIncident;
+
+  /// No description provided for @roadmapNoteIncident.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliberately open to everybody: a system in which only certain people may report a broken-down coach is a system that does not find out about the coach.'**
+  String get roadmapNoteIncident;
+
+  /// No description provided for @roadmapStepReadCirculars.
+  ///
+  /// In en, this message translates to:
+  /// **'What the Administration has published to the whole mission this season. Read rather than written — entering one is the step above, in the other hands.'**
+  String get roadmapStepReadCirculars;
+
+  /// No description provided for @roadmapStepComplain.
+  ///
+  /// In en, this message translates to:
+  /// **'File a complaint and read what came back on it. Complaining is not an authority somebody grants, so this is open to every approved account.'**
+  String get roadmapStepComplain;
+
+  /// No description provided for @roadmapStepDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'The season from above: how many files are running, who is where, what is still waiting. Each part of it answers for itself, so you see the sections you hold and no others.'**
+  String get roadmapStepDashboard;
+
+  /// No description provided for @roadmapStepMap.
+  ///
+  /// In en, this message translates to:
+  /// **'The season drawn on the ground — the hotels, the camps and the places of the rites, with what is happening at each.'**
+  String get roadmapStepMap;
+
+  /// No description provided for @roadmapStepPresence.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is present, everywhere, right now. The map says where the places are and this says who is standing in them.'**
+  String get roadmapStepPresence;
+
+  /// No description provided for @roadmapStepIncidents.
+  ///
+  /// In en, this message translates to:
+  /// **'The register of urgent reports as they arrive. The one oversight screen in this app that is read while the thing it is about is still happening.'**
+  String get roadmapStepIncidents;
+
+  /// No description provided for @roadmapStepComplaints.
+  ///
+  /// In en, this message translates to:
+  /// **'Every complaint filed across the mission: reply to it, dismiss it, or lock it once it is settled.'**
+  String get roadmapStepComplaints;
+
+  /// No description provided for @roadmapNoteComplaints.
+  ///
+  /// In en, this message translates to:
+  /// **'A complaint can escalate onto a person\'s account with no human in the loop, which is why the register sits with the people rather than with the files.'**
+  String get roadmapNoteComplaints;
+
+  /// No description provided for @roadmapStepAudit.
+  ///
+  /// In en, this message translates to:
+  /// **'The season act by act: who did what, and when. The dashboard is the season from above; this is the same season from the side.'**
+  String get roadmapStepAudit;
+
+  /// No description provided for @roadmapStepEvaluate.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in the evaluations you were asked for. They reach you by name rather than by permission, so this list is empty for anybody who was not asked — which is the true answer, not a missing door.'**
+  String get roadmapStepEvaluate;
+
+  /// No description provided for @roadmapNoteEvaluate.
+  ///
+  /// In en, this message translates to:
+  /// **'What was written about you is not here. It is on your own page, and it arrives with no name on it.'**
+  String get roadmapNoteEvaluate;
+
+  /// No description provided for @roadmapStepExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Take any list out of the app as a file, with the columns you choose — for a report, an archive, or anything that has to be worked on outside.'**
+  String get roadmapStepExport;
+
+  /// No description provided for @roadmapStepArchiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Close the year, open the next'**
+  String get roadmapStepArchiveTitle;
+
+  /// No description provided for @roadmapStepArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is deleted at the end of a season. The year stops being the current one and becomes the archive, and a new season is opened beside it — which puts you back at the first step of this map.'**
+  String get roadmapStepArchive;
+
+  /// No description provided for @roadmapNoteArchive.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything filed against a past season stays readable exactly as it was. Closing a year hides nothing.'**
+  String get roadmapNoteArchive;
 }
 
 class _AppLocalizationsDelegate

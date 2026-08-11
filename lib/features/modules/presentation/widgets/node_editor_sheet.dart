@@ -38,6 +38,8 @@ Future<NodeDraft?> showNodeEditorSheet(
 }) {
   return showModalBottomSheet<NodeDraft>(
     context: context,
+    // Over the rail as well as the page — see [showAppSheet].
+    useRootNavigator: true,
     isScrollControlled: true,
     showDragHandle: true,
     builder: (_) => _NodeEditorSheet(

@@ -14,6 +14,8 @@ import 'audit_style.dart';
 Future<void> showAuditEventSheet(BuildContext context, AuditEvent event) {
   return showModalBottomSheet<void>(
     context: context,
+    // Over the rail as well as the page — see [showAppSheet].
+    useRootNavigator: true,
     isScrollControlled: true,
     showDragHandle: true,
     builder: (_) => _Sheet(event: event),

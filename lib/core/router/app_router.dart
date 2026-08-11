@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/application/session_cubit.dart';
@@ -14,6 +15,7 @@ import '../../features/employees/presentation/employees_directory_screen.dart';
 import '../../features/evaluations/application/evaluations_cubit.dart';
 import '../../features/evaluations/presentation/evaluation_forms_screen.dart';
 import '../../features/evaluations/presentation/evaluations_screen.dart';
+import '../../features/home/presentation/app_shell.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/checkin/presentation/check_in_screen.dart';
 import '../../features/checkin/presentation/my_check_ins_screen.dart';
@@ -203,6 +205,14 @@ final sectionGuards = <String, bool Function(SessionState)>{
 };
 
 GoRouter buildRouter(SessionCubit session) {
+  // The navigator every approved page lives on. Named rather than left to
+  // go_router to invent, so that `useRootNavigator: true` on a sheet means
+  // something: without a key of its own the shell's navigator IS the root, and
+  // a sheet opened over the files list would be confined to the column beside
+  // the rail — with the rail still lit and still tappable behind its own
+  // scrim-free edge.
+  final shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
+
   return GoRouter(
     initialLocation: Routes.home,
     refreshListenable: GoRouterRefreshStream(session.stream),
@@ -285,9 +295,7 @@ GoRouter buildRouter(SessionCubit session) {
         path: Routes.login,
         pageBuilder: (c, s) => fadeThroughPage(
           key: s.pageKey,
-          child: LoginScreen(
-            addingForUserId: s.uri.queryParameters['add'],
-          ),
+          child: LoginScreen(addingForUserId: s.uri.queryParameters['add']),
         ),
       ),
       GoRoute(
@@ -317,207 +325,246 @@ GoRouter buildRouter(SessionCubit session) {
         pageBuilder: (c, s) =>
             fadeThroughPage(key: s.pageKey, child: const SuspendedScreen()),
       ),
-      GoRoute(
-        path: Routes.home,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const HomeScreen()),
-      ),
-      GoRoute(
-        path: Routes.notifications,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const NotificationsScreen()),
-      ),
-      GoRoute(
-        path: Routes.settings,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const SettingsScreen()),
-      ),
-      GoRoute(
-        path: Routes.outbox,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const OutboxScreen()),
-      ),
-      GoRoute(
-        path: Routes.export,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const ExportScreen()),
-      ),
-      GoRoute(
-        path: Routes.raiseIncident,
-        pageBuilder: (c, s) => fadeThroughPage(
-          key: s.pageKey,
-          child: RaiseIncidentScreen(
-            moduleId: s.uri.queryParameters['module'],
-            nodeId: s.uri.queryParameters['node'],
+      // ── Everything an approved account can reach ─────────────────────
+      //
+      // All of it inside one shell, so that the standing rail under
+      // [HomeLayout.sidebar] is built ABOVE the navigator these pages live in.
+      // That is the whole difference between a menu and a frame: the column is
+      // not rebuilt when a page changes beneath it, so it does not re-fold, does
+      // not lose its scroll position, and does not flash.
+      //
+      // Under [HomeLayout.grid] the shell hands its child straight back and
+      // nothing here is felt at all — see [AppShell].
+      //
+      // The seven routes ABOVE this are outside it deliberately. The splash,
+      // the sign-in form and the three "your account is not through yet"
+      // screens are whole pages in their own right, and a navigation rail
+      // beside a login box offers doors to somebody who has not been let in.
+      //
+      // The key is what makes the shell's navigator addressable: a modal that
+      // must cover the rail as well as the page asks for the ROOT navigator and
+      // gets the whole window, while everything pushed from inside a page lands
+      // here and keeps the rail beside it.
+      ShellRoute(
+        navigatorKey: shellNavigatorKey,
+        builder: (context, state, child) =>
+            AppShell(location: state.matchedLocation, child: child),
+        routes: [
+          GoRoute(
+            path: Routes.home,
+            pageBuilder: (c, s) =>
+                fadeThroughPage(key: s.pageKey, child: const HomeScreen()),
           ),
-        ),
-      ),
-      GoRoute(
-        path: Routes.incidents,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const IncidentsScreen()),
-      ),
-      GoRoute(
-        path: Routes.checkIn,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const CheckInScreen()),
-      ),
-      GoRoute(
-        path: Routes.myCheckIns,
-        // `?compose=1` opens the scanner on arrival, exactly as it does for
-        // tasks and complaints — the one way this app is asked to write
-        // something from the home page.
-        pageBuilder: (c, s) => fadeThroughPage(
-          key: s.pageKey,
-          child: MyCheckInsScreen(
-            compose: s.uri.queryParameters['compose'] == '1',
+          GoRoute(
+            path: Routes.notifications,
+            pageBuilder: (c, s) => fadeThroughPage(
+              key: s.pageKey,
+              child: const NotificationsScreen(),
+            ),
           ),
-        ),
-      ),
-      GoRoute(
-        path: Routes.presence,
-        pageBuilder: (c, s) => fadeThroughPage(
-          key: s.pageKey,
-          // `place` narrows the board to one entry — how the map's pin and a
-          // hotel's page reach it. Absent, it is the whole season.
-          child: PresenceBoardScreen(
-            itemId: s.uri.queryParameters['place'],
-            placeName: s.uri.queryParameters['name'],
+          GoRoute(
+            path: Routes.settings,
+            pageBuilder: (c, s) =>
+                fadeThroughPage(key: s.pageKey, child: const SettingsScreen()),
           ),
-        ),
-      ),
-      GoRoute(
-        path: Routes.seasonMap,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const SeasonMapScreen()),
-      ),
-      GoRoute(
-        path: Routes.tasks,
-        // `?compose=1` asks the screen to open its editor on arrival. A query
-        // parameter rather than `extra` because it survives a deep link and a
-        // restore, and because a request to write something is part of WHERE
-        // the reader asked to go.
-        pageBuilder: (c, s) => fadeThroughPage(
-          key: s.pageKey,
-          child: TasksScreen(
-            compose: s.uri.queryParameters['compose'] == '1',
+          GoRoute(
+            path: Routes.outbox,
+            pageBuilder: (c, s) =>
+                fadeThroughPage(key: s.pageKey, child: const OutboxScreen()),
           ),
-        ),
-      ),
-      GoRoute(
-        path: Routes.tasksManage,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const TasksManageScreen()),
-      ),
-      GoRoute(
-        path: Routes.reports,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const ReportsScreen()),
-      ),
-      GoRoute(
-        path: Routes.reportsManage,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const ReportsManageScreen()),
-      ),
-      GoRoute(
-        path: Routes.dashboard,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const DashboardScreen()),
-      ),
-      GoRoute(
-        path: Routes.approvals,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const ApprovalQueueScreen()),
-      ),
-      GoRoute(
-        path: Routes.permissions,
-        pageBuilder: (c, s) => fadeThroughPage(
-          key: s.pageKey,
-          child: const PermissionsEmployeesScreen(),
-        ),
-      ),
-      GoRoute(
-        path: Routes.seasons,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const SeasonsScreen()),
-      ),
-      GoRoute(
-        path: Routes.employees,
-        pageBuilder: (c, s) => fadeThroughPage(
-          key: s.pageKey,
-          child: const EmployeesDirectoryScreen(),
-        ),
-      ),
-      GoRoute(
-        path: Routes.modules,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const ModulesScreen()),
-      ),
-      // The same screen asked the other question. A separate route rather than
-      // a flag on the first, so the office and the work each have a place of
-      // their own to return to.
-      GoRoute(
-        path: Routes.modulesManage,
-        pageBuilder: (c, s) => fadeThroughPage(
-          key: s.pageKey,
-          child: const ModulesScreen(view: ModulesView.manage),
-        ),
-      ),
-      GoRoute(
-        path: Routes.referenceData,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const ReferenceDataScreen()),
-      ),
-      GoRoute(
-        path: Routes.auditLog,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const AuditLogScreen()),
-      ),
-      GoRoute(
-        path: Routes.myProfile,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const MyProfileScreen()),
-      ),
-      // The same screen asked the other question, as with files and reports:
-      // one is what this person filed, the other is the whole register.
-      GoRoute(
-        path: Routes.complaints,
-        pageBuilder: (c, s) => fadeThroughPage(
-          key: s.pageKey,
-          child: ComplaintsScreen(
-            compose: s.uri.queryParameters['compose'] == '1',
+          GoRoute(
+            path: Routes.export,
+            pageBuilder: (c, s) =>
+                fadeThroughPage(key: s.pageKey, child: const ExportScreen()),
           ),
-        ),
-      ),
-      GoRoute(
-        path: Routes.complaintsManage,
-        pageBuilder: (c, s) => fadeThroughPage(
-          key: s.pageKey,
-          child: const ComplaintsScreen(scope: ComplaintsScope.all),
-        ),
-      ),
-      // The same pair again, for the same reason: one is what this person was
-      // asked to fill, the other is the whole register. The forms behind both
-      // are a third door, because writing the paper and reading the marks are
-      // two different trusts.
-      GoRoute(
-        path: Routes.evaluations,
-        pageBuilder: (c, s) =>
-            fadeThroughPage(key: s.pageKey, child: const EvaluationsScreen()),
-      ),
-      GoRoute(
-        path: Routes.evaluationsManage,
-        pageBuilder: (c, s) => fadeThroughPage(
-          key: s.pageKey,
-          child: const EvaluationsScreen(scope: EvaluationsScope.all),
-        ),
-      ),
-      GoRoute(
-        path: Routes.evaluationForms,
-        pageBuilder: (c, s) => fadeThroughPage(
-          key: s.pageKey,
-          child: const EvaluationFormsScreen(),
-        ),
+          GoRoute(
+            path: Routes.raiseIncident,
+            pageBuilder: (c, s) => fadeThroughPage(
+              key: s.pageKey,
+              child: RaiseIncidentScreen(
+                moduleId: s.uri.queryParameters['module'],
+                nodeId: s.uri.queryParameters['node'],
+              ),
+            ),
+          ),
+          GoRoute(
+            path: Routes.incidents,
+            pageBuilder: (c, s) =>
+                fadeThroughPage(key: s.pageKey, child: const IncidentsScreen()),
+          ),
+          GoRoute(
+            path: Routes.checkIn,
+            pageBuilder: (c, s) =>
+                fadeThroughPage(key: s.pageKey, child: const CheckInScreen()),
+          ),
+          GoRoute(
+            path: Routes.myCheckIns,
+            // `?compose=1` opens the scanner on arrival, exactly as it does for
+            // tasks and complaints — the one way this app is asked to write
+            // something from the home page.
+            pageBuilder: (c, s) => fadeThroughPage(
+              key: s.pageKey,
+              child: MyCheckInsScreen(
+                compose: s.uri.queryParameters['compose'] == '1',
+              ),
+            ),
+          ),
+          GoRoute(
+            path: Routes.presence,
+            pageBuilder: (c, s) => fadeThroughPage(
+              key: s.pageKey,
+              // `place` narrows the board to one entry — how the map's pin and a
+              // hotel's page reach it. Absent, it is the whole season.
+              child: PresenceBoardScreen(
+                itemId: s.uri.queryParameters['place'],
+                placeName: s.uri.queryParameters['name'],
+              ),
+            ),
+          ),
+          GoRoute(
+            path: Routes.seasonMap,
+            pageBuilder: (c, s) =>
+                fadeThroughPage(key: s.pageKey, child: const SeasonMapScreen()),
+          ),
+          GoRoute(
+            path: Routes.tasks,
+            // `?compose=1` asks the screen to open its editor on arrival. A query
+            // parameter rather than `extra` because it survives a deep link and a
+            // restore, and because a request to write something is part of WHERE
+            // the reader asked to go.
+            pageBuilder: (c, s) => fadeThroughPage(
+              key: s.pageKey,
+              child: TasksScreen(
+                compose: s.uri.queryParameters['compose'] == '1',
+              ),
+            ),
+          ),
+          GoRoute(
+            path: Routes.tasksManage,
+            pageBuilder: (c, s) => fadeThroughPage(
+              key: s.pageKey,
+              child: const TasksManageScreen(),
+            ),
+          ),
+          GoRoute(
+            path: Routes.reports,
+            pageBuilder: (c, s) =>
+                fadeThroughPage(key: s.pageKey, child: const ReportsScreen()),
+          ),
+          GoRoute(
+            path: Routes.reportsManage,
+            pageBuilder: (c, s) => fadeThroughPage(
+              key: s.pageKey,
+              child: const ReportsManageScreen(),
+            ),
+          ),
+          GoRoute(
+            path: Routes.dashboard,
+            pageBuilder: (c, s) =>
+                fadeThroughPage(key: s.pageKey, child: const DashboardScreen()),
+          ),
+          GoRoute(
+            path: Routes.approvals,
+            pageBuilder: (c, s) => fadeThroughPage(
+              key: s.pageKey,
+              child: const ApprovalQueueScreen(),
+            ),
+          ),
+          GoRoute(
+            path: Routes.permissions,
+            pageBuilder: (c, s) => fadeThroughPage(
+              key: s.pageKey,
+              child: const PermissionsEmployeesScreen(),
+            ),
+          ),
+          GoRoute(
+            path: Routes.seasons,
+            pageBuilder: (c, s) =>
+                fadeThroughPage(key: s.pageKey, child: const SeasonsScreen()),
+          ),
+          GoRoute(
+            path: Routes.employees,
+            pageBuilder: (c, s) => fadeThroughPage(
+              key: s.pageKey,
+              child: const EmployeesDirectoryScreen(),
+            ),
+          ),
+          GoRoute(
+            path: Routes.modules,
+            pageBuilder: (c, s) =>
+                fadeThroughPage(key: s.pageKey, child: const ModulesScreen()),
+          ),
+          // The same screen asked the other question. A separate route rather than
+          // a flag on the first, so the office and the work each have a place of
+          // their own to return to.
+          GoRoute(
+            path: Routes.modulesManage,
+            pageBuilder: (c, s) => fadeThroughPage(
+              key: s.pageKey,
+              child: const ModulesScreen(view: ModulesView.manage),
+            ),
+          ),
+          GoRoute(
+            path: Routes.referenceData,
+            pageBuilder: (c, s) => fadeThroughPage(
+              key: s.pageKey,
+              child: const ReferenceDataScreen(),
+            ),
+          ),
+          GoRoute(
+            path: Routes.auditLog,
+            pageBuilder: (c, s) =>
+                fadeThroughPage(key: s.pageKey, child: const AuditLogScreen()),
+          ),
+          GoRoute(
+            path: Routes.myProfile,
+            pageBuilder: (c, s) =>
+                fadeThroughPage(key: s.pageKey, child: const MyProfileScreen()),
+          ),
+          // The same screen asked the other question, as with files and reports:
+          // one is what this person filed, the other is the whole register.
+          GoRoute(
+            path: Routes.complaints,
+            pageBuilder: (c, s) => fadeThroughPage(
+              key: s.pageKey,
+              child: ComplaintsScreen(
+                compose: s.uri.queryParameters['compose'] == '1',
+              ),
+            ),
+          ),
+          GoRoute(
+            path: Routes.complaintsManage,
+            pageBuilder: (c, s) => fadeThroughPage(
+              key: s.pageKey,
+              child: const ComplaintsScreen(scope: ComplaintsScope.all),
+            ),
+          ),
+          // The same pair again, for the same reason: one is what this person was
+          // asked to fill, the other is the whole register. The forms behind both
+          // are a third door, because writing the paper and reading the marks are
+          // two different trusts.
+          GoRoute(
+            path: Routes.evaluations,
+            pageBuilder: (c, s) => fadeThroughPage(
+              key: s.pageKey,
+              child: const EvaluationsScreen(),
+            ),
+          ),
+          GoRoute(
+            path: Routes.evaluationsManage,
+            pageBuilder: (c, s) => fadeThroughPage(
+              key: s.pageKey,
+              child: const EvaluationsScreen(scope: EvaluationsScope.all),
+            ),
+          ),
+          GoRoute(
+            path: Routes.evaluationForms,
+            pageBuilder: (c, s) => fadeThroughPage(
+              key: s.pageKey,
+              child: const EvaluationFormsScreen(),
+            ),
+          ),
+        ],
       ),
     ],
   );

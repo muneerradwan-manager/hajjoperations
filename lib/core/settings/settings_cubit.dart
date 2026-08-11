@@ -6,12 +6,39 @@ import '../../core/bloc/safe_cubit.dart';
 import '../../features/notifications/data/push_service.dart';
 import '../../features/prayer_times/application/prayer_scheduler.dart';
 
+/// Which shape the home page takes.
+///
+/// Two arrangements of the same doors, and deliberately not two different sets
+/// of them: whatever a person may open, they may open in either. The choice is
+/// about how they would rather FIND it.
+enum HomeLayout {
+  /// The original: every door on the page at once, in colour-coded shelves.
+  ///
+  /// It is the default and stays the default. It is the arrangement that
+  /// answers "what is there?" without being asked — a man who opened this app
+  /// for the first time this morning can see the whole of his authority in one
+  /// scroll, and he does not yet know there is a menu to open.
+  grid,
+
+  /// A standing rail of the same doors, with the app's guide in their place.
+  ///
+  /// For the reader who already knows where everything is and wants it one tap
+  /// away from wherever he happens to be — and for a monitor, where a page of
+  /// tiles spends a metre of glass saying what a 280-pixel column says.
+  sidebar;
+
+  static HomeLayout fromName(String? name) =>
+      values.firstWhere((v) => v.name == name, orElse: () => grid);
+}
+
 class SettingsState extends Equatable {
   const SettingsState({
     required this.themeMode,
     required this.locale,
     this.notificationsEnabled = true,
     this.solidSurfaces = false,
+    this.homeLayout = HomeLayout.grid,
+    this.sidebarExpanded = true,
   });
 
   final ThemeMode themeMode;
@@ -36,18 +63,36 @@ class SettingsState extends Equatable {
   /// who he is. The same person on a desk indoors wants it off.
   final bool solidSurfaces;
 
+  /// Which arrangement the home page takes — see [HomeLayout].
+  ///
+  /// Per DEVICE, like everything else on this object. It is about the screen in
+  /// front of this man: the same account wants the rail on the monitor on his
+  /// desk and the page of tiles on the phone in his pocket, and a preference
+  /// stored against the account would make him choose once for both.
+  final HomeLayout homeLayout;
+
+  /// Whether the rail stands open with its labels showing, or folded to a
+  /// column of icons. Meaningless under [HomeLayout.grid], and kept anyway:
+  /// somebody who folds it, switches away for a week and comes back should find
+  /// it folded, not reset.
+  final bool sidebarExpanded;
+
   SettingsState copyWith({
     ThemeMode? themeMode,
     Locale? locale,
     bool clearLocale = false,
     bool? notificationsEnabled,
     bool? solidSurfaces,
+    HomeLayout? homeLayout,
+    bool? sidebarExpanded,
   }) {
     return SettingsState(
       themeMode: themeMode ?? this.themeMode,
       locale: clearLocale ? null : (locale ?? this.locale),
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       solidSurfaces: solidSurfaces ?? this.solidSurfaces,
+      homeLayout: homeLayout ?? this.homeLayout,
+      sidebarExpanded: sidebarExpanded ?? this.sidebarExpanded,
     );
   }
 
@@ -57,6 +102,8 @@ class SettingsState extends Equatable {
     locale,
     notificationsEnabled,
     solidSurfaces,
+    homeLayout,
+    sidebarExpanded,
   ];
 }
 
@@ -69,6 +116,8 @@ class SettingsCubit extends SafeCubit<SettingsState> {
           locale: _readLocale(_prefs),
           notificationsEnabled: _prefs.getBool(_kNotifications) ?? true,
           solidSurfaces: _prefs.getBool(_kSolidSurfaces) ?? false,
+          homeLayout: HomeLayout.fromName(_prefs.getString(_kHomeLayout)),
+          sidebarExpanded: _prefs.getBool(_kSidebarExpanded) ?? true,
         ),
       );
 
@@ -76,6 +125,8 @@ class SettingsCubit extends SafeCubit<SettingsState> {
 
   static const _kTheme = 'settings.themeMode';
   static const _kSolidSurfaces = 'settings.solidSurfaces';
+  static const _kHomeLayout = 'settings.homeLayout';
+  static const _kSidebarExpanded = 'settings.sidebarExpanded';
 
   /// Public because the prayer scheduler reads it too: a notification raised
   /// while the app is closed has no cubit to ask what language to speak, and
@@ -132,6 +183,23 @@ class SettingsCubit extends SafeCubit<SettingsState> {
   Future<void> setSolidSurfaces(bool solid) async {
     emit(state.copyWith(solidSurfaces: solid));
     await _prefs.setBool(_kSolidSurfaces, solid);
+  }
+
+  /// Which shape the home page takes. Written by name rather than by index, so
+  /// that reordering the enum one day does not silently move everybody who
+  /// chose the rail back onto the grid.
+  Future<void> setHomeLayout(HomeLayout layout) async {
+    emit(state.copyWith(homeLayout: layout));
+    await _prefs.setString(_kHomeLayout, layout.name);
+  }
+
+  /// Folding and unfolding the rail. Persisted rather than held in the screen's
+  /// own state: it is a habit, not a moment — a man who works folded wants it
+  /// folded tomorrow, and re-folding it on every cold start is the sort of
+  /// small insult an app is never forgiven for.
+  Future<void> setSidebarExpanded(bool expanded) async {
+    emit(state.copyWith(sidebarExpanded: expanded));
+    await _prefs.setBool(_kSidebarExpanded, expanded);
   }
 
   /// Turning push off unsubscribes this device from every topic and forgets its

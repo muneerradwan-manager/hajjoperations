@@ -4061,4 +4061,252 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get settingsHomeLayout => 'Home screen';
+
+  @override
+  String get settingsHomeLayoutGrid => 'Cards';
+
+  @override
+  String get settingsHomeLayoutGridHint =>
+      'Every door on the page at once, on colour-coded shelves';
+
+  @override
+  String get settingsHomeLayoutSidebar => 'Sidebar';
+
+  @override
+  String get settingsHomeLayoutSidebarHint =>
+      'A standing column of doors, and the season\'s roadmap in their place';
+
+  @override
+  String get sidebarExpand => 'Expand the sidebar';
+
+  @override
+  String get sidebarCollapse => 'Collapse the sidebar';
+
+  @override
+  String get sidebarMenu => 'Menu';
+
+  @override
+  String get roadmapTitle => 'Operational roadmap';
+
+  @override
+  String get roadmapIntroTitle => 'How a season is run';
+
+  @override
+  String get roadmapIntroBody =>
+      'Every other screen in this app answers where something is. This one answers when. A season is laid out below from the week before it opens to the week after it closes: five phases, each step saying what is done at it and what it is waiting on. The whole map is drawn for everybody — the steps that are not yours are marked so, because knowing that somebody had to fill in the master data before your file existed is part of knowing your own place in the season.';
+
+  @override
+  String get roadmapOpen => 'Open';
+
+  @override
+  String get roadmapLocked => 'In the Administration\'s hands';
+
+  @override
+  String get roadmapEveryone => 'Open to everyone';
+
+  @override
+  String roadmapPhaseLabel(int number) {
+    return 'Phase $number';
+  }
+
+  @override
+  String roadmapStepsOpen(int open, int total) {
+    return '$open of $total steps are yours';
+  }
+
+  @override
+  String get roadmapPhaseSetup => 'Laying the ground';
+
+  @override
+  String get roadmapPhaseSetupWhen => 'Weeks before the season';
+
+  @override
+  String get roadmapPhaseSetupBody =>
+      'Nothing in this app stands on its own: every file, every task and every urgent report is filed against a season and built out of the reference lists. This phase is set once a year, and everything after it rests on it.';
+
+  @override
+  String get roadmapPhaseBuild => 'Building the work';
+
+  @override
+  String get roadmapPhaseBuildWhen => 'The month before';
+
+  @override
+  String get roadmapPhaseBuildBody =>
+      'The paperwork the season will actually be worked through: which files exist, who is in them and in what role, what each person is told to do, and what the whole mission is to be told.';
+
+  @override
+  String get roadmapPhaseRun => 'Running the season';
+
+  @override
+  String get roadmapPhaseRunWhen => 'Dhul Hijjah itself';
+
+  @override
+  String get roadmapPhaseRunBody =>
+      'The only phase most of the mission ever touches, and the only one measured in hours rather than weeks. Everything in it is open to everybody, and that is its whole character: the season is not run by the people holding permissions, it is run by whoever is standing in Mina at three in the morning.';
+
+  @override
+  String get roadmapPhaseWatch => 'Watching it happen';
+
+  @override
+  String get roadmapPhaseWatchWhen => 'Alongside the phase above';
+
+  @override
+  String get roadmapPhaseWatchBody =>
+      'The operations room\'s half of the same days. Some of it is the season seen whole while it is still moving; the rest is read back afterwards, act by act.';
+
+  @override
+  String get roadmapPhaseClose => 'Closing the year';
+
+  @override
+  String get roadmapPhaseCloseWhen => 'The weeks after';
+
+  @override
+  String get roadmapPhaseCloseBody =>
+      'What is harvested from a season once the buses have gone home: the marks people were asked to give, the records taken out of the app, and the year put away so the next one can be opened.';
+
+  @override
+  String get roadmapStepSeason =>
+      'Name the year the Administration is working through and make it the current one. Every file, task, report and check-in that follows is filed against it, which is why nothing else in this map can be done first.';
+
+  @override
+  String get roadmapNoteSeason =>
+      'Only one season is current at a time. Changing it changes what every other screen in the app is showing.';
+
+  @override
+  String get roadmapStepReference =>
+      'The lists everything else is assembled from: hotels, clusters, the places of the rites, and the rest of the master data. A file names a hotel rather than describing one, so a hotel that is not on this list cannot be put in a file.';
+
+  @override
+  String get roadmapNoteReference =>
+      'A place only becomes scannable once it is here with a position and a radius — which is what makes attendance work at all.';
+
+  @override
+  String get roadmapStepApprovals =>
+      'Nobody reaches the app before their account is approved. Registrations queue here, and each is admitted, refused, or left waiting.';
+
+  @override
+  String get roadmapStepEmployees =>
+      'Who is working this season: their details, their photographs and the numbers they are reached on. It is filled here once, and read from here by every other screen that has to contact somebody.';
+
+  @override
+  String get roadmapStepPermissions =>
+      'What each person may do. Being approved lets somebody in; this decides what they find once inside — and the sections nobody grants them stay both hidden and shut.';
+
+  @override
+  String get roadmapNotePermissions =>
+      'A permission granted now reaches the holder when their session next refreshes — a pull on any list will do it.';
+
+  @override
+  String get roadmapStepFiles =>
+      'Open the season\'s operational files, put people into them and give each a role. This is the step that turns a directory of staff into an organisation: a file reaches its members by assignment, and it is here that the assigning happens.';
+
+  @override
+  String get roadmapNoteFiles =>
+      'A member sees a file because he was put in it, never because of a permission — which is why every file has to be built here before anybody can work one.';
+
+  @override
+  String get roadmapStepAssign =>
+      'Write duties onto other people\'s lists and follow them up. Separate from the files on purpose: a task is aimed at a person, not at a folder, and most of them have no file behind them at all.';
+
+  @override
+  String get roadmapStepForms =>
+      'Write the evaluation papers the season will be judged with: the stages, the questions, and what each is worth. Written before anybody is asked to fill one, because the paper cannot change under a mark that has already been given.';
+
+  @override
+  String get roadmapNoteForms =>
+      'Writing the questions and reading the answers are two different trusts, and two different permissions.';
+
+  @override
+  String get roadmapStepCirculars =>
+      'Enter and publish the decisions, timetables and notices the whole mission reads — meal times, movement orders, anything that has to reach everybody at once.';
+
+  @override
+  String get roadmapStepMyFiles =>
+      'The files you were put into, and your role in each. Whatever your rank, this shows your own work: being allowed to open every file does not make every file yours.';
+
+  @override
+  String get roadmapStepMyTasks =>
+      'Your own list, and what was written onto it by somebody else. Mark a duty done as you go rather than at the end of the day — the follow-up screens read exactly this.';
+
+  @override
+  String get roadmapNoteOffline =>
+      'Written with no network, it is kept on the device and sent by itself when the network returns. Do not write it twice.';
+
+  @override
+  String get roadmapStepCheckIn =>
+      'Scan the code fixed at the place and your arrival is recorded there, with the time and the place on it. Your own record is yours to read from any device.';
+
+  @override
+  String get roadmapNoteCheckIn =>
+      'The phone\'s own position is checked as well as the code, so an arrival cannot be filed from the other end of the street.';
+
+  @override
+  String get roadmapStepIncident =>
+      'Say that something has gone wrong — a coach broken down, a pilgrim lost, a hotel refusing a group — and it reaches the operations room at once. There is a red button for it on nearly every screen in the app.';
+
+  @override
+  String get roadmapNoteIncident =>
+      'Deliberately open to everybody: a system in which only certain people may report a broken-down coach is a system that does not find out about the coach.';
+
+  @override
+  String get roadmapStepReadCirculars =>
+      'What the Administration has published to the whole mission this season. Read rather than written — entering one is the step above, in the other hands.';
+
+  @override
+  String get roadmapStepComplain =>
+      'File a complaint and read what came back on it. Complaining is not an authority somebody grants, so this is open to every approved account.';
+
+  @override
+  String get roadmapStepDashboard =>
+      'The season from above: how many files are running, who is where, what is still waiting. Each part of it answers for itself, so you see the sections you hold and no others.';
+
+  @override
+  String get roadmapStepMap =>
+      'The season drawn on the ground — the hotels, the camps and the places of the rites, with what is happening at each.';
+
+  @override
+  String get roadmapStepPresence =>
+      'Who is present, everywhere, right now. The map says where the places are and this says who is standing in them.';
+
+  @override
+  String get roadmapStepIncidents =>
+      'The register of urgent reports as they arrive. The one oversight screen in this app that is read while the thing it is about is still happening.';
+
+  @override
+  String get roadmapStepComplaints =>
+      'Every complaint filed across the mission: reply to it, dismiss it, or lock it once it is settled.';
+
+  @override
+  String get roadmapNoteComplaints =>
+      'A complaint can escalate onto a person\'s account with no human in the loop, which is why the register sits with the people rather than with the files.';
+
+  @override
+  String get roadmapStepAudit =>
+      'The season act by act: who did what, and when. The dashboard is the season from above; this is the same season from the side.';
+
+  @override
+  String get roadmapStepEvaluate =>
+      'Fill in the evaluations you were asked for. They reach you by name rather than by permission, so this list is empty for anybody who was not asked — which is the true answer, not a missing door.';
+
+  @override
+  String get roadmapNoteEvaluate =>
+      'What was written about you is not here. It is on your own page, and it arrives with no name on it.';
+
+  @override
+  String get roadmapStepExport =>
+      'Take any list out of the app as a file, with the columns you choose — for a report, an archive, or anything that has to be worked on outside.';
+
+  @override
+  String get roadmapStepArchiveTitle => 'Close the year, open the next';
+
+  @override
+  String get roadmapStepArchive =>
+      'Nothing is deleted at the end of a season. The year stops being the current one and becomes the archive, and a new season is opened beside it — which puts you back at the first step of this map.';
+
+  @override
+  String get roadmapNoteArchive =>
+      'Everything filed against a past season stays readable exactly as it was. Closing a year hides nothing.';
 }

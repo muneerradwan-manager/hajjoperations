@@ -27,7 +27,8 @@ void main() {
       expect(
         settings.state.locale,
         const Locale('ar'),
-        reason: 'the mission works in Arabic; a phone set to English is a '
+        reason:
+            'the mission works in Arabic; a phone set to English is a '
             'phone, not a decision',
       );
     });
@@ -38,9 +39,66 @@ void main() {
       expect(
         settings.state.themeMode,
         ThemeMode.dark,
-        reason: 'this app is read at three in the morning in Mina far more '
+        reason:
+            'this app is read at three in the morning in Mina far more '
             'often than at a desk',
       );
+    });
+
+    test('opens on the grid of tiles', () async {
+      final settings = await cubitWith({});
+
+      expect(
+        settings.state.homeLayout,
+        HomeLayout.grid,
+        reason:
+            'a man opening this app for the first time does not yet know '
+            'there is a menu to open; the grid answers "what is there?" '
+            'without being asked',
+      );
+      expect(
+        settings.state.sidebarExpanded,
+        isTrue,
+        reason: 'a rail that arrives folded is a column of unlabelled glyphs',
+      );
+    });
+  });
+
+  group('the home layout', () {
+    test('is kept once it has been chosen', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+
+      await SettingsCubit(prefs).setHomeLayout(HomeLayout.sidebar);
+
+      expect(SettingsCubit(prefs).state.homeLayout, HomeLayout.sidebar);
+    });
+
+    test('is written by name, not by position', () async {
+      // Stored as an index, reordering the enum one day would silently move
+      // everybody who chose the rail back onto the grid.
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+
+      await SettingsCubit(prefs).setHomeLayout(HomeLayout.sidebar);
+
+      expect(prefs.getString('settings.homeLayout'), 'sidebar');
+    });
+
+    test('a value written by some other build lands on the grid', () async {
+      final settings = await cubitWith({'settings.homeLayout': 'carousel'});
+      expect(settings.state.homeLayout, HomeLayout.grid);
+    });
+
+    test('folding the rail survives a restart', () async {
+      // A habit, not a moment: re-folding it on every cold start is the sort of
+      // small insult an app is never forgiven for.
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+
+      await SettingsCubit(prefs).setSidebarExpanded(false);
+
+      expect(SettingsCubit(prefs).state.sidebarExpanded, isFalse);
     });
   });
 

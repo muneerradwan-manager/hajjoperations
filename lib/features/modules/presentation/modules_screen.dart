@@ -85,6 +85,8 @@ class _View extends StatelessWidget {
         ? available.single
         : await showModalBottomSheet<ModuleType>(
             context: context,
+            // Over the rail as well as the page — see [showAppSheet].
+            useRootNavigator: true,
             // The list of types is as long as the season has kinds of file —
             // ten of them now — and a sheet left unscrollable stops at half the
             // screen and overflows the rest.

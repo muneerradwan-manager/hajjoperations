@@ -32,6 +32,8 @@ class ImagePickerField extends StatelessWidget {
   Future<void> _pick(BuildContext context) async {
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
+      // Over the rail as well as the page — see [showAppSheet].
+      useRootNavigator: true,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
         child: Column(

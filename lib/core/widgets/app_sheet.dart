@@ -40,6 +40,19 @@ Future<T?> showAppSheet<T>({
 }) {
   return showModalBottomSheet<T>(
     context: context,
+    // The WHOLE window, not the column beside the rail.
+    //
+    // Under the sidebar arrangement every page lives on the shell's own
+    // navigator, and a modal raised on that navigator is bounded by the pane it
+    // is in: the scrim stops at the rail, which stays lit and stays tappable. A
+    // stray press on a destination then navigates the page out from under an
+    // open sheet and leaves it floating over a screen it has nothing to do
+    // with. Asking for the root navigator puts the scrim over everything, which
+    // is what a modal means.
+    //
+    // Every other `showModalBottomSheet` in this app says the same thing, and
+    // points here for the reason. `showDialog` already defaults to it.
+    useRootNavigator: true,
     isScrollControlled: isScrollControlled,
     showDragHandle: showDragHandle,
     isDismissible: isDismissible,

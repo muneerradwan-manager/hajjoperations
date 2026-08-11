@@ -78,6 +78,8 @@ Future<_AttachSource?> _chooseSource(BuildContext context) {
   final l = context.l10n;
   return showModalBottomSheet<_AttachSource>(
     context: context,
+    // Over the rail as well as the page — see [showAppSheet].
+    useRootNavigator: true,
     showDragHandle: true,
     builder: (sheetContext) => SafeArea(
       child: Column(

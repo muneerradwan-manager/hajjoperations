@@ -257,6 +257,8 @@ class _MapViewState extends State<_MapView> {
   void _openPlace(MapPlace place) {
     showModalBottomSheet<void>(
       context: context,
+      // Over the rail as well as the page — see [showAppSheet].
+      useRootNavigator: true,
       showDragHandle: true,
       // On a desk monitor an unconstrained sheet runs the full width and leaves
       // a title alone at one end and a button at the other.
@@ -268,6 +270,8 @@ class _MapViewState extends State<_MapView> {
   void _openIncident(Incident incident) {
     showModalBottomSheet<void>(
       context: context,
+      // Over the rail as well as the page — see [showAppSheet].
+      useRootNavigator: true,
       showDragHandle: true,
       constraints: const BoxConstraints(maxWidth: 640),
       builder: (sheetContext) => Padding(

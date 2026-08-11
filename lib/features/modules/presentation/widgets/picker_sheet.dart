@@ -55,6 +55,8 @@ Future<Set<String>?> showPickerSheet(
 }) {
   return showModalBottomSheet<Set<String>>(
     context: context,
+    // Over the rail as well as the page — see [showAppSheet].
+    useRootNavigator: true,
     isScrollControlled: true,
     showDragHandle: true,
     builder: (_) => _PickerSheet(

@@ -19,6 +19,8 @@ Future<void> showReferenceItemForm(
   final cubit = context.read<ReferenceDataCubit>();
   return showModalBottomSheet<void>(
     context: context,
+    // Over the rail as well as the page — see [showAppSheet].
+    useRootNavigator: true,
     isScrollControlled: true,
     showDragHandle: true,
     builder: (_) => BlocProvider.value(

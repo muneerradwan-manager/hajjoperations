@@ -4090,4 +4090,252 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get settingsHomeLayout => 'الشاشة الرئيسية';
+
+  @override
+  String get settingsHomeLayoutGrid => 'بطاقات';
+
+  @override
+  String get settingsHomeLayoutGridHint =>
+      'كل الأبواب في الصفحة دفعةً واحدة، على رفوف ملوّنة';
+
+  @override
+  String get settingsHomeLayoutSidebar => 'شريط جانبي';
+
+  @override
+  String get settingsHomeLayoutSidebarHint =>
+      'عمودٌ ثابت يحمل الأبواب، والخريطة التشغيلية مكانها';
+
+  @override
+  String get sidebarExpand => 'توسيع الشريط الجانبي';
+
+  @override
+  String get sidebarCollapse => 'طيّ الشريط الجانبي';
+
+  @override
+  String get sidebarMenu => 'القائمة';
+
+  @override
+  String get roadmapTitle => 'الخريطة التشغيلية';
+
+  @override
+  String get roadmapIntroTitle => 'كيف يُدار الموسم';
+
+  @override
+  String get roadmapIntroBody =>
+      'كل شاشة أخرى في هذا التطبيق تُجيب عن سؤال «أين»، وهذه تُجيب عن سؤال «متى». الموسم مرسومٌ أدناه من الأسبوع الذي يسبق افتتاحه إلى الأسبوع الذي يلي إغلاقه: خمس مراحل، وكل خطوة تقول ما يُصنع فيها وعلى أي شيء تنتظر. والخريطة مرسومةٌ كاملة للجميع — وما ليس من عملك مُعلَّمٌ بذلك، لأن معرفتك أن أحداً كان عليه أن يعبّئ البيانات المرجعية قبل أن يوجد ملفك هي جزءٌ من معرفتك موقعك أنت من الموسم.';
+
+  @override
+  String get roadmapOpen => 'افتح';
+
+  @override
+  String get roadmapLocked => 'بيد الإدارة';
+
+  @override
+  String get roadmapEveryone => 'مفتوحة للجميع';
+
+  @override
+  String roadmapPhaseLabel(int number) {
+    return 'المرحلة $number';
+  }
+
+  @override
+  String roadmapStepsOpen(int open, int total) {
+    return '$open من $total خطوة بيدك';
+  }
+
+  @override
+  String get roadmapPhaseSetup => 'تهيئة الأرض';
+
+  @override
+  String get roadmapPhaseSetupWhen => 'قبل الموسم بأسابيع';
+
+  @override
+  String get roadmapPhaseSetupBody =>
+      'لا شيء في هذا التطبيق يقوم وحده: كل ملف وكل مهمة وكل بلاغ عاجل يُقيَّد على موسم، ويُبنى من القوائم المرجعية. تُضبط هذه المرحلة مرةً في السنة، وكل ما بعدها يقوم عليها.';
+
+  @override
+  String get roadmapPhaseBuild => 'بناء العمل';
+
+  @override
+  String get roadmapPhaseBuildWhen => 'الشهر السابق';
+
+  @override
+  String get roadmapPhaseBuildBody =>
+      'الورق الذي سيُشتغل الموسم به فعلاً: أي الملفات تُفتح، ومن فيها وبأي دور، وما الذي يُكلَّف به كل شخص، وما الذي تُبلَّغ به البعثة كلها.';
+
+  @override
+  String get roadmapPhaseRun => 'تشغيل الموسم';
+
+  @override
+  String get roadmapPhaseRunWhen => 'ذو الحجة نفسه';
+
+  @override
+  String get roadmapPhaseRunBody =>
+      'المرحلة الوحيدة التي يمسّها أكثر أهل البعثة، والوحيدة التي تُقاس بالساعات لا بالأسابيع. وكل ما فيها مفتوحٌ للجميع، وهذا طبعها كله: الموسم لا يُدار بأصحاب الصلاحيات، بل بمن يقف في منى الثالثة فجراً.';
+
+  @override
+  String get roadmapPhaseWatch => 'المتابعة والإشراف';
+
+  @override
+  String get roadmapPhaseWatchWhen => 'بالتوازي مع المرحلة التي فوقها';
+
+  @override
+  String get roadmapPhaseWatchBody =>
+      'نصيب غرفة العمليات من الأيام نفسها. بعضه الموسم منظوراً إليه كاملاً وهو لا يزال يتحرك، وبقيته تُقرأ بعد وقوعها، فعلاً فعلاً.';
+
+  @override
+  String get roadmapPhaseClose => 'إغلاق السنة';
+
+  @override
+  String get roadmapPhaseCloseWhen => 'الأسابيع التالية';
+
+  @override
+  String get roadmapPhaseCloseBody =>
+      'ما يُحصد من الموسم بعد أن تعود الحافلات: العلامات التي طُلب من الناس أن يكتبوها، والسجلات التي تُخرَج من التطبيق، والسنة التي تُطوى ليُفتح ما بعدها.';
+
+  @override
+  String get roadmapStepSeason =>
+      'سمِّ السنة التي تعمل عليها الإدارة واجعلها الموسم الحالي. كل ملف ومهمة وتقرير وحضور يأتي بعدها يُقيَّد عليها، ولهذا لا يمكن أن يسبقها شيء آخر في هذه الخريطة.';
+
+  @override
+  String get roadmapNoteSeason =>
+      'موسمٌ واحد يكون حالياً في كل وقت، وتغييره يغيّر ما تعرضه كل شاشة أخرى في التطبيق.';
+
+  @override
+  String get roadmapStepReference =>
+      'القوائم التي يُركَّب منها كل ما سواها: الفنادق والتجمّعات وأماكن المشاعر وبقية البيانات المرجعية. الملف يذكر اسم فندق ولا يصفه، ففندقٌ ليس في هذه القائمة لا يمكن وضعه في ملف.';
+
+  @override
+  String get roadmapNoteReference =>
+      'لا يصير المكان قابلاً للمسح إلا بعد أن يكون هنا بموقعه ونصف قطره — وهذا ما يجعل تسجيل الحضور ممكناً أصلاً.';
+
+  @override
+  String get roadmapStepApprovals =>
+      'لا يصل أحدٌ إلى التطبيق قبل اعتماد حسابه. تصطفّ التسجيلات هنا، فيُقبل كلٌّ منها أو يُرفض أو يُترك منتظراً.';
+
+  @override
+  String get roadmapStepEmployees =>
+      'من يعمل في هذا الموسم: بياناتهم وصورهم والأرقام التي يُوصل إليهم عبرها. تُملأ هنا مرةً، وتقرؤها منها كل شاشة أخرى تحتاج أن تتصل بأحد.';
+
+  @override
+  String get roadmapStepPermissions =>
+      'ما يجوز لكل شخص فعله. الاعتماد يُدخِل الشخص، وهذه تقرّر ما الذي يجده بعد دخوله — والأقسام التي لا يُمنحها تبقى مخفيّةً ومغلقةً معاً.';
+
+  @override
+  String get roadmapNotePermissions =>
+      'الصلاحية الممنوحة الآن تصل صاحبها عند تحديث جلسته القادم — وسحبةٌ على أي قائمة تكفي.';
+
+  @override
+  String get roadmapStepFiles =>
+      'افتح ملفات الموسم التشغيلية، وضع الناس فيها، وأعطِ كلاً منهم دوره. هذه هي الخطوة التي تحوّل دليل موظفين إلى تنظيم: الملف يصل أعضاءه بالإسناد، وهنا يقع الإسناد.';
+
+  @override
+  String get roadmapNoteFiles =>
+      'العضو يرى الملف لأنه وُضع فيه، لا لأنه يملك صلاحية — ولهذا لا بد أن يُبنى كل ملف هنا قبل أن يعمل عليه أحد.';
+
+  @override
+  String get roadmapStepAssign =>
+      'اكتب المهام على قوائم الآخرين وتابعها. وهي منفصلة عن الملفات عمداً: المهمة تُوجَّه إلى شخص لا إلى مجلد، وأكثرها لا ملف خلفه أصلاً.';
+
+  @override
+  String get roadmapStepForms =>
+      'اكتب أوراق التقييم التي سيُحاكم بها الموسم: مراحلها وأسئلتها ودرجة كلٍّ منها. تُكتب قبل أن يُطلب من أحد تعبئتها، لأن الورقة لا تتغيّر تحت علامةٍ أُعطيت.';
+
+  @override
+  String get roadmapNoteForms =>
+      'كتابة الأسئلة وقراءة الأجوبة أمانتان مختلفتان، وصلاحيتان مختلفتان.';
+
+  @override
+  String get roadmapStepCirculars =>
+      'أدخِل وانشر القرارات والجداول والتعميمات التي تقرؤها البعثة كلها — مواعيد الوجبات، وأوامر التحرّك، وكل ما يجب أن يصل الجميع دفعةً واحدة.';
+
+  @override
+  String get roadmapStepMyFiles =>
+      'الملفات التي وُضعت فيها، ودورك في كلٍّ منها. مهما كانت رتبتك فهذه تعرض عملك أنت: أن يُسمح لك بفتح كل ملف لا يجعل كل ملف ملفك.';
+
+  @override
+  String get roadmapStepMyTasks =>
+      'قائمتك أنت، وما كتبه غيرك عليها. علّم المهمة منجزةً أولاً بأول لا في آخر اليوم — فشاشات المتابعة تقرأ هذا بعينه.';
+
+  @override
+  String get roadmapNoteOffline =>
+      'ما كُتب بلا شبكة يُحفظ في الجهاز ويُرسَل وحده حين تعود. فلا تكتبه مرتين.';
+
+  @override
+  String get roadmapStepCheckIn =>
+      'امسح الرمز المثبَّت في المكان فيُسجَّل حضورك فيه بوقته ومكانه. وسِجلّك الخاص تقرؤه أنت من أي جهاز.';
+
+  @override
+  String get roadmapNoteCheckIn =>
+      'يُتحقَّق من موضع الهاتف كما يُتحقَّق من الرمز، فلا يُسجَّل حضورٌ من الطرف الآخر من الشارع.';
+
+  @override
+  String get roadmapStepIncident =>
+      'قل إن شيئاً قد ساء — حافلة تعطّلت، أو حاج ضاع، أو فندق رفض مجموعة — فيصل إلى غرفة العمليات فوراً. وله زرٌّ أحمر في كل شاشة تقريباً.';
+
+  @override
+  String get roadmapNoteIncident =>
+      'مفتوحٌ للجميع عمداً: نظامٌ لا يُبلَّغ فيه عن حافلة معطّلة إلا بصلاحية هو نظامٌ لا يعرف بالحافلة.';
+
+  @override
+  String get roadmapStepReadCirculars =>
+      'ما نشرته الإدارة على البعثة كلها في هذا الموسم. تُقرأ ولا تُكتب — وكتابتها هي الخطوة التي فوقها، في يدٍ أخرى.';
+
+  @override
+  String get roadmapStepComplain =>
+      'قدّم شكوى واقرأ ما عاد عليها. والشكوى ليست صلاحيةً يمنحها أحد، فهذه مفتوحة لكل حساب معتمد.';
+
+  @override
+  String get roadmapStepDashboard =>
+      'الموسم من فوق: كم ملفاً يعمل، ومن أين، وما الذي لا يزال منتظراً. وكل قسمٍ فيها يُجيب عن نفسه، فترى ما تملكه منها لا غير.';
+
+  @override
+  String get roadmapStepMap =>
+      'الموسم مرسوماً على الأرض — الفنادق والمخيّمات وأماكن المشاعر، وما يجري في كلٍّ منها.';
+
+  @override
+  String get roadmapStepPresence =>
+      'من هو حاضر، في كل مكان، الآن. الخريطة تقول أين الأماكن، وهذه تقول من يقف فيها.';
+
+  @override
+  String get roadmapStepIncidents =>
+      'سجلّ البلاغات العاجلة وهي تصل. وهي شاشة الإشراف الوحيدة في التطبيق التي تُقرأ والأمر الذي تتحدث عنه لا يزال يقع.';
+
+  @override
+  String get roadmapStepComplaints =>
+      'كل شكوى قُدّمت في البعثة: تُردّ عليها، أو تُصرف، أو تُقفل بعد تسويتها.';
+
+  @override
+  String get roadmapNoteComplaints =>
+      'الشكوى قد تتصاعد إلى حساب صاحبها بلا تدخّل بشري، ولهذا يقف السجلّ مع الأشخاص لا مع الملفات.';
+
+  @override
+  String get roadmapStepAudit =>
+      'الموسم فعلاً فعلاً: من فعل ماذا، ومتى. اللوحة هي الموسم من فوق، وهذا هو الموسم نفسه من الجانب.';
+
+  @override
+  String get roadmapStepEvaluate =>
+      'عبّئ التقييمات التي طُلبت منك. تصلك بالاسم لا بالصلاحية، فتكون هذه القائمة فارغةً لمن لم يُطلب منه شيء — وهذا هو الجواب الصادق، لا بابٌ ناقص.';
+
+  @override
+  String get roadmapNoteEvaluate =>
+      'ما كُتب عنك ليس هنا. هو في صفحتك أنت، ويصلك بلا اسم كاتبه.';
+
+  @override
+  String get roadmapStepExport =>
+      'أخرِج أي قائمة من التطبيق ملفاً، بالأعمدة التي تختارها — لتقرير، أو لأرشيف، أو لأي عمل يُصنع خارج التطبيق.';
+
+  @override
+  String get roadmapStepArchiveTitle => 'إغلاق السنة وفتح التالية';
+
+  @override
+  String get roadmapStepArchive =>
+      'لا يُحذف شيء في آخر الموسم. تتوقّف السنة عن كونها الحالية فتصير أرشيفاً، ويُفتح موسمٌ جديد بجانبها — وهذا يعيدك إلى أول خطوة في هذه الخريطة.';
+
+  @override
+  String get roadmapNoteArchive =>
+      'كل ما قُيّد على موسم ماضٍ يبقى مقروءاً كما كُتب تماماً. وإغلاق السنة لا يُخفي شيئاً.';
 }

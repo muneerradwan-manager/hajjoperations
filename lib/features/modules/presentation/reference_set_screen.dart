@@ -199,6 +199,8 @@ class _ReferenceSetScreenState extends State<ReferenceSetScreen> {
 
     final from = await showModalBottomSheet<String>(
       context: context,
+      // Over the rail as well as the page — see [showAppSheet].
+      useRootNavigator: true,
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
         child: Column(

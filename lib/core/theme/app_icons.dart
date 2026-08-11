@@ -102,6 +102,60 @@ class AppIcons {
   static const language = Iconsax.language_square;
   static const theme = Iconsax.moon;
 
+  // ── The two shapes of the home page ─────────────────────────────────────
+  //
+  // Drawn beside the choice in settings, so the two arrangements are told apart
+  // by their SHAPE before either word is read: a field of tiles, and a column
+  // standing beside a page.
+
+  /// نمط البطاقات — every door on the page at once.
+  static const layoutGrid = Iconsax.element_3;
+
+  /// نمط الشريط الجانبي.
+  ///
+  /// `row_vertical` — a plain vertical split — and deliberately not
+  /// `sidebar_left`, which names a side. The rail stands on the START side, and
+  /// that is the right in Arabic; an icon with "left" baked into its geometry
+  /// would be pointing at the wrong edge for most of this app's readers, and
+  /// Iconsax declares nothing with `matchTextDirection` to flip it back.
+  static const layoutSidebar = Iconsax.row_vertical;
+
+  /// The rail's own hamburger, on a window too narrow to stand one open.
+  static const menu = Iconsax.menu;
+
+  /// Folding the rail down to its icons, and opening it again.
+  ///
+  /// Material's chevrons rather than Iconsax's arrows, and for the reason the
+  /// whole of [NavChevron] exists: these two are declared with
+  /// `matchTextDirection`, so "collapse" points at the start edge in both
+  /// directions — left in English, right in Arabic — without anybody naming a
+  /// side. An Iconsax arrow would point the same way in both, which on the
+  /// Arabic build is an arrow inviting you to fold the rail INTO the page.
+  static const sidebarCollapse = Icons.chevron_left_rounded;
+  static const sidebarExpand = Icons.chevron_right_rounded;
+
+  // ── The operational map ─────────────────────────────────────────────────
+
+  /// الخريطة التشغيلية — the page that stands where the tiles were.
+  ///
+  /// A branching hierarchy rather than [map]'s folded sheet: that one is the
+  /// season's PLACES drawn on Makkah, and this is the season's ORDER — what is
+  /// done first, and what cannot be done until it is. Two very different things
+  /// both called a map in Arabic, and they must not share a glyph.
+  static const roadmap = Iconsax.hierarchy_square_3;
+
+  /// The end of a phase, on the spine of that map.
+  static const milestone = Iconsax.flag_2;
+
+  /// A step of the map that is somebody else's to take.
+  ///
+  /// Not a refusal and not an error — the map shows the whole season on
+  /// purpose, and this says plainly which parts of it are in other hands.
+  static const locked = Iconsax.lock_1;
+
+  /// A line worth knowing that nothing else on a screen would have told you.
+  static const tip = Iconsax.lamp_on;
+
   // Profile fields
   static const firstName = Iconsax.user;
   static const fatherName = Iconsax.profile_2user;
