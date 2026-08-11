@@ -57,7 +57,7 @@ class _View extends StatelessWidget {
           builder: (context, state) {
             if (state.status == DashboardStatus.loading &&
                 state.stats.season == null) {
-              return const SkeletonList(count: 4, minTileWidth: 220);
+              return const SkeletonList(count: 4, height: 112, minTileWidth: CardWidth.stat);
             }
             if (state.status == DashboardStatus.error) {
               return EmptyState(
@@ -112,7 +112,7 @@ class _View extends StatelessWidget {
       // The headline row: the four or five numbers somebody opens this page to
       // read. Everything below explains one of them.
       AdaptiveGrid(
-        minTileWidth: 200,
+        minTileWidth: CardWidth.stat,
         maxColumns: 4,
         children: staggered(_headline(context, l, stats)),
       ),
@@ -187,7 +187,7 @@ class _View extends StatelessWidget {
           ),
         ),
         AdaptiveGrid(
-          minTileWidth: 200,
+          minTileWidth: CardWidth.stat,
           maxColumns: 4,
           children: staggered([
             StatTile(
@@ -299,7 +299,7 @@ class _View extends StatelessWidget {
           ),
         ),
         AdaptiveGrid(
-          minTileWidth: 200,
+          minTileWidth: CardWidth.stat,
           maxColumns: 4,
           children: staggered([
             StatTile(
@@ -367,7 +367,7 @@ class _View extends StatelessWidget {
           ),
         ),
         AdaptiveGrid(
-          minTileWidth: 200,
+          minTileWidth: CardWidth.stat,
           maxColumns: 4,
           children: staggered([
             StatTile(
@@ -430,7 +430,7 @@ class _View extends StatelessWidget {
           ),
         ),
         AdaptiveGrid(
-          minTileWidth: 200,
+          minTileWidth: CardWidth.stat,
           maxColumns: 4,
           children: staggered([
             StatTile(
@@ -489,7 +489,7 @@ class _View extends StatelessWidget {
           ),
         ),
         AdaptiveGrid(
-          minTileWidth: 200,
+          minTileWidth: CardWidth.stat,
           maxColumns: 4,
           children: staggered([
             StatTile(
@@ -633,8 +633,6 @@ class _View extends StatelessWidget {
   /// [LayoutBuilder] cannot be asked for an intrinsic height. See
   /// [GridCellWidth].)
   Widget _cards(List<Widget> cards) => AdaptiveGrid(
-    minTileWidth: 340,
-    maxColumns: 3,
     equalHeights: false,
     children: staggered(cards.whereType<Widget>().toList()),
   );

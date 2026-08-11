@@ -203,8 +203,6 @@ class _ViewState extends State<_View> {
             ];
 
             Widget fields(List<Widget> children) => AdaptiveGrid(
-              minTileWidth: 300,
-              maxColumns: 2,
               spacing: AppSpacing.md,
               equalHeights: false,
               children: children,
@@ -215,7 +213,7 @@ class _ViewState extends State<_View> {
               child: Form(
                 key: _formKey,
                 child: ResponsivePage(
-                  maxWidth: 900,
+                  width: PageWidth.editor,
                   builder: (context, size) => SinglePaneLayout(
                     gutter: size.gutter,
                     bottom: AppSpacing.xxl,

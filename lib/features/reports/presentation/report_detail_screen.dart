@@ -156,8 +156,9 @@ class _View extends StatelessWidget {
             // layout that never arrives.
             ReportDetailStatus.loading => ResponsivePage(
               builder: (context, size) => SkeletonList(
+                width: PageWidth.reading,
                 maxColumns: 1,
-                minTileWidth: double.infinity,
+                minTileWidth: CardWidth.full,
                 height: 200,
                 count: 3,
                 padding: context.scrollPadding(

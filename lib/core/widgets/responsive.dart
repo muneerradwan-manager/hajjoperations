@@ -101,6 +101,114 @@ extension WindowSizeX on BuildContext {
   WindowSize get windowSize => WindowSize.of(this);
 }
 
+/// How wide a page is allowed to get, chosen by what the page HOLDS.
+///
+/// There used to be no answer to this question, and the result was twelve of
+/// them. Screens capped themselves at 520, 560, 640, 700, 720, 820, 860, 900,
+/// 1100 and 1200, or at nothing at all — numbers picked one screen at a time by
+/// whoever was looking at that screen that afternoon, each defensible alone and
+/// none of them agreeing with the next. A reader moving from القرارات (1200) to
+/// الموظفون (1680) to مهامي (900) watched the page jump width three times
+/// without changing what it was doing, which reads as three different
+/// applications rather than three sections of one.
+///
+/// So a page no longer picks a number. It says what kind of thing it is, and
+/// the kind carries the number — which means the number can be re-tuned once,
+/// here, for the whole app.
+///
+/// Four kinds, and the boundaries between them are about READING rather than
+/// about taste:
+enum PageWidth {
+  /// One column of fields and a button under them.
+  ///
+  /// A form is typed into, and a text box a metre wide is harder to write in,
+  /// not easier: the eye loses the start of the line on the way back. 640 is
+  /// about as wide as a field can be before that starts.
+  ///
+  /// Raising an urgent report, showing a place's code, choosing what to export,
+  /// assigning an evaluation.
+  form(640),
+
+  /// A document read from top to bottom: a decision, a complaint and its
+  /// replies, a filled evaluation sheet, a person's own attendance.
+  ///
+  /// The classic measure — a column of prose stops being readable past roughly
+  /// seventy characters, and past that the answer is never a wider column.
+  reading(900),
+
+  /// A form big enough to be laid out in columns of its own: the profile
+  /// questionnaire, the file editor, the employee record.
+  ///
+  /// Wider than [form] because the fields inside are already gridded — the
+  /// width is spent on a second and third column of fields rather than on
+  /// making any one of them longer.
+  editor(1100),
+
+  /// Everything that is a list, a grid or a board.
+  ///
+  /// The only kind with no fixed number: it grows with the window by
+  /// [WindowSize.contentMaxWidth], because the answer to a wider window here is
+  /// one more column and eventually nothing at all.
+  browse(null);
+
+  const PageWidth(this._fixed);
+
+  final double? _fixed;
+
+  /// The cap for this kind at [size].
+  double of(WindowSize size) => _fixed ?? size.contentMaxWidth;
+}
+
+/// How wide one card wants to be before the grid drops a column.
+///
+/// The companion to [PageWidth], and the half that decides how many things a
+/// reader sees at once. These were ten different numbers — 150, 200, 220, 300,
+/// 320, 340, 360, 380, 420 and infinity — so الشكاوى showed two cards on the
+/// monitor where الموظفون showed four, and neither could say why.
+///
+/// [list] is the one that matters, because nearly everything in this app is a
+/// list of cards. Against the four page caps it gives:
+///
+/// ```
+///   medium      720 →  2 columns of 354
+///   expanded   1100 →  3 columns of 358
+///   large      1400 →  4 columns of 341
+///   extraLarge 1680 →  4 columns of 411
+/// ```
+///
+/// — which is the whole point: الشكاوى and الموظفون and القرارات and البلاغات
+/// now break at the same widths and show the same number of cards, because they
+/// are the same size of thing.
+class CardWidth {
+  const CardWidth._();
+
+  /// A card: a title, a line or two under it, and some badges. The default, and
+  /// what every list in the app should be using.
+  static const list = 340.0;
+
+  /// A card standing INSIDE another card — a member of a team, drawn on the
+  /// pane that holds the team.
+  ///
+  /// [list] less the pane's own padding, and derived rather than typed so it
+  /// cannot drift: a nested grid that used its own number broke a column
+  /// earlier than the page it was sitting on, which reads as the inner grid
+  /// being wrong rather than as the pane being narrow.
+  static const nested = list - AppSpacing.lg;
+
+  /// A stat: a number and the word for it. Four or more to a row, because a
+  /// dashboard is read at a glance and a row of two numbers is not a dashboard.
+  static const stat = 200.0;
+
+  /// A tile: a mark and a word, nothing else. The home page's الإدارة grid,
+  /// where a reader holding every permission is handed a dozen.
+  static const tile = 150.0;
+
+  /// One per row, whatever the window. A report's own table, a message in a
+  /// thread, a section of a file — things that are already as wide as the page
+  /// and would be cut in half by a column.
+  static const full = double.infinity;
+}
+
 /// A [LayoutBuilder] that reports a [WindowSize] measured from the space this
 /// widget was actually handed.
 ///
@@ -161,22 +269,27 @@ class SnackBarWidthCap extends StatelessWidget {
 /// is a different number at every size and the space it leaves over goes to the
 /// content rather than to the wallpaper.
 class ResponsivePage extends StatelessWidget {
-  const ResponsivePage({super.key, required this.builder, this.maxWidth});
+  const ResponsivePage({
+    super.key,
+    required this.builder,
+    this.width = PageWidth.browse,
+  });
 
   final Widget Function(BuildContext context, WindowSize size) builder;
 
-  /// Overrides [WindowSize.contentMaxWidth] — for a page whose content has its
-  /// own reason to stop earlier, such as a form.
-  final double? maxWidth;
+  /// What kind of page this is, which is what decides how wide it may get.
+  ///
+  /// A KIND rather than a number, and deliberately: the number is a decision
+  /// about the whole app and belongs in one place. See [PageWidth] for the four
+  /// of them and for the twelve that came before.
+  final PageWidth width;
 
   @override
   Widget build(BuildContext context) {
     return WindowSizeBuilder(
       builder: (context, size) => Center(
         child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: maxWidth ?? size.contentMaxWidth,
-          ),
+          constraints: BoxConstraints(maxWidth: width.of(size)),
           child: builder(context, size),
         ),
       ),
@@ -300,7 +413,7 @@ class AdaptiveGrid extends StatelessWidget {
   const AdaptiveGrid({
     super.key,
     required this.children,
-    this.minTileWidth = 340,
+    this.minTileWidth = CardWidth.list,
     this.maxColumns = 4,
     this.spacing = AppSpacing.md,
     this.equalHeights = true,
@@ -308,7 +421,11 @@ class AdaptiveGrid extends StatelessWidget {
 
   final List<Widget> children;
 
-  /// The narrowest a tile may get before the grid drops a column.
+  /// The narrowest a card may get before the grid drops a column.
+  ///
+  /// One of [CardWidth], never a number written here: it is what decides how
+  /// many things a reader sees at once, and every list in this app has to
+  /// answer that the same way or the app reads as several.
   final double minTileWidth;
 
   /// A ceiling on the count regardless of room. Past four across, a dashboard
@@ -390,7 +507,7 @@ class AdaptiveGridView extends StatelessWidget {
     super.key,
     required this.itemCount,
     required this.itemBuilder,
-    this.minTileWidth = 340,
+    this.minTileWidth = CardWidth.list,
     this.maxColumns = 4,
     this.spacing = AppSpacing.md,
     this.equalHeights = true,

@@ -145,7 +145,7 @@ class HomeGridView extends StatelessWidget {
                     // phone gets one column and the whole point of the compact
                     // card is lost. At 150 a phone gets two, a tablet three or
                     // four, and a monitor the four it is capped at.
-                    minTileWidth: 150,
+                    minTileWidth: CardWidth.tile,
                     children: tiles,
                   ),
                   const SizedBox(height: AppSpacing.md),

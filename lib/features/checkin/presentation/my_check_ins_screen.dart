@@ -108,7 +108,11 @@ class _ViewState extends State<_View> {
             final cubit = context.read<MyCheckInsCubit>();
 
             if (state.status == MyCheckInsStatus.loading) {
-              return const SkeletonList(count: 6, height: 84);
+              return const SkeletonList(
+                count: 6,
+                height: 84,
+                width: PageWidth.reading,
+              );
             }
             if (state.status == MyCheckInsStatus.error) {
               return EmptyState(
@@ -124,7 +128,7 @@ class _ViewState extends State<_View> {
             final shown = state.shown;
 
             return ResponsivePage(
-              maxWidth: 700,
+              width: PageWidth.reading,
               builder: (context, size) => Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [

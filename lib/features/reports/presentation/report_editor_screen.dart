@@ -103,8 +103,9 @@ class _View extends StatelessWidget {
           body: switch (state.status) {
             EditorStatus.loading => ResponsivePage(
               builder: (context, size) => SkeletonList(
+                width: PageWidth.reading,
                 maxColumns: 1,
-                minTileWidth: double.infinity,
+                minTileWidth: CardWidth.full,
                 height: 180,
                 count: 3,
                 padding: context.scrollPadding(

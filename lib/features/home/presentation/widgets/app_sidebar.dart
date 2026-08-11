@@ -69,7 +69,11 @@ const _border = 1.0;
 /// text would re-break on every frame of the animation and the last few frames
 /// would be a `RenderFlex overflowed` stripe.
 const _labelWidth =
-    kRailExpandedWidth - _tileMargin * 2 - _border * 2 - _padOpen * 2 - _iconBox;
+    kRailExpandedWidth -
+    _tileMargin * 2 -
+    _border * 2 -
+    _padOpen * 2 -
+    _iconBox;
 
 const _iconBox = 24.0;
 
@@ -331,17 +335,16 @@ class _FoldButton extends StatelessWidget {
             ? AlignmentDirectional.centerEnd
             : AlignmentDirectional.center,
         child: Padding(
-          padding: const EdgeInsetsDirectional.only(end: AppSpacing.sm),
+          padding: expanded
+              ? const EdgeInsetsDirectional.only(end: AppSpacing.sm)
+              : EdgeInsets.zero,
           child: IconButton(
             tooltip: expanded ? l.sidebarCollapse : l.sidebarExpand,
             onPressed: () {
               HapticFeedback.selectionClick();
               onPressed();
             },
-            icon: Icon(
-              expanded ? AppIcons.sidebarCollapse : AppIcons.sidebarExpand,
-              size: 26,
-            ),
+            icon: Icon(AppIcons.menu, size: 26),
           ),
         ),
       ),
@@ -405,11 +408,7 @@ class _RailGroupLabel extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                     horizontal: _tileMargin + _border + _padOpen,
                   ),
-                  child: ShelfHeader(
-                    title: title,
-                    color: color,
-                    compact: true,
-                  ),
+                  child: ShelfHeader(title: title, color: color, compact: true),
                 ),
               ),
             ),
@@ -467,18 +466,7 @@ class _RailDates extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Center(
-              child: AnimatedOpacity(
-                duration: _fold,
-                curve: _curve,
-                opacity: expanded ? 0 : 1,
-                child: Icon(
-                  AppIcons.hijriDate,
-                  size: 20,
-                  color: scheme.secondary,
-                ),
-              ),
-            ),
+            
             ClipRect(
               child: OverflowBox(
                 alignment: AlignmentDirectional.centerStart,
@@ -541,9 +529,9 @@ class _RailDivider extends StatelessWidget {
       height: 1,
       indent: AppSpacing.md,
       endIndent: AppSpacing.md,
-      color: Theme.of(context).colorScheme.outlineVariant.withValues(
-        alpha: 0.45,
-      ),
+      color: Theme.of(
+        context,
+      ).colorScheme.outlineVariant.withValues(alpha: 0.45),
     );
   }
 }
@@ -682,10 +670,7 @@ class _RailTile extends StatelessWidget {
     );
 
     final tile = Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: _tileMargin,
-        vertical: 2,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: _tileMargin, vertical: 2),
       child: Material(
         type: MaterialType.transparency,
         child: InkWell(

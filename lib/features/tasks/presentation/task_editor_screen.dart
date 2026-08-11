@@ -142,7 +142,6 @@ class _TaskEditorScreenState extends State<TaskEditorScreen> {
       submitLabel: l.commonSave,
       busy: _busy,
       onSubmit: _save,
-      maxWidth: 640,
       children: [
         GlassCard(
           padding: const EdgeInsets.all(AppSpacing.lg),

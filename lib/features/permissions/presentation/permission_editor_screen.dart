@@ -59,7 +59,7 @@ class _View extends StatelessWidget {
                 },
                 builder: (context, state) {
                   if (state.status == PermissionEditorStatus.loading) {
-                    return const SkeletonList(minTileWidth: 360, maxColumns: 3);
+                    return const SkeletonList(height: 200);
                   }
                   final parents = state.catalog
                       .where((p) => p.isParent)
@@ -98,8 +98,6 @@ class _View extends StatelessWidget {
                       // beside each other instead of forming a column half a screen
                       // wide and several screens long.
                       AdaptiveGrid(
-                        minTileWidth: 360,
-                        maxColumns: 3,
                         equalHeights: false,
                         children: staggered([
                           for (final parent in parents)

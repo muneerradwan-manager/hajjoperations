@@ -88,7 +88,7 @@ class _View extends StatelessWidget {
                       },
                       builder: (context, state) {
                         if (state.status == ParticipantsStatus.loading) {
-                          return const SkeletonList(minTileWidth: 320);
+                          return const SkeletonList(height: 84);
                         }
                         final items = state.filtered;
                         return AdaptiveGridView(
@@ -98,7 +98,6 @@ class _View extends StatelessWidget {
                             size.gutter,
                             16 + MediaQuery.viewPaddingOf(context).bottom,
                           ),
-                          minTileWidth: 320,
                           spacing: 10,
                           itemCount: items.length,
                           itemBuilder: (context, i) {

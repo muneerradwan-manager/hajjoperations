@@ -120,10 +120,7 @@ class _ViewState extends State<_View> {
 
             if (state.status == ComplaintsStatus.loading) {
               return ResponsivePage(
-                maxWidth: 1200,
                 builder: (context, size) => SkeletonList(
-                  minTileWidth: 380,
-                  maxColumns: 2,
                   height: 132,
                   padding: context.scrollPadding(
                     horizontal: size.gutter,
@@ -169,7 +166,6 @@ class _ViewState extends State<_View> {
                                     : l.complaintsEmptyAllHint),
                         )
                       : ResponsivePage(
-                          maxWidth: 1200,
                           builder: (context, size) => AdaptiveGridView(
                             padding: EdgeInsets.fromLTRB(
                               size.gutter,
@@ -180,8 +176,6 @@ class _ViewState extends State<_View> {
                                   MediaQuery.viewPaddingOf(context).bottom,
                             ),
                             onRefresh: cubit.load,
-                            minTileWidth: 380,
-                            maxColumns: 2,
                             spacing: AppSpacing.md,
                             itemCount: visible.length,
                             itemBuilder: (context, i) => FadeSlideIn(
@@ -233,7 +227,6 @@ class _FilterBarState extends State<_FilterBar> {
     final kinds = <ComplaintTarget>{for (final c in s.complaints) c.target};
 
     return ResponsivePage(
-      maxWidth: 1200,
       builder: (context, size) => Padding(
         padding: EdgeInsets.fromLTRB(
           size.gutter,

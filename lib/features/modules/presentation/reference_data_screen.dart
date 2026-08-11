@@ -45,7 +45,7 @@ class _View extends StatelessWidget {
       body: BlocBuilder<ReferenceDataCubit, ReferenceDataState>(
         builder: (context, state) {
           if (state.status == ReferenceDataStatus.loading) {
-            return const SkeletonList(minTileWidth: 300);
+            return const SkeletonList(height: 96);
           }
           if (state.status == ReferenceDataStatus.error) {
             return EmptyState(
@@ -75,7 +75,6 @@ class _View extends StatelessWidget {
                     icon: _shelfIcon(shelf.section),
                   ),
                   AdaptiveGrid(
-                    minTileWidth: 300,
                     children: staggered([
                       for (final set in shelf.sets) _SetCard(set: set),
                     ]),

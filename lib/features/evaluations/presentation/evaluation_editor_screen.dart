@@ -165,7 +165,7 @@ class _Editor extends StatelessWidget {
         : state.stageIndex.clamp(0, state.form.stages.length - 1);
 
     return ResponsivePage(
-      maxWidth: 900,
+      width: PageWidth.editor,
       builder: (context, size) => SinglePaneLayout(
         gutter: size.gutter,
         children: [

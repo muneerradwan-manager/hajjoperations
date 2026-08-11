@@ -967,13 +967,6 @@ class _RosterFilterBarState extends State<_RosterFilterBar> {
 /// already a padding narrower than the page's. So the figure is the 340 a tile
 /// actually wants, less the gutter it does not get.
 ///
-/// There were two of these — one for the rosters that stood loose on the page
-/// and one for the tree nested in a node's card — and at 1200, where the side
-/// panel first appears and the content pane is at its narrowest, the difference
-/// was a column. The loose rosters have moved into cards, so the distinction
-/// they encoded is gone and one number serves all three.
-const _kNestedMemberWidth = 340.0 - AppSpacing.lg;
-
 /// One team of a file with no tree: everyone on it, and under each of them the
 /// duties he was actually handed.
 ///
@@ -1053,7 +1046,7 @@ class _RoleRosterCard extends StatelessWidget {
           GlassCard(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: AdaptiveGrid(
-              minTileWidth: _kNestedMemberWidth,
+              minTileWidth: CardWidth.nested,
               spacing: AppSpacing.lg,
               equalHeights: false,
               children: tiles,
@@ -1166,7 +1159,7 @@ class _SectorCard extends StatelessWidget {
             GlassCard(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: AdaptiveGrid(
-                minTileWidth: _kNestedMemberWidth,
+                minTileWidth: CardWidth.nested,
                 spacing: AppSpacing.lg,
                 equalHeights: false,
                 children: supervisors,
@@ -1415,7 +1408,7 @@ class _TowerCard extends StatelessWidget {
                 // no forced equal heights, because there is no bottom edge to
                 // line up.
                 child: AdaptiveGrid(
-                  minTileWidth: _kNestedMemberWidth,
+                  minTileWidth: CardWidth.nested,
                   spacing: AppSpacing.lg,
                   equalHeights: false,
                   children: serving,

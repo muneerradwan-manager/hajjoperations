@@ -65,7 +65,7 @@ class _ApprovalQueueView extends StatelessWidget {
         },
         builder: (context, state) {
           if (state.status == ApprovalStatus.loading) {
-            return const SkeletonList(count: 5, height: 84, minTileWidth: 320);
+            return const SkeletonList(count: 5, height: 84);
           }
           if (state.pending.isEmpty) {
             return EmptyState(
@@ -80,7 +80,6 @@ class _ApprovalQueueView extends StatelessWidget {
             builder: (context, size) => AdaptiveGridView(
               padding: context.scrollPadding(horizontal: size.gutter),
               onRefresh: () => context.read<ApprovalCubit>().load(),
-              minTileWidth: 320,
               itemCount: state.pending.length,
               itemBuilder: (context, i) {
                 final p = state.pending[i];

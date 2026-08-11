@@ -154,11 +154,21 @@ class SkeletonList extends StatelessWidget {
     this.count = 5,
     this.height = 76,
     this.padding,
-    this.minTileWidth = 340,
+    this.minTileWidth = CardWidth.list,
     this.maxColumns = 4,
     this.panel = false,
     this.panelHeight = 280,
+    this.width = PageWidth.browse,
   });
+
+  /// The page kind this skeleton is standing in.
+  ///
+  /// It has to be the same one the loaded screen passes to its own
+  /// [ResponsivePage], and it is the half that was missing. The shape was
+  /// already measured by the same arithmetic and cut into the same columns —
+  /// but always at [PageWidth.browse], so a form capped at 640 flashed a
+  /// placeholder 1680 wide and then snapped in to a third of it. The promise
+  /// has to include the WIDTH, or the arrival still reads as the page jumping.
 
   /// How many ROWS to draw, not how many cards: on a window three columns wide
   /// this draws three times as many, because that is what will be there.
@@ -181,6 +191,8 @@ class SkeletonList extends StatelessWidget {
   final bool panel;
 
   final double panelHeight;
+
+  final PageWidth width;
 
   Widget _bar({required double height, int step = 0}) => Shimmer(
     delay: Duration(milliseconds: 90 * step),
@@ -222,6 +234,7 @@ class SkeletonList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ResponsivePage(
+      width: width,
       builder: (context, size) {
         final page = padding ?? context.scrollPadding(horizontal: size.gutter);
 

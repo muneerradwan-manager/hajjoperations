@@ -116,8 +116,9 @@ class _View extends StatelessWidget {
           body: SafeArea(
             child: switch (state.status) {
               ThreadStatus.loading => ResponsivePage(
-                maxWidth: 860,
+                width: PageWidth.reading,
                 builder: (context, size) => SkeletonList(
+                  width: PageWidth.reading,
                   maxColumns: 1,
                   height: 140,
                   padding: context.scrollPadding(
@@ -227,7 +228,7 @@ class _Thread extends StatelessWidget {
     final cubit = context.read<ComplaintThreadCubit>();
 
     return ResponsivePage(
-      maxWidth: 860,
+      width: PageWidth.reading,
       builder: (context, size) => SinglePaneLayout(
         gutter: size.gutter,
         onRefresh: cubit.load,

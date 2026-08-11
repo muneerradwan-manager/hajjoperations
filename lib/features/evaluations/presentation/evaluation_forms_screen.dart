@@ -273,10 +273,7 @@ class _View extends StatelessWidget {
 
             if (state.status == EvaluationFormsStatus.loading) {
               return ResponsivePage(
-                maxWidth: 1200,
                 builder: (context, size) => SkeletonList(
-                  minTileWidth: 380,
-                  maxColumns: 2,
                   height: 148,
                   padding: context.scrollPadding(
                     horizontal: size.gutter,
@@ -309,7 +306,6 @@ class _View extends StatelessWidget {
                               : l.evaluationFormsEmpty,
                         )
                       : ResponsivePage(
-                          maxWidth: 1200,
                           builder: (context, size) => AdaptiveGridView(
                             padding: EdgeInsets.fromLTRB(
                               size.gutter,
@@ -319,8 +315,6 @@ class _View extends StatelessWidget {
                                   MediaQuery.viewPaddingOf(context).bottom,
                             ),
                             onRefresh: cubit.load,
-                            minTileWidth: 380,
-                            maxColumns: 2,
                             spacing: AppSpacing.md,
                             itemCount: visible.length,
                             itemBuilder: (context, i) => FadeSlideIn(
@@ -582,7 +576,6 @@ class _SearchBarState extends State<_SearchBar> {
     final kinds = <EvaluationTarget>{for (final f in s.forms) f.target};
 
     return ResponsivePage(
-      maxWidth: 1200,
       builder: (context, size) => Padding(
         padding: EdgeInsets.fromLTRB(
           size.gutter,

@@ -43,7 +43,7 @@ class _IncidentsView extends StatelessWidget {
       body: BlocBuilder<IncidentsCubit, IncidentsState>(
         builder: (context, state) {
           if (state.status == IncidentsStatus.loading) {
-            return const SkeletonList();
+            return const SkeletonList(height: 168);
           }
           if (state.status == IncidentsStatus.error) {
             return EmptyState(
@@ -103,8 +103,6 @@ class _IncidentsView extends StatelessWidget {
                 // sitting forty minutes outranks one raised a moment ago — and
                 // reading order carries that across the columns unchanged.
                 AdaptiveGrid(
-                  minTileWidth: 420,
-                  maxColumns: 3,
                   children: [
                     for (final incident in state.incidents)
                       _IncidentCard(incident: incident),

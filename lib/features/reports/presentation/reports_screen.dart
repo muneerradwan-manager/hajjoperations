@@ -50,10 +50,7 @@ class _View extends StatelessWidget {
               // inside the same 1200 page — so the cards do not jump when the
               // real ones arrive.
               return ResponsivePage(
-                maxWidth: 1200,
                 builder: (context, size) => SkeletonList(
-                  minTileWidth: 380,
-                  maxColumns: 2,
                   height: 108,
                   padding: context.scrollPadding(
                     horizontal: size.gutter,
@@ -88,7 +85,6 @@ class _View extends StatelessWidget {
                               : l.reportsEmpty,
                         )
                       : ResponsivePage(
-                          maxWidth: 1200,
                           builder: (context, size) => AdaptiveGridView(
                             padding: EdgeInsets.fromLTRB(
                               size.gutter,
@@ -98,8 +94,6 @@ class _View extends StatelessWidget {
                                   MediaQuery.viewPaddingOf(context).bottom,
                             ),
                             onRefresh: cubit.load,
-                            minTileWidth: 380,
-                            maxColumns: 2,
                             spacing: AppSpacing.md,
                             itemCount: visible.length,
                             itemBuilder: (context, i) => FadeSlideIn(
@@ -147,7 +141,6 @@ class _FilterBarState extends State<ReportsFilterBar> {
     final s = widget.state;
 
     return ResponsivePage(
-      maxWidth: 1200,
       builder: (context, size) => Padding(
         padding: EdgeInsets.fromLTRB(
           size.gutter,

@@ -30,8 +30,6 @@ import '../../../core/widgets/states.dart';
 /// the width here buys a second COLUMN of ordinary fields beside the portrait,
 /// and then stops — the space left over is not waste, it is the reason the form
 /// is still readable.
-const _formMaxWidth = 1100.0;
-
 class ProfileCompletionScreen extends StatelessWidget {
   const ProfileCompletionScreen({super.key, this.existing});
 
@@ -281,8 +279,6 @@ class _ProfileCompletionViewState extends State<_ProfileCompletionView> {
       // two columns stops being a sequence of questions and becomes a page to
       // search, and the answer to "which field comes next" stops being obvious.
       AdaptiveGrid(
-        minTileWidth: 300,
-        maxColumns: 2,
         spacing: AppSpacing.lg,
         equalHeights: false,
         children: fields,
@@ -324,7 +320,7 @@ class _ProfileCompletionViewState extends State<_ProfileCompletionView> {
         // The Form wraps both panes: the portrait is not a field, but the scope
         // has to cover everything the submit button validates.
         child: ResponsivePage(
-          maxWidth: _formMaxWidth,
+          width: PageWidth.editor,
           builder: (context, size) {
             final wide = size.isAtLeast(WindowSize.expanded);
 
@@ -496,8 +492,7 @@ class _DocumentsSection extends StatelessWidget {
         // one place on this form where a row of three is easier to take in
         // than a column of three.
         AdaptiveGrid(
-          minTileWidth: 200,
-          maxColumns: 3,
+          minTileWidth: CardWidth.stat,
           spacing: AppSpacing.md,
           equalHeights: false,
           children: [

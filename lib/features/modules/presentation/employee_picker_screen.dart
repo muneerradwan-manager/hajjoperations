@@ -253,7 +253,7 @@ class _ViewState extends State<_View> {
               ),
               Expanded(
                 child: switch (state.status) {
-                  PickerStatus.loading => const SkeletonList(minTileWidth: 320),
+                  PickerStatus.loading => const SkeletonList(height: 84),
                   PickerStatus.error => EmptyState(
                     icon: AppIcons.participants,
                     title: friendlyError(context, state.error),
@@ -284,7 +284,6 @@ class _ViewState extends State<_View> {
                         MediaQuery.viewPaddingOf(context).bottom +
                             AppSpacing.xl,
                       ),
-                      minTileWidth: 320,
                       spacing: AppSpacing.sm,
                       itemCount: state.people.length,
                       footer: _Footer(

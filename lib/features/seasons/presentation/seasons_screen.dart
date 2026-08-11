@@ -51,7 +51,6 @@ class _View extends StatelessWidget {
             return const SkeletonList(
               count: 4,
               height: 88,
-              minTileWidth: 300,
               panel: true,
             );
           }
@@ -77,7 +76,6 @@ class _View extends StatelessWidget {
                     ),
                   ),
                   AdaptiveGrid(
-                    minTileWidth: 300,
                     children: staggered([
                       for (final s in state.upcoming)
                         _SeasonTile(season: s, onTap: () => _open(context, s)),
@@ -101,7 +99,6 @@ class _View extends StatelessWidget {
                   )
                 else
                   AdaptiveGrid(
-                    minTileWidth: 300,
                     children: staggered([
                       for (final s in state.archive)
                         _SeasonTile(season: s, onTap: () => _open(context, s)),

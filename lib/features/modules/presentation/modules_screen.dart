@@ -151,7 +151,7 @@ class _View extends StatelessWidget {
       body: BlocBuilder<ModulesCubit, ModulesState>(
         builder: (context, state) {
           if (state.status == ModulesStatus.loading) {
-            return const SkeletonList();
+            return const SkeletonList(height: 150);
           }
           if (state.status == ModulesStatus.error) {
             return EmptyState(
@@ -201,7 +201,6 @@ class _View extends StatelessWidget {
           // differently. At 1680 this costs the grid its fourth column, which
           // is the cheaper of the two prices.
           return ResponsivePage(
-            maxWidth: 1200,
             builder: (context, size) => SinglePaneLayout(
               gutter: size.gutter,
               onRefresh: () => context.read<ModulesCubit>().load(),

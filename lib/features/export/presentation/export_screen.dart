@@ -89,7 +89,7 @@ class _ExportView extends StatelessWidget {
           // `scrollPadding`, which is what keeps the export button above the
           // Android 15 gesture bar instead of behind it.
           return ResponsivePage(
-            maxWidth: 640,
+            width: PageWidth.form,
             builder: (context, size) => SinglePaneLayout(
               gutter: size.gutter,
               children: [

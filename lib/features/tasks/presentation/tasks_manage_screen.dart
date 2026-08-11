@@ -93,7 +93,6 @@ class _View extends StatelessWidget {
 
             if (state.status == TasksStatus.loading) {
               return ResponsivePage(
-                maxWidth: 900,
                 builder: (context, size) => SkeletonList(
                   height: 120,
                   padding: context.scrollPadding(
@@ -132,7 +131,6 @@ class _View extends StatelessWidget {
             }
 
             return ResponsivePage(
-              maxWidth: 900,
               builder: (context, size) => RefreshIndicator(
                 onRefresh: cubit.load,
                 child: ListView(

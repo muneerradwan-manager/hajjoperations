@@ -74,7 +74,7 @@ class RaiseIncidentButton extends StatelessWidget {
       // prayer card, and a centred button under a left-aligned card is a shape
       // with no explanation. The start side is the right in Arabic and the left
       // in English, without anybody naming one.
-      alignment: AlignmentDirectional.centerStart,
+      alignment: AlignmentDirectional.center,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: _maxWidth),
         child: FilledButton.icon(

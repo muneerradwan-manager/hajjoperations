@@ -230,7 +230,7 @@ class _Sheet extends StatelessWidget {
     final stage = sheet.stages[index];
 
     return ResponsivePage(
-      maxWidth: 820,
+      width: PageWidth.reading,
       builder: (context, size) => SinglePaneLayout(
         gutter: size.gutter,
         // Rebuilt from scratch when the stage changes, so a written answer's

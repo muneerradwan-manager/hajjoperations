@@ -121,7 +121,7 @@ class _View extends StatelessWidget {
       body: SafeArea(
         child: BlocBuilder<AssignEvaluationCubit, AssignEvaluationState>(
           builder: (context, state) => ResponsivePage(
-            maxWidth: 720,
+            width: PageWidth.form,
             builder: (context, size) => SinglePaneLayout(
               gutter: size.gutter,
               children: [

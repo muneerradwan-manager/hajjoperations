@@ -31,8 +31,6 @@ import 'widgets/node_editor_sheet.dart';
 /// pixels than at eleven, and a date field the width of a monitor is harder to
 /// use than one a third of that. The gain here is the gutters and the cap
 /// moving with the window, not the content stretching to meet it.
-const _editorMaxWidth = 1100.0;
-
 /// Builds one operational file, in the order it is really built. How many steps
 /// it takes is the TYPE's answer, not a constant — see [EditorStep]:
 ///
@@ -600,7 +598,7 @@ class ModuleInfoStepState extends State<ModuleInfoStep> {
     final notesOpen = _notesOpen ?? written;
 
     return ResponsivePage(
-      maxWidth: _editorMaxWidth,
+      width: PageWidth.editor,
       builder: (context, size) => SinglePaneLayout(
         gutter: size.gutter,
         children: staggered([
@@ -611,7 +609,6 @@ class ModuleInfoStepState extends State<ModuleInfoStep> {
             title: l.moduleSectionWhen,
             icon: AppIcons.seasons,
             separated: false,
-            maxColumns: 2,
             minFieldWidth: _paneFieldWidth,
             children: [
               _FieldGroup(
@@ -687,7 +684,6 @@ class ModuleInfoStepState extends State<ModuleInfoStep> {
             title: l.moduleSectionPaperwork,
             icon: AppIcons.file,
             separated: false,
-            maxColumns: 2,
             minFieldWidth: _paneFieldWidth,
             children: [
               _FieldGroup(
@@ -740,7 +736,6 @@ class ModuleInfoStepState extends State<ModuleInfoStep> {
               title: l.moduleSectionTypeFields,
               icon: AppIcons.document,
               separated: false,
-              maxColumns: 2,
               minFieldWidth: _paneFieldWidth,
               children: [
                 for (final field in type.fields)
@@ -944,7 +939,7 @@ class _NodesStep extends StatelessWidget {
     final sectors = state.parentNodes;
 
     return ResponsivePage(
-      maxWidth: _editorMaxWidth,
+      width: PageWidth.editor,
       builder: (context, size) => SinglePaneLayout(
         gutter: size.gutter,
         children: staggered([
@@ -1031,7 +1026,7 @@ class _TowersStep extends StatelessWidget {
     }
 
     return ResponsivePage(
-      maxWidth: _editorMaxWidth,
+      width: PageWidth.editor,
       builder: (context, size) => SinglePaneLayout(
         gutter: size.gutter,
         children: staggered([
@@ -1087,7 +1082,7 @@ class _TeamsStep extends StatelessWidget {
     }
 
     return ResponsivePage(
-      maxWidth: _editorMaxWidth,
+      width: PageWidth.editor,
       builder: (context, size) => SinglePaneLayout(
         gutter: size.gutter,
         children: staggered([

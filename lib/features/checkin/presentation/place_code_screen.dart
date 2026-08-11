@@ -148,7 +148,7 @@ class PlaceCodeScreen extends StatelessWidget {
       // across a monitor around it would put the print button a long way from
       // the thing it prints.
       body: ResponsivePage(
-        maxWidth: 520,
+        width: PageWidth.form,
         builder: (context, size) => SinglePaneLayout(
           gutter: size.gutter,
           children: [

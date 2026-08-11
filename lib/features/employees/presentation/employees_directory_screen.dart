@@ -130,7 +130,7 @@ class _ViewState extends State<_View> {
             },
             builder: (context, state) {
               if (state.status == DirectoryStatus.loading) {
-                return const SkeletonList(count: 7, height: 70, minTileWidth: 300);
+                return const SkeletonList(count: 7, height: 70);
               }
               return ResponsivePage(
                 builder: (context, size) => Column(
@@ -298,7 +298,6 @@ class _EmployeeList extends StatelessWidget {
         AppSpacing.lg + MediaQuery.viewPaddingOf(context).bottom,
       ),
       onRefresh: onRefresh,
-      minTileWidth: 300,
       itemCount: employees.length,
       itemBuilder: (context, i) {
         final e = employees[i];

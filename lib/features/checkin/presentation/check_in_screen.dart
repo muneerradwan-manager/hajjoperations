@@ -108,7 +108,6 @@ class _CheckInScreenState extends State<CheckInScreen> {
       submitLabel: l.checkInScan,
       submitIcon: AppIcons.qrCode,
       onSubmit: canScan ? _scan : null,
-      maxWidth: 520,
       children: [
         FadeSlideIn(
           child: GlassCard(

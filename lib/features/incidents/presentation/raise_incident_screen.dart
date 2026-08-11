@@ -127,7 +127,7 @@ class _RaiseIncidentScreenState extends State<RaiseIncidentScreen> {
       // The bottom padding comes from `scrollPadding`, which clears the
       // Android 15 gesture bar that the send button would otherwise sit under.
       body: ResponsivePage(
-        maxWidth: 560,
+        width: PageWidth.form,
         builder: (context, size) => SinglePaneLayout(
           gutter: size.gutter,
           keyboardDismiss: ScrollViewKeyboardDismissBehavior.onDrag,

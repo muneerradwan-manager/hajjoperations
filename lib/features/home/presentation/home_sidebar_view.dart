@@ -57,7 +57,6 @@ class HomeSidebarView extends StatelessWidget {
           // The other screens in this app cap at their window class because
           // their content is CARDS, which tile; this one caps at a column
           // because its content is read.
-          maxWidth: 1000,
           builder: (context, size) => SinglePaneLayout(
             gutter: size.gutter,
             onRefresh: onRefresh,

@@ -182,7 +182,6 @@ class _ViewState extends State<_View> {
             // back. Twice as many messages on the screen is the whole gain
             // available, and it is worth having.
             return ResponsivePage(
-              maxWidth: 1200,
               builder: (context, size) => AdaptiveGridView(
                 padding: EdgeInsets.fromLTRB(
                   size.gutter,
@@ -191,8 +190,6 @@ class _ViewState extends State<_View> {
                   24 + MediaQuery.viewPaddingOf(context).bottom,
                 ),
                 onRefresh: () => context.read<NotificationsCubit>().refresh(),
-                minTileWidth: 380,
-                maxColumns: 2,
                 spacing: 10,
                 itemCount: state.items.length,
                 itemBuilder: (context, i) {

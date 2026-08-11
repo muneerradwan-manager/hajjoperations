@@ -72,8 +72,6 @@ class SettingsScreen extends StatelessWidget {
                 // before another — so on a wide window they stand side by side
                 // rather than in a queue the length of the screen.
                 AdaptiveGrid(
-                  minTileWidth: 320,
-                  maxColumns: 3,
                   children: [
                     InfoSection(
                       title: l.settingsLanguage,
@@ -198,8 +196,6 @@ class SettingsScreen extends StatelessWidget {
                 // that — at two columns they share a row, at one they are
                 // adjacent.
                 AdaptiveGrid(
-                  minTileWidth: 320,
-                  maxColumns: 3,
                   children: [
                     // Both prayer panes are dropped from the LIST on a platform
                     // that cannot run them, rather than hidden inside

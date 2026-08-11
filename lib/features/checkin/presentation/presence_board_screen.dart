@@ -58,7 +58,7 @@ class _View extends StatelessWidget {
           final cubit = context.read<PresenceCubit>();
 
           if (state.status == PresenceStatus.loading) {
-            return const SkeletonList(minTileWidth: 360);
+            return const SkeletonList(height: 84);
           }
           if (state.status == PresenceStatus.error) {
             return EmptyState(

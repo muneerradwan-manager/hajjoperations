@@ -233,7 +233,6 @@ class _ViewState extends State<_View> {
         child: BlocBuilder<AuditCubit, AuditState>(
           builder: (context, state) {
             return ResponsivePage(
-              maxWidth: 1200,
               builder: (context, size) => Column(
                 children: [
                   Padding(
@@ -278,8 +277,7 @@ class _Body extends StatelessWidget {
     if (state.status == AuditStatus.loading) {
       return const SkeletonList(
         count: 6,
-        minTileWidth: 380,
-        maxColumns: 2,
+        height: 92,
         padding: EdgeInsets.fromLTRB(16, 8, 16, 24),
       );
     }
@@ -325,8 +323,6 @@ class _Body extends StatelessWidget {
         header: state.summary == null
             ? null
             : AuditPulse(summary: state.summary!),
-        minTileWidth: 380,
-        maxColumns: 2,
         spacing: 10,
         itemCount: state.events.length + (state.loadingMore ? 1 : 0),
         itemBuilder: (context, i) {

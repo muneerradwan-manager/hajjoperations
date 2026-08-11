@@ -74,7 +74,7 @@ class CreatorPage extends StatelessWidget {
     required this.onSubmit,
     this.submitIcon = AppIcons.approve,
     this.busy = false,
-    this.maxWidth = 720,
+    this.width = PageWidth.form,
   });
 
   final String title;
@@ -90,14 +90,17 @@ class CreatorPage extends StatelessWidget {
   /// cannot file the same thing twice.
   final bool busy;
 
-  final double maxWidth;
+  /// What kind of page this is. A creator is a form by default — one column of
+  /// fields and one decision at the foot of it — and the two that are not say
+  /// so: a record with a dozen fields is a [PageWidth.editor].
+  final PageWidth width;
 
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: GlassAppBar(title: Text(title)),
     body: SafeArea(
       child: ResponsivePage(
-        maxWidth: maxWidth,
+        width: width,
         builder: (context, size) => SinglePaneLayout(
           gutter: size.gutter,
           // The keyboard closes when the form is dragged, because a person

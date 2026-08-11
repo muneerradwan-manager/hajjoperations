@@ -129,7 +129,7 @@ class _SeasonDetailScreenState extends State<SeasonDetailScreen> {
                   future: _participants,
                   builder: (context, snap) {
                     if (snap.connectionState == ConnectionState.waiting) {
-                      return const SkeletonList(minTileWidth: 300);
+                      return const SkeletonList(height: 132);
                     }
                     if (snap.hasError) {
                       return Center(child: Text('${snap.error}'));
@@ -166,7 +166,6 @@ class _SeasonDetailScreenState extends State<SeasonDetailScreen> {
                                           context,
                                         ).bottom,
                                   ),
-                                  minTileWidth: 300,
                                   itemCount: people.length,
                                   itemBuilder: (context, i) {
                                     final p = people[i];

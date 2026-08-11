@@ -74,8 +74,8 @@ class _View extends StatelessWidget {
                   builder: (context, state) {
                     if (state.status == EmployeesStatus.loading) {
                       return const SkeletonList(
+                        height: 84,
                         padding: EdgeInsets.all(AppSpacing.lg),
-                        minTileWidth: 300,
                       );
                     }
                     final items = state.filtered;
@@ -94,7 +94,6 @@ class _View extends StatelessWidget {
                             MediaQuery.viewPaddingOf(context).bottom,
                       ),
                       onRefresh: () => context.read<EmployeesCubit>().load(),
-                      minTileWidth: 300,
                       itemCount: items.length,
                       itemBuilder: (context, i) {
                         final e = items[i];

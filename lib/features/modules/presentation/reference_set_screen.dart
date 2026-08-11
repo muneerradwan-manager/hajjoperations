@@ -321,7 +321,7 @@ class _ReferenceSetScreenState extends State<ReferenceSetScreen> {
         if (set == null) {
           return Scaffold(
             appBar: GlassAppBar(title: Text(l.referenceDataTitle)),
-            body: const SkeletonList(minTileWidth: 320),
+            body: const SkeletonList(height: 84),
           );
         }
 
@@ -497,7 +497,6 @@ class _DivisionList extends StatelessWidget {
         gutter,
         AppSpacing.xxl * 2 + MediaQuery.viewPaddingOf(context).bottom,
       ),
-      minTileWidth: 320,
       itemCount: items.length,
       itemBuilder: (context, i) => FadeSlideIn(
         delay: Duration(milliseconds: 30 * (i < 8 ? i : 8)),

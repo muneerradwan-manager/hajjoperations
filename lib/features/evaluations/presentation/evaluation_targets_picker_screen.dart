@@ -186,7 +186,7 @@ class _EvaluationTargetsPickerScreenState
           ),
           Expanded(
             child: switch (null) {
-              _ when _loading => const SkeletonList(minTileWidth: 320),
+              _ when _loading => const SkeletonList(height: 84),
               _ when _error != null => EmptyState(
                 icon: evaluationTargetIcon(widget.target),
                 title: friendlyError(context, _error),
@@ -212,7 +212,6 @@ class _EvaluationTargetsPickerScreenState
                     size.gutter,
                     MediaQuery.viewPaddingOf(context).bottom + AppSpacing.xl,
                   ),
-                  minTileWidth: 320,
                   spacing: AppSpacing.sm,
                   itemCount: _options.length,
                   itemBuilder: (context, i) => _TargetTile(

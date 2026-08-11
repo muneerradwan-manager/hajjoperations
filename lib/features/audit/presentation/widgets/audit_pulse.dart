@@ -41,8 +41,6 @@ class AuditPulse extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: AdaptiveGrid(
-        minTileWidth: 340,
-        maxColumns: 2,
         equalHeights: false,
         children: [
           ChartCard(

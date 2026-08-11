@@ -121,7 +121,7 @@ class AppIcons {
   static const layoutSidebar = Iconsax.row_vertical;
 
   /// The rail's own hamburger, on a window too narrow to stand one open.
-  static const menu = Iconsax.menu;
+  static const menu = Icons.menu;
 
   /// Folding the rail down to its icons, and opening it again.
   ///
