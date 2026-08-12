@@ -7178,6 +7178,12 @@ abstract class AppLocalizations {
   /// **'Saved to {path}'**
   String checkInQrSaved(String path);
 
+  /// No description provided for @checkInQrSavedPlain.
+  ///
+  /// In en, this message translates to:
+  /// **'File saved'**
+  String get checkInQrSavedPlain;
+
   /// No description provided for @checkInQrSaveFailed.
   ///
   /// In en, this message translates to:
@@ -7454,11 +7460,29 @@ abstract class AppLocalizations {
   /// **'PDF (for printing)'**
   String get exportFormatPdf;
 
-  /// No description provided for @exportRun.
+  /// No description provided for @exportSave.
   ///
   /// In en, this message translates to:
-  /// **'Export and share'**
-  String get exportRun;
+  /// **'Save to device'**
+  String get exportSave;
+
+  /// No description provided for @exportShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get exportShare;
+
+  /// No description provided for @exportSavedTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to {path}'**
+  String exportSavedTo(String path);
+
+  /// No description provided for @exportSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the file'**
+  String get exportSaveFailed;
 
   /// No description provided for @exportRunning.
   ///

@@ -4121,6 +4121,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get checkInQrSavedPlain => 'File saved';
+
+  @override
   String get checkInQrSaveFailed => 'Could not save the file';
 
   @override
@@ -4295,7 +4298,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportFormatPdf => 'PDF (for printing)';
 
   @override
-  String get exportRun => 'Export and share';
+  String get exportSave => 'Save to device';
+
+  @override
+  String get exportShare => 'Share';
+
+  @override
+  String exportSavedTo(String path) {
+    return 'Saved to $path';
+  }
+
+  @override
+  String get exportSaveFailed => 'Could not save the file';
 
   @override
   String get exportRunning => 'Preparing…';

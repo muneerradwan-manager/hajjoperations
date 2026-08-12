@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
+import '../../../core/share/save_to_device.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
@@ -48,29 +49,44 @@ class _ExportView extends StatelessWidget {
       appBar: GlassAppBar(title: Text(l.exportTitle)),
       body: BlocConsumer<ExportCubit, ExportState>(
         listenWhen: (a, b) =>
-            a.error != b.error || a.lastRowCount != b.lastRowCount,
+            a.error != b.error ||
+            a.lastRowCount != b.lastRowCount ||
+            a.savedPath != b.savedPath,
         listener: (context, state) {
           final messenger = ScaffoldMessenger.of(context);
           if (state.error != null) {
             messenger
               ..hideCurrentSnackBar()
               ..showSnackBar(
-                SnackBar(content: Text(friendlyError(context, state.error))),
+                SnackBar(
+                  content: Text(
+                    state.error == 'export_save_failed'
+                        ? l.exportSaveFailed
+                        : friendlyError(context, state.error),
+                  ),
+                ),
               );
             return;
           }
           final rows = state.lastRowCount;
           if (rows == null) return;
+
+          final path = state.savedPath;
           messenger
             ..hideCurrentSnackBar()
             ..showSnackBar(
               SnackBar(
                 content: Text(
-                  // Said either way. "Exported 0 rows" is the single most
-                  // useful sentence this screen produces: it almost always
-                  // means an option is on the wrong answer, and without it the
-                  // person emails an empty sheet.
-                  rows == 0 ? l.exportNothingMatched : l.exportDoneRows(rows),
+                  // "Exported 0 rows" is the single most useful sentence this
+                  // screen produces: it almost always means an option is on the
+                  // wrong answer, and without it the person emails an empty
+                  // sheet. It outranks saying where the file went — a person
+                  // told where to find an empty file goes and finds one.
+                  rows == 0
+                      ? l.exportNothingMatched
+                      : (path != null && path.isNotEmpty)
+                      ? l.exportSavedTo(path)
+                      : l.exportDoneRows(rows),
                 ),
               ),
             );
@@ -276,6 +292,16 @@ class _FormatPicker extends StatelessWidget {
   }
 }
 
+/// The two things a finished file can be for.
+///
+/// Saving is the filled one and sharing is the outlined one, and the ranking is
+/// not arbitrary: a person who came to a page called «تصدير البيانات» came to
+/// GET a file. Sending it on is what happens to some of them afterwards.
+///
+/// The screen used to have one button and it shared, which meant the commonest
+/// intention — keep this — was reached by opening a sheet full of contacts and
+/// finding «حفظ في الملفات» among them. Two buttons, two intentions, and
+/// neither pretends to be the other.
 class _RunButton extends StatelessWidget {
   const _RunButton({required this.state});
   final ExportState state;
@@ -285,23 +311,55 @@ class _RunButton extends StatelessWidget {
     final l = context.l10n;
     final running = state.status == ExportStatus.running;
 
-    return FilledButton.icon(
-      onPressed: state.canRun
-          ? () => context.read<ExportCubit>().run(
-              l: l,
-              languageCode: Localizations.localeOf(context).languageCode,
-              subtitle: l.exportGeneratedBy,
-              pageLabel: l.exportPage,
-            )
-          : null,
-      icon: running
-          ? const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : const Icon(AppIcons.upload),
-      label: Text(running ? l.exportRunning : l.exportRun),
+    void run(ExportDelivery delivery) => context.read<ExportCubit>().run(
+      l: l,
+      languageCode: Localizations.localeOf(context).languageCode,
+      subtitle: l.exportGeneratedBy,
+      pageLabel: l.exportPage,
+      delivery: delivery,
+    );
+
+    final spinner = running
+        ? const SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          )
+        : null;
+
+    return Row(
+      children: [
+        if (isSaveToDeviceSupported) ...[
+          Expanded(
+            child: FilledButton.icon(
+              onPressed: state.canRun ? () => run(ExportDelivery.save) : null,
+              icon: spinner ?? const Icon(AppIcons.download),
+              label: Text(running ? l.exportRunning : l.exportSave),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+        ],
+        Expanded(
+          child: isSaveToDeviceSupported
+              ? OutlinedButton.icon(
+                  onPressed: state.canRun
+                      ? () => run(ExportDelivery.share)
+                      : null,
+                  icon: const Icon(AppIcons.send),
+                  label: Text(l.exportShare),
+                )
+              // The browser has no save dialog this app can trust — see
+              // [isSaveToDeviceSupported] — so there it stays one button, and
+              // the one it keeps is the one that still works.
+              : FilledButton.icon(
+                  onPressed: state.canRun
+                      ? () => run(ExportDelivery.share)
+                      : null,
+                  icon: spinner ?? const Icon(AppIcons.upload),
+                  label: Text(running ? l.exportRunning : l.exportShare),
+                ),
+        ),
+      ],
     );
   }
 }

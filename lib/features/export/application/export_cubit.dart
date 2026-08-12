@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../core/bloc/safe_cubit.dart';
+import '../../../core/share/save_to_device.dart';
 import '../../../core/share/shareable.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/export_catalog.dart';
@@ -9,6 +10,14 @@ import '../data/export_runner.dart';
 import '../domain/export_dataset.dart';
 
 enum ExportStatus { choosing, preparing, running, error }
+
+/// Where a finished export goes.
+///
+/// Two intentions, not two buttons for one: [share] hands the file to somebody
+/// else, [save] puts it where its author can find it again. Which one is in
+/// flight is a parameter rather than state, because it is decided at the moment
+/// of pressing and is finished by the time anything is emitted.
+enum ExportDelivery { share, save }
 
 class ExportState extends Equatable {
   const ExportState({
@@ -22,6 +31,7 @@ class ExportState extends Equatable {
     this.status = ExportStatus.choosing,
     this.error,
     this.lastRowCount,
+    this.savedPath,
   });
 
   final List<ExportDataset> datasets;
@@ -47,6 +57,15 @@ class ExportState extends Equatable {
   /// the empty one usually means an option was left on the wrong answer.
   final int? lastRowCount;
 
+  /// Where the last export landed, when it was SAVED rather than shared.
+  ///
+  /// Its own field rather than a flag beside [lastRowCount], because the two
+  /// answer different questions and the screen prints both: how many rows went
+  /// into the file, and where the file went. Null after a share — there is no
+  /// answer to give, the sheet took it from here — and null on Android even
+  /// after a save, which hands back a document URI rather than a path.
+  final String? savedPath;
+
   /// Whether there is anything to export yet: a dataset, at least one column,
   /// and an answer to every option that insists on one.
   bool get canRun {
@@ -71,6 +90,8 @@ class ExportState extends Equatable {
     bool clearError = false,
     int? lastRowCount,
     bool clearRowCount = false,
+    String? savedPath,
+    bool clearSavedPath = false,
   }) => ExportState(
     datasets: datasets ?? this.datasets,
     dataset: dataset ?? this.dataset,
@@ -82,6 +103,7 @@ class ExportState extends Equatable {
     status: status ?? this.status,
     error: clearError ? null : (error ?? this.error),
     lastRowCount: clearRowCount ? null : (lastRowCount ?? this.lastRowCount),
+    savedPath: clearSavedPath ? null : (savedPath ?? this.savedPath),
   );
 
   @override
@@ -96,6 +118,7 @@ class ExportState extends Equatable {
     status,
     error,
     lastRowCount,
+    savedPath,
   ];
 }
 
@@ -205,23 +228,37 @@ class ExportCubit extends SafeCubit<ExportState> {
     mimeType: file.format.mimeType,
   );
 
-  /// Builds the file and hands it to the platform's share sheet.
+  /// Builds the file and delivers it the way [delivery] says.
   ///
-  /// Sharing rather than saving to a folder, and that is the right shape for
-  /// what this is for: the sheet is going to somebody — email, WhatsApp, a
-  /// drive — far more often than it is going to sit on the phone. The share
-  /// sheet includes "save to files" wherever the platform has one, so nothing
-  /// is lost by starting there.
+  /// One method rather than two, because everything before the last step is
+  /// identical and expensive: the query, the columns, the writer. What differs
+  /// is four lines at the end.
+  ///
+  /// The two deliveries are two different INTENTIONS and that is why both are
+  /// offered. Sharing sends the file to somebody — email, WhatsApp, a drive —
+  /// and saving puts it where the person can find it again. This screen used to
+  /// offer only the first, on the argument that a share sheet contains «حفظ في
+  /// الملفات» anywhere the platform has one. True, and still the wrong shape:
+  /// it made the one act that involves nobody go through a sheet full of
+  /// contacts.
   Future<void> run({
     required AppLocalizations l,
     required String languageCode,
     required String subtitle,
     required String pageLabel,
+    ExportDelivery delivery = ExportDelivery.share,
   }) async {
     final dataset = state.dataset;
     if (dataset == null || !state.canRun) return;
 
-    emit(state.copyWith(status: ExportStatus.running, clearError: true, clearRowCount: true));
+    emit(
+      state.copyWith(
+        status: ExportStatus.running,
+        clearError: true,
+        clearRowCount: true,
+        clearSavedPath: true,
+      ),
+    );
 
     try {
       final file = await ExportRunner.run(
@@ -237,6 +274,45 @@ class ExportCubit extends SafeCubit<ExportState> {
         subtitle: subtitle,
         pageLabel: pageLabel,
       );
+
+      if (delivery == ExportDelivery.save) {
+        final result = await saveToDevice(
+          file.bytes,
+          suggestedName: file.name,
+          label: state.format.name.toUpperCase(),
+          extension: state.format.extension,
+          mimeType: state.format.mimeType,
+        );
+
+        // Closing the picker is an answer, not an event. The screen goes back
+        // to what it was showing and says nothing — a snack bar reporting that
+        // somebody did not do the thing they decided not to do is noise.
+        if (result.outcome == SaveOutcome.cancelled) {
+          emit(state.copyWith(status: ExportStatus.choosing));
+          return;
+        }
+        if (result.outcome == SaveOutcome.failed) {
+          emit(
+            state.copyWith(
+              status: ExportStatus.error,
+              error: 'export_save_failed',
+            ),
+          );
+          return;
+        }
+
+        emit(
+          state.copyWith(
+            status: ExportStatus.choosing,
+            lastRowCount: file.rowCount,
+            // Null on Android, which answers with a document URI rather than a
+            // path anybody would recognise. The message that reads this says
+            // "saved" without a where in that case, which is the truth.
+            savedPath: result.path,
+          ),
+        );
+        return;
+      }
 
       await SharePlus.instance.share(
         ShareParams(

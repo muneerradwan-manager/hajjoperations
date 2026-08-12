@@ -4145,6 +4145,9 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get checkInQrSavedPlain => 'حُفظ الملف';
+
+  @override
   String get checkInQrSaveFailed => 'تعذّر الحفظ';
 
   @override
@@ -4321,7 +4324,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get exportFormatPdf => 'PDF (للطباعة)';
 
   @override
-  String get exportRun => 'تصدير ومشاركة';
+  String get exportSave => 'حفظ في الجهاز';
+
+  @override
+  String get exportShare => 'مشاركة';
+
+  @override
+  String exportSavedTo(String path) {
+    return 'حُفظ في $path';
+  }
+
+  @override
+  String get exportSaveFailed => 'تعذّر الحفظ';
 
   @override
   String get exportRunning => 'جارٍ التحضير…';

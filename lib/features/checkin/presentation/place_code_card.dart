@@ -102,11 +102,15 @@ class _Card extends StatelessWidget {
 
   /// Puts the poster somewhere the person chooses and keeps.
   ///
-  /// Desktop only — see [isSaveToDeviceSupported]. Printing wants a printer
-  /// attached and sharing wants something registered to receive a PDF; this
-  /// wants neither, which is what makes it the one that always works on an
-  /// operations-room machine. The forty posters for a list can be put in a
-  /// folder and taken to whatever prints them.
+  /// Printing wants a printer attached and sharing wants something registered
+  /// to receive a PDF; this wants neither, which is what makes it the one that
+  /// always works on an operations-room machine. The forty posters for a list
+  /// can be put in a folder and taken to whatever prints them.
+  ///
+  /// It used to be desktop-only, because [saveToDevice] was. It is not any
+  /// more — the phone opens its own document picker — and this screen inherited
+  /// that without asking for it, which is right: a man photographing posters to
+  /// print at a shop wanted the file, not a share sheet.
   Future<void> _save(BuildContext context, String payload) async {
     final l = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
@@ -130,7 +134,13 @@ class _Card extends StatelessWidget {
       final message = switch (result.outcome) {
         // Closing the dialog is an answer, and answering it is not an event.
         SaveOutcome.cancelled => null,
-        SaveOutcome.saved => l.checkInQrSaved(result.path ?? ''),
+        // Android answers with a document URI rather than a path anybody
+        // would recognise, and sometimes with nothing at all. "Saved to " with
+        // an empty tail is worse than "saved".
+        SaveOutcome.saved =>
+          (result.path?.isNotEmpty ?? false)
+              ? l.checkInQrSaved(result.path!)
+              : l.checkInQrSavedPlain,
         SaveOutcome.failed => l.checkInQrSaveFailed,
       };
       if (message == null) return;
@@ -252,8 +262,8 @@ class _Card extends StatelessWidget {
                           label: l.checkInQrShare,
                           onSelected: () => _share(context, payload),
                         ),
-                        // Only where there is a dialog to open. On a phone the
-                        // way to keep a file is the share sheet above.
+                        // Everywhere but the browser — see
+                        // [isSaveToDeviceSupported].
                         if (isSaveToDeviceSupported)
                           MenuAction(
                             icon: AppIcons.download,

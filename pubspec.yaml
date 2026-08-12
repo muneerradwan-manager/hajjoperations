@@ -48,10 +48,6 @@ dependencies:
   pdf: ^3.12.0
   printing: ^5.14.3
   share_plus: ^12.0.2
-  # Promoted from transitive (it arrives under `printing`) to direct, because
-  # `core/share/save_to_device.dart` calls it itself: "حفظ على الجهاز" needs a
-  # real Save-As dialog, and only the desktops have one.
-  file_selector: ^1.0.3
   bidi: ^2.0.13
   mobile_scanner: ^7.4.0
   # Pinned, not caret-ranged: the chart kit in `core/theme/chart_palette.dart`
