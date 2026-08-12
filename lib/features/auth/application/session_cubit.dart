@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/bloc/safe_cubit.dart';
 import '../../../core/constants/permission_codes.dart';
 import '../../../core/logging/error_reporting.dart';
+import '../../../core/offline/snapshots.dart';
 import '../../notifications/data/push_service.dart';
 import '../../profile/data/profile_repository.dart';
 import '../../profile/domain/profile.dart';
@@ -28,6 +29,7 @@ class SessionState extends Equatable {
     this.profile,
     this.permissions = const {},
     this.loadFailed = false,
+    this.restoredAt,
   });
 
   final SessionStatus status;
@@ -38,6 +40,21 @@ class SessionState extends Equatable {
   /// unreachable) and there is nothing older on screen to fall back to. The
   /// splash reads this to offer a retry instead of an endless progress bar.
   final bool loadFailed;
+
+  /// When this session was last true, if it was restored from disk rather than
+  /// fetched.
+  ///
+  /// Null on a live resolution. Carried rather than reduced to a flag for the
+  /// reason [Snapshots] gives: "a saved copy" makes the reader guess how old,
+  /// and the age is the only thing they need in order to decide whether to
+  /// trust what they are about to do with it.
+  ///
+  /// It matters more here than anywhere else it appears, because what is stale
+  /// is the PERMISSION SET — the thing that decides which doors are drawn. Not
+  /// which doors OPEN: every write still goes to a server that enforces its own
+  /// row rules, so a grant revoked while this phone was in a bag buys nobody
+  /// anything except a refusal when the signal returns.
+  final DateTime? restoredAt;
 
   bool get isAdmin => profile?.isAdmin ?? false;
   bool can(String code) => isAdmin || permissions.contains(code);
@@ -66,24 +83,57 @@ class SessionState extends Equatable {
     Profile? profile,
     Set<String>? permissions,
     bool? loadFailed,
+    DateTime? restoredAt,
+    bool clearRestoredAt = false,
   }) {
     return SessionState(
       status: status ?? this.status,
       profile: profile ?? this.profile,
       permissions: permissions ?? this.permissions,
       loadFailed: loadFailed ?? this.loadFailed,
+      restoredAt: clearRestoredAt ? null : (restoredAt ?? this.restoredAt),
     );
   }
 
   @override
-  List<Object?> get props => [status, profile, permissions, loadFailed];
+  List<Object?> get props => [
+    status,
+    profile,
+    permissions,
+    loadFailed,
+    restoredAt,
+  ];
 }
 
 /// Owns the app's authenticated session: reacts to Supabase auth events,
 /// loads the profile, and derives the routing status.
 class SessionCubit extends SafeCubit<SessionState> {
-  SessionCubit(this._auth, this._profiles) : super(const SessionState()) {
+  SessionCubit(this._auth, this._profiles, {Stream<void>? reconnects})
+    : super(const SessionState()) {
     _sub = _auth.authStateChanges.listen(_onAuthChanged);
+
+    // A session restored from disk is a session that has not been checked, and
+    // the moment the radio comes back is the moment to check it. Without this,
+    // a man who started the app in a dead spot carries yesterday's permissions
+    // until he closes and reopens it — which nobody does mid-shift.
+    //
+    // Only when there is something to correct: a live session re-fetching its
+    // own profile every time a wifi flickers is work done to arrive at the
+    // answer already on screen. The queue's own reconnect handler is what sends
+    // the WRITES; this one only makes the session catch up.
+    //
+    // `onError` for the reason the outbox gives: an error on a stream handed in
+    // as an argument, with nobody handling it, escapes to the framework and is
+    // reported as a crash. Watching the network must never be why the app looks
+    // broken.
+    _reconnectSub = reconnects?.listen(
+      (_) {
+        if (state.restoredAt != null || state.loadFailed) unawaited(reload());
+      },
+      onError: (Object _) {},
+      cancelOnError: false,
+    );
+
     // Handle a session that already exists at startup.
     if (_auth.currentUser != null) {
       reload();
@@ -95,6 +145,7 @@ class SessionCubit extends SafeCubit<SessionState> {
   final AuthRepository _auth;
   final ProfileRepository _profiles;
   late final StreamSubscription<AuthState> _sub;
+  StreamSubscription<void>? _reconnectSub;
 
   /// The account the current session state was loaded for — set the moment a
   /// load starts, not when it finishes, so that events arriving while the first
@@ -207,7 +258,8 @@ class SessionCubit extends SafeCubit<SessionState> {
   }
 
   Future<void> _reload() async {
-    final profile = await _profiles.fetchMine();
+    final read = await _profiles.fetchMine();
+    final profile = read.data;
 
     // Recorded here rather than at sign-in: this is the first point at which
     // the account has a face and a name to be recognised by in the switcher,
@@ -234,33 +286,66 @@ class SessionCubit extends SafeCubit<SessionState> {
         profile.isSuspended ? SessionStatus.suspended : SessionStatus.approved,
     };
 
-    Set<String> permissions = const {};
+    var permissions = const <String>{};
+    var restoredAt = read.savedAt;
     if (status == SessionStatus.approved && !profile.isAdmin) {
-      permissions = await _loadPermissions();
+      final grants = await _loadPermissions();
+      permissions = grants.data;
+      // The older of the two, because the session is only as fresh as its
+      // stalest half — and because the profile can come off disk while the
+      // grants come live, or the reverse, depending on which call the network
+      // died between.
+      restoredAt = _older(restoredAt, grants.savedAt);
     }
 
     emit(
-      SessionState(status: status, profile: profile, permissions: permissions),
+      SessionState(
+        status: status,
+        profile: profile,
+        permissions: permissions,
+        restoredAt: restoredAt,
+      ),
     );
 
     // Register this device for push once the user has full access.
-    if (status == SessionStatus.approved) {
+    //
+    // Skipped on a restored session: it is a network call, it would fail, and
+    // the token it registers is one the server already has from the last time
+    // this device was online.
+    if (status == SessionStatus.approved && restoredAt == null) {
       unawaited(PushService.instance.start());
     }
+  }
+
+  static DateTime? _older(DateTime? a, DateTime? b) {
+    if (a == null) return b;
+    if (b == null) return a;
+    return a.isBefore(b) ? a : b;
   }
 
   /// Throws on failure rather than returning an empty set: an error here used
   /// to silently strip every section card off the home screen until the next
   /// reload. Letting it propagate turns it into the same retryable failure as
   /// a profile fetch that never arrived.
-  Future<Set<String>> _loadPermissions() async {
-    final rows = await Supabase.instance.client.rpc('my_permissions');
-    return (rows as List).map((e) => e as String).toSet();
+  ///
+  /// Kept on disk for the same reason the profile is: without it a session that
+  /// survived a dead network would open every door for an administrator and
+  /// none for anybody else, which is a worse answer than not opening at all.
+  Future<Cached<Set<String>>> _loadPermissions() {
+    final uid = _auth.currentUser?.id;
+    return readWithSnapshot(
+      key: 'session.permissions.$uid',
+      fetch: () => Supabase.instance.client.rpc('my_permissions'),
+      parse: (rows) => {
+        for (final code in (rows as List?) ?? const []) code as String,
+      },
+    );
   }
 
   @override
   Future<void> close() {
     _sub.cancel();
+    _reconnectSub?.cancel();
     return super.close();
   }
 }

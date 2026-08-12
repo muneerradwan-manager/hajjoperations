@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'bootstrap.dart';
 import 'core/router/app_router.dart';
+import 'core/offline/reconnects.dart';
 import 'core/settings/settings_cubit.dart';
 import 'core/theme/app_theme.dart';
 import 'core/widgets/aurora_background.dart';
@@ -53,6 +54,10 @@ class HajjOperationsApp extends StatelessWidget {
             create: (context) => SessionCubit(
               context.read<AuthRepository>(),
               context.read<ProfileRepository>(),
+              // The same hint the outbox drains on. A session restored from
+              // disk goes and checks itself the second a radio associates,
+              // rather than waiting for somebody to close the app.
+              reconnects: platformReconnects(),
             ),
           ),
           BlocProvider(

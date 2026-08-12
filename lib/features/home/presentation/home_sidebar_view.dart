@@ -4,6 +4,7 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
+import '../../../core/widgets/saved_copy_banner.dart';
 import '../../auth/application/session_cubit.dart';
 import '../../notifications/presentation/widgets/notification_bell.dart';
 import '../../outbox/presentation/widgets/outbox_badge.dart';
@@ -75,6 +76,15 @@ class HomeSidebarView extends StatelessWidget {
               // day rather than a place to go. The urgent report used to stand
               // beside it and has moved to the app bar, where it is a hand's
               // width from the thumb on EVERY screen rather than on this one.
+
+              // The session itself came off disk — the app opened with no
+              // network at all. Said HERE and only here: this is the page every
+              // launch lands on, and the fact it reports is about the whole
+              // app rather than about anything on this page. Each screen still
+              // says whether its OWN data is saved; this says whether the
+              // person you are signed in as, and the doors drawn for them, were
+              // last confirmed an hour ago or on Tuesday.
+              SavedCopyBanner(savedAt: session.restoredAt),
               const MomentPanel(),
               const SizedBox(height: AppSpacing.xl),
               SeasonRoadmapView(session: session),

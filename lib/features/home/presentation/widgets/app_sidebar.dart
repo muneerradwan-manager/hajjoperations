@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
+// `hide TextDirection`: intl ships a class of that name — its own two-value
+// enum for laying out a formatted string — and it is not Flutter's. Imported
+// plainly it shadows the one `Directionality.of` returns, and the rail's side
+// inset below stops compiling for want of `.rtl`.
+import 'package:intl/intl.dart' hide TextDirection;
 
 import '../../../../core/l10n/l10n_extension.dart';
 import '../../../../core/router/app_router.dart';
@@ -261,17 +265,42 @@ class StandingRail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // The window's own status bar, and nothing else. The rail stands OUTSIDE
+    // The window's own system bars, and nothing else. The rail stands OUTSIDE
     // the page's scaffold now — beside it rather than under its bar — so it
     // runs from the top of the glass to the bottom while each page's own bar
     // spans only the column it belongs to. That is the shape every desktop
     // application with a rail has: the navigation is the frame, and the header
     // belongs to what is framed.
-    final top = MediaQuery.paddingOf(context).top + AppSpacing.md;
-    final bottom = MediaQuery.viewPaddingOf(context).bottom + AppSpacing.md;
+    //
+    // `viewPadding` on every side, never `padding`. The two are the same number
+    // until a keyboard is up, and then `padding` reports ZERO at the bottom
+    // because the keyboard is already covering that strip. This column does not
+    // move for a keyboard — the page beside it owns the fields — so taking the
+    // zero would drop its foot under the navigation bar for as long as somebody
+    // is typing.
+    final insets = MediaQuery.viewPaddingOf(context);
+    final top = insets.top + AppSpacing.md;
+    final bottom = insets.bottom + AppSpacing.md;
+
+    // The system bar's SIDE inset, on whichever edge this column is standing.
+    //
+    // Android 15 draws its bars over the app and no longer offers to reserve
+    // room, so in landscape — which is 600 pixels wide or more, and therefore
+    // exactly where this standing form is used — the navigation bar is a
+    // vertical strip pinned to one long edge. In Arabic the rail stands on the
+    // right and so, on a handset rotated clockwise, does the strip. [gutter] is
+    // 24 pixels against the 48 that strip takes: without this the fold button,
+    // the mark and the whole column of glyphs sit underneath it.
+    //
+    // The rail is the Row's first child, so it is on the START side — the right
+    // in Arabic, the left in English — which is why the inset taken is chosen
+    // by direction rather than named.
+    final side = Directionality.of(context) == TextDirection.rtl
+        ? insets.right
+        : insets.left;
 
     return Padding(
-      padding: EdgeInsetsDirectional.fromSTEB(gutter, top, 0, bottom),
+      padding: EdgeInsetsDirectional.fromSTEB(gutter + side, top, 0, bottom),
       child: AnimatedContainer(
         duration: _fold,
         curve: _curve,

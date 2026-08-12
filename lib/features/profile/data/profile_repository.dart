@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/offline/snapshots.dart';
 import '../../../core/supabase/supabase_client.dart';
 import '../domain/profile.dart';
 import '../domain/profile_enums.dart';
@@ -17,15 +18,33 @@ const profileEmbeds =
 
 class ProfileRepository {
   /// The signed-in user's own profile, or null if the row is not readable yet.
-  Future<Profile?> fetchMine() async {
+  ///
+  /// Kept on disk, and this is the ONE saved copy the whole offline story rests
+  /// on. Everything else in the app that survives a dead network — the task
+  /// list, the roster, the queue of writes waiting to go — is behind a session,
+  /// and the session is behind this row. Without it a launch with no signal
+  /// resolved to nothing, the router held at the splash, and an app full of
+  /// carefully offline-capable screens was unreachable from the first frame.
+  ///
+  /// Restored on a NETWORK failure only, like every other snapshot: an account
+  /// suspended this morning answers, and it answers "suspended". What is served
+  /// from disk is the answer given to a question nobody can ask right now.
+  Future<Cached<Profile?>> fetchMine() async {
     final uid = supabase.auth.currentUser?.id;
-    if (uid == null) return null;
-    final row = await supabase
-        .from('profiles')
-        .select(profileEmbeds)
-        .eq('id', uid)
-        .maybeSingle();
-    return row == null ? null : Profile.fromMap(row);
+    if (uid == null) return const Cached(null);
+    return readWithSnapshot(
+      // Per account, and dropped at sign-out — a shared handset must not open
+      // on the previous man's name and permissions.
+      key: 'session.profile.$uid',
+      fetch: () => supabase
+          .from('profiles')
+          .select(profileEmbeds)
+          .eq('id', uid)
+          .maybeSingle(),
+      parse: (row) => row == null
+          ? null
+          : Profile.fromMap((row as Map).cast<String, dynamic>()),
+    );
   }
 
   /// The entries of one admin-managed list, active ones only, in the order the

@@ -169,6 +169,21 @@ class SidebarDrawer extends StatelessWidget {
           // being readable through it.
           strong: true,
           child: SafeArea(
+            // The bottom inset taken from `viewPadding` rather than `padding`,
+            // and the reason is the `resizeToAvoidBottomInset: false` on the
+            // scaffold that owns this drawer.
+            //
+            // A plain [SafeArea] reads `padding`, which is the real inset LESS
+            // whatever the keyboard is already covering — so with a field
+            // focused on the page behind it, the bottom reads zero. The panel
+            // does not shrink to match, because the scaffold was told not to
+            // resize, and the foot of the column — Settings, and the last of
+            // the shelves — ends up under Android's navigation bar.
+            //
+            // This is the one flag that says "give me the inset as if there
+            // were no keyboard", which is the truth for a panel that never
+            // moves for one.
+            maintainBottomViewPadding: true,
             child: AppSidebar(
               session: session,
               location: location,
