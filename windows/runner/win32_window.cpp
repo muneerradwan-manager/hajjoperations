@@ -29,6 +29,30 @@ constexpr const wchar_t kGetPreferredBrightnessRegValue[] = L"AppsUseLightTheme"
 // The number of Win32Window objects that currently exist.
 static int g_active_window_count = 0;
 
+// The smallest window this app is willing to be dragged down to, in the same
+// logical pixels the Dart side measures in.
+//
+// Taken from the app's own breakpoints rather than picked by eye. `WindowSize`
+// (lib/core/widgets/responsive.dart) calls 600 the first width at which a
+// window is not a telephone, and the standing rail is 288 wide when it is open.
+// 288 + 432 is what 720 buys: a rail with a pane beside it that is still wider
+// than most phones. Below that the window has folded itself into the phone
+// layout — a hamburger drawer over a single column — which is a reasonable
+// thing for a window to do on a tablet and an absurd one on a monitor.
+//
+// 640 tall clears an app bar, a few rows and the bottom inset, and still fits a
+// 1366x768 laptop under its taskbar.
+//
+// Enforced HERE rather than from Dart through a window-management plugin, and
+// the difference is not only the dependency: this answers WM_GETMINMAXINFO,
+// which is Windows asking before it resizes, so the window cannot be dragged
+// smaller even for a frame. A plugin sets the limit after the engine has
+// started, which leaves the first moments of every launch unguarded and makes
+// the constraint something the app requests rather than something the window
+// has.
+constexpr int kMinimumWindowWidth = 720;
+constexpr int kMinimumWindowHeight = 640;
+
 using EnableNonClientDpiScaling = BOOL __stdcall(HWND hwnd);
 
 // Scale helper to convert logical scaler values to physical using passed in
@@ -186,6 +210,27 @@ Win32Window::MessageHandler(HWND hwnd,
         PostQuitMessage(0);
       }
       return 0;
+
+    case WM_GETMINMAXINFO: {
+      // Windows asking, before it resizes, how small this window may go.
+      //
+      // The limit is scaled by the DPI of the monitor the window is ON, not by
+      // the one it was created on: dragging between a 100% monitor and a 150%
+      // one keeps the same logical width, which is the whole point of stating
+      // the minimum in logical pixels. WM_DPICHANGED arrives on that move and
+      // this is asked again afterwards.
+      //
+      // A zero back from the DPI query means the window is not on a monitor
+      // yet, which happens during creation; 96 is the unscaled default and the
+      // right answer for a window nobody can drag yet.
+      UINT dpi = FlutterDesktopGetDpiForHWND(hwnd);
+      double scale_factor = (dpi == 0 ? 96 : dpi) / 96.0;
+
+      auto* info = reinterpret_cast<MINMAXINFO*>(lparam);
+      info->ptMinTrackSize.x = Scale(kMinimumWindowWidth, scale_factor);
+      info->ptMinTrackSize.y = Scale(kMinimumWindowHeight, scale_factor);
+      return 0;
+    }
 
     case WM_DPICHANGED: {
       auto newRectSize = reinterpret_cast<RECT*>(lparam);
