@@ -102,16 +102,14 @@ class AppIcons {
   static const language = Iconsax.language_square;
   static const theme = Iconsax.moon;
 
-  // ── The two shapes of the home page ─────────────────────────────────────
+  // ── The rail ────────────────────────────────────────────────────────────
   //
-  // Drawn beside the choice in settings, so the two arrangements are told apart
-  // by their SHAPE before either word is read: a field of tiles, and a column
-  // standing beside a page.
+  // There was a second glyph here — a field of tiles — drawn beside the choice
+  // in settings so the two arrangements were told apart by their SHAPE before
+  // either word was read. The choice is gone and so is the tile field; this one
+  // survives because two other screens spend it on «مكان في التطبيق».
 
-  /// نمط البطاقات — every door on the page at once.
-  static const layoutGrid = Iconsax.element_3;
-
-  /// نمط الشريط الجانبي.
+  /// نمط الشريط الجانبي، وموضعٌ في التطبيق يُبلَّغ عنه.
   ///
   /// `row_vertical` — a plain vertical split — and deliberately not
   /// `sidebar_left`, which names a side. The rail stands on the START side, and

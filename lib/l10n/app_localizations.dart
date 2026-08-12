@@ -7634,30 +7634,6 @@ abstract class AppLocalizations {
   /// **'Home screen'**
   String get settingsHomeLayout;
 
-  /// No description provided for @settingsHomeLayoutGrid.
-  ///
-  /// In en, this message translates to:
-  /// **'Cards'**
-  String get settingsHomeLayoutGrid;
-
-  /// No description provided for @settingsHomeLayoutGridHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Every door on the page at once, on colour-coded shelves'**
-  String get settingsHomeLayoutGridHint;
-
-  /// No description provided for @settingsHomeLayoutSidebar.
-  ///
-  /// In en, this message translates to:
-  /// **'Sidebar'**
-  String get settingsHomeLayoutSidebar;
-
-  /// No description provided for @settingsHomeLayoutSidebarHint.
-  ///
-  /// In en, this message translates to:
-  /// **'A standing column of doors, and the season\'s roadmap in their place'**
-  String get settingsHomeLayoutSidebarHint;
-
   /// No description provided for @sidebarExpand.
   ///
   /// In en, this message translates to:

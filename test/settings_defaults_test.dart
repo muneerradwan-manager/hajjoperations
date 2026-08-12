@@ -45,17 +45,9 @@ void main() {
       );
     });
 
-    test('opens on the grid of tiles', () async {
+    test('opens with the rail standing open', () async {
       final settings = await cubitWith({});
 
-      expect(
-        settings.state.homeLayout,
-        HomeLayout.grid,
-        reason:
-            'a man opening this app for the first time does not yet know '
-            'there is a menu to open; the grid answers "what is there?" '
-            'without being asked',
-      );
       expect(
         settings.state.sidebarExpanded,
         isTrue,
@@ -89,33 +81,8 @@ void main() {
     });
   });
 
-  group('the home layout', () {
-    test('is kept once it has been chosen', () async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-
-      await SettingsCubit(prefs).setHomeLayout(HomeLayout.sidebar);
-
-      expect(SettingsCubit(prefs).state.homeLayout, HomeLayout.sidebar);
-    });
-
-    test('is written by name, not by position', () async {
-      // Stored as an index, reordering the enum one day would silently move
-      // everybody who chose the rail back onto the grid.
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-
-      await SettingsCubit(prefs).setHomeLayout(HomeLayout.sidebar);
-
-      expect(prefs.getString('settings.homeLayout'), 'sidebar');
-    });
-
-    test('a value written by some other build lands on the grid', () async {
-      final settings = await cubitWith({'settings.homeLayout': 'carousel'});
-      expect(settings.state.homeLayout, HomeLayout.grid);
-    });
-
-    test('folding the rail survives a restart', () async {
+  group('the rail', () {
+    test('folding it survives a restart', () async {
       // A habit, not a moment: re-folding it on every cold start is the sort of
       // small insult an app is never forgiven for.
       SharedPreferences.setMockInitialValues({});
@@ -124,6 +91,15 @@ void main() {
       await SettingsCubit(prefs).setSidebarExpanded(false);
 
       expect(SettingsCubit(prefs).state.sidebarExpanded, isFalse);
+    });
+
+    test('a home layout stored by an older build is simply ignored', () async {
+      // The grid, and the choice between it and the rail, are gone. A device
+      // that chose the grid last month must open on the rail rather than on
+      // nothing — the key is dead, not authoritative.
+      final settings = await cubitWith({'settings.homeLayout': 'grid'});
+
+      expect(settings.state.sidebarExpanded, isTrue);
     });
   });
 

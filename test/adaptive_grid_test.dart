@@ -1,12 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hajjoperations/core/widgets/responsive.dart';
-import 'package:hajjoperations/features/home/presentation/widgets/dashboard_card.dart';
 
-/// The dashboard's whole answer to a monitor is "more columns, not a wider
+/// [AdaptiveGrid]'s whole answer to a monitor is "more columns, not a wider
 /// column", so the count has to be right at every width the user can drag to —
 /// and the tiles in a row have to end on the same line once they are side by
-/// side, which they never had to do while the page was a single column.
+/// side, which they never had to do while a page was a single column.
+///
+/// The tile is a stand-in declared below rather than a real card from a screen.
+/// It used to be `DashboardCard`, which went with the home grid; what is under
+/// test here was never that card but the GRID, and half a dozen screens still
+/// hand this widget their own cards — approvals, the audit log, complaints, the
+/// dashboard. A local tile keeps the test about the thing it is named after,
+/// and keeps it from being deleted again the next time a card is.
+class _Tile extends StatelessWidget {
+  const _Tile({required this.title, this.subtitle});
+
+  final String title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          const SizedBox(width: 40, height: 40),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title),
+                if (subtitle != null) Text(subtitle!),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 void main() {
   Widget inWindow(double width, Widget child) => MaterialApp(
     home: Scaffold(
@@ -21,20 +56,18 @@ void main() {
 
   List<Widget> cards(int n, {List<String>? subtitles}) => [
     for (var i = 0; i < n; i++)
-      DashboardCard(
-        icon: Icons.folder,
+      _Tile(
         title: 'Tile $i',
         subtitle: subtitles == null ? 'One line' : subtitles[i],
-        color: Colors.green,
       ),
   ];
 
   /// Every tile is an [Expanded] in its row, so counting the ones on the top
   /// row counts the columns.
   int columnsAt(WidgetTester tester) {
-    final first = tester.getTopLeft(find.byType(DashboardCard).first).dy;
+    final first = tester.getTopLeft(find.byType(_Tile).first).dy;
     return find
-        .byType(DashboardCard)
+        .byType(_Tile)
         .evaluate()
         .where((e) => tester.getTopLeft(find.byWidget(e.widget)).dy == first)
         .length;
@@ -108,7 +141,7 @@ void main() {
 
     expect(tester.takeException(), isNull);
     final heights = find
-        .byType(DashboardCard)
+        .byType(_Tile)
         .evaluate()
         .map((e) => tester.getSize(find.byWidget(e.widget)).height)
         .toSet();
@@ -127,7 +160,7 @@ void main() {
     await tester.pumpWidget(inWindow(792, AdaptiveGrid(children: cards(3))));
 
     final widths = find
-        .byType(DashboardCard)
+        .byType(_Tile)
         .evaluate()
         .map((e) => tester.getSize(find.byWidget(e.widget)).width)
         .toSet();

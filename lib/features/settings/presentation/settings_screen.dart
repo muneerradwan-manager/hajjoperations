@@ -133,48 +133,22 @@ class SettingsScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    // The shape of the home page. It sits among the three above
-                    // because it is the same KIND of thing they are: a fact
-                    // about this device and the man holding it, not about the
-                    // mission or about what he is allowed to do. Neither
-                    // arrangement offers a door the other does not — the two
-                    // read the same catalogue under the same permissions — so
-                    // this is a question of how he would rather find things,
-                    // which is exactly what a preference is.
+                    // The home page.
                     //
-                    // A pair of rows rather than a switch, and each carries a
-                    // line saying what it does: "sidebar" on its own says
-                    // nothing about the guide arriving in the tiles' place, and
-                    // that is the larger half of the change.
+                    // There were two rows above this switch — tiles or sidebar
+                    // — and choosing between them is no longer offered. The
+                    // tiles answered "what is there?" once, on a person's first
+                    // morning, and afterwards spent a whole screen restating a
+                    // menu that now stands beside every page in the app. A
+                    // preference is worth its row when both answers are good;
+                    // this one had stopped being that.
+                    //
+                    // What remains is the one thing about that page still worth
+                    // asking: what stands at the top of it.
                     InfoSection(
                       title: l.settingsHomeLayout,
                       icon: AppIcons.layoutSidebar,
                       children: [
-                        for (final (layout, label, hint)
-                            in <(HomeLayout, String, String)>[
-                              (
-                                HomeLayout.grid,
-                                l.settingsHomeLayoutGrid,
-                                l.settingsHomeLayoutGridHint,
-                              ),
-                              (
-                                HomeLayout.sidebar,
-                                l.settingsHomeLayoutSidebar,
-                                l.settingsHomeLayoutSidebarHint,
-                              ),
-                            ])
-                          SelectionRow(
-                            label: label,
-                            subtitle: hint,
-                            selected: state.homeLayout == layout,
-                            onTap: () => settings.setHomeLayout(layout),
-                          ),
-                        // What stands at the top of it, whichever arrangement
-                        // was chosen. It belongs in this pane rather than one
-                        // of its own because it answers the same question the
-                        // two rows above do — what the reader wants on his home
-                        // screen — and because it is not worth a heading on its
-                        // own.
                         _SettingSwitch(
                           title: l.settingsShowPrayerCard,
                           hint: l.settingsShowPrayerCardHint,

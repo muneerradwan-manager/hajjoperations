@@ -1541,10 +1541,6 @@
   "outboxBlockedNotice": "{count, plural, =1{1 item was not accepted} other{{count} items were not accepted}}",
   "@outboxBlockedNotice": { "placeholders": { "count": { "type": "int" } } },
   "settingsHomeLayout": "Home screen",
-  "settingsHomeLayoutGrid": "Cards",
-  "settingsHomeLayoutGridHint": "Every door on the page at once, on colour-coded shelves",
-  "settingsHomeLayoutSidebar": "Sidebar",
-  "settingsHomeLayoutSidebarHint": "A standing column of doors, and the season's roadmap in their place",
 
   "sidebarExpand": "Expand the sidebar",
   "sidebarCollapse": "Collapse the sidebar",

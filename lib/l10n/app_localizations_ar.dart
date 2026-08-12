@@ -4456,20 +4456,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsHomeLayout => 'الشاشة الرئيسية';
 
   @override
-  String get settingsHomeLayoutGrid => 'بطاقات';
-
-  @override
-  String get settingsHomeLayoutGridHint =>
-      'كل الأبواب في الصفحة دفعةً واحدة، على رفوف ملوّنة';
-
-  @override
-  String get settingsHomeLayoutSidebar => 'شريط جانبي';
-
-  @override
-  String get settingsHomeLayoutSidebarHint =>
-      'عمودٌ ثابت يحمل الأبواب، والخريطة التشغيلية مكانها';
-
-  @override
   String get sidebarExpand => 'توسيع الشريط الجانبي';
 
   @override

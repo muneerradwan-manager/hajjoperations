@@ -13,12 +13,15 @@ import 'widgets/app_sidebar.dart';
 
 /// The frame every approved page is drawn inside.
 ///
-/// Under [HomeLayout.grid] it is nothing at all — it hands its child straight
-/// back, and the app behaves exactly as it always has. Under
-/// [HomeLayout.sidebar] it is the rail, and the rail now OUTLIVES the page: it
-/// is built above the shell's navigator, so opening الموظفون replaces what is
-/// beside it and leaves the column itself untouched. No rebuild, no re-fold, no
-/// scroll position lost.
+/// It is the rail, and the rail OUTLIVES the page: it is built above the
+/// shell's navigator, so opening الموظفون replaces what is beside it and leaves
+/// the column itself untouched. No rebuild, no re-fold, no scroll position
+/// lost.
+///
+/// There was a second arrangement — a page of tiles — and a setting to choose
+/// between them; both are gone. This class used to hand its child straight back
+/// under that setting, which is why the frame is still conditional below: not
+/// on a preference any more, but on whether there is anybody to draw it for.
 ///
 /// Two consequences follow from that, and both are the point rather than side
 /// effects:
@@ -64,8 +67,7 @@ class _AppShellState extends State<AppShell> {
     // "your account is not through yet" screens are whole pages in their own
     // right, and a navigation rail beside a login box is an offer of doors to
     // somebody who has not been let in the building.
-    if (settings.homeLayout != HomeLayout.sidebar ||
-        session.status != SessionStatus.approved) {
+    if (session.status != SessionStatus.approved) {
       return widget.child;
     }
 

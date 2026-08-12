@@ -327,14 +327,11 @@ GoRouter buildRouter(SessionCubit session) {
       ),
       // ── Everything an approved account can reach ─────────────────────
       //
-      // All of it inside one shell, so that the standing rail under
-      // [HomeLayout.sidebar] is built ABOVE the navigator these pages live in.
-      // That is the whole difference between a menu and a frame: the column is
-      // not rebuilt when a page changes beneath it, so it does not re-fold, does
-      // not lose its scroll position, and does not flash.
-      //
-      // Under [HomeLayout.grid] the shell hands its child straight back and
-      // nothing here is felt at all — see [AppShell].
+      // All of it inside one shell, so that the standing rail is built ABOVE
+      // the navigator these pages live in. That is the whole difference between
+      // a menu and a frame: the column is not rebuilt when a page changes
+      // beneath it, so it does not re-fold, does not lose its scroll position,
+      // and does not flash.
       //
       // The seven routes ABOVE this are outside it deliberately. The splash,
       // the sign-in form and the three "your account is not through yet"

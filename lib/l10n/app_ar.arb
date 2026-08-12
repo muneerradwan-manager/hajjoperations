@@ -1530,10 +1530,6 @@
   "outboxBlockedNotice": "{count, plural, =1{عنصر واحد لم يُقبل} =2{عنصران لم يُقبلا} few{{count} عناصر لم تُقبل} other{{count} عنصراً لم يُقبل}}",
   "@outboxBlockedNotice": { "placeholders": { "count": { "type": "int" } } },
   "settingsHomeLayout": "الشاشة الرئيسية",
-  "settingsHomeLayoutGrid": "بطاقات",
-  "settingsHomeLayoutGridHint": "كل الأبواب في الصفحة دفعةً واحدة، على رفوف ملوّنة",
-  "settingsHomeLayoutSidebar": "شريط جانبي",
-  "settingsHomeLayoutSidebarHint": "عمودٌ ثابت يحمل الأبواب، والخريطة التشغيلية مكانها",
 
   "sidebarExpand": "توسيع الشريط الجانبي",
   "sidebarCollapse": "طيّ الشريط الجانبي",

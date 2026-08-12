@@ -4423,20 +4423,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsHomeLayout => 'Home screen';
 
   @override
-  String get settingsHomeLayoutGrid => 'Cards';
-
-  @override
-  String get settingsHomeLayoutGridHint =>
-      'Every door on the page at once, on colour-coded shelves';
-
-  @override
-  String get settingsHomeLayoutSidebar => 'Sidebar';
-
-  @override
-  String get settingsHomeLayoutSidebarHint =>
-      'A standing column of doors, and the season\'s roadmap in their place';
-
-  @override
   String get sidebarExpand => 'Expand the sidebar';
 
   @override
