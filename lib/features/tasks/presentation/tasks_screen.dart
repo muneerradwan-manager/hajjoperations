@@ -1,38 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../core/attachments/attachment_picker.dart';
-import '../../../core/attachments/attachments_view.dart';
-import '../../../core/constants/permission_codes.dart';
+import '../../../core/animations/animations.dart';
 import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
-import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/creator_page.dart';
 import '../../../core/widgets/glass.dart';
-import '../../../core/widgets/info_section.dart';
-import '../../../core/widgets/overflow_menu.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/saved_copy_banner.dart';
 import '../../../core/widgets/states.dart';
-import '../../auth/application/session_cubit.dart';
 import '../application/tasks_cubit.dart';
 import '../data/tasks_repository.dart';
 import '../domain/personal_task.dart';
+import 'task_detail_screen.dart';
 import 'task_editor_screen.dart';
+import 'widgets/task_card.dart';
 import 'widgets/task_state_widgets.dart';
 
 /// One person's task list, and nothing else's.
 ///
-/// This screen has no relation to the operational files, and no
-/// administration either. What is on it came from exactly two pens: the
-/// viewer's own — tasks they wrote for themselves, theirs entirely — and the
-/// pen of whoever holds `tasks.assign`, whose tasks arrive with a
-/// notification and offer the viewer one verb: say how it is going.
+/// This screen has no relation to the operational files, and no administration
+/// either. What is on it came from exactly two pens: the viewer's own — tasks
+/// they wrote for themselves, theirs entirely — and the pen of whoever holds
+/// `tasks.assign`.
 ///
-/// Assigning and managing what was assigned live behind their own door —
-/// [TasksManageScreen] — because that is authority, and this page is work.
+/// It stays a LIST. The board with its columns is one screen along, behind
+/// `tasks.assign`, and it is there because its reader is sitting down; this one
+/// is read standing in Mina with one thumb, and columns on a telephone in that
+/// position are a way of showing five things badly.
+///
+/// What it gains instead is the ability to answer «ما المتأخر؟» without the
+/// reader doing the arithmetic — the six views (0118), sliced on the server
+/// because "overdue" is a question about a clock and a state machine.
 class TasksScreen extends StatelessWidget {
   const TasksScreen({super.key, this.compose = false});
 
@@ -40,9 +41,7 @@ class TasksScreen extends StatelessWidget {
   ///
   /// Set by the button on the home card. The composer needs this screen's
   /// cubit, so it cannot be opened from the card directly — the card asks for
-  /// the screen AND the sheet, and the screen provides both in the right
-  /// order. A person who pressed "new task" should not have to press it again
-  /// on arrival.
+  /// the screen AND the sheet, and the screen provides both in the right order.
   final bool compose;
 
   @override
@@ -62,12 +61,14 @@ class _View extends StatefulWidget {
 }
 
 class _ViewState extends State<_View> {
+  bool _searching = false;
+  final _search = TextEditingController();
+
   @override
   void initState() {
     super.initState();
-    // After the first frame, so the sheet has a Scaffold to sit in — and once,
-    // because `initState` is the only place that is true of. Opening it in
-    // `build` would reopen it on every rebuild the list causes.
+    // After the first frame, so the editor has a Scaffold to sit above — and
+    // once, because `initState` is the only place that is true of.
     if (widget.compose) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _add();
@@ -75,39 +76,100 @@ class _ViewState extends State<_View> {
     }
   }
 
-  /// One way in and one way back: the editor is a page above this list, it
-  /// says what it wrote, and closing it lands here — see [CreatorPage]. The
-  /// cubit reloads itself on a successful write, so there is nothing to do
-  /// with the answer but let the list rebuild.
-  Future<void> _add() =>
-      openTaskEditor(context, context.read<TasksCubit>());
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  /// Writing one for oneself. Queues when there is no signal — a reminder is
+  /// written standing somewhere, and the outbox is what makes that survivable.
+  Future<void> _add() {
+    final cubit = context.read<TasksCubit>();
+    return openTaskEditor(
+      context,
+      onSubmit: (draft) => cubit.create(
+        title: draft.title,
+        description: draft.description,
+        dueOn: draft.dueOn,
+        priority: draft.priority,
+        kind: draft.kind,
+        steps: draft.steps,
+      ),
+    );
+  }
+
+  /// One way in and one way back: the task is a page above this list, and
+  /// closing it lands here. Reloaded on return rather than trusted, because
+  /// what happened up there may have moved the row out of the current view
+  /// entirely — accepting a task in «الجارية» removes it from «الجارية».
+  Future<void> _open(PersonalTask task) async {
+    final cubit = context.read<TasksCubit>();
+    await Navigator.of(context).push(
+      fadeThroughRoute((_) => TaskDetailScreen(taskId: task.id)),
+    );
+    await cubit.load();
+  }
+
+  Future<void> _quickMove(PersonalTask task, TaskState next) async {
+    final cubit = context.read<TasksCubit>();
+    final l = context.l10n;
+    final outcome = await cubit.move(task, next);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            !outcome.ok
+                ? friendlyError(context, outcome.error)
+                : outcome.queued
+                ? l.outboxSavedOffline
+                : l.taskStateSaved,
+          ),
+        ),
+      );
+  }
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
 
     return Scaffold(
-      appBar: GlassAppBar(title: Text(l.tasksTitle)),
-      floatingActionButton: CreateFab(
-        label: l.tasksNew,
-        onPressed: _add,
+      appBar: GlassAppBar(
+        title: _searching
+            ? TextField(
+                controller: _search,
+                autofocus: true,
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  hintText: l.tasksSearch,
+                  border: InputBorder.none,
+                ),
+                onSubmitted: context.read<TasksCubit>().setQuery,
+              )
+            : Text(l.tasksTitle),
+        actions: [
+          IconButton(
+            tooltip: l.tasksSearch,
+            icon: Icon(_searching ? AppIcons.reject : AppIcons.search),
+            onPressed: () {
+              final cubit = context.read<TasksCubit>();
+              setState(() => _searching = !_searching);
+              if (!_searching) {
+                _search.clear();
+                cubit.setQuery('');
+              }
+            },
+          ),
+        ],
       ),
+      floatingActionButton: CreateFab(label: l.tasksNew, onPressed: _add),
       body: SafeArea(
         child: BlocBuilder<TasksCubit, TasksState>(
           builder: (context, state) {
             final cubit = context.read<TasksCubit>();
 
-            if (state.status == TasksStatus.loading) {
-              return ResponsivePage(
-                builder: (context, size) => SkeletonList(
-                  height: 120,
-                  padding: context.scrollPadding(
-                    horizontal: size.gutter,
-                    bottom: AppSpacing.xl,
-                  ),
-                ),
-              );
-            }
             if (state.status == TasksStatus.error) {
               return EmptyState(
                 icon: AppIcons.tasks,
@@ -119,68 +181,26 @@ class _ViewState extends State<_View> {
               );
             }
 
-            final own = state.own;
-            final assignedToMe = state.assignedToMe;
-            if (own.isEmpty && assignedToMe.isEmpty) {
-              // The banner rides above the empty state too, and that case is
-              // the one that most needs it: "you have nothing to do" read off a
-              // saved copy is the most confidently wrong sentence this screen
-              // can say. Empty because it was empty an hour ago is not the same
-              // fact as empty now.
-              return Column(
+            return ResponsivePage(
+              builder: (context, size) => Column(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.lg,
-                      AppSpacing.lg,
-                      AppSpacing.lg,
-                      0,
-                    ),
-                    child: SavedCopyBanner(savedAt: state.savedAt),
+                  _ViewBar(
+                    view: state.view,
+                    stats: state.stats,
+                    onChanged: cubit.setView,
                   ),
                   Expanded(
-                    child: EmptyState(
-                      icon: AppIcons.tasks,
-                      title: l.tasksEmpty,
-                      message: l.tasksEmptyHint,
+                    child: RefreshIndicator(
+                      onRefresh: cubit.load,
+                      child: _List(
+                        state: state,
+                        gutter: size.gutter,
+                        onOpen: _open,
+                        onQuickMove: _quickMove,
+                      ),
                     ),
                   ),
                 ],
-              );
-            }
-
-            return ResponsivePage(
-              builder: (context, size) => RefreshIndicator(
-                onRefresh: cubit.load,
-                child: ListView(
-                  padding: context.scrollPadding(
-                    horizontal: size.gutter,
-                    bottom: AppSpacing.xl * 2,
-                  ),
-                  children: [
-                    // Draws nothing when the read was live.
-                    SavedCopyBanner(savedAt: state.savedAt),
-
-                    // 1 — the viewer's own notebook.
-                    if (own.isNotEmpty)
-                      TaskGroupCard(
-                        title: l.tasksOwnSection,
-                        subtitle: l.tasksOwnHint,
-                        icon: AppIcons.myProfile,
-                        tasks: own,
-                      ),
-
-                    // 2 — what arrived with somebody else's name on the pen.
-                    if (assignedToMe.isNotEmpty)
-                      TaskGroupCard(
-                        title: l.tasksAssignedSection,
-                        subtitle: l.tasksAssignedHint,
-                        icon: AppIcons.approvals,
-                        tasks: assignedToMe,
-                        showAuthor: true,
-                      ),
-                  ],
-                ),
               ),
             );
           },
@@ -190,29 +210,176 @@ class _ViewState extends State<_View> {
   }
 }
 
-/// One heading and the tasks under it, with what they add up to on the right.
-/// Shared with [TasksManageScreen], where each card is one person's share.
-class TaskGroupCard extends StatelessWidget {
-  const TaskGroupCard({
-    super.key,
+/// The six views, and the two numbers worth putting on the bar itself.
+///
+/// «متأخرة» carries its count and «الجارية» does not, and that is the whole
+/// point of the bar: a number beside every tab is a row of numbers nobody
+/// reads, and a number beside the one that means "something is wrong" is a
+/// thing a person acts on.
+class _ViewBar extends StatelessWidget {
+  const _ViewBar({
+    required this.view,
+    required this.stats,
+    required this.onChanged,
+  });
+
+  final TaskView view;
+  final TaskStats stats;
+  final void Function(TaskView view) onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return SizedBox(
+      height: 52,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        children: [
+          for (final option in TaskView.values)
+            Padding(
+              padding: const EdgeInsets.only(left: AppSpacing.sm),
+              child: ChoiceChip(
+                selected: option == view,
+                onSelected: (_) => onChanged(option),
+                label: Text(
+                  option == TaskView.overdue && stats.overdue > 0
+                      ? '${taskViewLabel(context, option)} ${stats.overdue}'
+                      : taskViewLabel(context, option),
+                ),
+                labelStyle: option == TaskView.overdue && stats.overdue > 0
+                    ? TextStyle(
+                        color: option == view ? null : scheme.error,
+                        fontWeight: FontWeight.w700,
+                      )
+                    : null,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _List extends StatelessWidget {
+  const _List({
+    required this.state,
+    required this.gutter,
+    required this.onOpen,
+    required this.onQuickMove,
+  });
+
+  final TasksState state;
+  final double gutter;
+  final Future<void> Function(PersonalTask task) onOpen;
+  final Future<void> Function(PersonalTask task, TaskState next) onQuickMove;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final padding = context.scrollPadding(
+      horizontal: gutter,
+      bottom: AppSpacing.xl * 2,
+    );
+
+    if (state.status == TasksStatus.loading) {
+      return SkeletonList(height: 132, padding: padding);
+    }
+
+    if (state.tasks.isEmpty) {
+      // The banner rides above the empty state too, and that case is the one
+      // that most needs it: "you have nothing to do" read off a saved copy is
+      // the most confidently wrong sentence this screen can say.
+      //
+      // And "nothing matches" is never printed as "nothing to do" — an empty
+      // list under a filter is a statement about the filter.
+      return ListView(
+        padding: padding,
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          SavedCopyBanner(savedAt: state.savedAt),
+          const SizedBox(height: AppSpacing.xl),
+          EmptyState(
+            icon: AppIcons.tasks,
+            title: state.isFiltered ? l.tasksNoMatch : l.tasksEmpty,
+            message: state.isFiltered ? null : l.tasksEmptyHint,
+            action: state.isFiltered
+                ? TextButton(
+                    onPressed: context.read<TasksCubit>().clearFilters,
+                    child: Text(l.tasksClearFilters),
+                  )
+                : null,
+          ),
+        ],
+      );
+    }
+
+    // Two sections, as 0105 had them, and for its reason: what a man wrote for
+    // himself and what was written for him are answerable in different ways,
+    // and merging them would let one of the two hide inside the other.
+    final assigned = state.assignedToMe;
+    final own = state.own;
+
+    return ListView(
+      padding: padding,
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        // Draws nothing when the read was live.
+        SavedCopyBanner(savedAt: state.savedAt),
+
+        if (assigned.isNotEmpty) ...[
+          _Heading(
+            title: l.tasksAssignedSection,
+            subtitle: l.tasksAssignedHint,
+            icon: AppIcons.approvals,
+            tasks: assigned,
+          ),
+          for (final task in assigned)
+            TaskCard(
+              task: task,
+              showAuthor: true,
+              busy: state.busy,
+              onTap: () => onOpen(task),
+              onQuickMove: (next) => onQuickMove(task, next),
+            ),
+        ],
+
+        if (own.isNotEmpty) ...[
+          _Heading(
+            title: l.tasksOwnSection,
+            subtitle: l.tasksOwnHint,
+            icon: AppIcons.myProfile,
+            tasks: own,
+          ),
+          for (final task in own)
+            TaskCard(
+              task: task,
+              busy: state.busy,
+              onTap: () => onOpen(task),
+              onQuickMove: (next) => onQuickMove(task, next),
+            ),
+        ],
+      ],
+    );
+  }
+}
+
+class _Heading extends StatelessWidget {
+  const _Heading({
     required this.title,
     required this.subtitle,
     required this.icon,
     required this.tasks,
-    this.showAuthor = false,
-    this.showOwner = false,
   });
 
   final String title;
   final String subtitle;
   final IconData icon;
   final List<PersonalTask> tasks;
-
-  /// Name who assigned it — for the "assigned to me" section.
-  final bool showAuthor;
-
-  /// Name whose list it is on — for the assigner's follow-up section.
-  final bool showOwner;
 
   @override
   Widget build(BuildContext context) {
@@ -221,465 +388,31 @@ class TaskGroupCard extends StatelessWidget {
     final (done, total) = PersonalTask.progressOf(tasks);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: GlassCard(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Icon(icon, size: 16, color: scheme.primary),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(child: Text(title, style: text.titleSmall)),
-                TaskProgressPill(done: done, total: total),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              subtitle,
-              style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            for (final task in tasks)
-              _TaskRow(
-                task: task,
-                showAuthor: showAuthor,
-                showOwner: showOwner,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// One task: what it is, how it is going, and — when somebody has moved it —
-/// what they said and attached.
-class _TaskRow extends StatelessWidget {
-  const _TaskRow({
-    required this.task,
-    this.showAuthor = false,
-    this.showOwner = false,
-  });
-
-  final PersonalTask task;
-  final bool showAuthor;
-  final bool showOwner;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-    final cubit = context.read<TasksCubit>();
-    final note = task.note?.trim() ?? '';
-
-    return InkWell(
-      onTap: () => showTaskSheet(context, task: task),
-      borderRadius: BorderRadius.circular(AppRadius.sm),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: TaskStateDot(state: task.state),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    task.title,
-                    style: text.bodyMedium?.copyWith(
-                      height: 1.5,
-                      // Struck through, not greyed: a finished task is still
-                      // part of the record and has to stay readable.
-                      decoration: task.state.isDone
-                          ? TextDecoration.lineThrough
-                          : null,
-                      decorationColor: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                  if (showOwner && task.ownerName != null)
-                    Text(
-                      l.taskAssignedTo(task.ownerName!),
-                      style: text.labelSmall?.copyWith(color: scheme.primary),
-                    ),
-                  if (showAuthor && task.authorName != null)
-                    Text(
-                      l.taskAssignedBy(task.authorName!),
-                      style: text.labelSmall?.copyWith(color: scheme.primary),
-                    ),
-                  if (task.description != null)
-                    Text(
-                      task.description!,
-                      style: text.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  if (task.dueOn != null)
-                    Text(
-                      l.taskDue(formatDate(task.dueOn)),
-                      style: text.labelSmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  if (note.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        note,
-                        style: text.bodySmall?.copyWith(height: 1.4),
-                      ),
-                    ),
-                  if (task.attachments.isNotEmpty)
-                    AttachmentsView(
-                      attachments: task.attachments,
-                      signer: cubit.signAttachment,
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            TaskStateChip(state: task.state),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ============================================================ the task sheet
-
-/// Whether the viewer holds the full pen over [task]: its author always, and
-/// an assigner over any assigned task. Mirrors `can_edit_personal_task`
-/// (0105) — the button is only ever the polite half of the database's answer.
-bool _canEdit(BuildContext context, PersonalTask task) {
-  final me = TasksCubit.viewerId;
-  if (task.createdBy == me) return true;
-  return task.isAssigned &&
-      context.read<SessionCubit>().state.can(PermissionCodes.tasksAssign);
-}
-
-/// Opening a task: the three states, a note, the evidence — and, for whoever
-/// holds the full pen, the way to correct or withdraw the task itself.
-Future<void> showTaskSheet(
-  BuildContext context, {
-  required PersonalTask task,
-}) async {
-  final cubit = context.read<TasksCubit>();
-  final messenger = ScaffoldMessenger.of(context);
-  final label = context.l10n.taskStateSaved;
-  final saved = await showAppSheet<bool>(
-    context: context,
-    builder: (_) => BlocProvider.value(
-      value: cubit,
-      child: _TaskSheet(task: task),
-    ),
-  );
-  if (saved == true) {
-    messenger
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(label)));
-  }
-}
-
-class _TaskSheet extends StatefulWidget {
-  const _TaskSheet({required this.task});
-
-  final PersonalTask task;
-
-  @override
-  State<_TaskSheet> createState() => _TaskSheetState();
-}
-
-class _TaskSheetState extends State<_TaskSheet> {
-  late TaskState _state = widget.task.state;
-  late final _note = TextEditingController(text: widget.task.note ?? '');
-  late final _kept = [...widget.task.attachments];
-  final _removed = <StoredAttachment>[];
-  final _added = <PendingAttachment>[];
-  bool _busy = false;
-
-  @override
-  void dispose() {
-    _note.dispose();
-    super.dispose();
-  }
-
-  Future<void> _attach() async {
-    final picked = await pickAttachment(context);
-    if (picked != null) setState(() => _added.add(picked));
-  }
-
-  /// Closes this sheet and opens the editor on the same task. The sheet goes
-  /// first: leaving it open under the editor page would leave a stale copy of
-  /// the row behind the correction being made to it.
-  Future<void> _edit() async {
-    final cubit = context.read<TasksCubit>();
-    final host = Navigator.of(context);
-    host.pop();
-    await openTaskEditor(host.context, cubit, existing: widget.task);
-  }
-
-  Future<void> _delete() async {
-    final l = context.l10n;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l.taskDelete),
-        content: Text(l.taskDeleteConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l.commonDelete),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-
-    setState(() => _busy = true);
-    final error = await context.read<TasksCubit>().delete(widget.task);
-    if (!mounted) return;
-    if (error != null) {
-      setState(() => _busy = false);
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(error)));
-      return;
-    }
-    Navigator.of(context).pop(false);
-  }
-
-  Future<void> _save() async {
-    setState(() => _busy = true);
-    final note = _note.text.trim();
-    final outcome = await context.read<TasksCubit>().setTaskState(
-      widget.task,
-      _state,
-      note: note.isEmpty ? null : note,
-      attachments: _added,
-      removed: _removed,
-    );
-    if (!mounted) return;
-    if (!outcome.ok) {
-      setState(() => _busy = false);
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(outcome.error!)));
-      return;
-    }
-    // Said plainly rather than passed over: a person who knows their phone had
-    // no signal is owed the difference between "it is with them" and "it is
-    // with the app".
-    if (outcome.queued) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(context.l10n.outboxSavedOffline)));
-    }
-    Navigator.of(context).pop(true);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-    final task = widget.task;
-    final canEdit = _canEdit(context, task);
-
-    return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        0,
-        AppSpacing.lg,
-        AppSpacing.xl,
+        AppSpacing.xs,
+        AppSpacing.md,
+        AppSpacing.xs,
+        AppSpacing.sm,
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: Text(task.title, style: text.titleLarge)),
-                // Correcting or withdrawing the task itself, for whoever holds
-                // the full pen. Absent — not disabled — for its assignee: the
-                // task is not theirs to rewrite, and a grey button would say
-                // "yours, but broken". See [OverflowMenu].
-                if (canEdit)
-                  OverflowMenu(
-                    actions: [
-                      MenuAction(
-                        icon: AppIcons.edit,
-                        label: l.taskEdit,
-                        onSelected: _edit,
-                      ),
-                      MenuAction(
-                        icon: AppIcons.delete,
-                        label: l.taskDelete,
-                        isDestructive: true,
-                        onSelected: _delete,
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-            if (task.description != null) ...[
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                task.description!,
-                style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-              ),
-            ],
-            if (task.isAssigned && task.authorName != null) ...[
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                l.taskAssignedBy(task.authorName!),
-                style: text.labelSmall?.copyWith(color: scheme.primary),
-              ),
-            ],
-            if (task.isAssigned && !canEdit) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Row(
-                children: [
-                  Icon(
-                    AppIcons.warning,
-                    size: 16,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      l.taskReadOnly,
-                      style: text.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-            const SizedBox(height: AppSpacing.lg),
-
-            Text(
-              l.taskState,
-              style: text.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Wrap(
-              spacing: AppSpacing.sm,
-              children: [
-                for (final option in TaskState.values)
-                  ChoiceChip(
-                    label: Text(taskStateLabel(context, option)),
-                    avatar: TaskStateDot(state: option),
-                    selected: _state == option,
-                    onSelected: _busy
-                        ? null
-                        : (_) => setState(() => _state = option),
-                  ),
-              ],
-            ),
-
-            const SizedBox(height: AppSpacing.lg),
-            for (final attachment in _kept)
-              _AttachmentRow(
-                name: attachment.name,
-                onRemove: _busy
-                    ? null
-                    : () => setState(() {
-                        _kept.remove(attachment);
-                        _removed.add(attachment);
-                      }),
-              ),
-            for (var i = 0; i < _added.length; i++)
-              PendingAttachmentRow(
-                attachment: _added[i],
-                onRemove: _busy
-                    ? null
-                    : () => setState(() => _added.removeAt(i)),
-              ),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: TextButton.icon(
-                onPressed: _busy ? null : _attach,
-                icon: const Icon(AppIcons.attach, size: 18),
-                label: Text(l.taskEvidence),
-              ),
-            ),
-
-            const SizedBox(height: AppSpacing.sm),
-            TextField(
-              controller: _note,
-              maxLines: 3,
-              enabled: !_busy,
-              decoration: InputDecoration(
-                labelText: l.taskNote,
-                helperText: l.taskNoteHint,
-                alignLabelWithHint: true,
-              ),
-            ),
-
-            const SizedBox(height: AppSpacing.lg),
-            FilledButton.icon(
-              onPressed: _busy ? null : _save,
-              icon: _busy
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2.2),
-                    )
-                  : const Icon(AppIcons.approve),
-              label: Text(l.taskUpdate),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// An attachment already filed, in the sheet that is editing it.
-class _AttachmentRow extends StatelessWidget {
-  const _AttachmentRow({required this.name, this.onRemove});
-
-  final String name;
-  final VoidCallback? onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
       child: Row(
         children: [
-          Icon(AppIcons.attach, size: 18, color: scheme.primary),
+          Icon(icon, size: 16, color: scheme.primary),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
-            child: Text(
-              name,
-              style: Theme.of(context).textTheme.bodySmall,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: text.titleSmall),
+                Text(
+                  subtitle,
+                  style: text.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
           ),
-          IconButton(
-            tooltip: context.l10n.commonDelete,
-            visualDensity: VisualDensity.compact,
-            onPressed: onRemove,
-            icon: const Icon(AppIcons.delete, size: 16),
-          ),
+          TaskProgressPill(done: done, total: total),
         ],
       ),
     );

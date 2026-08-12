@@ -64,6 +64,7 @@ Future<AssignableEmployee?> showSingleEmployeePicker(
   required String title,
   required String seasonId,
   String? selected,
+  Set<String> exclude = const {},
 }) {
   return Navigator.of(context).push<AssignableEmployee>(
     fadeThroughRoute(
@@ -73,6 +74,7 @@ Future<AssignableEmployee?> showSingleEmployeePicker(
         selected: selected == null ? const {} : {selected},
         multiple: false,
         returnsPerson: true,
+        exclude: exclude,
       ),
       opaque: true,
     ),

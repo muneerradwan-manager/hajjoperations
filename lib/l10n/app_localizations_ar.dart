@@ -640,6 +640,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get permTasksAssign => 'إسناد مهام إلى الآخرين';
 
   @override
+  String get permTasksViewAll => 'رؤية كل المهام المُسندة في البعثة';
+
+  @override
   String permissionRequires(String names) {
     return 'يتطلب: $names';
   }
@@ -1656,7 +1659,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get taskStateInProgress => 'قيد التنفيذ';
 
   @override
+  String get taskStateBlocked => 'متعثّرة';
+
+  @override
+  String get taskStateSubmitted => 'بانتظار القبول';
+
+  @override
   String get taskStateDone => 'منجزة';
+
+  @override
+  String get taskStateReturned => 'مُعادة';
+
+  @override
+  String get taskStateCancelled => 'ملغاة';
 
   @override
   String moduleTaskDue(String date) {
@@ -1816,7 +1831,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get taskReadOnly =>
-      'مهمة مُسندة إليك — لا تملك عليها سوى تغيير حالتها';
+      'مهمة مُسندة إليك — تحرّكها وتعلّق عليها، ونصّها لكاتبها';
 
   @override
   String get taskEdit => 'تعديل المهمة';
@@ -1831,6 +1846,320 @@ class AppLocalizationsAr extends AppLocalizations {
   String taskProgress(int done, int total) {
     return '$done/$total';
   }
+
+  @override
+  String taskKey(int seq) {
+    return 'م-$seq';
+  }
+
+  @override
+  String get taskMoveStart => 'ابدأ';
+
+  @override
+  String get taskMoveBlock => 'تعثّرت';
+
+  @override
+  String get taskMoveSubmit => 'أرسِل للقبول';
+
+  @override
+  String get taskMoveDone => 'أنجزتُها';
+
+  @override
+  String get taskMoveAccept => 'اقبَل';
+
+  @override
+  String get taskMoveReturn => 'أعِدها';
+
+  @override
+  String get taskMoveReopen => 'أعِد فتحها';
+
+  @override
+  String get taskMoveCancel => 'ألغِ المهمة';
+
+  @override
+  String get taskMoveRestore => 'أعِدها للقائمة';
+
+  @override
+  String get taskNoActions => 'لا إجراء متاح لك على هذه المهمة الآن';
+
+  @override
+  String get taskPriority => 'الأولوية';
+
+  @override
+  String get taskPriorityHigh => 'عاجلة';
+
+  @override
+  String get taskPriorityNormal => 'عادية';
+
+  @override
+  String get taskPriorityLow => 'منخفضة';
+
+  @override
+  String get taskKind => 'النوع';
+
+  @override
+  String get taskKindTask => 'مهمة';
+
+  @override
+  String get taskKindFollowUp => 'متابعة';
+
+  @override
+  String get taskKindRequest => 'طلب';
+
+  @override
+  String get taskViewToday => 'اليوم';
+
+  @override
+  String get taskViewWeek => 'الأسبوع';
+
+  @override
+  String get taskViewOverdue => 'متأخرة';
+
+  @override
+  String get taskViewOpen => 'الجارية';
+
+  @override
+  String get taskViewDone => 'المنجزة';
+
+  @override
+  String get taskViewAll => 'الكل';
+
+  @override
+  String taskLateDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'تأخّرت $days يوماً',
+      few: 'تأخّرت $days أيام',
+      two: 'تأخّرت يومين',
+      one: 'تأخّرت يوماً',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get taskDueToday => 'تستحق اليوم';
+
+  @override
+  String get taskDueTomorrow => 'تستحق غداً';
+
+  @override
+  String get taskThread => 'ما جرى';
+
+  @override
+  String get taskThreadEmpty => 'لم يُقل شيء بعد';
+
+  @override
+  String get taskCommentHint => 'اكتب ما يستحق أن يُقال';
+
+  @override
+  String get taskCommentSend => 'أرسِل';
+
+  @override
+  String get taskCommentAdded => 'أُضيف التعليق';
+
+  @override
+  String get taskCommentRequired => 'هذه الحركة تحتاج سبباً مكتوباً';
+
+  @override
+  String get taskBySystem => 'النظام';
+
+  @override
+  String get taskEventCreated => 'أنشأ المهمة';
+
+  @override
+  String get taskEventAssigned => 'أسند المهمة';
+
+  @override
+  String taskEventStateTo(String state) {
+    return 'نقلها إلى: $state';
+  }
+
+  @override
+  String get taskEventReassigned => 'نقلها إلى شخص آخر';
+
+  @override
+  String taskEventDue(String date) {
+    return 'غيّر الاستحقاق إلى $date';
+  }
+
+  @override
+  String get taskEventDueCleared => 'أزال تاريخ الاستحقاق';
+
+  @override
+  String taskEventPriority(String priority) {
+    return 'غيّر الأولوية إلى $priority';
+  }
+
+  @override
+  String get taskEventEscalated => 'تنبيه بالتأخر';
+
+  @override
+  String get taskSteps => 'الخطوات';
+
+  @override
+  String taskStepsProgress(int done, int total) {
+    return '$done من $total';
+  }
+
+  @override
+  String get taskStepsEdit => 'تعديل الخطوات';
+
+  @override
+  String get taskStepAdd => 'أضف خطوة';
+
+  @override
+  String get taskStepHint => 'خطوة';
+
+  @override
+  String get taskStepsSaved => 'حُفظت الخطوات';
+
+  @override
+  String get taskStepsOwnerOnly => 'الخطوات يكتبها من أسند المهمة';
+
+  @override
+  String taskBatchOf(String title) {
+    return 'ضمن: $title';
+  }
+
+  @override
+  String taskBatchCarriers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count شخصاً',
+      few: '$count أشخاص',
+      two: 'شخصان',
+      one: 'شخص واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String taskBatchAcceptReady(int count) {
+    return 'اقبَل الجاهز ($count)';
+  }
+
+  @override
+  String get taskBatchNudge => 'ذكّر المتبقّي';
+
+  @override
+  String taskBatchAccepted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'قُبلت $count مهمة',
+      few: 'قُبلت $count مهام',
+      two: 'قُبلت مهمتان',
+      one: 'قُبلت مهمة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String taskBatchNudged(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'أُرسل التذكير لـ $count',
+      two: 'أُرسل التذكير لاثنين',
+      one: 'أُرسل التذكير لواحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tasksBatchesEmpty => 'لا دفعات بعد';
+
+  @override
+  String get tasksBatchesEmptyHint =>
+      'الدفعة تُكتب حين تُسند مهمة واحدة لأكثر من شخص';
+
+  @override
+  String get taskReassign => 'إعادة الإسناد';
+
+  @override
+  String get taskReassignHint =>
+      'تنتقل المهمة بخيطها وأدلتها، وتعود إلى «لم تبدأ»';
+
+  @override
+  String get taskReassigned => 'نُقلت المهمة';
+
+  @override
+  String get taskCancel => 'إلغاء المهمة';
+
+  @override
+  String get taskCancelConfirm =>
+      'إلغاء هذه المهمة؟ تبقى في السجل ويُبلَّغ صاحبها، ولا تُحذف.';
+
+  @override
+  String get taskCancelled => 'أُلغيت المهمة';
+
+  @override
+  String get taskGone => 'لم تعد هذه المهمة موجودة';
+
+  @override
+  String get taskGoneHint => 'ربما سُحبت أو حُذفت';
+
+  @override
+  String taskStartedAt(String date) {
+    return 'بدأت: $date';
+  }
+
+  @override
+  String taskSubmittedAt(String date) {
+    return 'أُرسلت للقبول: $date';
+  }
+
+  @override
+  String taskAcceptedAt(String date) {
+    return 'قُبلت: $date';
+  }
+
+  @override
+  String get tasksSearch => 'ابحث بالعنوان أو الرقم';
+
+  @override
+  String get tasksNoMatch => 'لا مهمة تطابق ما بحثتَ عنه';
+
+  @override
+  String get tasksClearFilters => 'أزل الفلاتر';
+
+  @override
+  String get tasksBoardTitle => 'لوحة المهام';
+
+  @override
+  String get tasksBoardView => 'اللوحة';
+
+  @override
+  String get tasksBatchesView => 'الدفعات';
+
+  @override
+  String get tasksPeopleView => 'بالشخص';
+
+  @override
+  String get tasksScopeMine => 'ما أسندتُه';
+
+  @override
+  String get tasksScopeAll => 'البعثة كلها';
+
+  @override
+  String get tasksReviewQueue => 'بانتظار قبولك';
+
+  @override
+  String get tasksReviewEmpty => 'لا شيء ينتظر قبولك';
+
+  @override
+  String get taskStatsOpen => 'عليّ';
+
+  @override
+  String get taskStatsOverdue => 'متأخرة';
+
+  @override
+  String get taskStatsReview => 'بانتظار قبولي';
+
+  @override
+  String get taskStatsDone => 'أنجزتُها';
 
   @override
   String get moduleTeamPick => 'اختيار الأعضاء';
@@ -3600,6 +3929,38 @@ class AppLocalizationsAr extends AppLocalizations {
       'يُرفق تلقائياً: اسمك، وموقعك، ووقت البلاغ';
 
   @override
+  String get incidentAbout => 'عن ماذا؟ (اختياري)';
+
+  @override
+  String get incidentAboutKind => 'بمَ يتعلّق البلاغ؟';
+
+  @override
+  String get incidentAboutModule => 'ملف تشغيلي';
+
+  @override
+  String get incidentAboutEmployee => 'موظف';
+
+  @override
+  String get incidentAboutPage => 'صفحة في التطبيق';
+
+  @override
+  String get incidentAboutClear => 'بلا تحديد';
+
+  @override
+  String get incidentAboutNoModules => 'لا ملفات تشغيلية في الموسم الحالي';
+
+  @override
+  String get incidentAboutNoSeason => 'تعذّر تحديد الموسم الحالي';
+
+  @override
+  String incidentAboutLabel(String what) {
+    return 'البلاغ عن: $what';
+  }
+
+  @override
+  String get incidentOpenPage => 'افتح الصفحة';
+
+  @override
   String get incidentNotDeliveredTitle => 'لم يصل البلاغ';
 
   @override
@@ -4338,4 +4699,11 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get roadmapNoteArchive =>
       'كل ما قُيّد على موسم ماضٍ يبقى مقروءاً كما كُتب تماماً. وإغلاق السنة لا يُخفي شيئاً.';
+
+  @override
+  String get settingsShowPrayerCard => 'كرت مواقيت الصلاة';
+
+  @override
+  String get settingsShowPrayerCardHint =>
+      'الصلاة القادمة والعدّ التنازلي لها، في أعلى الشاشة الرئيسية';
 }

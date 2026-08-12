@@ -38,7 +38,7 @@ import '../../features/status/presentation/pending_screen.dart';
 import '../../features/status/presentation/rejected_screen.dart';
 import '../../features/status/presentation/splash_screen.dart';
 import '../../features/status/presentation/suspended_screen.dart';
-import '../../features/tasks/presentation/tasks_manage_screen.dart';
+import '../../features/tasks/presentation/tasks_board_screen.dart';
 import '../../features/tasks/presentation/tasks_screen.dart';
 import '../animations/animations.dart';
 import '../constants/permission_codes.dart';
@@ -443,7 +443,7 @@ GoRouter buildRouter(SessionCubit session) {
             path: Routes.tasksManage,
             pageBuilder: (c, s) => fadeThroughPage(
               key: s.pageKey,
-              child: const TasksManageScreen(),
+              child: const TasksBoardScreen(),
             ),
           ),
           GoRoute(

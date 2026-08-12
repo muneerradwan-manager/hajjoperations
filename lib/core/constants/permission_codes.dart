@@ -90,6 +90,20 @@ class PermissionCodes {
   /// files, which is why this does not live under `modules.`.
   static const tasksAssign = 'tasks.assign';
 
+  /// Reading every assigned task in the mission rather than only one's own
+  /// (0117). Its own code because the two are different trusts: assigning is
+  /// giving work out, and this is watching everybody else's.
+  ///
+  /// It exists at all because 0105's row policy already allowed the wider read
+  /// and no query in the app ever asked for it — oversight that is permitted
+  /// and unreachable is worse than oversight that is refused, because nobody
+  /// finds out it is missing.
+  ///
+  /// It does NOT open a man's own notebook, and cannot: the policy's
+  /// `created_by <> profile_id` guard sits in front of every branch this grant
+  /// touches.
+  static const tasksViewAll = 'tasks.view_all';
+
   // --------------------------------------------------------------- check-in
   //
   // Filing your OWN arrival needs no code at all, and that is deliberate: a

@@ -642,6 +642,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permTasksAssign => 'Assign tasks to other people';
 
   @override
+  String get permTasksViewAll => 'See every assigned task in the mission';
+
+  @override
   String permissionRequires(String names) {
     return 'Requires: $names';
   }
@@ -1662,7 +1665,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get taskStateInProgress => 'In progress';
 
   @override
+  String get taskStateBlocked => 'Stuck';
+
+  @override
+  String get taskStateSubmitted => 'Awaiting acceptance';
+
+  @override
   String get taskStateDone => 'Done';
+
+  @override
+  String get taskStateReturned => 'Sent back';
+
+  @override
+  String get taskStateCancelled => 'Withdrawn';
 
   @override
   String moduleTaskDue(String date) {
@@ -1826,7 +1841,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get taskReadOnly =>
-      'Assigned to you — only its state is yours to change';
+      'Assigned to you — move it and talk about it; its wording is its author\'s';
 
   @override
   String get taskEdit => 'Edit task';
@@ -1842,6 +1857,314 @@ class AppLocalizationsEn extends AppLocalizations {
   String taskProgress(int done, int total) {
     return '$done/$total';
   }
+
+  @override
+  String taskKey(int seq) {
+    return 'T-$seq';
+  }
+
+  @override
+  String get taskMoveStart => 'Start';
+
+  @override
+  String get taskMoveBlock => 'I\'m stuck';
+
+  @override
+  String get taskMoveSubmit => 'Send for acceptance';
+
+  @override
+  String get taskMoveDone => 'Done';
+
+  @override
+  String get taskMoveAccept => 'Accept';
+
+  @override
+  String get taskMoveReturn => 'Send back';
+
+  @override
+  String get taskMoveReopen => 'Reopen';
+
+  @override
+  String get taskMoveCancel => 'Withdraw task';
+
+  @override
+  String get taskMoveRestore => 'Put it back';
+
+  @override
+  String get taskNoActions => 'Nothing here is yours to move right now';
+
+  @override
+  String get taskPriority => 'Priority';
+
+  @override
+  String get taskPriorityHigh => 'Urgent';
+
+  @override
+  String get taskPriorityNormal => 'Normal';
+
+  @override
+  String get taskPriorityLow => 'Low';
+
+  @override
+  String get taskKind => 'Kind';
+
+  @override
+  String get taskKindTask => 'Task';
+
+  @override
+  String get taskKindFollowUp => 'Follow-up';
+
+  @override
+  String get taskKindRequest => 'Request';
+
+  @override
+  String get taskViewToday => 'Today';
+
+  @override
+  String get taskViewWeek => 'This week';
+
+  @override
+  String get taskViewOverdue => 'Overdue';
+
+  @override
+  String get taskViewOpen => 'Open';
+
+  @override
+  String get taskViewDone => 'Done';
+
+  @override
+  String get taskViewAll => 'All';
+
+  @override
+  String taskLateDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days late',
+      one: '1 day late',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get taskDueToday => 'Due today';
+
+  @override
+  String get taskDueTomorrow => 'Due tomorrow';
+
+  @override
+  String get taskThread => 'What happened';
+
+  @override
+  String get taskThreadEmpty => 'Nothing said yet';
+
+  @override
+  String get taskCommentHint => 'Say what is worth saying';
+
+  @override
+  String get taskCommentSend => 'Send';
+
+  @override
+  String get taskCommentAdded => 'Comment added';
+
+  @override
+  String get taskCommentRequired => 'This move needs a reason in words';
+
+  @override
+  String get taskBySystem => 'The system';
+
+  @override
+  String get taskEventCreated => 'created the task';
+
+  @override
+  String get taskEventAssigned => 'assigned the task';
+
+  @override
+  String taskEventStateTo(String state) {
+    return 'moved it to: $state';
+  }
+
+  @override
+  String get taskEventReassigned => 'handed it to somebody else';
+
+  @override
+  String taskEventDue(String date) {
+    return 'moved the deadline to $date';
+  }
+
+  @override
+  String get taskEventDueCleared => 'removed the deadline';
+
+  @override
+  String taskEventPriority(String priority) {
+    return 'changed the priority to $priority';
+  }
+
+  @override
+  String get taskEventEscalated => 'reported as late';
+
+  @override
+  String get taskSteps => 'Steps';
+
+  @override
+  String taskStepsProgress(int done, int total) {
+    return '$done of $total';
+  }
+
+  @override
+  String get taskStepsEdit => 'Edit steps';
+
+  @override
+  String get taskStepAdd => 'Add a step';
+
+  @override
+  String get taskStepHint => 'Step';
+
+  @override
+  String get taskStepsSaved => 'Steps saved';
+
+  @override
+  String get taskStepsOwnerOnly =>
+      'Steps are written by whoever assigned the task';
+
+  @override
+  String taskBatchOf(String title) {
+    return 'Part of: $title';
+  }
+
+  @override
+  String taskBatchCarriers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people',
+      one: '1 person',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String taskBatchAcceptReady(int count) {
+    return 'Accept the ready ($count)';
+  }
+
+  @override
+  String get taskBatchNudge => 'Nudge the rest';
+
+  @override
+  String taskBatchAccepted(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tasks accepted',
+      one: '1 task accepted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String taskBatchNudged(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people reminded',
+      one: '1 person reminded',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tasksBatchesEmpty => 'No batches yet';
+
+  @override
+  String get tasksBatchesEmptyHint =>
+      'A batch is written when one task goes to more than one person';
+
+  @override
+  String get taskReassign => 'Reassign';
+
+  @override
+  String get taskReassignHint =>
+      'It moves with its thread and its evidence, and returns to Not started';
+
+  @override
+  String get taskReassigned => 'Task handed over';
+
+  @override
+  String get taskCancel => 'Withdraw task';
+
+  @override
+  String get taskCancelConfirm =>
+      'Withdraw this task? It stays in the record, its owner is told, and nothing is deleted.';
+
+  @override
+  String get taskCancelled => 'Task withdrawn';
+
+  @override
+  String get taskGone => 'This task is no longer there';
+
+  @override
+  String get taskGoneHint => 'It was probably withdrawn or deleted';
+
+  @override
+  String taskStartedAt(String date) {
+    return 'Started $date';
+  }
+
+  @override
+  String taskSubmittedAt(String date) {
+    return 'Sent for acceptance $date';
+  }
+
+  @override
+  String taskAcceptedAt(String date) {
+    return 'Accepted $date';
+  }
+
+  @override
+  String get tasksSearch => 'Search by title or number';
+
+  @override
+  String get tasksNoMatch => 'Nothing matches what you searched for';
+
+  @override
+  String get tasksClearFilters => 'Clear filters';
+
+  @override
+  String get tasksBoardTitle => 'Task board';
+
+  @override
+  String get tasksBoardView => 'Board';
+
+  @override
+  String get tasksBatchesView => 'Batches';
+
+  @override
+  String get tasksPeopleView => 'By person';
+
+  @override
+  String get tasksScopeMine => 'Assigned by me';
+
+  @override
+  String get tasksScopeAll => 'The whole mission';
+
+  @override
+  String get tasksReviewQueue => 'Awaiting your acceptance';
+
+  @override
+  String get tasksReviewEmpty => 'Nothing is waiting on you';
+
+  @override
+  String get taskStatsOpen => 'On me';
+
+  @override
+  String get taskStatsOverdue => 'Overdue';
+
+  @override
+  String get taskStatsReview => 'Awaiting my acceptance';
+
+  @override
+  String get taskStatsDone => 'Done';
 
   @override
   String get moduleTeamPick => 'Choose members';
@@ -3577,6 +3900,40 @@ class AppLocalizationsEn extends AppLocalizations {
       'Attached automatically: your name, your position, the time';
 
   @override
+  String get incidentAbout => 'What is it about? (optional)';
+
+  @override
+  String get incidentAboutKind => 'What does the report concern?';
+
+  @override
+  String get incidentAboutModule => 'An operational file';
+
+  @override
+  String get incidentAboutEmployee => 'A member of staff';
+
+  @override
+  String get incidentAboutPage => 'A screen in the app';
+
+  @override
+  String get incidentAboutClear => 'Nothing in particular';
+
+  @override
+  String get incidentAboutNoModules =>
+      'No operational files in the current season';
+
+  @override
+  String get incidentAboutNoSeason =>
+      'The current season could not be determined';
+
+  @override
+  String incidentAboutLabel(String what) {
+    return 'About: $what';
+  }
+
+  @override
+  String get incidentOpenPage => 'Open the screen';
+
+  @override
   String get incidentNotDeliveredTitle => 'It did not go through';
 
   @override
@@ -4309,4 +4666,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get roadmapNoteArchive =>
       'Everything filed against a past season stays readable exactly as it was. Closing a year hides nothing.';
+
+  @override
+  String get settingsShowPrayerCard => 'Prayer times card';
+
+  @override
+  String get settingsShowPrayerCardHint =>
+      'The next prayer and its countdown, at the top of the home screen';
 }

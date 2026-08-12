@@ -1304,6 +1304,12 @@ abstract class AppLocalizations {
   /// **'Assign tasks to other people'**
   String get permTasksAssign;
 
+  /// No description provided for @permTasksViewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See every assigned task in the mission'**
+  String get permTasksViewAll;
+
   /// No description provided for @permissionRequires.
   ///
   /// In en, this message translates to:
@@ -3116,11 +3122,35 @@ abstract class AppLocalizations {
   /// **'In progress'**
   String get taskStateInProgress;
 
+  /// No description provided for @taskStateBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Stuck'**
+  String get taskStateBlocked;
+
+  /// No description provided for @taskStateSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting acceptance'**
+  String get taskStateSubmitted;
+
   /// No description provided for @taskStateDone.
   ///
   /// In en, this message translates to:
   /// **'Done'**
   String get taskStateDone;
+
+  /// No description provided for @taskStateReturned.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent back'**
+  String get taskStateReturned;
+
+  /// No description provided for @taskStateCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdrawn'**
+  String get taskStateCancelled;
 
   /// No description provided for @moduleTaskDue.
   ///
@@ -3413,7 +3443,7 @@ abstract class AppLocalizations {
   /// No description provided for @taskReadOnly.
   ///
   /// In en, this message translates to:
-  /// **'Assigned to you — only its state is yours to change'**
+  /// **'Assigned to you — move it and talk about it; its wording is its author\'s'**
   String get taskReadOnly;
 
   /// No description provided for @taskEdit.
@@ -3439,6 +3469,510 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{done}/{total}'**
   String taskProgress(int done, int total);
+
+  /// No description provided for @taskKey.
+  ///
+  /// In en, this message translates to:
+  /// **'T-{seq}'**
+  String taskKey(int seq);
+
+  /// No description provided for @taskMoveStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get taskMoveStart;
+
+  /// No description provided for @taskMoveBlock.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m stuck'**
+  String get taskMoveBlock;
+
+  /// No description provided for @taskMoveSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Send for acceptance'**
+  String get taskMoveSubmit;
+
+  /// No description provided for @taskMoveDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get taskMoveDone;
+
+  /// No description provided for @taskMoveAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get taskMoveAccept;
+
+  /// No description provided for @taskMoveReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'Send back'**
+  String get taskMoveReturn;
+
+  /// No description provided for @taskMoveReopen.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen'**
+  String get taskMoveReopen;
+
+  /// No description provided for @taskMoveCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw task'**
+  String get taskMoveCancel;
+
+  /// No description provided for @taskMoveRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Put it back'**
+  String get taskMoveRestore;
+
+  /// No description provided for @taskNoActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here is yours to move right now'**
+  String get taskNoActions;
+
+  /// No description provided for @taskPriority.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get taskPriority;
+
+  /// No description provided for @taskPriorityHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent'**
+  String get taskPriorityHigh;
+
+  /// No description provided for @taskPriorityNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get taskPriorityNormal;
+
+  /// No description provided for @taskPriorityLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get taskPriorityLow;
+
+  /// No description provided for @taskKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Kind'**
+  String get taskKind;
+
+  /// No description provided for @taskKindTask.
+  ///
+  /// In en, this message translates to:
+  /// **'Task'**
+  String get taskKindTask;
+
+  /// No description provided for @taskKindFollowUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow-up'**
+  String get taskKindFollowUp;
+
+  /// No description provided for @taskKindRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Request'**
+  String get taskKindRequest;
+
+  /// No description provided for @taskViewToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get taskViewToday;
+
+  /// No description provided for @taskViewWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get taskViewWeek;
+
+  /// No description provided for @taskViewOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get taskViewOverdue;
+
+  /// No description provided for @taskViewOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get taskViewOpen;
+
+  /// No description provided for @taskViewDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get taskViewDone;
+
+  /// No description provided for @taskViewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get taskViewAll;
+
+  /// No description provided for @taskLateDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{1 day late} other{{days} days late}}'**
+  String taskLateDays(int days);
+
+  /// No description provided for @taskDueToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Due today'**
+  String get taskDueToday;
+
+  /// No description provided for @taskDueTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Due tomorrow'**
+  String get taskDueTomorrow;
+
+  /// No description provided for @taskThread.
+  ///
+  /// In en, this message translates to:
+  /// **'What happened'**
+  String get taskThread;
+
+  /// No description provided for @taskThreadEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing said yet'**
+  String get taskThreadEmpty;
+
+  /// No description provided for @taskCommentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Say what is worth saying'**
+  String get taskCommentHint;
+
+  /// No description provided for @taskCommentSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get taskCommentSend;
+
+  /// No description provided for @taskCommentAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment added'**
+  String get taskCommentAdded;
+
+  /// No description provided for @taskCommentRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This move needs a reason in words'**
+  String get taskCommentRequired;
+
+  /// No description provided for @taskBySystem.
+  ///
+  /// In en, this message translates to:
+  /// **'The system'**
+  String get taskBySystem;
+
+  /// No description provided for @taskEventCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'created the task'**
+  String get taskEventCreated;
+
+  /// No description provided for @taskEventAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'assigned the task'**
+  String get taskEventAssigned;
+
+  /// No description provided for @taskEventStateTo.
+  ///
+  /// In en, this message translates to:
+  /// **'moved it to: {state}'**
+  String taskEventStateTo(String state);
+
+  /// No description provided for @taskEventReassigned.
+  ///
+  /// In en, this message translates to:
+  /// **'handed it to somebody else'**
+  String get taskEventReassigned;
+
+  /// No description provided for @taskEventDue.
+  ///
+  /// In en, this message translates to:
+  /// **'moved the deadline to {date}'**
+  String taskEventDue(String date);
+
+  /// No description provided for @taskEventDueCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'removed the deadline'**
+  String get taskEventDueCleared;
+
+  /// No description provided for @taskEventPriority.
+  ///
+  /// In en, this message translates to:
+  /// **'changed the priority to {priority}'**
+  String taskEventPriority(String priority);
+
+  /// No description provided for @taskEventEscalated.
+  ///
+  /// In en, this message translates to:
+  /// **'reported as late'**
+  String get taskEventEscalated;
+
+  /// No description provided for @taskSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps'**
+  String get taskSteps;
+
+  /// No description provided for @taskStepsProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total}'**
+  String taskStepsProgress(int done, int total);
+
+  /// No description provided for @taskStepsEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit steps'**
+  String get taskStepsEdit;
+
+  /// No description provided for @taskStepAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a step'**
+  String get taskStepAdd;
+
+  /// No description provided for @taskStepHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Step'**
+  String get taskStepHint;
+
+  /// No description provided for @taskStepsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps saved'**
+  String get taskStepsSaved;
+
+  /// No description provided for @taskStepsOwnerOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps are written by whoever assigned the task'**
+  String get taskStepsOwnerOnly;
+
+  /// No description provided for @taskBatchOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Part of: {title}'**
+  String taskBatchOf(String title);
+
+  /// No description provided for @taskBatchCarriers.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 person} other{{count} people}}'**
+  String taskBatchCarriers(int count);
+
+  /// No description provided for @taskBatchAcceptReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept the ready ({count})'**
+  String taskBatchAcceptReady(int count);
+
+  /// No description provided for @taskBatchNudge.
+  ///
+  /// In en, this message translates to:
+  /// **'Nudge the rest'**
+  String get taskBatchNudge;
+
+  /// No description provided for @taskBatchAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 task accepted} other{{count} tasks accepted}}'**
+  String taskBatchAccepted(int count);
+
+  /// No description provided for @taskBatchNudged.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 person reminded} other{{count} people reminded}}'**
+  String taskBatchNudged(int count);
+
+  /// No description provided for @tasksBatchesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No batches yet'**
+  String get tasksBatchesEmpty;
+
+  /// No description provided for @tasksBatchesEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A batch is written when one task goes to more than one person'**
+  String get tasksBatchesEmptyHint;
+
+  /// No description provided for @taskReassign.
+  ///
+  /// In en, this message translates to:
+  /// **'Reassign'**
+  String get taskReassign;
+
+  /// No description provided for @taskReassignHint.
+  ///
+  /// In en, this message translates to:
+  /// **'It moves with its thread and its evidence, and returns to Not started'**
+  String get taskReassignHint;
+
+  /// No description provided for @taskReassigned.
+  ///
+  /// In en, this message translates to:
+  /// **'Task handed over'**
+  String get taskReassigned;
+
+  /// No description provided for @taskCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw task'**
+  String get taskCancel;
+
+  /// No description provided for @taskCancelConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw this task? It stays in the record, its owner is told, and nothing is deleted.'**
+  String get taskCancelConfirm;
+
+  /// No description provided for @taskCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Task withdrawn'**
+  String get taskCancelled;
+
+  /// No description provided for @taskGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This task is no longer there'**
+  String get taskGone;
+
+  /// No description provided for @taskGoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'It was probably withdrawn or deleted'**
+  String get taskGoneHint;
+
+  /// No description provided for @taskStartedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Started {date}'**
+  String taskStartedAt(String date);
+
+  /// No description provided for @taskSubmittedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent for acceptance {date}'**
+  String taskSubmittedAt(String date);
+
+  /// No description provided for @taskAcceptedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Accepted {date}'**
+  String taskAcceptedAt(String date);
+
+  /// No description provided for @tasksSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by title or number'**
+  String get tasksSearch;
+
+  /// No description provided for @tasksNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing matches what you searched for'**
+  String get tasksNoMatch;
+
+  /// No description provided for @tasksClearFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear filters'**
+  String get tasksClearFilters;
+
+  /// No description provided for @tasksBoardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Task board'**
+  String get tasksBoardTitle;
+
+  /// No description provided for @tasksBoardView.
+  ///
+  /// In en, this message translates to:
+  /// **'Board'**
+  String get tasksBoardView;
+
+  /// No description provided for @tasksBatchesView.
+  ///
+  /// In en, this message translates to:
+  /// **'Batches'**
+  String get tasksBatchesView;
+
+  /// No description provided for @tasksPeopleView.
+  ///
+  /// In en, this message translates to:
+  /// **'By person'**
+  String get tasksPeopleView;
+
+  /// No description provided for @tasksScopeMine.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned by me'**
+  String get tasksScopeMine;
+
+  /// No description provided for @tasksScopeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'The whole mission'**
+  String get tasksScopeAll;
+
+  /// No description provided for @tasksReviewQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting your acceptance'**
+  String get tasksReviewQueue;
+
+  /// No description provided for @tasksReviewEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is waiting on you'**
+  String get tasksReviewEmpty;
+
+  /// No description provided for @taskStatsOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'On me'**
+  String get taskStatsOpen;
+
+  /// No description provided for @taskStatsOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Overdue'**
+  String get taskStatsOverdue;
+
+  /// No description provided for @taskStatsReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting my acceptance'**
+  String get taskStatsReview;
+
+  /// No description provided for @taskStatsDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get taskStatsDone;
 
   /// No description provided for @moduleTeamPick.
   ///
@@ -6284,6 +6818,66 @@ abstract class AppLocalizations {
   /// **'Attached automatically: your name, your position, the time'**
   String get incidentWhatIsAttached;
 
+  /// No description provided for @incidentAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'What is it about? (optional)'**
+  String get incidentAbout;
+
+  /// No description provided for @incidentAboutKind.
+  ///
+  /// In en, this message translates to:
+  /// **'What does the report concern?'**
+  String get incidentAboutKind;
+
+  /// No description provided for @incidentAboutModule.
+  ///
+  /// In en, this message translates to:
+  /// **'An operational file'**
+  String get incidentAboutModule;
+
+  /// No description provided for @incidentAboutEmployee.
+  ///
+  /// In en, this message translates to:
+  /// **'A member of staff'**
+  String get incidentAboutEmployee;
+
+  /// No description provided for @incidentAboutPage.
+  ///
+  /// In en, this message translates to:
+  /// **'A screen in the app'**
+  String get incidentAboutPage;
+
+  /// No description provided for @incidentAboutClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing in particular'**
+  String get incidentAboutClear;
+
+  /// No description provided for @incidentAboutNoModules.
+  ///
+  /// In en, this message translates to:
+  /// **'No operational files in the current season'**
+  String get incidentAboutNoModules;
+
+  /// No description provided for @incidentAboutNoSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'The current season could not be determined'**
+  String get incidentAboutNoSeason;
+
+  /// No description provided for @incidentAboutLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'About: {what}'**
+  String incidentAboutLabel(String what);
+
+  /// No description provided for @incidentOpenPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the screen'**
+  String get incidentOpenPage;
+
   /// No description provided for @incidentNotDeliveredTitle.
   ///
   /// In en, this message translates to:
@@ -7435,6 +8029,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Everything filed against a past season stays readable exactly as it was. Closing a year hides nothing.'**
   String get roadmapNoteArchive;
+
+  /// No description provided for @settingsShowPrayerCard.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer times card'**
+  String get settingsShowPrayerCard;
+
+  /// No description provided for @settingsShowPrayerCardHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The next prayer and its countdown, at the top of the home screen'**
+  String get settingsShowPrayerCardHint;
 }
 
 class _AppLocalizationsDelegate

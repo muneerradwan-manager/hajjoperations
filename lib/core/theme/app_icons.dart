@@ -219,6 +219,18 @@ class AppIcons {
   static const roles = Iconsax.user_octagon;
   static const pdf = Iconsax.document_download;
 
+  // The moves a task makes (0117). One glyph per transition, because the
+  // buttons that carry them sit side by side and a row of identical circles
+  // would be read by their labels alone — which is exactly what an icon is
+  // there to spare.
+  static const taskStart = Iconsax.play_circle;
+  static const taskReturn = Iconsax.undo;
+  static const taskReopen = Iconsax.refresh_left_square;
+  static const taskCancel = Iconsax.close_circle;
+  static const taskBoard = Iconsax.kanban;
+  static const taskBatch = Iconsax.layer;
+  static const taskSteps = Iconsax.task;
+
   /// التقارير — the published tables and notices, as distinct from the
   /// operational files. A clipboard rather than a document: a report is
   /// something posted for people to read, not a dossier somebody owns.

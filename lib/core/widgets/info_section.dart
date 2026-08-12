@@ -348,3 +348,18 @@ Future<void> copyToClipboard(BuildContext context, String value) async {
 String formatDate(DateTime? d) => d == null
     ? ''
     : '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+/// The date AND the hour, for a list where several things happen in one day.
+///
+/// [formatDate] is right almost everywhere in this app — a task is due on a
+/// day, a season runs between two of them — and wrong in exactly one place: a
+/// record of what went on. A task picked up at dawn, stuck by noon and sent for
+/// acceptance in the evening has three lines that all read «١٤٤٧-٠٦-٠٩», which
+/// is a timeline with the time taken out of it.
+///
+/// Twenty-four hour, because the whole mission runs on it and «٦:٤٠» with no
+/// م/ص is the one ambiguity a schedule cannot afford.
+String formatDateTime(DateTime? d) => d == null
+    ? ''
+    : '${formatDate(d)} · ${d.hour.toString().padLeft(2, '0')}:'
+          '${d.minute.toString().padLeft(2, '0')}';
