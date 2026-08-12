@@ -1,93 +1,34 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/l10n/l10n_extension.dart';
-import '../../../../core/router/app_router.dart';
-import '../../../../core/theme/app_icons.dart';
+import '../../../../core/settings/settings_cubit.dart';
 import '../../../../core/theme/glass_tokens.dart';
 import '../../../prayer_times/presentation/widgets/prayer_times_card.dart';
 
-/// The two things on the home page that are about the MOMENT rather than about
-/// a place to go: what time the next prayer is, and the way to say that
-/// something has gone wrong.
+/// What is on the home page about the MOMENT rather than about a place to go:
+/// what time the next prayer is.
 ///
 /// Bundled rather than added to each arrangement in turn, so that the grid's
 /// version and the rail's cannot drift apart. Both put it under the greeting
-/// and above everything else, because both are facts a man wants before he has
+/// and above everything else, because it is a fact a man wants before he has
 /// decided what he is doing next.
+///
+/// It used to carry two other things. The animated sky went because a
+/// decoration that costs a running particle system on a field handset is not
+/// worth what it costs. The urgent report went somewhere better: it is in the
+/// app bar now, in the same position on every screen in the app, rather than a
+/// full-width red slab that only existed here — see `IncidentButton`.
 class MomentPanel extends StatelessWidget {
   const MomentPanel({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        PrayerTimesCard(),
-        SizedBox(height: AppSpacing.sm),
-        // Only the emergency. Check-in used to sit here beside it, on the
-        // argument that they are the two things a man does standing in a place
-        // — which is true, and was the wrong conclusion: an arrival produces a
-        // RECORD, and the record had nowhere to live. It moved onto its own
-        // card in العام, with the act raised on it, so the thing you do and the
-        // thing it writes are one place. An emergency produces no record its
-        // author reads, so it stays here.
-        RaiseIncidentButton(),
-      ],
-    );
-  }
-}
+    final settings = context.watch<SettingsCubit>().state;
+    if (!settings.showPrayerCard) return const SizedBox.shrink();
 
-/// The red button that raises an urgent report.
-///
-/// Deliberately NOT a floating button. A floating one covers the last row of
-/// whatever is beneath it, and covers a different row at every window width.
-/// This is wanted in a place a person learns once: directly under the two
-/// things at the top of the page that are already about the present moment.
-///
-/// It takes the whole width it is given up to [_maxWidth], and then stops.
-///
-/// Stopping is the part that had to be added. The app's buttons claim their
-/// parent's full width by theme — `minimumSize` is a `Size.fromHeight`, and
-/// that is an infinite minimum WIDTH — which is right in a 320 panel and right
-/// on a phone, and became absurd the moment this button appeared in a page
-/// column a thousand pixels across: a solid red bar the width of a monitor,
-/// with four words in the middle of it. It read as a banner rather than as a
-/// control, and a control that does not look like one is the last thing this
-/// particular button can afford to be.
-///
-/// 380 is chosen to be large, not small. Everything else in this app that caps
-/// a button hugs its label ([EmptyState], the logout row in settings); this one
-/// keeps a target a thumb finds without looking, because it is pressed by
-/// somebody who has just seen a coach go into a barrier.
-class RaiseIncidentButton extends StatelessWidget {
-  const RaiseIncidentButton({super.key});
-
-  static const _maxWidth = 380.0;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return Align(
-      // At the reading edge rather than centred: it stands under a full-width
-      // prayer card, and a centred button under a left-aligned card is a shape
-      // with no explanation. The start side is the right in Arabic and the left
-      // in English, without anybody naming one.
-      alignment: AlignmentDirectional.center,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: _maxWidth),
-        child: FilledButton.icon(
-          style: FilledButton.styleFrom(
-            backgroundColor: scheme.error,
-            foregroundColor: scheme.onError,
-            minimumSize: const Size.fromHeight(48),
-          ),
-          onPressed: () => context.push(Routes.raiseIncident),
-          icon: const Icon(AppIcons.warning, size: 20),
-          label: Text(context.l10n.incidentTitle),
-        ),
-      ),
+    return const Padding(
+      padding: EdgeInsets.only(bottom: AppSpacing.sm),
+      child: PrayerTimesCard(),
     );
   }
 }

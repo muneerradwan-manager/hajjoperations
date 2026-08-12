@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/l10n/error_text.dart';
@@ -117,6 +118,68 @@ class _IncidentsView extends StatelessWidget {
   }
 }
 
+/// What a report is about, when the reporter said so — one quiet line under
+/// the one that says who sent it.
+///
+/// It carries its own action rather than adding a button to the row at the foot
+/// of the card, and that is the whole reason it is a widget: the thing you do
+/// about a subject is telephone HIM, and the thing you do about a screen is
+/// open it, and neither belongs beside "أتولّاه" — those are what you do about
+/// the REPORT.
+class _AboutLine extends StatelessWidget {
+  const _AboutLine({
+    required this.icon,
+    required this.label,
+    this.actionIcon,
+    this.actionHint,
+    this.onAction,
+  });
+
+  final IconData icon;
+  final String label;
+  final IconData? actionIcon;
+  final String? actionHint;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+
+    final line = Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xs),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: scheme.onSurfaceVariant),
+          const SizedBox(width: AppSpacing.sm),
+          Flexible(
+            child: Text(
+              context.l10n.incidentAboutLabel(label),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+          ),
+          if (actionIcon case final glyph? when onAction != null) ...[
+            const SizedBox(width: AppSpacing.sm),
+            Icon(glyph, size: 16, color: scheme.primary),
+          ],
+        ],
+      ),
+    );
+
+    if (onAction == null) return line;
+    return Tooltip(
+      message: actionHint ?? '',
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.xs),
+        onTap: onAction,
+        child: line,
+      ),
+    );
+  }
+}
+
 /// "40 د" / "3 س". Short because it sits beside a name on a crowded card, and
 /// what matters is the order of magnitude, not the seconds.
 String waitedLabel(AppLocalizations l, Duration waited) {
@@ -195,6 +258,43 @@ class _IncidentCard extends StatelessWidget {
               ].join(' · '),
               style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
             ),
+            // What the report is ABOUT, when the reporter said — a person or a
+            // screen (0120). On its own line rather than appended to the one
+            // above, because that line is about who SENT it: running "محمد ·
+            // برج ٣ · أحمد" together makes two names read as one party, and the
+            // whole reason the subject is recorded separately is that the room
+            // has two different calls to make.
+            if (incident.subjectName?.trim().isNotEmpty ?? false)
+              _AboutLine(
+                icon: AppIcons.employees,
+                label: incident.subjectName!,
+                // The subject's own number, on the line that names him rather
+                // than in the row of buttons below. Two "اتصال" buttons on one
+                // card is one too many: they are different calls to different
+                // people, and only the position on the card can say which.
+                actionIcon: switch (incident.subjectPhone?.trim()) {
+                  final phone? when phone.isNotEmpty => AppIcons.phoneSy,
+                  _ => null,
+                },
+                actionHint: l.incidentCall,
+                onAction: switch (incident.subjectPhone?.trim()) {
+                  final phone? when phone.isNotEmpty =>
+                    () => launchUrl(Uri.parse('tel:$phone')),
+                  _ => null,
+                },
+              )
+            else if (incident.appLabel?.trim().isNotEmpty ?? false)
+              _AboutLine(
+                icon: AppIcons.layoutSidebar,
+                label: incident.appLabel!,
+                actionIcon: incident.appRoute == null ? null : AppIcons.link,
+                actionHint: l.incidentOpenPage,
+                onAction: switch (incident.appRoute) {
+                  final route? when route.isNotEmpty => () =>
+                      context.push(route),
+                  _ => null,
+                },
+              ),
             if (incident.handledByName case final name?
                 when name.trim().isNotEmpty)
               Padding(

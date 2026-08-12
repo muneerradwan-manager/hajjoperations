@@ -102,14 +102,7 @@ class HomeGridView extends StatelessWidget {
         // The outbox first, and only when it has something in it. What the app
         // is still holding of yours outranks what it has been told.
         actions: const [OutboxBadge(), NotificationBell()],
-
-        // The one bar in the app without the urgent report on it. Every other
-        // screen carries it as an icon here because it has nowhere better; this
-        // page has somewhere better — the full-width red button below. Two
-        // doors to one screen, a hand's width apart, read as two different
-        // things.
       ),
-      // The emergency button is NOT a floating one — see [RaiseIncidentButton].
       body: Builder(
         // Inside the Scaffold body, so `scrollPadding` sees the inset the
         // Scaffold reserves for the app bar it is extending behind.
@@ -175,9 +168,9 @@ class HomeGridView extends StatelessWidget {
             // Under the greeting, and above the first heading, in both
             // arrangements — because it belongs to the same half of this screen
             // that the greeting does. Everything below a heading is a place to
-            // go; these two are facts about the moment the reader is standing
-            // in. Where there is a panel they stand in the panel for exactly
-            // that reason, beside the dates rather than among the tiles.
+            // go; this is a fact about the moment the reader is standing in.
+            // Where there is a panel it stands in the panel for exactly that
+            // reason, beside the dates rather than among the tiles.
             const moment = MomentPanel();
 
             return size.hasSidePanel

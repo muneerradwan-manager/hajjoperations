@@ -169,6 +169,18 @@ class SettingsScreen extends StatelessWidget {
                             selected: state.homeLayout == layout,
                             onTap: () => settings.setHomeLayout(layout),
                           ),
+                        // What stands at the top of it, whichever arrangement
+                        // was chosen. It belongs in this pane rather than one
+                        // of its own because it answers the same question the
+                        // two rows above do — what the reader wants on his home
+                        // screen — and because it is not worth a heading on its
+                        // own.
+                        _SettingSwitch(
+                          title: l.settingsShowPrayerCard,
+                          hint: l.settingsShowPrayerCardHint,
+                          value: state.showPrayerCard,
+                          onChanged: settings.setShowPrayerCard,
+                        ),
                       ],
                     ),
                   ],

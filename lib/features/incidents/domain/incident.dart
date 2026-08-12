@@ -42,6 +42,11 @@ class Incident {
     this.moduleId,
     this.moduleName,
     this.nodeLabel,
+    this.subjectId,
+    this.subjectName,
+    this.subjectPhone,
+    this.appRoute,
+    this.appLabel,
     this.latitude,
     this.longitude,
     this.handledByName,
@@ -64,6 +69,23 @@ class Incident {
   final String? moduleId;
   final String? moduleName;
   final String? nodeLabel;
+
+  /// Who the report is ABOUT, which is never who filed it — the database drops
+  /// a subject that is the reporter himself rather than refusing the report
+  /// (0120). Null on most reports, and that is the expected shape.
+  final String? subjectId;
+  final String? subjectName;
+
+  /// The subject's number, for the second call. The room telephones the
+  /// reporter to ask what happened and the subject to find out where he is.
+  final String? subjectPhone;
+
+  /// The screen the report is about, when it is about the app rather than about
+  /// the mission — the route so the register can open it, and the words the
+  /// reporter saw on it so a reader can tell what it was without following the
+  /// link. See 0120 for why both are stored.
+  final String? appRoute;
+  final String? appLabel;
 
   final double? latitude;
   final double? longitude;
@@ -104,6 +126,11 @@ class Incident {
     moduleId: map['module_id'] as String?,
     moduleName: map['module_name'] as String?,
     nodeLabel: map['node_label'] as String?,
+    subjectId: map['subject_id'] as String?,
+    subjectName: map['subject_name'] as String?,
+    subjectPhone: map['subject_phone'] as String?,
+    appRoute: map['app_route'] as String?,
+    appLabel: map['app_label'] as String?,
     latitude: (map['latitude'] as num?)?.toDouble(),
     longitude: (map['longitude'] as num?)?.toDouble(),
     handledByName: map['handled_by_name'] as String?,
@@ -145,11 +172,22 @@ class PendingIncident {
     required this.body,
     this.moduleId,
     this.nodeId,
+    this.subjectProfileId,
+    this.appRoute,
+    this.appLabel,
     this.attachments = const [],
   });
 
   final String body;
+
+  /// What it is about, and every one of these is optional — see 0120. At most
+  /// one of the three kinds is ever set, because the form offers them as one
+  /// choice rather than as three fields.
   final String? moduleId;
   final String? nodeId;
+  final String? subjectProfileId;
+  final String? appRoute;
+  final String? appLabel;
+
   final List<PendingAttachment> attachments;
 }

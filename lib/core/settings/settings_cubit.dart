@@ -39,6 +39,7 @@ class SettingsState extends Equatable {
     this.solidSurfaces = false,
     this.homeLayout = HomeLayout.grid,
     this.sidebarExpanded = true,
+    this.showPrayerCard = true,
   });
 
   final ThemeMode themeMode;
@@ -77,6 +78,14 @@ class SettingsState extends Equatable {
   /// it folded, not reset.
   final bool sidebarExpanded;
 
+  /// Whether مواقيت الصلاة stands at the top of the home page.
+  ///
+  /// On rather than off, and it takes an act to turn off: the times are the one
+  /// thing on this screen a man looks at without having decided to look at
+  /// anything. What it costs when it is unwanted is the top third of the page,
+  /// which is exactly why the switch exists.
+  final bool showPrayerCard;
+
   SettingsState copyWith({
     ThemeMode? themeMode,
     Locale? locale,
@@ -85,6 +94,7 @@ class SettingsState extends Equatable {
     bool? solidSurfaces,
     HomeLayout? homeLayout,
     bool? sidebarExpanded,
+    bool? showPrayerCard,
   }) {
     return SettingsState(
       themeMode: themeMode ?? this.themeMode,
@@ -93,6 +103,7 @@ class SettingsState extends Equatable {
       solidSurfaces: solidSurfaces ?? this.solidSurfaces,
       homeLayout: homeLayout ?? this.homeLayout,
       sidebarExpanded: sidebarExpanded ?? this.sidebarExpanded,
+      showPrayerCard: showPrayerCard ?? this.showPrayerCard,
     );
   }
 
@@ -104,6 +115,7 @@ class SettingsState extends Equatable {
     solidSurfaces,
     homeLayout,
     sidebarExpanded,
+    showPrayerCard,
   ];
 }
 
@@ -118,6 +130,7 @@ class SettingsCubit extends SafeCubit<SettingsState> {
           solidSurfaces: _prefs.getBool(_kSolidSurfaces) ?? false,
           homeLayout: HomeLayout.fromName(_prefs.getString(_kHomeLayout)),
           sidebarExpanded: _prefs.getBool(_kSidebarExpanded) ?? true,
+          showPrayerCard: _prefs.getBool(_kPrayerCard) ?? true,
         ),
       );
 
@@ -127,6 +140,7 @@ class SettingsCubit extends SafeCubit<SettingsState> {
   static const _kSolidSurfaces = 'settings.solidSurfaces';
   static const _kHomeLayout = 'settings.homeLayout';
   static const _kSidebarExpanded = 'settings.sidebarExpanded';
+  static const _kPrayerCard = 'settings.showPrayerCard';
 
   /// Public because the prayer scheduler reads it too: a notification raised
   /// while the app is closed has no cubit to ask what language to speak, and
@@ -191,6 +205,17 @@ class SettingsCubit extends SafeCubit<SettingsState> {
   Future<void> setHomeLayout(HomeLayout layout) async {
     emit(state.copyWith(homeLayout: layout));
     await _prefs.setString(_kHomeLayout, layout.name);
+  }
+
+  /// What stands at the top of the home page.
+  ///
+  /// One switch, for the one card that is there. It is on by default and takes
+  /// an act to turn off: the times are the thing a man looks at without having
+  /// decided to look at anything, and what it costs when it is unwanted is the
+  /// top third of the page — which is exactly why the switch exists.
+  Future<void> setShowPrayerCard(bool show) async {
+    emit(state.copyWith(showPrayerCard: show));
+    await _prefs.setBool(_kPrayerCard, show);
   }
 
   /// Folding and unfolding the rail. Persisted rather than held in the screen's

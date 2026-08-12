@@ -20,6 +20,9 @@ class IncidentsRepository {
     required String body,
     String? moduleId,
     String? nodeId,
+    String? subjectProfileId,
+    String? appRoute,
+    String? appLabel,
     double? latitude,
     double? longitude,
     double? accuracy,
@@ -34,6 +37,12 @@ class IncidentsRepository {
         'p_lat': latitude,
         'p_lng': longitude,
         'p_accuracy': accuracy,
+        // What the report is about, when the reporter said. All three are
+        // optional and the RPC drops a subject that is the caller himself; see
+        // 0120.
+        'p_subject_profile_id': subjectProfileId,
+        'p_app_route': appRoute,
+        'p_app_label': appLabel,
       },
     ) as String;
 

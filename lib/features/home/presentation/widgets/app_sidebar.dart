@@ -151,38 +151,22 @@ class AppSidebar extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (onToggle case final toggle?)
-          _FoldButton(expanded: expanded, onPressed: toggle),
-        // Who is signed in, and the way to their own page. First rather than
-        // last, because it answers the question a shared handset raises before
-        // any other — whose account is this? — and because the face is the one
-        // thing in this column that is still recognisable when the labels are
-        // folded away.
-        _RailTile(
-          // Radius 12, because [_iconBox] is 24: the face stands in the same
-          // box every glyph below it stands in, so the folded column is one
-          // straight run of marks rather than a face bulging out of the line.
-          leading: ProfileAvatar(
-            photoUrl: profile?.photoUrl,
-            name: profile?.firstName,
-            radius: 12,
-          ),
-          label: profile?.firstName ?? l.navMyProfile,
-          hint: profile?.jobTitleName?.of(context) ?? l.navMyProfile,
-          tooltip: l.navMyProfile,
+        // Whose app this is, what day it is, and the way to fold the column —
+        // one block, on two lines.
+        _RailHeader(expanded: expanded, onToggle: onToggle),
+        // Who is signed in, and the way to their own page. Directly under the
+        // header, because it answers the question a shared handset raises
+        // before any other — whose account is this? — and because the face is
+        // the one thing in this column that is still recognisable when the
+        // labels are folded away.
+        _RailProfile(
+          photoUrl: profile?.photoUrl,
+          name: profile?.firstName ?? l.navMyProfile,
+          jobTitle: profile?.jobTitleName?.of(context) ?? l.navMyProfile,
           expanded: expanded,
           selected: location == Routes.myProfile,
           onTap: () => go(Routes.myProfile),
         ),
-        // Today, in both calendars, directly under the name.
-        //
-        // They used to stand on the greeting card in the middle of the page,
-        // and under this arrangement there is no greeting card: the face and
-        // the name are here, so the dates that belong beside them came here
-        // too. It is also the better place for them — the mission runs on the
-        // Hijri date, and a fact consulted that often should be on the glass at
-        // all times rather than at the top of a page that scrolls.
-        _RailDates(expanded: expanded),
         const _RailDivider(),
         Expanded(
           child: ListView(
@@ -311,40 +295,323 @@ class StandingRail extends StatelessWidget {
   }
 }
 
-/// The button that folds the rail, sitting where a reader's eye lands first
-/// when they want it out of the way: the far corner of the panel.
-class _FoldButton extends StatelessWidget {
-  const _FoldButton({required this.expanded, required this.onPressed});
+/// The head of the column: whose app this is, what day it is, and the control
+/// that folds the whole thing away.
+///
+/// It replaces three separate things that used to be stacked here — a fold
+/// button alone on a row of its own, the profile drawn as one more navigation
+/// tile, and two full-size date badges one above the other. Together they spent
+/// 178 pixels before a single destination appeared and read as three unrelated
+/// fragments; nothing about the arrangement said "this is the top of a panel".
+///
+/// One block instead: the mark and the name on the first line, today's Hijri
+/// date on the second, and the fold control at the far edge where every panel
+/// in the world keeps it. The profile follows as a card of its own, which is
+/// what it always was — a person, not a destination.
+///
+/// The Gregorian date is in the tooltip rather than on the strip. Both dates on
+/// one line is 31 characters into 160 pixels, and the pair that survives an
+/// ellipsis is the wrong one: the mission runs on the Hijri calendar and every
+/// form outside it wants the other, so the one that is CONSULTED stays visible
+/// and the one that is TRANSCRIBED is a hover away.
+class _RailHeader extends StatelessWidget {
+  const _RailHeader({required this.expanded, this.onToggle});
 
   final bool expanded;
-  final VoidCallback onPressed;
+
+  /// Null inside the drawer — see [AppSidebar.onToggle]. The header then has no
+  /// control on it and the name takes the room the button would have stood in.
+  final VoidCallback? onToggle;
+
+  /// The width kept clear at the end of the strip for the fold button.
+  ///
+  /// The button is an [IconButton] with its own 48-pixel target and is drawn
+  /// OVER this row rather than inside it, because it has to be able to move to
+  /// the centre of a 76-pixel column while the row it sits on fades out. A
+  /// reserved gap is how the name knows not to run underneath it.
+  static const _controlGap = 44.0;
+
+  static const _height = 64.0;
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
 
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.sm),
-      child: AnimatedAlign(
-        duration: _fold,
-        curve: _curve,
-        // Hard against the far edge when open, dead centre when shut — the
-        // second is the only position that works in a 76-pixel column, and the
-        // first is where every panel in the world keeps this control.
-        alignment: expanded
-            ? AlignmentDirectional.centerEnd
-            : AlignmentDirectional.center,
-        child: Padding(
-          padding: expanded
-              ? const EdgeInsetsDirectional.only(end: AppSpacing.sm)
-              : EdgeInsets.zero,
-          child: IconButton(
-            tooltip: expanded ? l.sidebarCollapse : l.sidebarExpand,
-            onPressed: () {
+    // The language the reader chose, not the device's — the app carries its own
+    // locale, and a phone set to English with the app set to Arabic must not
+    // print half the pair in each.
+    final language = Localizations.localeOf(context).languageCode;
+
+    // Read at build time rather than held in state: a rail is rebuilt on every
+    // session change and every theme flip, and a date captured once in
+    // initState is, for a phone left running on a bedside table in Mina,
+    // yesterday.
+    final hijri = l.homeHijriDate(HijriUtils.todayInWords(language));
+    final gregorian = l.homeGregorianDate(
+      // `d MMMM y`, not the numeric form: the line above spells its month out,
+      // and "ذو الحجة" against "2026-08-04" is two habits of writing in one
+      // tooltip.
+      DateFormat('d MMMM y', language).format(DateTime.now()),
+    );
+
+    final brand = Padding(
+      // The same inset the tiles' glyphs stand at, so the mark heads the column
+      // of icons under it rather than floating beside it.
+      padding: const EdgeInsets.symmetric(
+        horizontal: _tileMargin + _border + _padOpen,
+      ),
+      child: Row(
+        children: [
+          // A mark, not the lockup: [AppLogo] carries a wordmark that stops
+          // being readable below 96 pixels and asserts as much, and a medallion
+          // is what the rest of this app uses wherever something small has to
+          // stand for something.
+          IconMedallion(
+            icon: AppIcons.organization,
+            color: scheme.primary,
+            size: 34,
+            iconSize: 18,
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.appTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: scheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  hijri,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (onToggle != null) const SizedBox(width: _controlGap),
+        ],
+      ),
+    );
+
+    return Tooltip(
+      message: '$hijri\n$gregorian',
+      child: SizedBox(
+        height: _height,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Laid out at the open width and revealed, never re-flowed — the
+            // same trick every label in this rail rests on. See [_labelWidth].
+            ClipRect(
+              child: OverflowBox(
+                alignment: AlignmentDirectional.centerStart,
+                minWidth: kRailExpandedWidth,
+                maxWidth: kRailExpandedWidth,
+                child: AnimatedOpacity(
+                  duration: _fold,
+                  curve: _curve,
+                  opacity: expanded ? 1 : 0,
+                  // Nothing in the strip is pressable, and folded it is
+                  // invisible — an `Opacity` of zero still takes taps, and a
+                  // 76-pixel column whose header swallows presses aimed at the
+                  // fold button is the one bug this arrangement could produce.
+                  child: IgnorePointer(child: brand),
+                ),
+              ),
+            ),
+            if (onToggle case final toggle?)
+              AnimatedAlign(
+                duration: _fold,
+                curve: _curve,
+                // Hard against the far edge when open, dead centre when shut —
+                // the second is the only position that works in a 76-pixel
+                // column, and the first is where every panel in the world keeps
+                // this control.
+                alignment: expanded
+                    ? AlignmentDirectional.centerEnd
+                    : AlignmentDirectional.center,
+                child: Padding(
+                  padding: expanded
+                      ? const EdgeInsetsDirectional.only(end: AppSpacing.sm)
+                      : EdgeInsets.zero,
+                  child: IconButton(
+                    tooltip: expanded ? l.sidebarCollapse : l.sidebarExpand,
+                    onPressed: () {
+                      HapticFeedback.selectionClick();
+                      toggle();
+                    },
+                    icon: Icon(
+                      expanded ? AppIcons.sidebarCollapse : AppIcons.menu,
+                      size: 26,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Who is signed in, drawn as a card rather than as one more entry in the list.
+///
+/// It used to be a [_RailTile] with an avatar where its glyph goes, which made
+/// the person indistinguishable from a place to go: same height, same hover,
+/// same wash when current — the first row of a menu happening to have a face on
+/// it. A rail's own account block is a different KIND of thing from its
+/// destinations, and on every panel that has one it is drawn as one.
+///
+/// It keeps the tiles' arithmetic exactly — [_padOpen], [_padShut] and
+/// [_iconBox] — so the face lands on the same x as every glyph below it, open
+/// or shut. What changes is the surface it stands on and the chevron at the
+/// end, which is what says "this opens your own page" rather than "this is
+/// where you are".
+class _RailProfile extends StatelessWidget {
+  const _RailProfile({
+    required this.photoUrl,
+    required this.name,
+    required this.jobTitle,
+    required this.expanded,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String? photoUrl;
+  final String name;
+  final String jobTitle;
+  final bool expanded;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+
+    return Tooltip(
+      message: expanded ? l.navMyProfile : '$name — ${l.navMyProfile}',
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          _tileMargin,
+          AppSpacing.sm,
+          _tileMargin,
+          AppSpacing.sm,
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+            onTap: () {
               HapticFeedback.selectionClick();
-              onPressed();
+              onTap();
             },
-            icon: Icon(AppIcons.menu, size: 26),
+            child: AnimatedContainer(
+              duration: _fold,
+              curve: _curve,
+              height: 60,
+              padding: EdgeInsets.symmetric(
+                horizontal: expanded ? _padOpen : _padShut,
+              ),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppRadius.sm),
+                // The wash is spent on BEING CURRENT and on nothing else, in
+                // this block as in every tile below it. A resting fill here
+                // would have made the account block the second-loudest thing in
+                // the column at all times, and a reader glancing down for where
+                // he is would find two candidates. What separates this from a
+                // destination is its outline, its two lines and its chevron —
+                // none of which move when the selection does.
+                color: selected
+                    ? scheme.primary.withValues(alpha: 0.16)
+                    : Colors.transparent,
+                border: Border.all(
+                  width: _border,
+                  color: selected
+                      ? scheme.primary.withValues(alpha: 0.30)
+                      : scheme.outlineVariant.withValues(alpha: 0.55),
+                ),
+              ),
+              child: Row(
+                children: [
+                  // Radius 12, because [_iconBox] is 24: the face stands in the
+                  // same box every glyph below it stands in, so the folded
+                  // column is one straight run of marks rather than a face
+                  // bulging out of the line.
+                  SizedBox(
+                    width: _iconBox,
+                    height: _iconBox,
+                    child: Center(
+                      child: ProfileAvatar(
+                        photoUrl: photoUrl,
+                        name: name,
+                        radius: 12,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: ClipRect(
+                      child: OverflowBox(
+                        alignment: AlignmentDirectional.centerStart,
+                        minWidth: _labelWidth,
+                        maxWidth: _labelWidth,
+                        child: AnimatedOpacity(
+                          duration: _fold,
+                          curve: _curve,
+                          opacity: expanded ? 1 : 0,
+                          child: Row(
+                            children: [
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: text.bodyMedium?.copyWith(
+                                        color: scheme.onSurface,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      jobTitle,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: text.labelSmall?.copyWith(
+                                        color: scheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const NavChevron(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -419,107 +686,6 @@ class _RailGroupLabel extends StatelessWidget {
   }
 }
 
-/// Today, in both calendars, folded into the width the rail happens to be.
-///
-/// Open, it is the same pair of pills the greeting card used to carry. Folded,
-/// there is no honest way to print "١٢ ذو الحجة ١٤٤٧" in 76 pixels, so what is
-/// left is the crescent — and the dates are in the tooltip, where a pointer and
-/// a screen reader both find them.
-///
-/// One fixed height for both states rather than an animated one: the column
-/// below it must not jump while the rail folds, and the difference between a
-/// two-line stack of pills and one glyph is small enough to absorb.
-class _RailDates extends StatelessWidget {
-  const _RailDates({required this.expanded});
-
-  final bool expanded;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-
-    // The language the reader chose, not the device's — the app carries its own
-    // locale, and a phone set to English with the app set to Arabic must not
-    // print half the pair in each.
-    final language = Localizations.localeOf(context).languageCode;
-
-    // Read at build time rather than held in state: a rail is rebuilt on every
-    // session change and every theme flip, and a date captured once in
-    // initState is, for a phone left running on a bedside table in Mina,
-    // yesterday.
-    final hijri = l.homeHijriDate(HijriUtils.todayInWords(language));
-    final gregorian = l.homeGregorianDate(
-      // `d MMMM y`, not the numeric form: the badge above spells its month out,
-      // and "ذو الحجة" against "2026-08-04" is two habits of writing in one
-      // column.
-      DateFormat('d MMMM y', language).format(DateTime.now()),
-    );
-
-    return Tooltip(
-      message: '$hijri\n$gregorian',
-      child: SizedBox(
-        // Two pills, one above the other — see the Column below for why they
-        // cannot stand side by side — plus the gap between them and a little
-        // air above and below.
-        height: 74,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            
-            ClipRect(
-              child: OverflowBox(
-                alignment: AlignmentDirectional.centerStart,
-                minWidth: kRailExpandedWidth,
-                maxWidth: kRailExpandedWidth,
-                child: AnimatedOpacity(
-                  duration: _fold,
-                  curve: _curve,
-                  opacity: expanded ? 1 : 0,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: _tileMargin + _border + _padOpen,
-                    ),
-                    // Stacked, and it is not a preference. On the greeting
-                    // card these two stood side by side because a card is as
-                    // wide as the page; here they have 244 pixels between them
-                    // and they measure 182 and 193 — put in a row they overflow
-                    // by 140 and paint a stripe across the top of the rail.
-                    //
-                    // Neither may be the one that gives way, which is what a
-                    // row would have forced: they are two answers to the same
-                    // question, and the mission runs on the Hijri one while
-                    // every form outside it wants the other.
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        GlassBadge(
-                          label: hijri,
-                          color: scheme.secondary,
-                          icon: AppIcons.hijriDate,
-                          dense: true,
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        GlassBadge(
-                          label: gregorian,
-                          color: scheme.primary,
-                          icon: AppIcons.gregorianDate,
-                          dense: true,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _RailDivider extends StatelessWidget {
   const _RailDivider();
 
@@ -549,7 +715,6 @@ class _RailTile extends StatelessWidget {
     required this.label,
     required this.expanded,
     required this.onTap,
-    this.hint,
     this.tooltip,
     this.color,
     this.selected = false,
@@ -560,10 +725,6 @@ class _RailTile extends StatelessWidget {
 
   final Widget leading;
   final String label;
-
-  /// A second, quieter line — the profile tile's job title, and nothing else.
-  /// A rail of two-line entries is a list, not a rail.
-  final String? hint;
 
   /// What a pointer is told, and what is read aloud. It carries the label
   /// itself when the rail is folded, because then there is nothing else to go
@@ -588,7 +749,10 @@ class _RailTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final tone = color ?? scheme.onSurfaceVariant;
-    final height = hint == null ? 46.0 : 58.0;
+    // One line, always. The two-line variant left with the profile, which is
+    // now a card of its own — and a rail of two-line entries is a list, not a
+    // rail.
+    const height = 46.0;
 
     final body = Row(
       children: [
@@ -618,33 +782,16 @@ class _RailTile extends StatelessWidget {
                   children: [
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            label,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: text.bodyMedium?.copyWith(
-                              color: selected ? tone : scheme.onSurface,
-                              fontWeight: selected
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                            ),
-                          ),
-                          if (hint case final line?) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              line,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: text.labelSmall?.copyWith(
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ],
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.bodyMedium?.copyWith(
+                          color: selected ? tone : scheme.onSurface,
+                          fontWeight: selected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                        ),
                       ),
                     ),
                     if (action case final act?)

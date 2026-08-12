@@ -30,6 +30,9 @@ abstract final class IncidentsOutbox {
     required String body,
     String? moduleId,
     String? nodeId,
+    String? subjectProfileId,
+    String? appRoute,
+    String? appLabel,
     double? latitude,
     double? longitude,
     double? accuracy,
@@ -37,6 +40,13 @@ abstract final class IncidentsOutbox {
     'body': body,
     'module_id': moduleId,
     'node_id': nodeId,
+    'subject_profile_id': subjectProfileId,
+    'app_route': appRoute,
+    // The label as well as the route, because a queued report is drained by a
+    // background isolate with no localisations loaded and no way to name a
+    // screen. It is what the reporter saw when he wrote it, which is the only
+    // honest answer anyway — see 0120.
+    'app_label': appLabel,
     'lat': latitude,
     'lng': longitude,
     'accuracy': accuracy,
@@ -48,6 +58,9 @@ abstract final class IncidentsOutbox {
       body: payload['body'] as String,
       moduleId: payload['module_id'] as String?,
       nodeId: payload['node_id'] as String?,
+      subjectProfileId: payload['subject_profile_id'] as String?,
+      appRoute: payload['app_route'] as String?,
+      appLabel: payload['app_label'] as String?,
       // The position recorded when the button was pressed, not wherever the
       // phone is now — which by the time this drains may be a different camp.
       latitude: (payload['lat'] as num?)?.toDouble(),

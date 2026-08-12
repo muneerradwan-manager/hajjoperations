@@ -70,10 +70,11 @@ class HomeSidebarView extends StatelessWidget {
               // phase of the season below the fold to say something the reader
               // is already looking at.
               //
-              // What stays is the moment: the coming prayer, and the red
-              // button. Neither is in the rail, and neither could be — one is a
-              // fact that changes through the day and the other is an act that
-              // must be a hand's width from the thumb on every screen.
+              // What stays is the moment: the coming prayer. It is not in the
+              // rail and could not be — it is a fact that changes through the
+              // day rather than a place to go. The urgent report used to stand
+              // beside it and has moved to the app bar, where it is a hand's
+              // width from the thumb on EVERY screen rather than on this one.
               const MomentPanel(),
               const SizedBox(height: AppSpacing.xl),
               SeasonRoadmapView(session: session),
