@@ -151,6 +151,27 @@ class SidebarDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The system bars' inset, taken OUTSIDE the glass rather than inside it.
+    //
+    // It was a [SafeArea] wrapped around the sidebar's content, and that kept
+    // the tiles clear of the bars while letting the PANE run on underneath
+    // them. On a handset with three-button navigation the bar is an opaque
+    // strip fifty pixels tall, so the panel arrived at the bottom of the
+    // screen, met it, and was cut off square — the rounded corner it is drawn
+    // with nowhere on screen. Every other surface in this app ends in that
+    // corner, so the one that did not read as broken rather than as deliberate.
+    //
+    // Insetting the pane instead means the glass stops where the bar starts and
+    // finishes its own shape. That is what the standing form has always done —
+    // see [StandingRail], where the padding is likewise outside the surface —
+    // and the two now agree.
+    //
+    // `viewPadding`, not `padding`, for the reason given there too: the
+    // scaffold that owns this drawer is `resizeToAvoidBottomInset: false`, so
+    // the panel keeps its full height with a keyboard up and must keep its full
+    // inset with it.
+    final insets = MediaQuery.viewPaddingOf(context);
+
     return Drawer(
       // Material's own panel is taken out entirely and the app's glass put in
       // its place: an opaque grey sheet sliding over the aurora is the one
@@ -159,37 +180,32 @@ class SidebarDrawer extends StatelessWidget {
       elevation: 0,
       shadowColor: Colors.transparent,
       surfaceTintColor: Colors.transparent,
-      width: kRailExpandedWidth + AppSpacing.lg,
+      // The side inset is ADDED to the width rather than taken out of it, so
+      // the glass keeps [kRailExpandedWidth] whatever the bars are doing. A
+      // panel narrowed by a navigation bar starts ellipsising the longer names,
+      // which is the one thing that width was chosen to avoid.
+      //
+      // Scaffold has already zeroed the padding on the side this drawer is not
+      // touching, so this is the one edge against the screen and not both.
+      width: kRailExpandedWidth + AppSpacing.lg + insets.horizontal,
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.sm),
+        padding: EdgeInsets.fromLTRB(
+          insets.left + AppSpacing.sm,
+          insets.top + AppSpacing.sm,
+          insets.right + AppSpacing.sm,
+          insets.bottom + AppSpacing.sm,
+        ),
         child: GlassSurface(
           radius: AppRadius.lg,
           // Blurred and dense, unlike the standing rail: this one is over the
           // page rather than beside it, and whatever it is covering has to stop
           // being readable through it.
           strong: true,
-          child: SafeArea(
-            // The bottom inset taken from `viewPadding` rather than `padding`,
-            // and the reason is the `resizeToAvoidBottomInset: false` on the
-            // scaffold that owns this drawer.
-            //
-            // A plain [SafeArea] reads `padding`, which is the real inset LESS
-            // whatever the keyboard is already covering — so with a field
-            // focused on the page behind it, the bottom reads zero. The panel
-            // does not shrink to match, because the scaffold was told not to
-            // resize, and the foot of the column — Settings, and the last of
-            // the shelves — ends up under Android's navigation bar.
-            //
-            // This is the one flag that says "give me the inset as if there
-            // were no keyboard", which is the truth for a panel that never
-            // moves for one.
-            maintainBottomViewPadding: true,
-            child: AppSidebar(
-              session: session,
-              location: location,
-              expanded: true,
-              onNavigate: () => Navigator.of(context).pop(),
-            ),
+          child: AppSidebar(
+            session: session,
+            location: location,
+            expanded: true,
+            onNavigate: () => Navigator.of(context).pop(),
           ),
         ),
       ),

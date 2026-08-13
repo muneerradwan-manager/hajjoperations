@@ -90,8 +90,8 @@ class _Intro extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return GlassCard(
-      radius: AppRadius.xl,
-      padding: const EdgeInsets.all(AppSpacing.xl),
+      radius: AppRadius.md,
+      padding: const EdgeInsets.all(AppSpacing.md),
       tint: scheme.primary,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
