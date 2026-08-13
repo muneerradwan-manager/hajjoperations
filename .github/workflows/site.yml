@@ -6,10 +6,12 @@
 # step that eventually is not. The script stays — it is the way to publish from
 # a machine without pushing — and this is the same sequence, run by the server.
 #
-# THE BRANCH. `operational-files`, not `main`. main holds one commit, the
-# initial scaffold, and is 111 behind; publishing from it would replace the
-# site with an empty app. Change the branch below on the day that stops being
-# true, and not before.
+# THE BRANCH. `main`, which is the trunk again as of this commit. It had sat at
+# the initial scaffold for 111 commits while the work went to a branch that was
+# never merged back, and this file first pointed at that branch because
+# publishing from main would have replaced the site with an empty app. Two
+# permanently-identical branches are one branch with extra steps; there is one
+# now, and the site follows it.
 #
 # THE DESTINATION. It force-pushes a `gh-pages` branch rather than using
 # `actions/deploy-pages`, because this repository's Pages source is set to
@@ -21,7 +23,7 @@ name: site
 
 on:
   push:
-    branches: [operational-files]
+    branches: [main]
   # So a build can be re-run without an empty commit — after a secret is fixed,
   # or to put the site back after somebody pushed something they regret.
   workflow_dispatch:
