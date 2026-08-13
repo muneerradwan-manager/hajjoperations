@@ -33,6 +33,8 @@
   "settingsSolidSurfaces": "أسطح معتمة",
   "settingsSolidSurfacesHint": "بلا شفافية ولا ضبابية — أوضح تحت الشمس، وأخفّ على الأجهزة البطيئة",
   "settingsTheme": "المظهر",
+  "settingsGroupDevice": "هذا الجهاز",
+  "settingsSwitchAccount": "التبديل إلى حساب آخر",
   "themeSystem": "حسب النظام",
   "themeLight": "فاتح",
   "themeDark": "داكن",
@@ -1104,7 +1106,7 @@
       "clock": { "type": "String" }
     }
   },
-  "prayerWidgetTitle": "الشاشة الرئيسية",
+  "prayerWidgetTitle": "على شاشة الهاتف",
   "prayerWidgetHint": "الصلاة القادمة والوقت المتبقي لها على شاشة الهاتف الرئيسية، دون فتح التطبيق.",
   "prayerWidgetAdd": "إضافة إلى الشاشة الرئيسية",
   "prayerWidgetAddManually": "اضغط مطوّلاً على مكان فارغ في الشاشة الرئيسية، ثم «الأدوات»، ثم اختر هذا التطبيق.",
@@ -1603,7 +1605,7 @@
   "outboxKindReport": "تقرير ملف",
   "outboxBlockedNotice": "{count, plural, =1{عنصر واحد لم يُقبل} =2{عنصران لم يُقبلا} few{{count} عناصر لم تُقبل} other{{count} عنصراً لم يُقبل}}",
   "@outboxBlockedNotice": { "placeholders": { "count": { "type": "int" } } },
-  "settingsHomeLayout": "الشاشة الرئيسية",
+  "settingsInApp": "داخل التطبيق",
 
   "sidebarExpand": "توسيع الشريط الجانبي",
   "sidebarCollapse": "طيّ الشريط الجانبي",

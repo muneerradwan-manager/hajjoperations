@@ -284,6 +284,18 @@ abstract class AppLocalizations {
   /// **'Appearance'**
   String get settingsTheme;
 
+  /// No description provided for @settingsGroupDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'This device'**
+  String get settingsGroupDevice;
+
+  /// No description provided for @settingsSwitchAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to another account'**
+  String get settingsSwitchAccount;
+
   /// No description provided for @themeSystem.
   ///
   /// In en, this message translates to:
@@ -5597,7 +5609,7 @@ abstract class AppLocalizations {
   /// No description provided for @prayerWidgetTitle.
   ///
   /// In en, this message translates to:
-  /// **'Home screen'**
+  /// **'On the phone\'s home screen'**
   String get prayerWidgetTitle;
 
   /// No description provided for @prayerWidgetHint.
@@ -8000,11 +8012,11 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 item was not accepted} other{{count} items were not accepted}}'**
   String outboxBlockedNotice(int count);
 
-  /// No description provided for @settingsHomeLayout.
+  /// No description provided for @settingsInApp.
   ///
   /// In en, this message translates to:
-  /// **'Home screen'**
-  String get settingsHomeLayout;
+  /// **'In the app'**
+  String get settingsInApp;
 
   /// No description provided for @sidebarExpand.
   ///

@@ -106,6 +106,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTheme => 'Appearance';
 
   @override
+  String get settingsGroupDevice => 'This device';
+
+  @override
+  String get settingsSwitchAccount => 'Switch to another account';
+
+  @override
   String get themeSystem => 'System';
 
   @override
@@ -3150,7 +3156,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get prayerWidgetTitle => 'Home screen';
+  String get prayerWidgetTitle => 'On the phone\'s home screen';
 
   @override
   String get prayerWidgetHint =>
@@ -4676,7 +4682,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get settingsHomeLayout => 'Home screen';
+  String get settingsInApp => 'In the app';
 
   @override
   String get sidebarExpand => 'Expand the sidebar';

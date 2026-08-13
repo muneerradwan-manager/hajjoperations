@@ -106,6 +106,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsTheme => 'المظهر';
 
   @override
+  String get settingsGroupDevice => 'هذا الجهاز';
+
+  @override
+  String get settingsSwitchAccount => 'التبديل إلى حساب آخر';
+
+  @override
   String get themeSystem => 'حسب النظام';
 
   @override
@@ -3161,7 +3167,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get prayerWidgetTitle => 'الشاشة الرئيسية';
+  String get prayerWidgetTitle => 'على شاشة الهاتف';
 
   @override
   String get prayerWidgetHint =>
@@ -4720,7 +4726,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get settingsHomeLayout => 'الشاشة الرئيسية';
+  String get settingsInApp => 'داخل التطبيق';
 
   @override
   String get sidebarExpand => 'توسيع الشريط الجانبي';

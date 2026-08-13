@@ -34,6 +34,8 @@
   "settingsSolidSurfaces": "Solid surfaces",
   "settingsSolidSurfacesHint": "No transparency or blur — clearer in sunlight, lighter on slower phones",
   "settingsTheme": "Appearance",
+  "settingsGroupDevice": "This device",
+  "settingsSwitchAccount": "Switch to another account",
   "themeSystem": "System",
   "themeLight": "Light",
   "themeDark": "Dark",
@@ -1115,7 +1117,7 @@
       "clock": { "type": "String" }
     }
   },
-  "prayerWidgetTitle": "Home screen",
+  "prayerWidgetTitle": "On the phone's home screen",
   "prayerWidgetHint": "The next prayer and its countdown, on the phone's home screen — without opening the app.",
   "prayerWidgetAdd": "Add to home screen",
   "prayerWidgetAddManually": "Long-press an empty spot on the home screen, choose Widgets, and pick this app.",
@@ -1614,7 +1616,7 @@
   "outboxKindReport": "File report",
   "outboxBlockedNotice": "{count, plural, =1{1 item was not accepted} other{{count} items were not accepted}}",
   "@outboxBlockedNotice": { "placeholders": { "count": { "type": "int" } } },
-  "settingsHomeLayout": "Home screen",
+  "settingsInApp": "In the app",
 
   "sidebarExpand": "Expand the sidebar",
   "sidebarCollapse": "Collapse the sidebar",
