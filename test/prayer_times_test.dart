@@ -42,16 +42,21 @@ void main() {
       expect(window.end, day.fajr);
     });
 
-    test('inside الفجر the countdown runs to الشروق, not to the next prayer', () {
-      final window = day.windowAt(DateTime(2026, 8, 2, 5, 0));
-      expect(window.current, PrayerSlot.fajr);
-      expect(window.next, PrayerSlot.sunrise);
-      // The card says "ينتهي وقت الفجر" rather than "الصلاة القادمة" off this.
-      expect(window.endsAtSunrise, isTrue);
-      expect(window.inSunriseGap, isFalse);
-      expect(window.remainingAt(DateTime(2026, 8, 2, 5, 0)),
-          const Duration(minutes: 55));
-    });
+    test(
+      'inside الفجر the countdown runs to الشروق, not to the next prayer',
+      () {
+        final window = day.windowAt(DateTime(2026, 8, 2, 5, 0));
+        expect(window.current, PrayerSlot.fajr);
+        expect(window.next, PrayerSlot.sunrise);
+        // The card says "ينتهي وقت الفجر" rather than "الصلاة القادمة" off this.
+        expect(window.endsAtSunrise, isTrue);
+        expect(window.inSunriseGap, isFalse);
+        expect(
+          window.remainingAt(DateTime(2026, 8, 2, 5, 0)),
+          const Duration(minutes: 55),
+        );
+      },
+    );
 
     test('after الشروق nothing is due until الظهر, and it says so', () {
       final window = day.windowAt(DateTime(2026, 8, 2, 9, 0));
@@ -94,8 +99,10 @@ void main() {
       // Not today's 04:30, which is eighteen hours in the past. Getting this
       // wrong is a countdown that shows a negative number all evening.
       expect(window.end, day.nextFajr);
-      expect(window.remainingAt(DateTime(2026, 8, 2, 23, 0)),
-          const Duration(hours: 5, minutes: 31));
+      expect(
+        window.remainingAt(DateTime(2026, 8, 2, 23, 0)),
+        const Duration(hours: 5, minutes: 31),
+      );
     });
 
     test('every minute of the day lands in exactly one window', () {
@@ -115,7 +122,8 @@ void main() {
       // The phone was asleep and the timer fired late. The card must show zero
       // and ask for a new window, not "-00:03".
       expect(
-        day.windowAt(DateTime(2026, 8, 2, 13, 0))
+        day
+            .windowAt(DateTime(2026, 8, 2, 13, 0))
             .remainingAt(DateTime(2026, 8, 2, 16, 0)),
         Duration.zero,
       );
@@ -192,8 +200,11 @@ void main() {
         computed.isha,
       ];
       for (var i = 1; i < marks.length; i++) {
-        expect(marks[i].isAfter(marks[i - 1]), isTrue,
-            reason: '${marks[i]} should follow ${marks[i - 1]}');
+        expect(
+          marks[i].isAfter(marks[i - 1]),
+          isTrue,
+          reason: '${marks[i]} should follow ${marks[i - 1]}',
+        );
       }
 
       // Local, not UTC — the one conversion this feature does, and the one that
@@ -206,33 +217,56 @@ void main() {
       expect(computed.nextFajr.isAfter(computed.isha), isTrue);
     });
 
-    test('الظهر falls at Makkah\'s solar noon, within the equation of time', () {
-      // A check on the astronomy that needs no table to compare against: the
-      // sun crosses the meridian at 12:00 UTC less four minutes per degree of
-      // east longitude, give or take the ±16 minutes the equation of time
-      // swings through over a year. Makkah is 39.83° E, so about 09:21 UTC.
-      final computed = repository.dayFor(
-        latitude: 21.4225,
-        longitude: 39.8262,
-        at: DateTime(2026, 8, 2, 10),
-      );
-      final noon = computed.dhuhr.toUtc();
-      final minutesFromMidnightUtc = noon.hour * 60 + noon.minute;
-      const meridianCrossing = 12 * 60 - 39.8262 * 4;
-      expect(
-        minutesFromMidnightUtc.toDouble(),
-        closeTo(meridianCrossing, 20),
-      );
-    });
+    test(
+      'الظهر falls at Makkah\'s solar noon, within the equation of time',
+      () {
+        // A check on the astronomy that needs no table to compare against: the
+        // sun crosses the meridian at 12:00 UTC less four minutes per degree of
+        // east longitude, give or take the ±16 minutes the equation of time
+        // swings through over a year. Makkah is 39.83° E, so about 09:21 UTC.
+        final computed = repository.dayFor(
+          latitude: 21.4225,
+          longitude: 39.8262,
+          at: DateTime(2026, 8, 2, 10),
+        );
+        final noon = computed.dhuhr.toUtc();
+        final minutesFromMidnightUtc = noon.hour * 60 + noon.minute;
+        const meridianCrossing = 12 * 60 - 39.8262 * 4;
+        expect(
+          minutesFromMidnightUtc.toDouble(),
+          closeTo(meridianCrossing, 20),
+        );
+      },
+    );
 
     test('a day computed anywhere still divides into windows', () {
       // Damascus in winter, where the method differs and the night is long.
       final computed = repository.dayFor(
         latitude: 33.5138,
         longitude: 36.2765,
-        at: DateTime(2026, 1, 15, 10),
+        at: DateTime(2026, 1, 15, 12),
       );
-      final window = computed.windowAt(DateTime(2026, 1, 15, 10));
+
+      // Asked at a moment taken from the computed day, not at a wall-clock
+      // hour — and this is the whole point of the test rather than a detail of
+      // it.
+      //
+      // The marks come back in the DEVICE's zone, and the device is not
+      // standing in Damascus. This used to ask at «10:00», which is a
+      // different INSTANT on every machine: 07:00 UTC on a laptop in the Gulf,
+      // comfortably inside the gap, and 10:00 UTC on a runner set to UTC —
+      // fifteen minutes past a الظهر that falls at 09:45 UTC. So the assertion
+      // read as one about the astronomy and was really about where the machine
+      // was sitting, and it passed for a year on the only machines anybody ran
+      // it on.
+      //
+      // Halfway between الشروق and الظهر is inside the gap wherever the clock
+      // is set, because all three are the same instants shifted by the same
+      // offset.
+      final gap = computed.dhuhr.difference(computed.sunrise);
+      final midGap = computed.sunrise.add(gap ~/ 2);
+
+      final window = computed.windowAt(midGap);
       expect(window.inSunriseGap, isTrue);
       expect(window.next, PrayerSlot.dhuhr);
     });
