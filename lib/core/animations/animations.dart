@@ -75,15 +75,31 @@ Widget _fadeThroughTransition(
 }
 
 /// Shared fade-through page transition for go_router routes.
+///
+/// [opaque] is the same door [fadeThroughRoute] has, and it is needed for the
+/// same reason: leaving a page transparent only works while the thing BELOW it
+/// fades itself out, which is true of one of these pages and of nothing else.
+///
+/// A route that can be pushed **over the shell** is the case that breaks it.
+/// `ShellRoute` is declared with `builder`, not `pageBuilder`, so go_router
+/// wraps it in its own default page — which has no secondary animation and
+/// simply keeps painting. Over that, a transparent scaffold is the page you
+/// left showing straight through the page you opened.
+///
+/// Marking such a route opaque stops the navigator painting anything below it
+/// once it settles. The aurora is mounted in `MaterialApp.builder`, OUTSIDE the
+/// navigator, so it still shows through the transparent scaffold and the page
+/// looks exactly as it always did.
 CustomTransitionPage<T> fadeThroughPage<T>({
   required Widget child,
   required LocalKey key,
+  bool opaque = false,
 }) {
   return CustomTransitionPage<T>(
     key: key,
     transitionDuration: _transitionDuration,
     reverseTransitionDuration: _reverseTransitionDuration,
-    opaque: false,
+    opaque: opaque,
     child: child,
     transitionsBuilder: (context, animation, secondary, child) =>
         _fadeThroughTransition(animation, secondary, child),

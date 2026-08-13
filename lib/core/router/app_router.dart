@@ -293,8 +293,19 @@ GoRouter buildRouter(SessionCubit session) {
       ),
       GoRoute(
         path: Routes.login,
+        // The one route in this list that is ever PUSHED rather than redirected
+        // to, and so the one that has to be opaque.
+        //
+        // Every other way of reaching it replaces the stack, leaving nothing
+        // underneath. Adding a second account does not: `?add=` is pushed from
+        // the settings pane onto a live session (see the redirect above), which
+        // lands this page on the root navigator directly over the SHELL — and
+        // the shell is built with `builder`, so it has no fade-out of its own
+        // and keeps painting. With the transparent scaffold every page here
+        // has, that showed the settings pane straight through the sign-in form.
         pageBuilder: (c, s) => fadeThroughPage(
           key: s.pageKey,
+          opaque: true,
           child: LoginScreen(addingForUserId: s.uri.queryParameters['add']),
         ),
       ),
