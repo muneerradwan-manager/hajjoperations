@@ -1399,6 +1399,7 @@
   "@incidentHandledBy": { "placeholders": { "name": { "type": "String" } } },
   "incidentOpenCount": "{count, plural, =0{لا بلاغات مفتوحة} =1{بلاغ واحد مفتوح} =2{بلاغان مفتوحان} few{{count} بلاغات مفتوحة} other{{count} بلاغاً مفتوحاً}}",
   "@incidentOpenCount": { "placeholders": { "count": { "type": "int" } } },
+  "attachmentPickFailed": "تعذّر فتح المُنتقي. جرّب طريقة أخرى للإرفاق.",
   "incidentDelete": "حذف البلاغ",
   "incidentDeleteConfirm": "يُحذف البلاغ وما أُرفق به نهائياً، ويختفي من سجل الجميع. لا يمكن التراجع.",
   "incidentDeleted": "حُذف البلاغ",

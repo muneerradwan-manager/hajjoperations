@@ -3,7 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../attachments/attachment_picker.dart' show isCameraCaptureSupported;
 import '../l10n/l10n_extension.dart';
+import '../logging/app_logger.dart';
 import '../theme/app_icons.dart';
 import '../theme/glass_tokens.dart';
 
@@ -30,37 +32,62 @@ class ImagePickerField extends StatelessWidget {
   final String? existingUrl;
 
   Future<void> _pick(BuildContext context) async {
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      // Over the rail as well as the page — see [showAppSheet].
-      useRootNavigator: true,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(AppIcons.camera),
-              title: Text(sheetContext.l10n.profileCamera),
-              onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(AppIcons.gallery),
-              title: Text(sheetContext.l10n.profileGallery),
-              onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
-            ),
-          ],
-        ),
-      ),
-    );
+    // No sheet at all where there is no camera to offer — see
+    // [isCameraCaptureSupported]. A chooser with one thing in it is not a
+    // choice; it is a tap the reader has to make before the tap they meant. On
+    // a desktop this goes straight to the file dialog, which is the only answer
+    // that was ever available there.
+    final source = isCameraCaptureSupported
+        ? await _chooseSource(context)
+        : ImageSource.gallery;
     if (source == null) return;
-    final picked = await ImagePicker().pickImage(
-      source: source,
-      maxWidth: 1600,
-      imageQuality: 82,
-    );
-    if (picked != null) onPicked(File(picked.path));
+
+    // The picker itself is not allowed to reach the zone handler. Until this
+    // was gated, `ImageSource.camera` on Windows threw straight out of here —
+    // `Bad state: … requires a "cameraDelegate"` — and what the reader saw was
+    // the sheet closing and nothing else happening at all.
+    try {
+      final picked = await ImagePicker().pickImage(
+        source: source,
+        maxWidth: 1600,
+        imageQuality: 82,
+      );
+      if (picked != null) onPicked(File(picked.path));
+    } catch (e) {
+      AppLogger.warn('images', 'pick failed: $e');
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(context.l10n.attachmentPickFailed)),
+        );
+    }
   }
+
+  Future<ImageSource?> _chooseSource(BuildContext context) =>
+      showModalBottomSheet<ImageSource>(
+        context: context,
+        // Over the rail as well as the page — see [showAppSheet].
+        useRootNavigator: true,
+        showDragHandle: true,
+        builder: (sheetContext) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(AppIcons.camera),
+                title: Text(sheetContext.l10n.profileCamera),
+                onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(AppIcons.gallery),
+                title: Text(sheetContext.l10n.profileGallery),
+                onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
+              ),
+            ],
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {

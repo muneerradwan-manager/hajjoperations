@@ -4006,6 +4006,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get attachmentPickFailed =>
+      'Couldn\'t open the picker. Try attaching another way.';
+
+  @override
   String get incidentDelete => 'Delete report';
 
   @override

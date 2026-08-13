@@ -6992,6 +6992,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =0{No open reports} =1{1 open report} other{{count} open reports}}'**
   String incidentOpenCount(int count);
 
+  /// No description provided for @attachmentPickFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the picker. Try attaching another way.'**
+  String get attachmentPickFailed;
+
   /// No description provided for @incidentDelete.
   ///
   /// In en, this message translates to:

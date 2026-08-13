@@ -4034,6 +4034,10 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get attachmentPickFailed =>
+      'تعذّر فتح المُنتقي. جرّب طريقة أخرى للإرفاق.';
+
+  @override
   String get incidentDelete => 'حذف البلاغ';
 
   @override
