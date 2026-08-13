@@ -409,6 +409,291 @@ class PermissionStats extends Equatable {
   List<Object?> get props => [admins, grantees, grants, bySection];
 }
 
+/// المهام المُسندة — everybody's assigned list at once (0123).
+///
+/// Assigned work only. A man's own notebook is not counted and cannot be: the
+/// row policy behind `tasks.view_all` guards every branch with
+/// `created_by <> profile_id`, and the RPC repeats that guard rather than
+/// inheriting it, because it runs SECURITY DEFINER and inherits nothing.
+///
+/// **Not season-scoped.** `personal_tasks` carries no season and should not —
+/// a task given to a man is his until it is answered. [recent] is the last
+/// thirty days, which is the honest window for a table with no season on it.
+class TaskDashStats extends Equatable {
+  const TaskDashStats({
+    required this.total,
+    required this.open,
+    required this.late,
+    required this.awaitingReview,
+    required this.blocked,
+    required this.escalated,
+    required this.assignees,
+    required this.recent,
+    required this.byState,
+    required this.byPriority,
+  });
+
+  final int total;
+
+  /// Neither منجزة nor ملغاة.
+  final int open;
+
+  /// Past its due date and still open — the same rule 0119's server-side
+  /// bucket applies, so the card and the list cannot disagree.
+  final int late;
+
+  /// بانتظار القبول: the assignee says he is finished and the assigner has not
+  /// answered. The one number here that names a queue somebody else is holding.
+  final int awaitingReview;
+
+  final int blocked;
+
+  /// Carried at least one rung up the ladder by the nightly pass.
+  final int escalated;
+
+  /// Distinct people with assigned work.
+  final int assignees;
+
+  final int recent;
+
+  /// Keys are `task_state` names; the app owns their wording.
+  final List<CountedKey> byState;
+
+  /// Open tasks by priority. Keys are `task_priority` names.
+  final List<CountedKey> byPriority;
+
+  static TaskDashStats fromMap(Map<String, dynamic> m) => TaskDashStats(
+    total: m['total'] as int? ?? 0,
+    open: m['open'] as int? ?? 0,
+    late: m['late'] as int? ?? 0,
+    awaitingReview: m['awaiting_review'] as int? ?? 0,
+    blocked: m['blocked'] as int? ?? 0,
+    escalated: m['escalated'] as int? ?? 0,
+    assignees: m['assignees'] as int? ?? 0,
+    recent: m['recent'] as int? ?? 0,
+    byState: _keys(m['by_state']),
+    byPriority: _keys(m['by_priority']),
+  );
+
+  @override
+  List<Object?> get props => [
+    total,
+    open,
+    late,
+    awaitingReview,
+    blocked,
+    escalated,
+    assignees,
+    recent,
+    byState,
+    byPriority,
+  ];
+}
+
+/// الشكاوى — counts, and deliberately nothing else (0123).
+///
+/// 0079 made this register structurally secret: the accused cannot learn who
+/// complained. A dashboard is the easiest place in an application to undo that
+/// by accident, so nothing here names anybody — the breakdown is by TARGET
+/// TYPE, which says "eleven about employees" and identifies no one.
+///
+/// **Not season-scoped:** a complaint is about conduct, not about a season.
+class ComplaintDashStats extends Equatable {
+  const ComplaintDashStats({
+    required this.total,
+    required this.open,
+    required this.locked,
+    required this.dismissed,
+    required this.recent,
+    required this.byTarget,
+  });
+
+  final int total;
+
+  /// Neither locked nor dismissed — the ones still open to replies.
+  final int open;
+
+  /// Closed to replies, but standing.
+  final int locked;
+
+  /// Called unfounded, and so out of the count that suspends an account.
+  final int dismissed;
+
+  final int recent;
+
+  /// Keys are `complaint_target_type` names.
+  final List<CountedKey> byTarget;
+
+  static ComplaintDashStats fromMap(Map<String, dynamic> m) =>
+      ComplaintDashStats(
+        total: m['total'] as int? ?? 0,
+        open: m['open'] as int? ?? 0,
+        locked: m['locked'] as int? ?? 0,
+        dismissed: m['dismissed'] as int? ?? 0,
+        recent: m['recent'] as int? ?? 0,
+        byTarget: _keys(m['by_target']),
+      );
+
+  @override
+  List<Object?> get props => [total, open, locked, dismissed, recent, byTarget];
+}
+
+/// التقييمات — the season's appraisal sheets (0123). Season-scoped.
+class EvaluationDashStats extends Equatable {
+  const EvaluationDashStats({
+    required this.total,
+    required this.submitted,
+    required this.draft,
+    required this.late,
+    required this.evaluators,
+    this.averagePct,
+    required this.byTarget,
+  });
+
+  final int total;
+  final int submitted;
+
+  /// Opened and not yet filled.
+  final int draft;
+
+  /// Unfilled and past its due date.
+  final int late;
+
+  final int evaluators;
+
+  /// A PERCENTAGE, not an average score, and the difference is not cosmetic.
+  /// 0084 freezes `score` beside `max_score` because the form they were earned
+  /// against will be edited afterwards — "38" without its "out of 50" means
+  /// nothing a year later. Averaging raw scores across sheets from different
+  /// forms would be adding up marks out of different totals; the percentage is
+  /// the only figure that survives it. Null when nothing has been submitted.
+  final double? averagePct;
+
+  /// Keys are `evaluation_target_type` names.
+  final List<CountedKey> byTarget;
+
+  static EvaluationDashStats fromMap(Map<String, dynamic> m) =>
+      EvaluationDashStats(
+        total: m['total'] as int? ?? 0,
+        submitted: m['submitted'] as int? ?? 0,
+        draft: m['draft'] as int? ?? 0,
+        late: m['late'] as int? ?? 0,
+        evaluators: m['evaluators'] as int? ?? 0,
+        averagePct: (m['average_pct'] as num?)?.toDouble(),
+        byTarget: _keys(m['by_target']),
+      );
+
+  @override
+  List<Object?> get props => [
+    total,
+    submitted,
+    draft,
+    late,
+    evaluators,
+    averagePct,
+    byTarget,
+  ];
+}
+
+/// تسجيل الوصول — the season's arrivals (0123). Season-scoped: 0098 stamps
+/// `season_id` at insert for exactly this kind of question.
+class CheckInDashStats extends Equatable {
+  const CheckInDashStats({
+    required this.total,
+    required this.people,
+    required this.places,
+    required this.today,
+    required this.recent,
+    required this.series,
+  });
+
+  final int total;
+
+  /// Distinct people who have filed at least one arrival.
+  final int people;
+
+  /// Distinct places arrived at.
+  final int places;
+
+  /// Since midnight — the number the operations room actually asks for. Counted
+  /// server-side rather than read off the end of [series], so shortening the
+  /// chart cannot silently change the headline.
+  final int today;
+
+  final int recent;
+
+  /// Arrivals per day, last 30 days.
+  final List<ReportDay> series;
+
+  static CheckInDashStats fromMap(Map<String, dynamic> m) => CheckInDashStats(
+    total: m['total'] as int? ?? 0,
+    people: m['people'] as int? ?? 0,
+    places: m['places'] as int? ?? 0,
+    today: m['today'] as int? ?? 0,
+    recent: m['recent'] as int? ?? 0,
+    series: _days(m['series']),
+  );
+
+  @override
+  List<Object?> get props => [total, people, places, today, recent, series];
+}
+
+/// البلاغات العاجلة — the register, from above (0123).
+///
+/// **Not season-scoped:** an emergency belongs to the hour it happened in, and
+/// `incidents` carries no season by design.
+class IncidentDashStats extends Equatable {
+  const IncidentDashStats({
+    required this.total,
+    required this.open,
+    required this.inProgress,
+    required this.closed,
+    required this.recent,
+    this.avgMinutesToHandle,
+    required this.series,
+  });
+
+  final int total;
+
+  /// Raised and not yet picked up. The one number on this card worth acting on,
+  /// which is why the card sits high.
+  final int open;
+
+  final int inProgress;
+  final int closed;
+  final int recent;
+
+  /// How long an emergency sat before somebody took it on, averaged over the
+  /// last thirty days. The only figure on this page that measures the ROOM
+  /// rather than the mission — and answerable only because 0088 stamps
+  /// `handled_at` on the FIRST person to pick one up and never overwrites it.
+  final double? avgMinutesToHandle;
+
+  /// Reports raised per day, last 30 days.
+  final List<ReportDay> series;
+
+  static IncidentDashStats fromMap(Map<String, dynamic> m) => IncidentDashStats(
+    total: m['total'] as int? ?? 0,
+    open: m['open'] as int? ?? 0,
+    inProgress: m['in_progress'] as int? ?? 0,
+    closed: m['closed'] as int? ?? 0,
+    recent: m['recent'] as int? ?? 0,
+    avgMinutesToHandle: (m['avg_minutes_to_handle'] as num?)?.toDouble(),
+    series: _days(m['series']),
+  );
+
+  @override
+  List<Object?> get props => [
+    total,
+    open,
+    inProgress,
+    closed,
+    recent,
+    avgMinutesToHandle,
+    series,
+  ];
+}
+
 /// The season a dashboard is pointed at.
 class DashboardSeason extends Equatable {
   const DashboardSeason({
@@ -453,6 +738,11 @@ class DashboardStats extends Equatable {
     this.notifications,
     this.reference,
     this.permissions,
+    this.tasks,
+    this.complaints,
+    this.evaluations,
+    this.checkIn,
+    this.incidents,
   });
 
   final DashboardSeason? season;
@@ -466,6 +756,16 @@ class DashboardStats extends Equatable {
   final ReferenceStats? reference;
   final PermissionStats? permissions;
 
+  // Added in 0123. The function was last written in 0085 and the app kept
+  // going without it: five sections of work — emergencies, arrivals, assigned
+  // tasks, appraisals, complaints — existed for months with no card here at
+  // all, on a screen that is read INSTEAD of reading everything.
+  final TaskDashStats? tasks;
+  final ComplaintDashStats? complaints;
+  final EvaluationDashStats? evaluations;
+  final CheckInDashStats? checkIn;
+  final IncidentDashStats? incidents;
+
   /// Whether there is anything at all to draw. A reader holding none of the
   /// permissions gets a season and nothing else, and should be told so plainly
   /// instead of shown an empty page.
@@ -478,7 +778,12 @@ class DashboardStats extends Equatable {
       centralReports == null &&
       notifications == null &&
       reference == null &&
-      permissions == null;
+      permissions == null &&
+      tasks == null &&
+      complaints == null &&
+      evaluations == null &&
+      checkIn == null &&
+      incidents == null;
 
   static DashboardStats fromMap(Map<String, dynamic> m) => DashboardStats(
     season: _sub(m['season'], DashboardSeason.fromMap),
@@ -491,6 +796,11 @@ class DashboardStats extends Equatable {
     notifications: _sub(m['notifications'], NotificationDashStats.fromMap),
     reference: _sub(m['reference'], ReferenceStats.fromMap),
     permissions: _sub(m['permissions'], PermissionStats.fromMap),
+    tasks: _sub(m['tasks'], TaskDashStats.fromMap),
+    complaints: _sub(m['complaints'], ComplaintDashStats.fromMap),
+    evaluations: _sub(m['evaluations'], EvaluationDashStats.fromMap),
+    checkIn: _sub(m['checkin'], CheckInDashStats.fromMap),
+    incidents: _sub(m['incidents'], IncidentDashStats.fromMap),
   );
 
   @override
@@ -505,6 +815,11 @@ class DashboardStats extends Equatable {
     notifications,
     reference,
     permissions,
+    tasks,
+    complaints,
+    evaluations,
+    checkIn,
+    incidents,
   ];
 }
 

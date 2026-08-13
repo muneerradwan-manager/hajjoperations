@@ -2673,6 +2673,179 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get dashboardNotSeasonScoped =>
+      'All seasons — not filtered by the one selected';
+
+  @override
+  String get dashboardSectionIncidents => 'Urgent reports';
+
+  @override
+  String get dashboardIncidentsOpen => 'Open reports';
+
+  @override
+  String dashboardIncidentsInProgress(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'and $count in progress',
+      one: 'and 1 in progress',
+      zero: 'none in progress',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardIncidentsRecent => 'Reports, last 30 days';
+
+  @override
+  String dashboardIncidentsAllTime(int count) {
+    return '$count all time';
+  }
+
+  @override
+  String get dashboardIncidentsAvgHandle => 'Average time to pick up';
+
+  @override
+  String get dashboardIncidentsAvgHandleCaption => 'From raised to taken on';
+
+  @override
+  String get dashboardIncidentsSplit => 'Reports by state';
+
+  @override
+  String get dashboardIncidentsTrend => 'Reports per day';
+
+  @override
+  String get dashboardIncidentsTrendEmpty => 'No reports in this period';
+
+  @override
+  String get dashboardSectionCheckIn => 'Check-in';
+
+  @override
+  String get dashboardCheckInToday => 'Today\'s arrivals';
+
+  @override
+  String get dashboardCheckInPeople => 'People who filed';
+
+  @override
+  String dashboardCheckInPlaces(int count) {
+    return 'at $count places';
+  }
+
+  @override
+  String get dashboardCheckInTotal => 'Arrivals this season';
+
+  @override
+  String get dashboardCheckInTrend => 'Arrivals per day';
+
+  @override
+  String get dashboardCheckInTrendEmpty => 'No arrivals in this period';
+
+  @override
+  String get dashboardSectionTasks => 'Assigned tasks';
+
+  @override
+  String get dashboardTasksOpen => 'Open tasks';
+
+  @override
+  String get dashboardTasksLate => 'Late';
+
+  @override
+  String dashboardTasksEscalated(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count escalated',
+      one: '1 escalated',
+      zero: 'none escalated',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardTasksAwaiting => 'Awaiting review';
+
+  @override
+  String get dashboardTasksAssignees => 'Assignees';
+
+  @override
+  String dashboardTasksAllTime(int count) {
+    return '$count tasks all time';
+  }
+
+  @override
+  String get dashboardTasksByState => 'Tasks by state';
+
+  @override
+  String get dashboardTasksByPriority => 'Open tasks by priority';
+
+  @override
+  String get dashboardSectionEvaluations => 'Evaluations';
+
+  @override
+  String get dashboardEvalSubmitted => 'Sheets submitted';
+
+  @override
+  String dashboardEvalOf(int count) {
+    return 'of $count';
+  }
+
+  @override
+  String get dashboardEvalLate => 'Late';
+
+  @override
+  String dashboardEvalDrafts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count drafts',
+      one: '1 draft',
+      zero: 'no drafts',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardEvalAverage => 'Average';
+
+  @override
+  String get dashboardEvalAverageCaption => 'As a share of each form\'s total';
+
+  @override
+  String get dashboardEvalEvaluators => 'Evaluators';
+
+  @override
+  String get dashboardSectionComplaints => 'Complaints';
+
+  @override
+  String get dashboardComplaintsOpen => 'Open complaints';
+
+  @override
+  String get dashboardComplaintsRecent => 'Complaints, last 30 days';
+
+  @override
+  String dashboardComplaintsAllTime(int count) {
+    return '$count all time';
+  }
+
+  @override
+  String get dashboardComplaintsDismissed => 'Dismissed';
+
+  @override
+  String dashboardComplaintsLocked(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'and $count locked',
+      one: 'and 1 locked',
+      zero: 'none locked',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardComplaintsByTarget => 'Complaints by subject';
+
+  @override
   String get dashboardSectionReference => 'Master data';
 
   @override

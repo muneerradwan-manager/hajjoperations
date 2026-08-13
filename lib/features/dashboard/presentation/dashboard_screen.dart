@@ -13,6 +13,15 @@ import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../../l10n/app_localizations.dart';
+// The three sections added in 0123 name states, priorities and complaint kinds
+// that other screens already name. Borrowed rather than re-spelled: a chart
+// that called «بانتظار القبول» something else than the board does would be two
+// answers to one question.
+import '../../complaints/domain/complaint.dart' show ComplaintTarget;
+import '../../complaints/presentation/widgets/complaint_labels.dart';
+import '../../tasks/domain/personal_task.dart'
+    show TaskPriority, TaskState;
+import '../../tasks/presentation/widgets/task_state_widgets.dart';
 import '../application/dashboard_cubit.dart';
 import '../data/dashboard_repository.dart';
 import '../domain/dashboard_stats.dart';
@@ -421,6 +430,338 @@ class _View extends StatelessWidget {
         ]),
       ],
 
+      // ─────────────────────────────── the five sections added in 0123 ──
+      //
+      // Three of them cannot be scoped to the season the selector at the top of
+      // this page is set to, because their tables carry no season and should
+      // not: a task given to a man is his until it is answered, a complaint is
+      // about conduct, an emergency belongs to the hour it happened in. Every
+      // one of those cards SAYS SO in its caption — a number sitting under a
+      // season selector is read as that season's number, and letting the layout
+      // imply what the data does not support is the whole failure this section
+      // was added to correct.
+
+      if (stats.incidents != null) ...[
+        const SizedBox(height: AppSpacing.xl),
+        FadeSlideIn(
+          child: SectionHeader(
+            l.dashboardSectionIncidents,
+            icon: AppIcons.warning,
+          ),
+        ),
+        AdaptiveGrid(
+          minTileWidth: CardWidth.stat,
+          maxColumns: 4,
+          children: staggered([
+            StatTile(
+              label: l.dashboardIncidentsOpen,
+              value: '${stats.incidents!.open}',
+              icon: AppIcons.warning,
+              color: stats.incidents!.open > 0
+                  ? Accent.red.of(context)
+                  : Accent.greenDark.of(context),
+              caption: l.dashboardNotSeasonScoped,
+            ),
+            StatTile(
+              label: l.dashboardIncidentsRecent,
+              value: '${stats.incidents!.recent}',
+              icon: AppIcons.trend,
+              color: Accent.gold.of(context),
+              caption: l.dashboardIncidentsAllTime(stats.incidents!.total),
+              spark: [for (final d in stats.incidents!.series) d.count],
+            ),
+            // Minutes, and only when somebody has actually picked one up. A
+            // response time of "0" on a register nobody has answered would read
+            // as instant service.
+            if (stats.incidents!.avgMinutesToHandle case final minutes?)
+              StatTile(
+                label: l.dashboardIncidentsAvgHandle,
+                value: l.durationMinutes(minutes.round()),
+                icon: AppIcons.checkIn,
+                color: Accent.greenDeep.of(context),
+                caption: l.dashboardIncidentsAvgHandleCaption,
+              ),
+          ]),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _cards([
+          ChartCard(
+            title: l.dashboardIncidentsSplit,
+            child: DonutChart(
+              otherLabel: l.chartOther,
+              centerLabel: l.chartTotal,
+              slices: [
+                ChartSlice(
+                  label: l.incidentStateOpen,
+                  value: stats.incidents!.open,
+                ),
+                ChartSlice(
+                  label: l.incidentStateInProgress,
+                  value: stats.incidents!.inProgress,
+                ),
+                ChartSlice(
+                  label: l.incidentStateClosed,
+                  value: stats.incidents!.closed,
+                ),
+              ],
+            ),
+          ),
+          ChartCard(
+            title: l.dashboardIncidentsTrend,
+            child: TrendChart(
+              emptyLabel: l.dashboardIncidentsTrendEmpty,
+              labelForDay: _day,
+              points: [
+                for (final d in stats.incidents!.series)
+                  TrendPoint(day: d.day, value: d.count),
+              ],
+            ),
+          ),
+        ]),
+      ],
+
+      if (stats.checkIn != null) ...[
+        const SizedBox(height: AppSpacing.xl),
+        FadeSlideIn(
+          child: SectionHeader(
+            l.dashboardSectionCheckIn,
+            icon: AppIcons.checkIn,
+          ),
+        ),
+        AdaptiveGrid(
+          minTileWidth: CardWidth.stat,
+          maxColumns: 4,
+          children: staggered([
+            StatTile(
+              label: l.dashboardCheckInToday,
+              value: '${stats.checkIn!.today}',
+              icon: AppIcons.checkIn,
+              color: Accent.green.of(context),
+              spark: [for (final d in stats.checkIn!.series) d.count],
+            ),
+            StatTile(
+              label: l.dashboardCheckInPeople,
+              value: '${stats.checkIn!.people}',
+              icon: AppIcons.participants,
+              color: Accent.greenDeep.of(context),
+              caption: l.dashboardCheckInPlaces(stats.checkIn!.places),
+            ),
+            StatTile(
+              label: l.dashboardCheckInTotal,
+              value: '${stats.checkIn!.total}',
+              icon: AppIcons.document,
+              color: Accent.goldSoft.of(context),
+            ),
+          ]),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _cards([
+          ChartCard(
+            title: l.dashboardCheckInTrend,
+            child: TrendChart(
+              emptyLabel: l.dashboardCheckInTrendEmpty,
+              labelForDay: _day,
+              points: [
+                for (final d in stats.checkIn!.series)
+                  TrendPoint(day: d.day, value: d.count),
+              ],
+            ),
+          ),
+        ]),
+      ],
+
+      if (stats.tasks != null) ...[
+        const SizedBox(height: AppSpacing.xl),
+        FadeSlideIn(
+          child: SectionHeader(l.dashboardSectionTasks, icon: AppIcons.tasks),
+        ),
+        AdaptiveGrid(
+          minTileWidth: CardWidth.stat,
+          maxColumns: 4,
+          children: staggered([
+            StatTile(
+              label: l.dashboardTasksOpen,
+              value: '${stats.tasks!.open}',
+              icon: AppIcons.tasks,
+              color: Accent.green.of(context),
+              caption: l.dashboardNotSeasonScoped,
+            ),
+            StatTile(
+              label: l.dashboardTasksLate,
+              value: '${stats.tasks!.late}',
+              icon: AppIcons.warning,
+              color: stats.tasks!.late > 0
+                  ? Accent.red.of(context)
+                  : Accent.greenDark.of(context),
+              caption: l.dashboardTasksEscalated(stats.tasks!.escalated),
+            ),
+            // The queue somebody ELSE is holding: the assignee has said he is
+            // finished and nobody has answered him. It belongs on this page
+            // because it is invisible from either man's own list.
+            StatTile(
+              label: l.dashboardTasksAwaiting,
+              value: '${stats.tasks!.awaitingReview}',
+              icon: AppIcons.approvals,
+              color: Accent.gold.of(context),
+            ),
+            StatTile(
+              label: l.dashboardTasksAssignees,
+              value: '${stats.tasks!.assignees}',
+              icon: AppIcons.participants,
+              color: Accent.greenDeep.of(context),
+              caption: l.dashboardTasksAllTime(stats.tasks!.total),
+            ),
+          ]),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _cards([
+          if (stats.tasks!.byState.isNotEmpty)
+            ChartCard(
+              title: l.dashboardTasksByState,
+              child: RankedBars(
+                slices: [
+                  // The RPC sends the `task_state` spelling; the enum owns the
+                  // translation from it, so the chart and the board cannot end
+                  // up calling the same state two different things.
+                  for (final s in stats.tasks!.byState)
+                    ChartSlice(
+                      label: taskStateLabel(context, TaskState.fromDb(s.key)),
+                      value: s.count,
+                    ),
+                ],
+              ),
+            ),
+          if (stats.tasks!.byPriority.isNotEmpty)
+            ChartCard(
+              title: l.dashboardTasksByPriority,
+              child: DonutChart(
+                otherLabel: l.chartOther,
+                centerLabel: l.chartTotal,
+                slices: [
+                  for (final s in stats.tasks!.byPriority)
+                    ChartSlice(
+                      label: taskPriorityLabel(
+                        context,
+                        TaskPriority.fromDb(s.key),
+                      ),
+                      value: s.count,
+                    ),
+                ],
+              ),
+            ),
+        ]),
+      ],
+
+      if (stats.evaluations != null) ...[
+        const SizedBox(height: AppSpacing.xl),
+        FadeSlideIn(
+          child: SectionHeader(
+            l.dashboardSectionEvaluations,
+            icon: AppIcons.rating,
+          ),
+        ),
+        AdaptiveGrid(
+          minTileWidth: CardWidth.stat,
+          maxColumns: 4,
+          children: staggered([
+            StatTile(
+              label: l.dashboardEvalSubmitted,
+              value: '${stats.evaluations!.submitted}',
+              icon: AppIcons.rating,
+              color: Accent.green.of(context),
+              caption: l.dashboardEvalOf(stats.evaluations!.total),
+            ),
+            StatTile(
+              label: l.dashboardEvalLate,
+              value: '${stats.evaluations!.late}',
+              icon: AppIcons.warning,
+              color: stats.evaluations!.late > 0
+                  ? Accent.red.of(context)
+                  : Accent.greenDark.of(context),
+              caption: l.dashboardEvalDrafts(stats.evaluations!.draft),
+            ),
+            // A percentage, never an average score — see [EvaluationDashStats]
+            // for why the two are not the same figure.
+            if (stats.evaluations!.averagePct case final pct?)
+              StatTile(
+                label: l.dashboardEvalAverage,
+                value: '${pct.toStringAsFixed(1)}%',
+                icon: AppIcons.trend,
+                color: Accent.gold.of(context),
+                caption: l.dashboardEvalAverageCaption,
+              ),
+            StatTile(
+              label: l.dashboardEvalEvaluators,
+              value: '${stats.evaluations!.evaluators}',
+              icon: AppIcons.participants,
+              color: Accent.greenDeep.of(context),
+            ),
+          ]),
+        ),
+      ],
+
+      if (stats.complaints != null) ...[
+        const SizedBox(height: AppSpacing.xl),
+        FadeSlideIn(
+          child: SectionHeader(
+            l.dashboardSectionComplaints,
+            icon: AppIcons.complaints,
+          ),
+        ),
+        AdaptiveGrid(
+          minTileWidth: CardWidth.stat,
+          maxColumns: 4,
+          children: staggered([
+            StatTile(
+              label: l.dashboardComplaintsOpen,
+              value: '${stats.complaints!.open}',
+              icon: AppIcons.complaints,
+              color: stats.complaints!.open > 0
+                  ? Accent.gold.of(context)
+                  : Accent.greenDark.of(context),
+              caption: l.dashboardNotSeasonScoped,
+            ),
+            StatTile(
+              label: l.dashboardComplaintsRecent,
+              value: '${stats.complaints!.recent}',
+              icon: AppIcons.trend,
+              color: Accent.greenDeep.of(context),
+              caption: l.dashboardComplaintsAllTime(stats.complaints!.total),
+            ),
+            StatTile(
+              label: l.dashboardComplaintsDismissed,
+              value: '${stats.complaints!.dismissed}',
+              icon: AppIcons.locked,
+              color: Accent.goldSoft.of(context),
+              caption: l.dashboardComplaintsLocked(stats.complaints!.locked),
+            ),
+          ]),
+        ),
+        // Counts only, and by TARGET TYPE — never a name. See
+        // [ComplaintDashStats]: the register is structurally secret, and a
+        // dashboard is the easiest place in an application to undo that.
+        if (stats.complaints!.byTarget.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.md),
+          _cards([
+            ChartCard(
+              title: l.dashboardComplaintsByTarget,
+              child: RankedBars(
+                slices: [
+                  for (final s in stats.complaints!.byTarget)
+                    ChartSlice(
+                      label: complaintTargetLabel(
+                        l,
+                        ComplaintTarget.fromDb(s.key),
+                      ),
+                      value: s.count,
+                    ),
+                ],
+              ),
+            ),
+          ]),
+        ],
+      ],
+
       if (stats.reference != null) ...[
         const SizedBox(height: AppSpacing.xl),
         FadeSlideIn(
@@ -576,6 +917,20 @@ class _View extends StatelessWidget {
     DashboardStats stats,
   ) {
     return [
+      // First in the row, ahead of the participant count, and only when there
+      // is one. An open emergency is not a statistic — it is the one thing on
+      // this page somebody is meant to stop reading and act on — so it goes at
+      // the head of the headline and takes the error colour, and a register
+      // with nothing open does not appear here at all rather than printing a
+      // reassuring zero in red.
+      if ((stats.incidents?.open ?? 0) > 0)
+        StatTile(
+          label: l.dashboardIncidentsOpen,
+          value: '${stats.incidents!.open}',
+          icon: AppIcons.warning,
+          color: Accent.red.of(context),
+          caption: l.dashboardIncidentsInProgress(stats.incidents!.inProgress),
+        ),
       if (stats.people != null)
         StatTile(
           label: l.dashboardParticipants,

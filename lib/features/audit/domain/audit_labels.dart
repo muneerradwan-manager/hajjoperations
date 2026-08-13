@@ -57,10 +57,54 @@ class AuditLabels {
       tables: ['module_reports', 'module_report_attachments'],
     ),
     // Standalone since 0105 — no relation to the operational files.
+    //
+    // Six tables, not the two this listed until now. 0117 and 0118 turned a
+    // task from a value one party wrote into a THREAD — comments, events,
+    // batches, steps — and every one of them takes the audit trigger in its own
+    // migration. Naming only the first two here meant the log recorded the
+    // whole conversation and the filter could reach none of it.
     AuditEntityGroup(
       key: 'personal_tasks',
       name: LocalizedName(ar: 'المهام', en: 'Tasks'),
-      tables: ['personal_tasks', 'personal_task_attachments'],
+      tables: [
+        'personal_tasks',
+        'personal_task_attachments',
+        'personal_task_comments',
+        'personal_task_events',
+        'personal_task_batches',
+        'personal_task_steps',
+      ],
+    ),
+    // 0084. Audited since the day it was created and unreachable from this
+    // filter for just as long — a whole section of the app with no section
+    // here. The redacting trigger keeps the marks out of the log; what is
+    // recorded is that a sheet was opened, assigned, filled or deleted, and
+    // that is exactly what an office needs to be able to ask about.
+    AuditEntityGroup(
+      key: 'evaluations',
+      name: LocalizedName(ar: 'التقييمات', en: 'Evaluations'),
+      tables: [
+        'evaluations',
+        'evaluation_answers',
+        'evaluation_templates',
+        'evaluation_stages',
+        'evaluation_questions',
+        'evaluation_options',
+      ],
+    ),
+    // 0098 + 0114 + 0122. The arrivals themselves went unlogged until 0122 —
+    // see that migration for why an attendance register is the last thing that
+    // should be quietly correctable.
+    AuditEntityGroup(
+      key: 'checkin',
+      name: LocalizedName(ar: 'تسجيل الوصول', en: 'Check-in'),
+      tables: ['place_check_ins', 'place_codes', 'place_code_policy'],
+    ),
+    // 0088, logged since 0121 — which also gave the register its delete.
+    AuditEntityGroup(
+      key: 'incidents',
+      name: LocalizedName(ar: 'البلاغات العاجلة', en: 'Urgent reports'),
+      tables: ['incidents', 'incident_attachments'],
     ),
     AuditEntityGroup(
       key: 'reference',
@@ -75,6 +119,9 @@ class AuditLabels {
         'module_type_tasks',
         'module_type_levels',
         'module_type_task_groups',
+        // 0115, and unlogged until 0122 — the only `module_type_*` table that
+        // was not, which is what made it easy to miss.
+        'module_type_teams',
       ],
     ),
     AuditEntityGroup(
@@ -86,6 +133,10 @@ class AuditLabels {
         'report_type_fields',
         'report_type_columns',
         'report_attachments',
+        // 0086, unlogged until 0122. Not a decision but the record BEHIND one:
+        // what the nightly pass decided was late, and how far up it carried it.
+        // It belongs where a reader asking "why was my superior told" looks.
+        'report_misses',
       ],
     ),
     AuditEntityGroup(
@@ -155,6 +206,38 @@ class AuditLabels {
       ar: 'مرفق مهمة',
       en: 'Task attachment',
     ),
+    'personal_task_comments': LocalizedName(
+      ar: 'تعليق على مهمة',
+      en: 'Task comment',
+    ),
+    'personal_task_events': LocalizedName(ar: 'حركة مهمة', en: 'Task event'),
+    'personal_task_batches': LocalizedName(ar: 'دفعة مهام', en: 'Task batch'),
+    'personal_task_steps': LocalizedName(ar: 'خطوة مهمة', en: 'Task step'),
+    'evaluations': LocalizedName(ar: 'ورقة تقييم', en: 'Evaluation sheet'),
+    'evaluation_answers': LocalizedName(ar: 'إجابة تقييم', en: 'Evaluation answer'),
+    'evaluation_templates': LocalizedName(
+      ar: 'نموذج تقييم',
+      en: 'Evaluation form',
+    ),
+    'evaluation_stages': LocalizedName(
+      ar: 'مرحلة تقييم',
+      en: 'Evaluation stage',
+    ),
+    'evaluation_questions': LocalizedName(ar: 'سؤال تقييم', en: 'Evaluation question'),
+    'evaluation_options': LocalizedName(ar: 'خيار إجابة', en: 'Answer option'),
+    'place_check_ins': LocalizedName(ar: 'تسجيل وصول', en: 'Check-in'),
+    'place_codes': LocalizedName(ar: 'رمز مكان', en: 'Place code'),
+    'place_code_policy': LocalizedName(
+      ar: 'سياسة رموز الأماكن',
+      en: 'Place code policy',
+    ),
+    'incidents': LocalizedName(ar: 'بلاغ عاجل', en: 'Urgent report'),
+    'incident_attachments': LocalizedName(
+      ar: 'مرفق بلاغ',
+      en: 'Report attachment',
+    ),
+    'report_misses': LocalizedName(ar: 'تقرير متأخر', en: 'Late report'),
+    'module_type_teams': LocalizedName(ar: 'فريق نوع ملف', en: 'File type team'),
     'module_reports': LocalizedName(ar: 'تقرير ملف', en: 'File report'),
     'module_report_attachments': LocalizedName(
       ar: 'مرفق تقرير ملف',

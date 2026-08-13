@@ -2677,6 +2677,186 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get dashboardNotSeasonScoped => 'لكل المواسم — لا يتبع الموسم المختار';
+
+  @override
+  String get dashboardSectionIncidents => 'البلاغات العاجلة';
+
+  @override
+  String get dashboardIncidentsOpen => 'بلاغات مفتوحة';
+
+  @override
+  String dashboardIncidentsInProgress(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'و$count قيد المعالجة',
+      few: 'و$count قيد المعالجة',
+      two: 'واثنان قيد المعالجة',
+      one: 'وواحد قيد المعالجة',
+      zero: 'لا شيء قيد المعالجة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardIncidentsRecent => 'بلاغات آخر ٣٠ يوماً';
+
+  @override
+  String dashboardIncidentsAllTime(int count) {
+    return '$count منذ البداية';
+  }
+
+  @override
+  String get dashboardIncidentsAvgHandle => 'متوسط زمن التولّي';
+
+  @override
+  String get dashboardIncidentsAvgHandleCaption => 'من الرفع حتى يتولّاه أحد';
+
+  @override
+  String get dashboardIncidentsSplit => 'حالة البلاغات';
+
+  @override
+  String get dashboardIncidentsTrend => 'البلاغات يومياً';
+
+  @override
+  String get dashboardIncidentsTrendEmpty => 'لا بلاغات في هذه المدة';
+
+  @override
+  String get dashboardSectionCheckIn => 'تسجيل الوصول';
+
+  @override
+  String get dashboardCheckInToday => 'تسجيلات اليوم';
+
+  @override
+  String get dashboardCheckInPeople => 'من سجّلوا';
+
+  @override
+  String dashboardCheckInPlaces(int count) {
+    return 'في $count مكاناً';
+  }
+
+  @override
+  String get dashboardCheckInTotal => 'تسجيلات الموسم';
+
+  @override
+  String get dashboardCheckInTrend => 'التسجيلات يومياً';
+
+  @override
+  String get dashboardCheckInTrendEmpty => 'لا تسجيلات في هذه المدة';
+
+  @override
+  String get dashboardSectionTasks => 'المهام المُسندة';
+
+  @override
+  String get dashboardTasksOpen => 'مهام مفتوحة';
+
+  @override
+  String get dashboardTasksLate => 'متأخرة';
+
+  @override
+  String dashboardTasksEscalated(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'صُعِّدت $count',
+      few: 'صُعِّدت $count',
+      two: 'صُعِّدت اثنتان',
+      one: 'صُعِّدت واحدة',
+      zero: 'لم يُصعَّد شيء',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardTasksAwaiting => 'بانتظار القبول';
+
+  @override
+  String get dashboardTasksAssignees => 'مُسنَد إليهم';
+
+  @override
+  String dashboardTasksAllTime(int count) {
+    return '$count مهمة منذ البداية';
+  }
+
+  @override
+  String get dashboardTasksByState => 'المهام حسب الحالة';
+
+  @override
+  String get dashboardTasksByPriority => 'المفتوحة حسب الأولوية';
+
+  @override
+  String get dashboardSectionEvaluations => 'التقييمات';
+
+  @override
+  String get dashboardEvalSubmitted => 'أوراق مُسلَّمة';
+
+  @override
+  String dashboardEvalOf(int count) {
+    return 'من $count';
+  }
+
+  @override
+  String get dashboardEvalLate => 'متأخرة';
+
+  @override
+  String dashboardEvalDrafts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count مسوّدة',
+      few: '$count مسوّدات',
+      two: 'مسوّدتان',
+      one: 'مسوّدة واحدة',
+      zero: 'لا مسوّدات',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardEvalAverage => 'المتوسط';
+
+  @override
+  String get dashboardEvalAverageCaption => 'نسبةً إلى درجة كل نموذج';
+
+  @override
+  String get dashboardEvalEvaluators => 'المقيِّمون';
+
+  @override
+  String get dashboardSectionComplaints => 'الشكاوى';
+
+  @override
+  String get dashboardComplaintsOpen => 'شكاوى مفتوحة';
+
+  @override
+  String get dashboardComplaintsRecent => 'شكاوى آخر ٣٠ يوماً';
+
+  @override
+  String dashboardComplaintsAllTime(int count) {
+    return '$count منذ البداية';
+  }
+
+  @override
+  String get dashboardComplaintsDismissed => 'مرفوضة';
+
+  @override
+  String dashboardComplaintsLocked(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'و$count مغلقة',
+      few: 'و$count مغلقة',
+      two: 'ومغلقتان',
+      one: 'ومغلقة واحدة',
+      zero: 'لا شيء مغلق',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get dashboardComplaintsByTarget => 'الشكاوى حسب الجهة';
+
+  @override
   String get dashboardSectionReference => 'البيانات المرجعية';
 
   @override

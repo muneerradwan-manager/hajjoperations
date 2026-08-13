@@ -4820,6 +4820,258 @@ abstract class AppLocalizations {
   /// **'{n} messages all-time'**
   String dashboardNotifAllTime(Object n);
 
+  /// No description provided for @dashboardNotSeasonScoped.
+  ///
+  /// In en, this message translates to:
+  /// **'All seasons — not filtered by the one selected'**
+  String get dashboardNotSeasonScoped;
+
+  /// No description provided for @dashboardSectionIncidents.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent reports'**
+  String get dashboardSectionIncidents;
+
+  /// No description provided for @dashboardIncidentsOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open reports'**
+  String get dashboardIncidentsOpen;
+
+  /// No description provided for @dashboardIncidentsInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{none in progress} =1{and 1 in progress} other{and {count} in progress}}'**
+  String dashboardIncidentsInProgress(int count);
+
+  /// No description provided for @dashboardIncidentsRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports, last 30 days'**
+  String get dashboardIncidentsRecent;
+
+  /// No description provided for @dashboardIncidentsAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} all time'**
+  String dashboardIncidentsAllTime(int count);
+
+  /// No description provided for @dashboardIncidentsAvgHandle.
+  ///
+  /// In en, this message translates to:
+  /// **'Average time to pick up'**
+  String get dashboardIncidentsAvgHandle;
+
+  /// No description provided for @dashboardIncidentsAvgHandleCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'From raised to taken on'**
+  String get dashboardIncidentsAvgHandleCaption;
+
+  /// No description provided for @dashboardIncidentsSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports by state'**
+  String get dashboardIncidentsSplit;
+
+  /// No description provided for @dashboardIncidentsTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Reports per day'**
+  String get dashboardIncidentsTrend;
+
+  /// No description provided for @dashboardIncidentsTrendEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No reports in this period'**
+  String get dashboardIncidentsTrendEmpty;
+
+  /// No description provided for @dashboardSectionCheckIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in'**
+  String get dashboardSectionCheckIn;
+
+  /// No description provided for @dashboardCheckInToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s arrivals'**
+  String get dashboardCheckInToday;
+
+  /// No description provided for @dashboardCheckInPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'People who filed'**
+  String get dashboardCheckInPeople;
+
+  /// No description provided for @dashboardCheckInPlaces.
+  ///
+  /// In en, this message translates to:
+  /// **'at {count} places'**
+  String dashboardCheckInPlaces(int count);
+
+  /// No description provided for @dashboardCheckInTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrivals this season'**
+  String get dashboardCheckInTotal;
+
+  /// No description provided for @dashboardCheckInTrend.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrivals per day'**
+  String get dashboardCheckInTrend;
+
+  /// No description provided for @dashboardCheckInTrendEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No arrivals in this period'**
+  String get dashboardCheckInTrendEmpty;
+
+  /// No description provided for @dashboardSectionTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned tasks'**
+  String get dashboardSectionTasks;
+
+  /// No description provided for @dashboardTasksOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open tasks'**
+  String get dashboardTasksOpen;
+
+  /// No description provided for @dashboardTasksLate.
+  ///
+  /// In en, this message translates to:
+  /// **'Late'**
+  String get dashboardTasksLate;
+
+  /// No description provided for @dashboardTasksEscalated.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{none escalated} =1{1 escalated} other{{count} escalated}}'**
+  String dashboardTasksEscalated(int count);
+
+  /// No description provided for @dashboardTasksAwaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting review'**
+  String get dashboardTasksAwaiting;
+
+  /// No description provided for @dashboardTasksAssignees.
+  ///
+  /// In en, this message translates to:
+  /// **'Assignees'**
+  String get dashboardTasksAssignees;
+
+  /// No description provided for @dashboardTasksAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tasks all time'**
+  String dashboardTasksAllTime(int count);
+
+  /// No description provided for @dashboardTasksByState.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks by state'**
+  String get dashboardTasksByState;
+
+  /// No description provided for @dashboardTasksByPriority.
+  ///
+  /// In en, this message translates to:
+  /// **'Open tasks by priority'**
+  String get dashboardTasksByPriority;
+
+  /// No description provided for @dashboardSectionEvaluations.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluations'**
+  String get dashboardSectionEvaluations;
+
+  /// No description provided for @dashboardEvalSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Sheets submitted'**
+  String get dashboardEvalSubmitted;
+
+  /// No description provided for @dashboardEvalOf.
+  ///
+  /// In en, this message translates to:
+  /// **'of {count}'**
+  String dashboardEvalOf(int count);
+
+  /// No description provided for @dashboardEvalLate.
+  ///
+  /// In en, this message translates to:
+  /// **'Late'**
+  String get dashboardEvalLate;
+
+  /// No description provided for @dashboardEvalDrafts.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{no drafts} =1{1 draft} other{{count} drafts}}'**
+  String dashboardEvalDrafts(int count);
+
+  /// No description provided for @dashboardEvalAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Average'**
+  String get dashboardEvalAverage;
+
+  /// No description provided for @dashboardEvalAverageCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'As a share of each form\'s total'**
+  String get dashboardEvalAverageCaption;
+
+  /// No description provided for @dashboardEvalEvaluators.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluators'**
+  String get dashboardEvalEvaluators;
+
+  /// No description provided for @dashboardSectionComplaints.
+  ///
+  /// In en, this message translates to:
+  /// **'Complaints'**
+  String get dashboardSectionComplaints;
+
+  /// No description provided for @dashboardComplaintsOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open complaints'**
+  String get dashboardComplaintsOpen;
+
+  /// No description provided for @dashboardComplaintsRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Complaints, last 30 days'**
+  String get dashboardComplaintsRecent;
+
+  /// No description provided for @dashboardComplaintsAllTime.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} all time'**
+  String dashboardComplaintsAllTime(int count);
+
+  /// No description provided for @dashboardComplaintsDismissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismissed'**
+  String get dashboardComplaintsDismissed;
+
+  /// No description provided for @dashboardComplaintsLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{none locked} =1{and 1 locked} other{and {count} locked}}'**
+  String dashboardComplaintsLocked(int count);
+
+  /// No description provided for @dashboardComplaintsByTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Complaints by subject'**
+  String get dashboardComplaintsByTarget;
+
   /// No description provided for @dashboardSectionReference.
   ///
   /// In en, this message translates to:
