@@ -4522,6 +4522,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportWhat => 'What do you want to export?';
 
   @override
+  String get exportPickFirst => 'Choose one above';
+
+  @override
+  String get exportPickFirstHint =>
+      'Once you have, the columns you can take, the shape of the file, and the save and send buttons appear here.';
+
+  @override
   String get exportWhichColumns => 'Columns';
 
   @override

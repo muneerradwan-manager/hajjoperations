@@ -4559,6 +4559,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get exportWhat => 'ما الذي تريد تصديره؟';
 
   @override
+  String get exportPickFirst => 'اختر جدولاً من الأعلى';
+
+  @override
+  String get exportPickFirstHint =>
+      'بعد الاختيار تظهر هنا الأعمدة التي يمكن أخذها، وصيغة الملف، وزرّا الحفظ والإرسال.';
+
+  @override
   String get exportWhichColumns => 'الأعمدة';
 
   @override

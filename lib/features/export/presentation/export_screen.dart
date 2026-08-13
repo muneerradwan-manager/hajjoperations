@@ -109,27 +109,91 @@ class _ExportView extends StatelessWidget {
             builder: (context, size) => SinglePaneLayout(
               gutter: size.gutter,
               children: [
-              SectionHeader(l.exportWhat),
-              _DatasetPicker(state: state),
-              if (state.dataset != null) ...[
-                for (final option in state.dataset!.options)
-                  _OptionPicker(option: option, state: state),
-                const SizedBox(height: AppSpacing.md),
-                SectionHeader(
-                  l.exportWhichColumns,
-                  trailing: _ColumnActions(state: state),
-                ),
-                _ColumnPicker(state: state),
-                const SizedBox(height: AppSpacing.md),
-                SectionHeader(l.exportFormat),
-                _FormatPicker(state: state),
-                const SizedBox(height: AppSpacing.lg),
-                _RunButton(state: state),
-              ],
+                SectionHeader(l.exportWhat),
+                _DatasetPicker(state: state),
+                // Everything below step one is disclosed by step one, which is
+                // right — the columns of a dataset nobody has named cannot be
+                // drawn — and it left the screen with a heading, a row of chips
+                // and then nothing at all: a page that reads as broken rather
+                // than as waiting. So the space says what it is waiting for.
+                if (state.dataset == null)
+                  const _AwaitingDataset()
+                else ...[
+                  for (final option in state.dataset!.options)
+                    _OptionPicker(option: option, state: state),
+                  const SizedBox(height: AppSpacing.md),
+                  SectionHeader(
+                    l.exportWhichColumns,
+                    trailing: _ColumnActions(state: state),
+                  ),
+                  _ColumnPicker(state: state),
+                  const SizedBox(height: AppSpacing.md),
+                  SectionHeader(l.exportFormat),
+                  _FormatPicker(state: state),
+                  const SizedBox(height: AppSpacing.lg),
+                  _RunButton(state: state),
+                ],
               ],
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+/// What stands in the space the rest of the form will fill.
+///
+/// A well rather than a pane — [GlassCard.subtle] is the recessed fill, and a
+/// recess is what says "something goes here" instead of "here is a thing". It
+/// carries no control and takes no tap: the only thing to press is already
+/// above it, and a second button here would be a second answer to a question
+/// that has one.
+///
+/// It says what is coming rather than only that something is missing. «اختر
+/// جدولاً» alone would restate the heading four centimetres above it; the line
+/// under it — columns, then a format, then the two buttons — is the shape of
+/// the whole errand, which is worth knowing before starting it.
+class _AwaitingDataset extends StatelessWidget {
+  const _AwaitingDataset();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final theme = Theme.of(context);
+    final muted = theme.colorScheme.onSurfaceVariant;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.lg),
+      child: GlassCard(
+        subtle: true,
+        shadow: false,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.xxl,
+        ),
+        child: Column(
+          children: [
+            Icon(AppIcons.file, size: 34, color: muted.withValues(alpha: 0.55)),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              l.exportPickFirst,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              l.exportPickFirstHint,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: muted,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1568,6 +1568,8 @@
   "exportTitle": "Export data",
   "exportSubtitle": "Take any list out as a file — with the columns you choose",
   "exportWhat": "What do you want to export?",
+  "exportPickFirst": "Choose one above",
+  "exportPickFirstHint": "Once you have, the columns you can take, the shape of the file, and the save and send buttons appear here.",
   "exportWhichColumns": "Columns",
   "exportColumnsDefault": "Default",
   "exportColumnsAll": "All",

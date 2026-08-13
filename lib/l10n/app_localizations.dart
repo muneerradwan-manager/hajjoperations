@@ -7772,6 +7772,18 @@ abstract class AppLocalizations {
   /// **'What do you want to export?'**
   String get exportWhat;
 
+  /// No description provided for @exportPickFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose one above'**
+  String get exportPickFirst;
+
+  /// No description provided for @exportPickFirstHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Once you have, the columns you can take, the shape of the file, and the save and send buttons appear here.'**
+  String get exportPickFirstHint;
+
   /// No description provided for @exportWhichColumns.
   ///
   /// In en, this message translates to:

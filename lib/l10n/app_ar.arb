@@ -1557,6 +1557,8 @@
   "exportTitle": "تصدير البيانات",
   "exportSubtitle": "أخرج أي قائمة كملف — باختيار الأعمدة",
   "exportWhat": "ما الذي تريد تصديره؟",
+  "exportPickFirst": "اختر جدولاً من الأعلى",
+  "exportPickFirstHint": "بعد الاختيار تظهر هنا الأعمدة التي يمكن أخذها، وصيغة الملف، وزرّا الحفظ والإرسال.",
   "exportWhichColumns": "الأعمدة",
   "exportColumnsDefault": "الافتراضية",
   "exportColumnsAll": "الكل",
