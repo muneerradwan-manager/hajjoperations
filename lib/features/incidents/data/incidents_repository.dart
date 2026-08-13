@@ -116,4 +116,44 @@ class IncidentsRepository {
       'p_resolution': resolution,
     },
   );
+
+  /// Strikes one off the register (0121).
+  ///
+  /// The RPC hands back the storage paths its cascade orphaned, because nothing
+  /// in Postgres owns objects in a bucket: the attachment ROWS go with the
+  /// incident and the photographs would stay behind forever, in a private
+  /// bucket, readable by nobody and paid for indefinitely.
+  Future<void> delete(String incidentId) async {
+    final paths = await supabase.rpc(
+      'delete_incident',
+      params: {'p_incident_id': incidentId},
+    );
+    await _sweep(paths);
+  }
+
+  /// Empties it. [onlyClosed] false takes the open ones too — see
+  /// `delete_all_incidents`, where that is the argument the caller has to make
+  /// deliberately. Returns how many rows went.
+  Future<int> deleteAll({bool onlyClosed = true}) async {
+    final rows = await supabase.rpc(
+      'delete_all_incidents',
+      params: {'p_only_closed': onlyClosed},
+    );
+    // A `returns table` RPC comes back as a list of one row.
+    final row = ((rows as List?) ?? const []).cast<Map<String, dynamic>>();
+    if (row.isEmpty) return 0;
+    await _sweep(row.first['paths']);
+    return (row.first['deleted'] as int?) ?? 0;
+  }
+
+  /// Removes the orphaned objects. Deliberately swallowed: the row is already
+  /// gone and the register is already right, and a bucket call that failed is
+  /// not something to put in front of somebody who just deleted a report.
+  Future<void> _sweep(Object? paths) async {
+    final list = ((paths as List?) ?? const []).cast<String>();
+    if (list.isEmpty) return;
+    try {
+      await supabase.storage.from(_bucket).remove(list);
+    } catch (_) {}
+  }
 }

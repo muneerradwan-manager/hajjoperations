@@ -90,6 +90,34 @@ class IncidentsCubit extends SafeCubit<IncidentsState> {
       return e.toString();
     }
   }
+
+  /// Strikes one off. Returns null on success, else what went wrong.
+  ///
+  /// Not queued when the network is down, for the same reason [setState] is not:
+  /// the register is what several people are reading at once, and a deletion
+  /// that lands an hour later removes a row somebody has since acted on.
+  Future<String?> delete(Incident incident) async {
+    try {
+      await _repo.delete(incident.id);
+      await load();
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  /// Empties it. Returns how many went, or the error.
+  Future<({int deleted, String? error})> deleteAll({
+    bool onlyClosed = true,
+  }) async {
+    try {
+      final deleted = await _repo.deleteAll(onlyClosed: onlyClosed);
+      await load();
+      return (deleted: deleted, error: null);
+    } catch (e) {
+      return (deleted: 0, error: e.toString());
+    }
+  }
 }
 
 /// Raising one. A plain function, because it is called from a button that may

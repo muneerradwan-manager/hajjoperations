@@ -1244,6 +1244,12 @@ abstract class AppLocalizations {
   /// **'Take on an urgent report and close it'**
   String get permIncidentsHandle;
 
+  /// No description provided for @permIncidentsDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete urgent reports from the register'**
+  String get permIncidentsDelete;
+
   /// No description provided for @perm_checkin.
   ///
   /// In en, this message translates to:
@@ -6985,6 +6991,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =0{No open reports} =1{1 open report} other{{count} open reports}}'**
   String incidentOpenCount(int count);
+
+  /// No description provided for @incidentDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete report'**
+  String get incidentDelete;
+
+  /// No description provided for @incidentDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'The report and anything attached to it are erased for good, and it leaves everyone\'s register. This cannot be undone.'**
+  String get incidentDeleteConfirm;
+
+  /// No description provided for @incidentDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Report deleted'**
+  String get incidentDeleted;
+
+  /// No description provided for @incidentsClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the register'**
+  String get incidentsClear;
+
+  /// No description provided for @incidentsClearWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'What should be deleted?'**
+  String get incidentsClearWhat;
+
+  /// No description provided for @incidentsClearClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed ones only'**
+  String get incidentsClearClosed;
+
+  /// No description provided for @incidentsClearClosedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Every open or in-progress report stays exactly as it is'**
+  String get incidentsClearClosedHint;
+
+  /// No description provided for @incidentsClearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Every report'**
+  String get incidentsClearAll;
+
+  /// No description provided for @incidentsClearAllHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Open ones included — they vanish from the screen of everyone watching the register right now'**
+  String get incidentsClearAllHint;
+
+  /// No description provided for @incidentsCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Nothing was deleted} =1{1 report deleted} other{{count} reports deleted}}'**
+  String incidentsCleared(int count);
+
+  /// No description provided for @incidentAlarmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent report'**
+  String get incidentAlarmTitle;
+
+  /// No description provided for @incidentAlarmOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the register'**
+  String get incidentAlarmOpen;
+
+  /// No description provided for @incidentAlarmDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get incidentAlarmDismiss;
+
+  /// No description provided for @incidentAlarmMore.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{and 1 more} other{and {count} more}}'**
+  String incidentAlarmMore(int count);
 
   /// No description provided for @durationMinutes.
   ///

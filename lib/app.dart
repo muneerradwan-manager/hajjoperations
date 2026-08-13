@@ -14,6 +14,8 @@ import 'features/auth/application/auth_cubit.dart';
 import 'features/auth/application/session_cubit.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'features/auth/data/saved_accounts_store.dart';
+import 'features/incidents/application/incident_alarm.dart';
+import 'features/incidents/presentation/widgets/incident_alarm_host.dart';
 import 'features/notifications/data/push_service.dart';
 import 'features/profile/data/profile_repository.dart';
 import 'l10n/app_localizations.dart';
@@ -85,12 +87,33 @@ class _AppViewState extends State<_AppView> {
     super.initState();
     PushService.instance.pendingTap.addListener(_deliverTap);
     _deliverTap();
+    // The listener below only fires on a CHANGE, and a session restored from
+    // disk can already be approved by the time this widget is built — in which
+    // case nothing would ever have started the alarm.
+    _syncAlarm(context.read<SessionCubit>().state);
   }
 
   @override
   void dispose() {
     PushService.instance.pendingTap.removeListener(_deliverTap);
+    IncidentAlarm.instance.stop();
     super.dispose();
+  }
+
+  /// Turns the urgent-report alarm on for whoever is signed in, and off when
+  /// nobody is.
+  ///
+  /// Tied to the SESSION rather than started once at boot, because what it
+  /// listens to is one person's inbox: left running across an account switch it
+  /// would be watching the previous user's stream, and the ids it had already
+  /// dismissed would silence the new reader's emergencies. [IncidentAlarm.stop]
+  /// clears both.
+  void _syncAlarm(SessionState session) {
+    if (session.status == SessionStatus.approved) {
+      IncidentAlarm.instance.watch();
+    } else {
+      IncidentAlarm.instance.stop();
+    }
   }
 
   /// Takes a notification tapped in the phone's tray to the inbox.
@@ -133,7 +156,10 @@ class _AppViewState extends State<_AppView> {
     final settings = context.watch<SettingsCubit>().state;
 
     return BlocListener<SessionCubit, SessionState>(
-      listener: (_, _) => _deliverTap(),
+      listener: (_, session) {
+        _deliverTap();
+        _syncAlarm(session);
+      },
       child: _app(settings),
     );
   }
@@ -153,8 +179,17 @@ class _AppViewState extends State<_AppView> {
       // below every route, so it survives page transitions without restarting.
       // The snack bar cap wraps it because it works by overriding the theme,
       // and everything that shows a snack bar is inside.
-      builder: (context, child) => SnackBarWidthCap(
-        child: AuroraBackground(child: child ?? const SizedBox.shrink()),
+      //
+      // The alarm host is outermost and draws nothing. It has to be above every
+      // route for the same reason the backdrop is — an urgent report is not
+      // something you have to be on the right screen to be told about — and it
+      // is handed the router because a dialog opened from here has no Navigator
+      // above it to open on.
+      builder: (context, child) => IncidentAlarmHost(
+        router: _router,
+        child: SnackBarWidthCap(
+          child: AuroraBackground(child: child ?? const SizedBox.shrink()),
+        ),
       ),
     );
   }

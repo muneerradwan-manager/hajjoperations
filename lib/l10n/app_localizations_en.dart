@@ -610,6 +610,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permIncidentsHandle => 'Take on an urgent report and close it';
 
   @override
+  String get permIncidentsDelete => 'Delete urgent reports from the register';
+
+  @override
   String get perm_checkin => 'Check-in';
 
   @override
@@ -3998,6 +4001,68 @@ class AppLocalizationsEn extends AppLocalizations {
       other: '$count open reports',
       one: '1 open report',
       zero: 'No open reports',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get incidentDelete => 'Delete report';
+
+  @override
+  String get incidentDeleteConfirm =>
+      'The report and anything attached to it are erased for good, and it leaves everyone\'s register. This cannot be undone.';
+
+  @override
+  String get incidentDeleted => 'Report deleted';
+
+  @override
+  String get incidentsClear => 'Clear the register';
+
+  @override
+  String get incidentsClearWhat => 'What should be deleted?';
+
+  @override
+  String get incidentsClearClosed => 'Closed ones only';
+
+  @override
+  String get incidentsClearClosedHint =>
+      'Every open or in-progress report stays exactly as it is';
+
+  @override
+  String get incidentsClearAll => 'Every report';
+
+  @override
+  String get incidentsClearAllHint =>
+      'Open ones included — they vanish from the screen of everyone watching the register right now';
+
+  @override
+  String incidentsCleared(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reports deleted',
+      one: '1 report deleted',
+      zero: 'Nothing was deleted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get incidentAlarmTitle => 'Urgent report';
+
+  @override
+  String get incidentAlarmOpen => 'Open the register';
+
+  @override
+  String get incidentAlarmDismiss => 'Dismiss';
+
+  @override
+  String incidentAlarmMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'and $count more',
+      one: 'and 1 more',
     );
     return '$_temp0';
   }

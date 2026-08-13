@@ -27,6 +27,11 @@
          are still laid down inexactly rather than not at all. A call four
          minutes late beats a call that never comes. -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <!-- The urgent-report alarm buzzes as well as sounds — see AlarmSound. The
+         one phone that will not make a noise is the one somebody has muted at
+         hardware level, and it is nearly always the phone of a person in a
+         meeting rather than asleep. Granted at install, no dialog. -->
+    <uses-permission android:name="android.permission.VIBRATE"/>
     <!-- Backup is off on purpose: the Supabase session (a live refresh token)
          and other prefs live in this app's private storage, and auto-backup
          would carry them off the device into cloud backups and adb extraction.

@@ -3,14 +3,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/constants/permission_codes.dart';
 import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
+import '../../../core/widgets/overflow_menu.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../auth/application/session_cubit.dart';
 import '../application/incidents_cubit.dart';
 import '../data/incidents_repository.dart';
 import '../domain/incident.dart';
@@ -38,9 +41,27 @@ class _IncidentsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
+    final canDelete = context.select<SessionCubit, bool>(
+      (cubit) => cubit.state.can(PermissionCodes.incidentsDelete),
+    );
 
     return Scaffold(
-      appBar: GlassAppBar(title: Text(l.incidentsTitle)),
+      appBar: GlassAppBar(
+        title: Text(l.incidentsTitle),
+        actions: [
+          if (canDelete)
+            OverflowMenu(
+              actions: [
+                MenuAction(
+                  icon: AppIcons.delete,
+                  label: l.incidentsClear,
+                  isDestructive: true,
+                  onSelected: () => _clear(context),
+                ),
+              ],
+            ),
+        ],
+      ),
       body: BlocBuilder<IncidentsCubit, IncidentsState>(
         builder: (context, state) {
           if (state.status == IncidentsStatus.loading) {
@@ -116,6 +137,106 @@ class _IncidentsView extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Emptying the register.
+///
+/// Asks WHAT rather than merely "are you sure", because the two answers are not
+/// the same act and a yes/no dialog cannot tell them apart. Clearing the closed
+/// ones is housekeeping — the season is over, the list is six hundred rows of
+/// finished business, and nobody loses anything. Clearing everything takes an
+/// OPEN emergency off the screen of every other person watching the register,
+/// possibly while somebody is driving towards it, and that has to be chosen in
+/// so many words rather than arrived at by pressing the confirming button twice.
+///
+/// The safe answer is the primary one and the dangerous one is a plain button
+/// in the error colour, which is the opposite of how a confirmation usually
+/// reads and is the point.
+Future<void> _clear(BuildContext context) async {
+  final l = context.l10n;
+  final messenger = ScaffoldMessenger.of(context);
+  final cubit = context.read<IncidentsCubit>();
+
+  final onlyClosed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(l.incidentsClear),
+      content: Text(l.incidentsClearWhat),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(),
+          child: Text(l.commonCancel),
+        ),
+        TextButton(
+          style: TextButton.styleFrom(
+            foregroundColor: Theme.of(dialogContext).colorScheme.error,
+          ),
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: Text(l.incidentsClearAll),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          child: Text(l.incidentsClearClosed),
+        ),
+      ],
+    ),
+  );
+  if (onlyClosed == null) return;
+
+  final result = await cubit.deleteAll(onlyClosed: onlyClosed);
+  messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Text(
+          result.error == null
+              ? l.incidentsCleared(result.deleted)
+              : friendlyErrorL(l, result.error),
+        ),
+      ),
+    );
+}
+
+/// Striking one off, with the warning that it is final.
+Future<void> _delete(BuildContext context, Incident incident) async {
+  final l = context.l10n;
+  final messenger = ScaffoldMessenger.of(context);
+  final cubit = context.read<IncidentsCubit>();
+
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(l.incidentDelete),
+      content: Text(l.incidentDeleteConfirm),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: Text(l.commonCancel),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: Theme.of(dialogContext).colorScheme.error,
+          ),
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          child: Text(l.commonDelete),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true) return;
+
+  final error = await cubit.delete(incident);
+  messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Text(
+          error == null
+              ? l.incidentDeleted
+              : friendlyErrorL(l, error),
+        ),
+      ),
+    );
 }
 
 /// What a report is about, when the reporter said so — one quiet line under
@@ -198,6 +319,9 @@ class _IncidentCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final cubit = context.read<IncidentsCubit>();
+    final canDelete = context.select<SessionCubit, bool>(
+      (session) => session.state.can(PermissionCodes.incidentsDelete),
+    );
 
     final stateLabel = switch (incident.state) {
       IncidentState.open => l.incidentStateOpen,
@@ -244,6 +368,26 @@ class _IncidentCard extends StatelessWidget {
                     l.incidentWaited(waitedLabel(l, incident.waited)),
                     style: text.bodySmall?.copyWith(color: accent),
                   ),
+                // In the header rather than beside "أتولّاه" below. That row is
+                // what you do ABOUT the emergency — telephone him, take it on,
+                // close it — and a button that erases the record has no business
+                // standing in a line of them at 3am with one thumb.
+                //
+                // Absent rather than disabled for whoever may not: see
+                // [OverflowMenu], and the same argument the file screens make.
+                if (canDelete) ...[
+                  const SizedBox(width: AppSpacing.sm),
+                  OverflowMenu(
+                    actions: [
+                      MenuAction(
+                        icon: AppIcons.delete,
+                        label: l.incidentDelete,
+                        isDestructive: true,
+                        onSelected: () => _delete(context, incident),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: AppSpacing.sm),

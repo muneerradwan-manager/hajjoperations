@@ -70,6 +70,7 @@ String permissionLabel(AppLocalizations l, String code) => switch (code) {
   'evaluations.delete' => l.permEvaluationsDelete,
   'incidents.receive' => l.permIncidentsReceive,
   'incidents.handle' => l.permIncidentsHandle,
+  'incidents.delete' => l.permIncidentsDelete,
   'checkin.board' => l.permCheckinBoard,
   'checkin.codes' => l.permCheckinCodes,
   'checkin.rotate' => l.permCheckinRotate,

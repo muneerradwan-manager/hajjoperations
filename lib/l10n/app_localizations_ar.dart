@@ -609,6 +609,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get permIncidentsHandle => 'تولّي بلاغ عاجل وإغلاقه';
 
   @override
+  String get permIncidentsDelete => 'حذف البلاغات العاجلة من السجل';
+
+  @override
   String get perm_checkin => 'تسجيل الوصول';
 
   @override
@@ -4026,6 +4029,72 @@ class AppLocalizationsAr extends AppLocalizations {
       two: 'بلاغان مفتوحان',
       one: 'بلاغ واحد مفتوح',
       zero: 'لا بلاغات مفتوحة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get incidentDelete => 'حذف البلاغ';
+
+  @override
+  String get incidentDeleteConfirm =>
+      'يُحذف البلاغ وما أُرفق به نهائياً، ويختفي من سجل الجميع. لا يمكن التراجع.';
+
+  @override
+  String get incidentDeleted => 'حُذف البلاغ';
+
+  @override
+  String get incidentsClear => 'تفريغ السجل';
+
+  @override
+  String get incidentsClearWhat => 'ما الذي يُحذف؟';
+
+  @override
+  String get incidentsClearClosed => 'المغلقة فقط';
+
+  @override
+  String get incidentsClearClosedHint =>
+      'يبقى كل بلاغ مفتوح أو قيد المعالجة كما هو';
+
+  @override
+  String get incidentsClearAll => 'كل البلاغات';
+
+  @override
+  String get incidentsClearAllHint =>
+      'بما فيها المفتوحة — تختفي من شاشة كل من يتابع السجل الآن';
+
+  @override
+  String incidentsCleared(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'حُذف $count بلاغاً',
+      few: 'حُذفت $count بلاغات',
+      two: 'حُذف بلاغان',
+      one: 'حُذف بلاغ واحد',
+      zero: 'لم يُحذف شيء',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get incidentAlarmTitle => 'بلاغ عاجل';
+
+  @override
+  String get incidentAlarmOpen => 'افتح السجل';
+
+  @override
+  String get incidentAlarmDismiss => 'إغلاق';
+
+  @override
+  String incidentAlarmMore(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'و$count بلاغاً آخر',
+      few: 'و$count بلاغات أخرى',
+      two: 'وبلاغان آخران',
+      one: 'وبلاغ آخر',
     );
     return '$_temp0';
   }

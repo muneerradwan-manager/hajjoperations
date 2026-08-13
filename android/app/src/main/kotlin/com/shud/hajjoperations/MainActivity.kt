@@ -6,7 +6,7 @@ import io.flutter.plugin.common.MethodChannel
 
 /**
  * The one activity, and the only place Flutter can reach the home-screen
- * widget.
+ * widget and the urgent-report alarm.
  *
  * Three calls out — update, count, pin — and one call BACK, which is the whole
  * reason this class now holds onto its channel. `applicationContext`
@@ -17,6 +17,25 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        alarmChannel = MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            AlarmSound.CHANNEL,
+        ).also { alarm ->
+            alarm.setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "start" -> {
+                        AlarmSound.start(applicationContext)
+                        result.success(null)
+                    }
+                    "stop" -> {
+                        AlarmSound.stop(applicationContext)
+                        result.success(null)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
+        }
 
         val channel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
@@ -55,6 +74,12 @@ class MainActivity : FlutterActivity() {
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
         widgetChannel?.setMethodCallHandler(null)
         widgetChannel = null
+        alarmChannel?.setMethodCallHandler(null)
+        alarmChannel = null
+        // The engine going away means the dialog that was ringing is gone too,
+        // and a MediaPlayer looping an alarm tone with nothing left able to stop
+        // it is a phone the reader has to reboot.
+        AlarmSound.stop(applicationContext)
         super.cleanUpFlutterEngine(flutterEngine)
     }
 
@@ -64,6 +89,9 @@ class MainActivity : FlutterActivity() {
          * life, because the widget is drawn with the app closed.
          */
         private var widgetChannel: MethodChannel? = null
+
+        /** Held for the same reason, and torn down in the same place. */
+        private var alarmChannel: MethodChannel? = null
 
         /**
          * Tells Dart a copy of the widget has just been pinned.

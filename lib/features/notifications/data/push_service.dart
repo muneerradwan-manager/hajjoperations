@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/logging/app_logger.dart';
 import '../../../core/notifications/local_notifications.dart';
 import '../../../core/supabase/supabase_client.dart';
+import '../../incidents/application/incident_alarm.dart';
 import 'notifications_repository.dart';
 
 /// What a tapped notification carried, as keys this app can act on.
@@ -341,6 +342,24 @@ class PushService {
     // while the app happens to be open is the one that comes in quietly.
     final urgent = message.data['type'] == incidentType;
     final channel = urgent ? _urgentChannel : _channel;
+
+    // And a tray entry is not enough for this one. The app being in FRONT is
+    // exactly the case the notification handles worst — a banner slides in over
+    // a list and slides out again, and in an operations room, where the app is
+    // open on a screen nobody is looking at, that is an emergency nobody saw.
+    // So it also goes to [IncidentAlarm], which stops the app with a dialog and
+    // an alarm tone. It is keyed on the incident, so this and the Realtime
+    // stream delivering the same report ring once between them.
+    if (urgent) {
+      IncidentAlarm.instance.raiseFromPush(
+        key: switch (message.data['incident_id']) {
+          final String id when id.isNotEmpty => id,
+          _ => message.messageId ?? '${n.title}${n.body}',
+        },
+        title: n.title ?? '',
+        body: n.body,
+      );
+    }
     _local.plugin.show(
       id: n.hashCode,
       title: n.title,

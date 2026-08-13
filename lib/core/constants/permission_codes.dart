@@ -222,4 +222,12 @@ class PermissionCodes {
   /// register and being answerable for it are two different trusts, and the
   /// database makes this one require the other (see migration 0088).
   static const incidentsHandle = 'incidents.handle';
+
+  /// Striking one off the register, and emptying the register (0121).
+  ///
+  /// Not folded into [incidentsHandle]: closing a report says "somebody went",
+  /// deleting it says "this never happened", and the second is not the first
+  /// with more confidence. Until 0121 the table had no delete policy at all, so
+  /// this was nobody's — not even an administrator's.
+  static const incidentsDelete = 'incidents.delete';
 }
