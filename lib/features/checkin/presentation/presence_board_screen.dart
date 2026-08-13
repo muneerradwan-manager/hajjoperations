@@ -99,30 +99,50 @@ class _View extends StatelessWidget {
                 ),
                 Expanded(
                   child: state.showingGaps
-                      ? _GapsList(gaps: gaps, gutter: size.gutter, onRefresh: cubit.load)
+                      ? _GapsList(
+                          gaps: gaps,
+                          gutter: size.gutter,
+                          onRefresh: cubit.load,
+                        )
                       : places.isEmpty
                       ? EmptyState(
                           icon: AppIcons.checkIn,
                           title: l.presenceEmpty,
                           message: l.presenceEmptyHint,
                         )
-                      : RefreshIndicator(
+                      // A grid, like every other list in the app. This was a
+                      // [ListView] — one place per row at every width — so a
+                      // season with fourteen hotels and camps came out as a
+                      // single column of cards down the middle of a monitor
+                      // with two thirds of it blank, and a supervisor asking
+                      // "is anybody at the camps tonight" scrolled past four
+                      // places to reach the fifth. At [CardWidth.list] the same
+                      // fourteen are four across and read at a glance, which is
+                      // what a board is for.
+                      : AdaptiveGridView(
+                          padding: EdgeInsets.fromLTRB(
+                            size.gutter,
+                            AppSpacing.md,
+                            size.gutter,
+                            AppSpacing.xxl +
+                                MediaQuery.viewPaddingOf(context).bottom,
+                          ),
                           onRefresh: cubit.load,
-                          child: ListView.builder(
-                            padding: EdgeInsets.fromLTRB(
-                              size.gutter,
-                              AppSpacing.md,
-                              size.gutter,
-                              AppSpacing.xxl +
-                                  MediaQuery.viewPaddingOf(context).bottom,
-                            ),
-                            itemCount: places.length,
-                            itemBuilder: (context, i) => FadeSlideIn(
-                              delay: Duration(
-                                milliseconds: 30 * (i < 8 ? i : 8),
-                              ),
-                              child: _PlaceCard(group: places[i]),
-                            ),
+                          spacing: AppSpacing.md,
+                          // Natural heights, and this is the one list in the
+                          // app that has to say so. A place card is as tall as
+                          // the number of people standing in that place: منى
+                          // with thirty names beside a hotel with one. Held to
+                          // a shared height, the row would be four cards the
+                          // depth of the tallest, three of them mostly empty
+                          // glass — the equal-height rule earns its keep on
+                          // cards that differ by a badge, not by a factor of
+                          // thirty.
+                          equalHeights: false,
+                          itemCount: places.length,
+                          itemBuilder: (context, i) => FadeSlideIn(
+                            delay: Duration(milliseconds: 30 * (i < 8 ? i : 8)),
+                            child: _PlaceCard(group: places[i]),
                           ),
                         ),
                 ),
@@ -225,44 +245,45 @@ class _PlaceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: GlassCard(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(AppIcons.location, size: 18, color: scheme.primary),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+    // No bottom margin of its own: the grid around it spaces the rows, and a
+    // card carrying its own gap as well would double it between rows and leave
+    // it out between columns.
+    return GlassCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(AppIcons.location, size: 18, color: scheme.primary),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      group.placeName,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    if (group.groupName != null)
                       Text(
-                        group.placeName,
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      if (group.groupName != null)
-                        Text(
-                          group.groupName!,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        group.groupName!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
                         ),
-                    ],
-                  ),
+                      ),
+                  ],
                 ),
-                Text(
-                  '${group.lines.length}',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-              ],
-            ),
-            const Divider(height: AppSpacing.lg),
-            for (final line in group.lines) _Line(line: line),
-          ],
-        ),
+              ),
+              Text(
+                '${group.lines.length}',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ],
+          ),
+          const Divider(height: AppSpacing.lg),
+          for (final line in group.lines) _Line(line: line),
+        ],
       ),
     );
   }
@@ -312,9 +333,9 @@ class _Line extends StatelessWidget {
           ),
           Text(
             DateFormat.jm().format(line.createdAt),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -397,20 +418,23 @@ class _GapsList extends StatelessWidget {
       );
     }
 
-    return RefreshIndicator(
+    // The same grid as the other side of the board, so turning the toggle over
+    // does not also change how many cards a row holds. These are uniform — a
+    // name, a place, a time and two telephone buttons — so they keep the shared
+    // height that the place cards opposite cannot.
+    return AdaptiveGridView(
+      padding: EdgeInsets.fromLTRB(
+        gutter,
+        AppSpacing.md,
+        gutter,
+        AppSpacing.xxl + MediaQuery.viewPaddingOf(context).bottom,
+      ),
       onRefresh: onRefresh,
-      child: ListView.builder(
-        padding: EdgeInsets.fromLTRB(
-          gutter,
-          AppSpacing.md,
-          gutter,
-          AppSpacing.xxl + MediaQuery.viewPaddingOf(context).bottom,
-        ),
-        itemCount: gaps.length,
-        itemBuilder: (context, i) => FadeSlideIn(
-          delay: Duration(milliseconds: 30 * (i < 8 ? i : 8)),
-          child: _GapCard(gap: gaps[i]),
-        ),
+      spacing: AppSpacing.md,
+      itemCount: gaps.length,
+      itemBuilder: (context, i) => FadeSlideIn(
+        delay: Duration(milliseconds: 30 * (i < 8 ? i : 8)),
+        child: _GapCard(gap: gaps[i]),
       ),
     );
   }
@@ -446,60 +470,58 @@ class _GapCard extends StatelessWidget {
         ? gap.phoneSa!
         : (gap.phoneSy ?? '');
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: GlassCard(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(gap.fullName, style: text.titleSmall),
-                  const SizedBox(height: 2),
-                  Text(
-                    [
-                      gap.placeName,
-                      if (gap.roleName case final r? when r.isNotEmpty) r,
-                    ].join(' · '),
-                    style: text.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+    // Spaced by the grid, not by the card — see [_PlaceCard].
+    return GlassCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(gap.fullName, style: text.titleSmall),
+                const SizedBox(height: 2),
+                Text(
+                  [
+                    gap.placeName,
+                    if (gap.roleName case final r? when r.isNotEmpty) r,
+                  ].join(' · '),
+                  style: text.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
                   ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    when,
-                    style: text.labelSmall?.copyWith(
-                      color: never ? scheme.error : scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // The telephone, because every row here is a name somebody is about
-            // to ring. Absent when there is no number rather than drawn dead:
-            // a button that does nothing is worse than no button.
-            if (phone.isNotEmpty) ...[
-              const SizedBox(width: AppSpacing.sm),
-              if (InfoAction.whatsAppUri(phone) case final uri?)
-                IconButton(
-                  tooltip: context.l10n.contactWhatsApp,
-                  onPressed: () =>
-                      launchUrl(uri, mode: LaunchMode.externalApplication),
-                  icon: const Icon(AppIcons.whatsApp),
-                  color: scheme.primary,
                 ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  when,
+                  style: text.labelSmall?.copyWith(
+                    color: never ? scheme.error : scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // The telephone, because every row here is a name somebody is about
+          // to ring. Absent when there is no number rather than drawn dead:
+          // a button that does nothing is worse than no button.
+          if (phone.isNotEmpty) ...[
+            const SizedBox(width: AppSpacing.sm),
+            if (InfoAction.whatsAppUri(phone) case final uri?)
               IconButton(
-                tooltip: l.incidentCall,
-                onPressed: () => launchUrl(InfoAction.call.uriFor(phone)),
-                icon: const Icon(AppIcons.phoneSy),
+                tooltip: context.l10n.contactWhatsApp,
+                onPressed: () =>
+                    launchUrl(uri, mode: LaunchMode.externalApplication),
+                icon: const Icon(AppIcons.whatsApp),
                 color: scheme.primary,
               ),
-            ],
+            IconButton(
+              tooltip: l.incidentCall,
+              onPressed: () => launchUrl(InfoAction.call.uriFor(phone)),
+              icon: const Icon(AppIcons.phoneSy),
+              color: scheme.primary,
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
