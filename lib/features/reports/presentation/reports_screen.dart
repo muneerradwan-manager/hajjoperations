@@ -8,6 +8,7 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
+import '../../../core/widgets/search_field.dart';
 import '../../../core/widgets/states.dart';
 import '../../seasons/data/seasons_repository.dart';
 import '../application/reports_cubit.dart';
@@ -99,7 +100,9 @@ class _View extends StatelessWidget {
                             itemBuilder: (context, i) => FadeSlideIn(
                               // Cap the cascade so a row first built deep in the scroll doesn't
                               // sit invisible for seconds (same rule as the directory).
-                              delay: Duration(milliseconds: 25 * (i < 8 ? i : 8)),
+                              delay: Duration(
+                                milliseconds: 25 * (i < 8 ? i : 8),
+                              ),
                               child: ReportCard(report: visible[i]),
                             ),
                           ),
@@ -140,69 +143,36 @@ class _FilterBarState extends State<ReportsFilterBar> {
     final cubit = context.read<ReportsCubit>();
     final s = widget.state;
 
-    return ResponsivePage(
-      builder: (context, size) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          size.gutter,
-          AppSpacing.sm,
-          size.gutter,
-          AppSpacing.sm,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 460),
-              child: TextField(
-                controller: _controller,
-                textInputAction: TextInputAction.search,
-                onChanged: cubit.search,
-                decoration: InputDecoration(
-                  isDense: true,
-                  hintText: l.reportsSearchHint,
-                  prefixIcon: const Icon(AppIcons.search, size: 20),
-                  suffixIcon: s.query.isEmpty
-                      ? null
-                      : IconButton(
-                          icon: const Icon(AppIcons.reject, size: 18),
-                          onPressed: () {
-                            _controller.clear();
-                            cubit.search('');
-                          },
-                        ),
-                ),
-              ),
+    return SearchFilterBar(
+      hint: l.reportsSearchHint,
+      controller: _controller,
+      onChanged: cubit.search,
+      filters: Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.xs,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          for (final scope in ReportScope.values)
+            ChoiceChip(
+              label: Text(switch (scope) {
+                ReportScope.all => l.reportsScopeAll,
+                ReportScope.seasonal => l.reportsScopeSeasonal,
+                ReportScope.general => l.reportsScopeGeneral,
+              }),
+              selected: s.scope == scope,
+              visualDensity: VisualDensity.compact,
+              onSelected: (_) => cubit.setScope(scope),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.xs,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                for (final scope in ReportScope.values)
-                  ChoiceChip(
-                    label: Text(switch (scope) {
-                      ReportScope.all => l.reportsScopeAll,
-                      ReportScope.seasonal => l.reportsScopeSeasonal,
-                      ReportScope.general => l.reportsScopeGeneral,
-                    }),
-                    selected: s.scope == scope,
-                    visualDensity: VisualDensity.compact,
-                    onSelected: (_) => cubit.setScope(scope),
-                  ),
-                if (s.isNarrowed)
-                  TextButton.icon(
-                    onPressed: () {
-                      _controller.clear();
-                      cubit.clearFilters();
-                    },
-                    icon: const Icon(AppIcons.reject, size: 16),
-                    label: Text(l.moduleRosterClear),
-                  ),
-              ],
+          if (s.isNarrowed)
+            TextButton.icon(
+              onPressed: () {
+                _controller.clear();
+                cubit.clearFilters();
+              },
+              icon: const Icon(AppIcons.reject, size: 16),
+              label: Text(l.moduleRosterClear),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }

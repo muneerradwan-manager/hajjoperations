@@ -19,6 +19,7 @@ import '../../../core/widgets/info_section.dart';
 import '../../../core/widgets/overflow_menu.dart';
 import '../../../core/widgets/profile_avatar.dart';
 import '../../../core/widgets/responsive.dart';
+import '../../../core/widgets/search_field.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
 // The two screens link to each other — a file lists its people, and a person
@@ -328,7 +329,10 @@ class _BodyState extends State<_Body> {
   /// Below this a filter bar is furniture: إدارة شؤون مكاتب البعثة has two
   /// people in it, and a search box above two names is a worse page than no
   /// search box. Files that need one have tens or hundreds.
-  static const _worthFiltering = 10;
+  ///
+  /// The number is the app's, not this screen's — the picker sheets ask the
+  /// same question about their own lists and must not answer it differently.
+  static const _worthFiltering = kSearchWorthShowing;
 
   /// Above this the groups start folded — the قطاعات of a file with a tree, and
   /// the teams of one without.
@@ -590,6 +594,23 @@ class _BodyState extends State<_Body> {
         icon: AppIcons.participants,
       ),
 
+      // Directly under the heading it belongs to, which is where every other
+      // search in the app sits relative to its list. It used to come after the
+      // anonymity notice and the notify button — three blocks into the section,
+      // far enough down that on a file of two hundred it was below the fold on
+      // the very page whose length is the reason it exists.
+      if (state.peopleCount >= _worthFiltering) ...[
+        _RosterFilterBar(
+          filter: _filter,
+          roles: rolesPresent,
+          counts: roleCounts,
+          showing: showing,
+          total: state.peopleCount,
+          onChanged: (f) => setState(() => _filter = f),
+        ),
+        const SizedBox(height: AppSpacing.md),
+      ],
+
       // What a finished file is for. The stars themselves are under each name
       // in the roster below — see [_Rating] — and this is the one thing that
       // could not go with them: the promise of anonymity is made ONCE, to the
@@ -632,18 +653,6 @@ class _BodyState extends State<_Body> {
               showSendNotificationSheet(context, moduleId: module.id),
           icon: const Icon(AppIcons.send),
           label: Text(l.moduleNotifyMembers),
-        ),
-        const SizedBox(height: AppSpacing.md),
-      ],
-
-      if (state.peopleCount >= _worthFiltering) ...[
-        _RosterFilterBar(
-          filter: _filter,
-          roles: rolesPresent,
-          counts: roleCounts,
-          showing: showing,
-          total: state.peopleCount,
-          onChanged: (f) => setState(() => _filter = f),
         ),
         const SizedBox(height: AppSpacing.md),
       ],
@@ -874,25 +883,11 @@ class _RosterFilterBarState extends State<_RosterFilterBar> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TextField(
+          AppSearchField(
+            hint: l.moduleRosterSearchHint,
             controller: _controller,
-            textInputAction: TextInputAction.search,
             onChanged: (v) =>
                 widget.onChanged(_RosterFilter(query: v, roleId: f.roleId)),
-            decoration: InputDecoration(
-              isDense: true,
-              hintText: l.moduleRosterSearchHint,
-              prefixIcon: const Icon(AppIcons.search, size: 20),
-              suffixIcon: f.query.isEmpty
-                  ? null
-                  : IconButton(
-                      icon: const Icon(AppIcons.reject, size: 18),
-                      onPressed: () {
-                        _controller.clear();
-                        widget.onChanged(_RosterFilter(roleId: f.roleId));
-                      },
-                    ),
-            ),
           ),
           if (widget.roles.length > 1) ...[
             const SizedBox(height: AppSpacing.sm),
@@ -1134,7 +1129,8 @@ class _SectorCard extends StatelessWidget {
           // مركز is an entry of a list and its `label` is null, so every
           // heading on مخيمات منى fell through to the level and read "المركز",
           // over and over, with nothing to tell one from the next.
-          state.referenceItem(level.referenceSetId, sector.referenceItemId)
+          state
+                  .referenceItem(level.referenceSetId, sector.referenceItemId)
                   ?.name
                   .of(context) ??
               sector.label ??
@@ -2033,7 +2029,9 @@ class _ReportSheetState extends State<_ReportSheet> {
     if (outcome.queued) {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(context.l10n.outboxSavedOffline)));
+        ..showSnackBar(
+          SnackBar(content: Text(context.l10n.outboxSavedOffline)),
+        );
     }
     Navigator.of(context).pop(true);
   }

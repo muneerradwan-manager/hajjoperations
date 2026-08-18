@@ -12,6 +12,7 @@ import '../../../core/widgets/blocking_progress.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/overflow_menu.dart';
 import '../../../core/widgets/responsive.dart';
+import '../../../core/widgets/search_field.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
 import '../../checkin/data/check_in_repository.dart';
@@ -412,23 +413,9 @@ class _ReferenceSetScreenState extends State<ReferenceSetScreen> {
                 builder: (context, size) => Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        size.gutter,
-                        MediaQuery.paddingOf(context).top + kToolbarHeight,
-                        size.gutter,
-                        AppSpacing.sm,
-                      ),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 460),
-                        child: TextField(
-                          decoration: InputDecoration(
-                            hintText: l.commonSearch,
-                            prefixIcon: const Icon(AppIcons.search),
-                          ),
-                          onChanged: (v) => setState(() => _query = v),
-                        ),
-                      ),
+                    SearchFilterBar(
+                      hint: l.commonSearch,
+                      onChanged: (v) => setState(() => _query = v),
                     ),
                     if (divided)
                       TabBar(

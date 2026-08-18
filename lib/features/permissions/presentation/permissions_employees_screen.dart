@@ -8,6 +8,7 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/employee_tile.dart';
 import '../../../core/widgets/responsive.dart';
+import '../../../core/widgets/search_field.dart';
 import '../../profile/domain/profile.dart';
 import '../application/employees_cubit.dart';
 import '../data/permissions_repository.dart';
@@ -39,29 +40,9 @@ class _View extends StatelessWidget {
         child: ResponsivePage(
           builder: (context, size) => Column(
             children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(
-                  size.gutter,
-                  AppSpacing.md,
-                  size.gutter,
-                  AppSpacing.xs,
-                ),
-                // See the directory: a search box is the width of what gets
-                // typed into it, not the width of the window.
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 460),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: l.commonSearch,
-                        prefixIcon: const Icon(AppIcons.search),
-                      ),
-                      onChanged: (v) =>
-                          context.read<EmployeesCubit>().search(v),
-                    ),
-                  ),
-                ),
+              SearchFilterBar(
+                hint: l.commonSearch,
+                onChanged: (v) => context.read<EmployeesCubit>().search(v),
               ),
               Expanded(
                 child: BlocConsumer<EmployeesCubit, EmployeesState>(

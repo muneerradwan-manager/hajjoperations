@@ -9,6 +9,7 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
+import '../../../core/widgets/search_field.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
 import '../application/evaluations_cubit.dart';
@@ -262,113 +263,84 @@ class _FilterBarState extends State<_FilterBar> {
     // sheets is a menu of dead ends.
     final kinds = <EvaluationTarget>{for (final e in s.evaluations) e.target};
 
-    return ResponsivePage(
-      builder: (context, size) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          size.gutter,
-          AppSpacing.sm,
-          size.gutter,
-          AppSpacing.sm,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 460),
-              child: TextField(
-                controller: _controller,
-                textInputAction: TextInputAction.search,
-                onChanged: cubit.search,
-                decoration: InputDecoration(
-                  isDense: true,
-                  hintText: l.evaluationsSearchHint,
-                  prefixIcon: const Icon(AppIcons.search, size: 20),
-                  suffixIcon: s.query.isEmpty
-                      ? null
-                      : IconButton(
-                          icon: const Icon(AppIcons.reject, size: 18),
-                          onPressed: () {
-                            _controller.clear();
-                            cubit.search('');
-                          },
-                        ),
+    return SearchFilterBar(
+      hint: l.evaluationsSearchHint,
+      controller: _controller,
+      onChanged: cubit.search,
+      filters: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // What is still owed, said once and above the filters — it is the
+          // reason somebody opened this screen, and it must not be a number
+          // they have to count off the cards.
+          if (s.openCount > 0) ...[
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.xs,
+              children: [
+                GlassBadge(
+                  label: l.evaluationsOpenCount(s.openCount),
+                  icon: AppIcons.pending,
+                  color: scheme.tertiary,
+                  dense: true,
                 ),
-              ),
-            ),
-            // What is still owed, said once and above the filters — it is the
-            // reason somebody opened this screen, and it must not be a number
-            // they have to count off the cards.
-            if (s.openCount > 0) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Wrap(
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.xs,
-                children: [
+                if (s.overdueCount > 0)
                   GlassBadge(
-                    label: l.evaluationsOpenCount(s.openCount),
-                    icon: AppIcons.pending,
-                    color: scheme.tertiary,
+                    label: l.evaluationsOverdueCount(s.overdueCount),
+                    icon: AppIcons.warning,
+                    color: scheme.error,
                     dense: true,
                   ),
-                  if (s.overdueCount > 0)
-                    GlassBadge(
-                      label: l.evaluationsOverdueCount(s.overdueCount),
-                      icon: AppIcons.warning,
-                      color: scheme.error,
-                      dense: true,
-                    ),
-                ],
-              ),
-            ],
-            if (kinds.length > 1 || s.isNarrowed) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Wrap(
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.xs,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  ChoiceChip(
-                    label: Text(l.evaluationsFilterAll),
-                    selected: s.target == null && s.filterStatus == null,
-                    visualDensity: VisualDensity.compact,
-                    onSelected: (_) => cubit.clearFilters(),
-                  ),
-                  ChoiceChip(
-                    label: Text(l.evaluationStatusDraft),
-                    selected: s.filterStatus == EvaluationStatus.draft,
-                    visualDensity: VisualDensity.compact,
-                    onSelected: (on) =>
-                        cubit.setStatus(on ? EvaluationStatus.draft : null),
-                  ),
-                  ChoiceChip(
-                    label: Text(l.evaluationStatusSubmitted),
-                    selected: s.filterStatus == EvaluationStatus.submitted,
-                    visualDensity: VisualDensity.compact,
-                    onSelected: (on) =>
-                        cubit.setStatus(on ? EvaluationStatus.submitted : null),
-                  ),
-                  for (final kind in EvaluationTarget.values)
-                    if (kinds.contains(kind))
-                      ChoiceChip(
-                        label: Text(evaluationTargetLabel(l, kind)),
-                        selected: s.target == kind,
-                        visualDensity: VisualDensity.compact,
-                        onSelected: (on) => cubit.setTarget(on ? kind : null),
-                      ),
-                  if (s.isNarrowed)
-                    TextButton.icon(
-                      onPressed: () {
-                        _controller.clear();
-                        cubit.clearFilters();
-                      },
-                      icon: const Icon(AppIcons.reject, size: 16),
-                      label: Text(l.moduleRosterClear),
-                    ),
-                ],
-              ),
-            ],
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
           ],
-        ),
+          if (kinds.length > 1 || s.isNarrowed)
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.xs,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                ChoiceChip(
+                  label: Text(l.evaluationsFilterAll),
+                  selected: s.target == null && s.filterStatus == null,
+                  visualDensity: VisualDensity.compact,
+                  onSelected: (_) => cubit.clearFilters(),
+                ),
+                ChoiceChip(
+                  label: Text(l.evaluationStatusDraft),
+                  selected: s.filterStatus == EvaluationStatus.draft,
+                  visualDensity: VisualDensity.compact,
+                  onSelected: (on) =>
+                      cubit.setStatus(on ? EvaluationStatus.draft : null),
+                ),
+                ChoiceChip(
+                  label: Text(l.evaluationStatusSubmitted),
+                  selected: s.filterStatus == EvaluationStatus.submitted,
+                  visualDensity: VisualDensity.compact,
+                  onSelected: (on) =>
+                      cubit.setStatus(on ? EvaluationStatus.submitted : null),
+                ),
+                for (final kind in EvaluationTarget.values)
+                  if (kinds.contains(kind))
+                    ChoiceChip(
+                      label: Text(evaluationTargetLabel(l, kind)),
+                      selected: s.target == kind,
+                      visualDensity: VisualDensity.compact,
+                      onSelected: (on) => cubit.setTarget(on ? kind : null),
+                    ),
+                if (s.isNarrowed)
+                  TextButton.icon(
+                    onPressed: () {
+                      _controller.clear();
+                      cubit.clearFilters();
+                    },
+                    icon: const Icon(AppIcons.reject, size: 16),
+                    label: Text(l.moduleRosterClear),
+                  ),
+              ],
+            ),
+        ],
       ),
     );
   }

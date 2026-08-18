@@ -10,6 +10,7 @@ import '../../../core/widgets/creator_page.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/saved_copy_banner.dart';
+import '../../../core/widgets/search_field.dart';
 import '../../../core/widgets/states.dart';
 import '../application/tasks_cubit.dart';
 import '../data/tasks_repository.dart';
@@ -61,7 +62,6 @@ class _View extends StatefulWidget {
 }
 
 class _ViewState extends State<_View> {
-  bool _searching = false;
   final _search = TextEditingController();
 
   @override
@@ -105,9 +105,9 @@ class _ViewState extends State<_View> {
   /// entirely — accepting a task in «الجارية» removes it from «الجارية».
   Future<void> _open(PersonalTask task) async {
     final cubit = context.read<TasksCubit>();
-    await Navigator.of(context).push(
-      fadeThroughRoute((_) => TaskDetailScreen(taskId: task.id)),
-    );
+    await Navigator.of(
+      context,
+    ).push(fadeThroughRoute((_) => TaskDetailScreen(taskId: task.id)));
     await cubit.load();
   }
 
@@ -136,34 +136,7 @@ class _ViewState extends State<_View> {
     final l = context.l10n;
 
     return Scaffold(
-      appBar: GlassAppBar(
-        title: _searching
-            ? TextField(
-                controller: _search,
-                autofocus: true,
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: l.tasksSearch,
-                  border: InputBorder.none,
-                ),
-                onSubmitted: context.read<TasksCubit>().setQuery,
-              )
-            : Text(l.tasksTitle),
-        actions: [
-          IconButton(
-            tooltip: l.tasksSearch,
-            icon: Icon(_searching ? AppIcons.reject : AppIcons.search),
-            onPressed: () {
-              final cubit = context.read<TasksCubit>();
-              setState(() => _searching = !_searching);
-              if (!_searching) {
-                _search.clear();
-                cubit.setQuery('');
-              }
-            },
-          ),
-        ],
-      ),
+      appBar: GlassAppBar(title: Text(l.tasksTitle)),
       floatingActionButton: CreateFab(label: l.tasksNew, onPressed: _add),
       body: SafeArea(
         child: BlocBuilder<TasksCubit, TasksState>(
@@ -184,6 +157,16 @@ class _ViewState extends State<_View> {
             return ResponsivePage(
               builder: (context, size) => Column(
                 children: [
+                  // Same place as on every other list in the app, and visible
+                  // without being asked for. The box used to hide behind a lens
+                  // in the bar, which taught this screen's reader that the list
+                  // could not be searched — the one thing it must not say about
+                  // a list that can.
+                  SearchFilterBar(
+                    hint: l.tasksSearch,
+                    controller: _search,
+                    onChanged: cubit.setQuery,
+                  ),
                   _ViewBar(
                     view: state.view,
                     stats: state.stats,

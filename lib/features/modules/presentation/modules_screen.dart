@@ -12,6 +12,7 @@ import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/info_section.dart';
 import '../../../core/widgets/overflow_menu.dart';
 import '../../../core/widgets/responsive.dart';
+import '../../../core/widgets/search_field.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
 import '../../seasons/data/seasons_repository.dart';
@@ -200,70 +201,88 @@ class _View extends StatelessWidget {
           // list screens that search differently teach that they search
           // differently. At 1680 this costs the grid its fourth column, which
           // is the cheaper of the two prices.
-          return ResponsivePage(
-            builder: (context, size) => SinglePaneLayout(
-              gutter: size.gutter,
-              onRefresh: () => context.read<ModulesCubit>().load(),
-              children: [
-                _ModulesFilterBar(state: state),
-                const SizedBox(height: AppSpacing.md),
-                if (nothingLeft)
-                  GlassCard(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Text(l.modulesNoMatches),
-                  ),
-                if (state.active.isNotEmpty) ...[
-                  FadeSlideIn(
-                    child: SectionHeader(
-                      l.moduleActiveSection,
-                      icon: AppIcons.modules,
-                    ),
-                  ),
-                  AdaptiveGrid(
-                    children: staggered([
-                      for (final m in state.active)
-                        _ModuleCard(
-                          module: m,
-                          fromOffice: fromOffice,
-                          // Only in the office, and only for whoever runs it.
-                          onEdit: fromOffice && canEdit
-                              ? () => _editModule(context, m)
-                              : null,
-                          onDelete: fromOffice && canDelete
-                              ? () => _deleteModule(context, m)
-                              : null,
+          // Pinned above the list rather than riding in it, which is how the
+          // other nine list screens carry their box. Inside the scroll it went
+          // away at the third row of cards, and a reader two screens down who
+          // wanted to search had to scroll back to the top to find out that
+          // they could — on this screen alone.
+          return Column(
+            children: [
+              _ModulesFilterBar(state: state),
+              Expanded(
+                child: ResponsivePage(
+                  builder: (context, size) =>
+                      // The bar above already cleared the app bar; without this
+                      // the list would clear it a second time and open on a
+                      // hand's width of nothing.
+                      MediaQuery.removePadding(
+                        context: context,
+                        removeTop: true,
+                        child: SinglePaneLayout(
+                          gutter: size.gutter,
+                          onRefresh: () => context.read<ModulesCubit>().load(),
+                          children: [
+                            if (nothingLeft)
+                              GlassCard(
+                                padding: const EdgeInsets.all(AppSpacing.lg),
+                                child: Text(l.modulesNoMatches),
+                              ),
+                            if (state.active.isNotEmpty) ...[
+                              FadeSlideIn(
+                                child: SectionHeader(
+                                  l.moduleActiveSection,
+                                  icon: AppIcons.modules,
+                                ),
+                              ),
+                              AdaptiveGrid(
+                                children: staggered([
+                                  for (final m in state.active)
+                                    _ModuleCard(
+                                      module: m,
+                                      fromOffice: fromOffice,
+                                      // Only in the office, and only for whoever runs it.
+                                      onEdit: fromOffice && canEdit
+                                          ? () => _editModule(context, m)
+                                          : null,
+                                      onDelete: fromOffice && canDelete
+                                          ? () => _deleteModule(context, m)
+                                          : null,
+                                    ),
+                                ], start: _step),
+                              ),
+                            ],
+                            if (state.drafts.isNotEmpty) ...[
+                              const SizedBox(height: AppSpacing.lg),
+                              FadeSlideIn(
+                                delay: draftBeat,
+                                child: SectionHeader(
+                                  l.moduleDraftSection,
+                                  icon: AppIcons.edit,
+                                ),
+                              ),
+                              AdaptiveGrid(
+                                children: staggered([
+                                  for (final m in state.drafts)
+                                    _ModuleCard(
+                                      module: m,
+                                      fromOffice: fromOffice,
+                                      // Only in the office, and only for whoever runs it.
+                                      onEdit: fromOffice && canEdit
+                                          ? () => _editModule(context, m)
+                                          : null,
+                                      onDelete: fromOffice && canDelete
+                                          ? () => _deleteModule(context, m)
+                                          : null,
+                                    ),
+                                ], start: draftBeat + _step),
+                              ),
+                            ],
+                          ],
                         ),
-                    ], start: _step),
-                  ),
-                ],
-                if (state.drafts.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.lg),
-                  FadeSlideIn(
-                    delay: draftBeat,
-                    child: SectionHeader(
-                      l.moduleDraftSection,
-                      icon: AppIcons.edit,
-                    ),
-                  ),
-                  AdaptiveGrid(
-                    children: staggered([
-                      for (final m in state.drafts)
-                        _ModuleCard(
-                          module: m,
-                          fromOffice: fromOffice,
-                          // Only in the office, and only for whoever runs it.
-                          onEdit: fromOffice && canEdit
-                              ? () => _editModule(context, m)
-                              : null,
-                          onDelete: fromOffice && canDelete
-                              ? () => _deleteModule(context, m)
-                              : null,
-                        ),
-                    ], start: draftBeat + _step),
-                  ),
-                ],
-              ],
-            ),
+                      ),
+                ),
+              ),
+            ],
           );
         },
       ),
@@ -618,65 +637,42 @@ class _ModulesFilterBarState extends State<_ModulesFilterBar> {
     final cubit = context.read<ModulesCubit>();
     final s = widget.state;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 460),
-          child: TextField(
-            controller: _controller,
-            textInputAction: TextInputAction.search,
-            onChanged: cubit.search,
-            decoration: InputDecoration(
-              isDense: true,
-              hintText: l.modulesSearchHint,
-              prefixIcon: const Icon(AppIcons.search, size: 20),
-              suffixIcon: s.query.isEmpty
-                  ? null
-                  : IconButton(
-                      icon: const Icon(AppIcons.reject, size: 18),
-                      onPressed: () {
-                        _controller.clear();
-                        cubit.search('');
-                      },
-                    ),
-            ),
-          ),
-        ),
-        // Only where both kinds exist. On عام a member sees running files and
-        // nothing else, and a chip that filters to an empty half of a page is
-        // furniture.
-        if (s.modules.any((m) => !m.isRunning)) ...[
-          const SizedBox(height: AppSpacing.sm),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.xs,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              for (final f in ModuleFilter.values)
-                ChoiceChip(
-                  label: Text(switch (f) {
-                    ModuleFilter.all => l.reportsScopeAll,
-                    ModuleFilter.running => l.moduleActiveSection,
-                    ModuleFilter.notRunning => l.moduleDraftSection,
-                  }),
-                  selected: s.filter == f,
-                  visualDensity: VisualDensity.compact,
-                  onSelected: (_) => cubit.setFilter(f),
-                ),
-              if (s.isNarrowed)
-                TextButton.icon(
-                  onPressed: () {
-                    _controller.clear();
-                    cubit.clearFilters();
-                  },
-                  icon: const Icon(AppIcons.reject, size: 16),
-                  label: Text(l.moduleRosterClear),
-                ),
-            ],
-          ),
-        ],
-      ],
+    return SearchFilterBar(
+      hint: l.modulesSearchHint,
+      controller: _controller,
+      onChanged: cubit.search,
+      // Only where both kinds exist. On عام a member sees running files and
+      // nothing else, and a chip that filters to an empty half of a page is
+      // furniture.
+      filters: s.modules.any((m) => !m.isRunning)
+          ? Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.xs,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                for (final f in ModuleFilter.values)
+                  ChoiceChip(
+                    label: Text(switch (f) {
+                      ModuleFilter.all => l.reportsScopeAll,
+                      ModuleFilter.running => l.moduleActiveSection,
+                      ModuleFilter.notRunning => l.moduleDraftSection,
+                    }),
+                    selected: s.filter == f,
+                    visualDensity: VisualDensity.compact,
+                    onSelected: (_) => cubit.setFilter(f),
+                  ),
+                if (s.isNarrowed)
+                  TextButton.icon(
+                    onPressed: () {
+                      _controller.clear();
+                      cubit.clearFilters();
+                    },
+                    icon: const Icon(AppIcons.reject, size: 16),
+                    label: Text(l.moduleRosterClear),
+                  ),
+              ],
+            )
+          : null,
     );
   }
 }

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/l10n/l10n_extension.dart';
+import '../../../../core/utils/arabic_search.dart';
 import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/glass_tokens.dart';
 import '../../../../core/widgets/glass.dart';
 import '../../../../core/widgets/profile_avatar.dart';
+import '../../../../core/widgets/search_field.dart';
 import '../../../../core/widgets/selection_indicator.dart';
 import '../../../../core/widgets/states.dart';
 
@@ -32,12 +34,13 @@ class PickerOption {
   /// People are recognised by face before name; master-data entries are not.
   final bool showAvatar;
 
-  bool matches(String query) {
-    final q = query.trim().toLowerCase();
-    if (q.isEmpty) return true;
-    return label.toLowerCase().contains(q) ||
-        (subtitle?.toLowerCase().contains(q) ?? false);
-  }
+  /// Folded on both sides, like every other search in the app.
+  ///
+  /// A plain `contains` was answering "no results" to a hamza sitting in the
+  /// list — أحمد typed against احمد filed — which is exactly the failure
+  /// [arabicMatchesAll] exists to stop, and a sheet of look-alike names is the
+  /// worst place to leave it.
+  bool matches(String query) => arabicMatchesAll([label, subtitle], query);
 }
 
 /// A searchable dropdown replacement. Both the master-data fields and the role
@@ -141,7 +144,7 @@ class _PickerSheetState extends State<_PickerSheet> {
                 ],
               ),
             ),
-            if (widget.options.length > 8)
+            if (widget.options.length > kSearchWorthShowing)
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.lg,
@@ -149,12 +152,8 @@ class _PickerSheetState extends State<_PickerSheet> {
                   AppSpacing.lg,
                   AppSpacing.sm,
                 ),
-                child: TextField(
-                  autofocus: false,
-                  decoration: InputDecoration(
-                    hintText: l.commonSearch,
-                    prefixIcon: const Icon(AppIcons.search),
-                  ),
+                child: AppSearchField(
+                  hint: l.commonSearch,
                   onChanged: (v) => setState(() => _query = v),
                 ),
               ),

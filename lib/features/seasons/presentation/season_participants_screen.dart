@@ -4,9 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/animations/animations.dart';
 import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
-import '../../../core/theme/app_icons.dart';
 import '../../../core/widgets/profile_avatar.dart';
 import '../../../core/widgets/responsive.dart';
+import '../../../core/widgets/search_field.dart';
 import '../application/season_participants_cubit.dart';
 import '../data/seasons_repository.dart';
 import '../domain/season.dart';
@@ -38,22 +38,10 @@ class _View extends StatelessWidget {
         child: ResponsivePage(
           builder: (context, size) => Column(
             children: [
-              Padding(
-                padding: EdgeInsets.fromLTRB(size.gutter, 8, size.gutter, 4),
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 460),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: l.commonSearch,
-                        prefixIcon: const Icon(AppIcons.search),
-                      ),
-                      onChanged: (v) =>
-                          context.read<SeasonParticipantsCubit>().search(v),
-                    ),
-                  ),
-                ),
+              SearchFilterBar(
+                hint: l.commonSearch,
+                onChanged: (v) =>
+                    context.read<SeasonParticipantsCubit>().search(v),
               ),
               BlocBuilder<SeasonParticipantsCubit, SeasonParticipantsState>(
                 builder: (context, state) {

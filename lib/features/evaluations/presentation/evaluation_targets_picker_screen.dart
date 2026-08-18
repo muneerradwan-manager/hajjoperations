@@ -10,6 +10,7 @@ import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/profile_avatar.dart';
 import '../../../core/widgets/responsive.dart';
+import '../../../core/widgets/search_field.dart';
 import '../../../core/widgets/selection_indicator.dart';
 import '../../../core/widgets/states.dart';
 import '../data/evaluations_repository.dart';
@@ -153,36 +154,10 @@ class _EvaluationTargetsPickerScreenState
       ),
       body: Column(
         children: [
-          ResponsivePage(
-            builder: (context, size) => Padding(
-              padding: EdgeInsets.fromLTRB(
-                size.gutter,
-                MediaQuery.paddingOf(context).top + AppSpacing.sm,
-                size.gutter,
-                AppSpacing.sm,
-              ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 460),
-                child: TextField(
-                  controller: _controller,
-                  textInputAction: TextInputAction.search,
-                  onChanged: _search,
-                  decoration: InputDecoration(
-                    hintText: l.evaluationAssignPickSubject,
-                    prefixIcon: const Icon(AppIcons.search),
-                    suffixIcon: _controller.text.isEmpty
-                        ? null
-                        : IconButton(
-                            icon: const Icon(AppIcons.reject, size: 18),
-                            onPressed: () {
-                              _controller.clear();
-                              _search('');
-                            },
-                          ),
-                  ),
-                ),
-              ),
-            ),
+          SearchFilterBar(
+            hint: l.evaluationAssignPickSubject,
+            controller: _controller,
+            onChanged: _search,
           ),
           Expanded(
             child: switch (null) {

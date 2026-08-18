@@ -10,6 +10,7 @@ import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/profile_avatar.dart';
 import '../../../core/widgets/responsive.dart';
+import '../../../core/widgets/search_field.dart';
 import '../../../core/widgets/states.dart';
 import '../../modules/presentation/widgets/picker_sheet.dart';
 import '../application/audit_cubit.dart';
@@ -61,7 +62,7 @@ class _ViewState extends State<_View> {
   /// trip otherwise, and the answer to "أح" is not worth one.
   void _onQuery(String value) {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 400), () {
+    _debounce = Timer(kSearchDebounce, () {
       if (!mounted) return;
       final cubit = context.read<AuditCubit>();
       cubit.setFilters(cubit.state.filters.copyWith(query: value));
@@ -388,14 +389,7 @@ class _FilterBar extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TextField(
-          decoration: InputDecoration(
-            hintText: l.auditSearchHint,
-            prefixIcon: const Icon(AppIcons.search),
-            isDense: true,
-          ),
-          onChanged: onQuery,
-        ),
+        AppSearchField(hint: l.auditSearchHint, onChanged: onQuery),
         const SizedBox(height: AppSpacing.sm),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,

@@ -9,6 +9,7 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
+import '../../../core/widgets/search_field.dart';
 import '../../../core/widgets/states.dart';
 import '../application/check_in_cubit.dart';
 import '../data/check_in_repository.dart';
@@ -77,7 +78,7 @@ class _View extends StatelessWidget {
                 Padding(
                   padding: EdgeInsets.fromLTRB(
                     size.gutter,
-                    AppSpacing.sm,
+                    AppSpacing.md,
                     size.gutter,
                     0,
                   ),
@@ -169,16 +170,7 @@ class _Filters extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 460),
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: l.commonSearch,
-              prefixIcon: const Icon(AppIcons.search),
-            ),
-            onChanged: cubit.setQuery,
-          ),
-        ),
+        AppSearchField(hint: l.commonSearch, onChanged: cubit.setQuery),
         const SizedBox(height: AppSpacing.sm),
         // How far back "now" reaches. A shift is what the word means to the
         // room, and which shift is the reader's to choose — an evening

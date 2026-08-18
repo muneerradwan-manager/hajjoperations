@@ -11,6 +11,7 @@ import '../../../core/utils/arabic_search.dart';
 import '../../../core/widgets/employee_tile.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
+import '../../../core/widgets/search_field.dart';
 import '../../../core/widgets/saved_copy_banner.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
@@ -126,7 +127,9 @@ class _ViewState extends State<_View> {
             listener: (context, state) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
-                ..showSnackBar(SnackBar(content: Text(friendlyError(context, state.error))));
+                ..showSnackBar(
+                  SnackBar(content: Text(friendlyError(context, state.error))),
+                );
             },
             builder: (context, state) {
               if (state.status == DirectoryStatus.loading) {
@@ -139,37 +142,11 @@ class _ViewState extends State<_View> {
                     // true of the whole page, and both tabs are affected —
                     // the externals worst of all, since with no signal they
                     // cannot be read at all and the tab shows empty.
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        size.gutter,
-                        AppSpacing.md,
-                        size.gutter,
-                        0,
-                      ),
-                      child: SavedCopyBanner(savedAt: state.savedAt),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        size.gutter,
-                        AppSpacing.md,
-                        size.gutter,
-                        AppSpacing.xs,
-                      ),
-                      // Held to a width a name fits in, at the start edge. A
-                      // search box the width of a monitor asks for something
-                      // much longer than anything anyone types into it, and
-                      // pushes its own clear button a foot away from the text.
-                      child: Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 460),
-                          child: _SearchField(
-                            controller: _search,
-                            hint: l.commonSearch,
-                            onChanged: (v) => setState(() => _query = v.trim()),
-                          ),
-                        ),
-                      ),
+                    SearchFilterBar(
+                      hint: l.commonSearch,
+                      controller: _search,
+                      onChanged: (v) => setState(() => _query = v.trim()),
+                      above: SavedCopyBanner(savedAt: state.savedAt),
                     ),
                     Expanded(
                       child: TabBarView(
@@ -198,64 +175,6 @@ class _ViewState extends State<_View> {
               );
             },
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Pill-shaped glass search box with a clear affordance once text is entered.
-class _SearchField extends StatelessWidget {
-  const _SearchField({
-    required this.controller,
-    required this.hint,
-    required this.onChanged,
-  });
-
-  final TextEditingController controller;
-  final String hint;
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      onChanged: onChanged,
-      textInputAction: TextInputAction.search,
-      decoration: InputDecoration(
-        hintText: hint,
-        prefixIcon: const Icon(AppIcons.search, size: 20),
-        isDense: true,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.md,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-          borderSide: BorderSide(color: context.glass.stroke),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-          borderSide: BorderSide(color: context.glass.stroke),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.pill),
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.primary,
-            width: 1.6,
-          ),
-        ),
-        suffixIcon: ValueListenableBuilder<TextEditingValue>(
-          valueListenable: controller,
-          builder: (context, value, _) => value.text.isEmpty
-              ? const SizedBox.shrink()
-              : IconButton(
-                  icon: const Icon(AppIcons.reject, size: 18),
-                  onPressed: () {
-                    controller.clear();
-                    onChanged('');
-                  },
-                ),
         ),
       ),
     );

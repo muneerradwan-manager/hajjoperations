@@ -9,6 +9,7 @@ import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/profile_avatar.dart';
 import '../../../core/widgets/responsive.dart';
+import '../../../core/widgets/search_field.dart';
 import '../../../core/widgets/selection_indicator.dart';
 import '../../../core/widgets/states.dart';
 import '../application/employee_picker_cubit.dart';
@@ -376,102 +377,66 @@ class _SearchBarState extends State<_SearchBar> {
   Widget build(BuildContext context) {
     final l = context.l10n;
 
-    return ResponsivePage(
-      builder: (context, size) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          size.gutter,
-          MediaQuery.paddingOf(context).top + AppSpacing.sm,
-          size.gutter,
-          AppSpacing.sm,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // See the directory: a search box is the width of what gets typed
-            // into it, and the filter chips sit under it rather than beside a
-            // field that ran off to the far edge of the window.
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 460),
-              child: TextField(
-                controller: _controller,
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: l.modulePickerSearchHint,
-                  prefixIcon: const Icon(AppIcons.search),
-                  suffixIcon: widget.query.isEmpty
-                      ? null
-                      : IconButton(
-                          icon: const Icon(AppIcons.reject, size: 18),
-                          onPressed: () {
-                            _controller.clear();
-                            widget.onChanged('');
-                          },
-                        ),
-                ),
-                onChanged: widget.onChanged,
-              ),
+    return SearchFilterBar(
+      hint: l.modulePickerSearchHint,
+      controller: _controller,
+      onChanged: widget.onChanged,
+      // Everything narrows in the database, so the row is a set of questions
+      // rather than a view over the forty rows in hand. They wrap: on a phone
+      // this is four lines, on a monitor one.
+      filters: Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.xs,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          for (final filter in ParticipantFilter.values)
+            ChoiceChip(
+              label: Text(switch (filter) {
+                ParticipantFilter.all => l.modulePickerAll,
+                ParticipantFilter.internal => l.modulePickerInternal,
+                ParticipantFilter.external => l.modulePickerExternal,
+              }),
+              selected: widget.filter == filter,
+              visualDensity: VisualDensity.compact,
+              onSelected: (_) => widget.onFilter(filter),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            // Everything narrows in the database, so the row is a set of
-            // questions rather than a view over the forty rows in hand. They
-            // wrap: on a phone this is four lines, on a monitor one.
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.xs,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                for (final filter in ParticipantFilter.values)
-                  ChoiceChip(
-                    label: Text(switch (filter) {
-                      ParticipantFilter.all => l.modulePickerAll,
-                      ParticipantFilter.internal => l.modulePickerInternal,
-                      ParticipantFilter.external => l.modulePickerExternal,
-                    }),
-                    selected: widget.filter == filter,
-                    visualDensity: VisualDensity.compact,
-                    onSelected: (_) => widget.onFilter(filter),
-                  ),
-                // The one question this page exists to ask, made askable:
-                // who is not already carrying something this season.
-                FilterChip(
-                  label: Text(l.modulePickerOnlyFree),
-                  selected: widget.state.onlyFree,
-                  visualDensity: VisualDensity.compact,
-                  onSelected: widget.onOnlyFree,
-                ),
-                if (widget.state.jobTitles.isNotEmpty)
-                  _FilterDropdown(
-                    hint: l.profileJobTitle,
-                    value: widget.state.jobTitleId,
-                    options: [
-                      for (final t in widget.state.jobTitles)
-                        (t.id, t.name.of(context)),
-                    ],
-                    onChanged: widget.onJobTitle,
-                  ),
-                if (widget.state.cities.isNotEmpty)
-                  _FilterDropdown(
-                    hint: l.profileCity,
-                    value: widget.state.cityId,
-                    options: [
-                      for (final c in widget.state.cities)
-                        (c.id, c.name.of(context)),
-                    ],
-                    onChanged: widget.onCity,
-                  ),
-                if (widget.state.isNarrowed)
-                  TextButton.icon(
-                    onPressed: () {
-                      _controller.clear();
-                      widget.onClear();
-                    },
-                    icon: const Icon(AppIcons.reject, size: 16),
-                    label: Text(l.moduleRosterClear),
-                  ),
+          // The one question this page exists to ask, made askable:
+          // who is not already carrying something this season.
+          FilterChip(
+            label: Text(l.modulePickerOnlyFree),
+            selected: widget.state.onlyFree,
+            visualDensity: VisualDensity.compact,
+            onSelected: widget.onOnlyFree,
+          ),
+          if (widget.state.jobTitles.isNotEmpty)
+            _FilterDropdown(
+              hint: l.profileJobTitle,
+              value: widget.state.jobTitleId,
+              options: [
+                for (final t in widget.state.jobTitles)
+                  (t.id, t.name.of(context)),
               ],
+              onChanged: widget.onJobTitle,
             ),
-          ],
-        ),
+          if (widget.state.cities.isNotEmpty)
+            _FilterDropdown(
+              hint: l.profileCity,
+              value: widget.state.cityId,
+              options: [
+                for (final c in widget.state.cities) (c.id, c.name.of(context)),
+              ],
+              onChanged: widget.onCity,
+            ),
+          if (widget.state.isNarrowed)
+            TextButton.icon(
+              onPressed: () {
+                _controller.clear();
+                widget.onClear();
+              },
+              icon: const Icon(AppIcons.reject, size: 16),
+              label: Text(l.moduleRosterClear),
+            ),
+        ],
       ),
     );
   }
@@ -678,9 +643,7 @@ class _FilterDropdown extends StatelessWidget {
       decoration: BoxDecoration(
         color: on ? scheme.secondaryContainer : Colors.transparent,
         borderRadius: BorderRadius.circular(AppRadius.pill),
-        border: Border.all(
-          color: on ? scheme.secondary : context.glass.stroke,
-        ),
+        border: Border.all(color: on ? scheme.secondary : context.glass.stroke),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String?>(
@@ -692,7 +655,10 @@ class _FilterDropdown extends StatelessWidget {
             color: on ? scheme.onSecondaryContainer : scheme.onSurface,
           ),
           items: [
-            DropdownMenuItem(value: null, child: Text('$hint: ${l.modulePickerAll}')),
+            DropdownMenuItem(
+              value: null,
+              child: Text('$hint: ${l.modulePickerAll}'),
+            ),
             for (final (id, label) in options)
               DropdownMenuItem(value: id, child: Text(label)),
           ],

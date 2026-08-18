@@ -9,6 +9,7 @@ import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/creator_page.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
+import '../../../core/widgets/search_field.dart';
 import '../../../core/widgets/states.dart';
 import '../application/complaints_cubit.dart';
 import '../data/complaints_repository.dart';
@@ -76,9 +77,9 @@ class _ViewState extends State<_View> {
 
   Future<void> _file(BuildContext context) async {
     final cubit = context.read<ComplaintsCubit>();
-    final filed = await Navigator.of(context).push<bool>(
-      fadeThroughRoute((_) => const FileComplaintScreen()),
-    );
+    final filed = await Navigator.of(
+      context,
+    ).push<bool>(fadeThroughRoute((_) => const FileComplaintScreen()));
     if (filed == true) await cubit.load();
   }
 
@@ -86,10 +87,8 @@ class _ViewState extends State<_View> {
     final cubit = context.read<ComplaintsCubit>();
     final changed = await Navigator.of(context).push<bool>(
       fadeThroughRoute(
-        (_) => ComplaintThreadScreen(
-          complaintId: complaint.id,
-          known: complaint,
-        ),
+        (_) =>
+            ComplaintThreadScreen(complaintId: complaint.id, known: complaint),
       ),
     );
     if (changed == true) await cubit.load();
@@ -108,10 +107,7 @@ class _ViewState extends State<_View> {
       // where they are started. A manager who wants to file one files it as
       // anybody does.
       floatingActionButton: mine
-          ? CreateFab(
-              label: l.complaintsNew,
-              onPressed: () => _file(context),
-            )
+          ? CreateFab(label: l.complaintsNew, onPressed: () => _file(context))
           : null,
       body: SafeArea(
         child: BlocBuilder<ComplaintsCubit, ComplaintsState>(
@@ -226,81 +222,48 @@ class _FilterBarState extends State<_FilterBar> {
     // complaints is a menu of dead ends.
     final kinds = <ComplaintTarget>{for (final c in s.complaints) c.target};
 
-    return ResponsivePage(
-      builder: (context, size) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          size.gutter,
-          AppSpacing.sm,
-          size.gutter,
-          AppSpacing.sm,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 460),
-              child: TextField(
-                controller: _controller,
-                textInputAction: TextInputAction.search,
-                onChanged: cubit.search,
-                decoration: InputDecoration(
-                  isDense: true,
-                  hintText: l.complaintsSearchHint,
-                  prefixIcon: const Icon(AppIcons.search, size: 20),
-                  suffixIcon: s.query.isEmpty
-                      ? null
-                      : IconButton(
-                          icon: const Icon(AppIcons.reject, size: 18),
-                          onPressed: () {
-                            _controller.clear();
-                            cubit.search('');
-                          },
-                        ),
+    return SearchFilterBar(
+      hint: l.complaintsSearchHint,
+      controller: _controller,
+      onChanged: cubit.search,
+      filters: kinds.length > 1 || s.isNarrowed
+          ? Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.xs,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                ChoiceChip(
+                  label: Text(l.complaintsFilterAll),
+                  selected: s.target == null,
+                  visualDensity: VisualDensity.compact,
+                  onSelected: (_) => cubit.setTarget(null),
                 ),
-              ),
-            ),
-            if (kinds.length > 1 || s.isNarrowed) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Wrap(
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.xs,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  ChoiceChip(
-                    label: Text(l.complaintsFilterAll),
-                    selected: s.target == null,
-                    visualDensity: VisualDensity.compact,
-                    onSelected: (_) => cubit.setTarget(null),
-                  ),
-                  for (final kind in ComplaintTarget.values)
-                    if (kinds.contains(kind))
-                      ChoiceChip(
-                        label: Text(complaintTargetLabel(l, kind)),
-                        selected: s.target == kind,
-                        visualDensity: VisualDensity.compact,
-                        onSelected: (_) => cubit.setTarget(kind),
-                      ),
-                  FilterChip(
-                    label: Text(l.complaintsShowDismissed),
-                    selected: s.includeDismissed,
-                    visualDensity: VisualDensity.compact,
-                    onSelected: cubit.setIncludeDismissed,
-                  ),
-                  if (s.isNarrowed)
-                    TextButton.icon(
-                      onPressed: () {
-                        _controller.clear();
-                        cubit.clearFilters();
-                      },
-                      icon: const Icon(AppIcons.reject, size: 16),
-                      label: Text(l.moduleRosterClear),
+                for (final kind in ComplaintTarget.values)
+                  if (kinds.contains(kind))
+                    ChoiceChip(
+                      label: Text(complaintTargetLabel(l, kind)),
+                      selected: s.target == kind,
+                      visualDensity: VisualDensity.compact,
+                      onSelected: (_) => cubit.setTarget(kind),
                     ),
-                ],
-              ),
-            ],
-          ],
-        ),
-      ),
+                FilterChip(
+                  label: Text(l.complaintsShowDismissed),
+                  selected: s.includeDismissed,
+                  visualDensity: VisualDensity.compact,
+                  onSelected: cubit.setIncludeDismissed,
+                ),
+                if (s.isNarrowed)
+                  TextButton.icon(
+                    onPressed: () {
+                      _controller.clear();
+                      cubit.clearFilters();
+                    },
+                    icon: const Icon(AppIcons.reject, size: 16),
+                    label: Text(l.moduleRosterClear),
+                  ),
+              ],
+            )
+          : null,
     );
   }
 }

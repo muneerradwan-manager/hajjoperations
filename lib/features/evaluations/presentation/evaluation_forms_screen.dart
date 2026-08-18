@@ -8,6 +8,7 @@ import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
+import '../../../core/widgets/search_field.dart';
 import '../../../core/constants/permission_codes.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
@@ -575,65 +576,32 @@ class _SearchBarState extends State<_SearchBar> {
     final s = widget.state;
     final kinds = <EvaluationTarget>{for (final f in s.forms) f.target};
 
-    return ResponsivePage(
-      builder: (context, size) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          size.gutter,
-          AppSpacing.sm,
-          size.gutter,
-          AppSpacing.sm,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 460),
-              child: TextField(
-                controller: _controller,
-                textInputAction: TextInputAction.search,
-                onChanged: cubit.search,
-                decoration: InputDecoration(
-                  isDense: true,
-                  hintText: l.evaluationFormsSearchHint,
-                  prefixIcon: const Icon(AppIcons.search, size: 20),
-                  suffixIcon: s.query.isEmpty
-                      ? null
-                      : IconButton(
-                          icon: const Icon(AppIcons.reject, size: 18),
-                          onPressed: () {
-                            _controller.clear();
-                            cubit.search('');
-                          },
-                        ),
+    return SearchFilterBar(
+      hint: l.evaluationFormsSearchHint,
+      controller: _controller,
+      onChanged: cubit.search,
+      filters: kinds.length > 1
+          ? Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.xs,
+              children: [
+                ChoiceChip(
+                  label: Text(l.evaluationsFilterAll),
+                  selected: s.target == null,
+                  visualDensity: VisualDensity.compact,
+                  onSelected: (_) => cubit.setTarget(null),
                 ),
-              ),
-            ),
-            if (kinds.length > 1) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Wrap(
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.xs,
-                children: [
-                  ChoiceChip(
-                    label: Text(l.evaluationsFilterAll),
-                    selected: s.target == null,
-                    visualDensity: VisualDensity.compact,
-                    onSelected: (_) => cubit.setTarget(null),
-                  ),
-                  for (final kind in EvaluationTarget.values)
-                    if (kinds.contains(kind))
-                      ChoiceChip(
-                        label: Text(evaluationTargetLabel(l, kind)),
-                        selected: s.target == kind,
-                        visualDensity: VisualDensity.compact,
-                        onSelected: (on) => cubit.setTarget(on ? kind : null),
-                      ),
-                ],
-              ),
-            ],
-          ],
-        ),
-      ),
+                for (final kind in EvaluationTarget.values)
+                  if (kinds.contains(kind))
+                    ChoiceChip(
+                      label: Text(evaluationTargetLabel(l, kind)),
+                      selected: s.target == kind,
+                      visualDensity: VisualDensity.compact,
+                      onSelected: (on) => cubit.setTarget(on ? kind : null),
+                    ),
+              ],
+            )
+          : null,
     );
   }
 }
