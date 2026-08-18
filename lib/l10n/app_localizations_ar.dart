@@ -181,8 +181,48 @@ class AppLocalizationsAr extends AppLocalizations {
   String get authPasswordMismatch => 'كلمتا المرور غير متطابقتين';
 
   @override
-  String get authCheckEmail =>
-      'تحقق من بريدك الإلكتروني لتأكيد حسابك ثم سجّل الدخول.';
+  String get authVerifyTitle => 'أدخل رمز التحقّق';
+
+  @override
+  String authVerifySubtitle(String email) {
+    return 'أرسلنا رمزاً من ستة أرقام إلى $email';
+  }
+
+  @override
+  String get authVerifyCode => 'رمز التحقّق';
+
+  @override
+  String get authVerifyCodeHint => '٦ أرقام';
+
+  @override
+  String get authVerifyAction => 'تأكيد';
+
+  @override
+  String get authVerifyCodeTooShort => 'الرمز ستة أرقام';
+
+  @override
+  String get authVerifyResend => 'إعادة الإرسال';
+
+  @override
+  String authVerifyResendIn(int seconds) {
+    return 'إعادة الإرسال بعد $seconds ثانية';
+  }
+
+  @override
+  String get authVerifyResent => 'أُرسل رمز جديد';
+
+  @override
+  String get authVerifyWrongCode => 'الرمز غير صحيح أو انتهت صلاحيته';
+
+  @override
+  String get authVerifyChangeEmail => 'تغيير البريد';
+
+  @override
+  String get authVerifyJunkHint => 'لم يصل؟ انظر في البريد غير المرغوب فيه';
+
+  @override
+  String get authVerifyUnconfirmed =>
+      'هذا الحساب لم يُؤكَّد بعد. أرسلنا رمزاً جديداً.';
 
   @override
   String get accountsTitle => 'الحسابات';

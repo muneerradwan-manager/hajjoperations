@@ -27,6 +27,14 @@ String friendlyErrorL(AppLocalizations l, String? raw) {
   // Codes the admin-set-email function answers with. They arrive wrapped in
   // exception text ("FunctionException(status: 400, details: {error:
   // email_taken}…)"), so this matches by substring like the smells above.
+  // The six digits handed back at sign-up. Supabase says "Token has expired or
+  // is invalid" — one sentence for two cases, and rightly, since the reader's
+  // next move is the same either way: type it again, or ask for another.
+  if (s.contains('otp_expired') ||
+      (s.contains('token') &&
+          (s.contains('expired') || s.contains('invalid')))) {
+    return l.authVerifyWrongCode;
+  }
   if (s.contains('email_taken')) return l.employeeEmailTaken;
   if (s.contains('cannot_set_admin_email')) return l.employeeEmailAdminBlocked;
   // The reports trigger (0078) refusing a second once-per-season report. The

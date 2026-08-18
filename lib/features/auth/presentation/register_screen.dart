@@ -15,6 +15,7 @@ import '../application/auth_cubit.dart';
 import '../data/auth_repository.dart';
 import 'widgets/google_button.dart';
 import 'widgets/settings_menu_button.dart';
+import 'widgets/verify_code_card.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -64,13 +65,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
             if (state.status == AuthStatus.error && state.error != null) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
-                ..showSnackBar(SnackBar(content: Text(friendlyError(context, state.error))));
-            } else if (state.status == AuthStatus.emailConfirmationSent) {
+                ..showSnackBar(
+                  SnackBar(content: Text(friendlyError(context, state.error))),
+                );
+            } else if (state.codeResent) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
-                ..showSnackBar(SnackBar(content: Text(l.authCheckEmail)));
-              context.pop();
+                ..showSnackBar(SnackBar(content: Text(l.authVerifyResent)));
             }
+            // Nothing to do when the code goes out the first time: the card
+            // takes the screen's place and says so itself. This used to pop
+            // back to the sign-in form with "check your email" in a snack bar,
+            // which asked the reader to leave the app, find a letter, press a
+            // link that opened a browser, and then work out for themselves
+            // that they were supposed to come back and sign in.
           },
           builder: (context, state) {
             return LayoutBuilder(
@@ -104,109 +112,125 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   subtitle: l.authRegisterSubtitle,
                                 ),
                                 const SizedBox(height: AppSpacing.xxl),
-                                GlassCard(
-                                  radius: AppRadius.lg,
-                                  padding: const EdgeInsets.all(AppSpacing.md),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      TextFormField(
-                                        controller: _email,
-                                        keyboardType:
-                                            TextInputType.emailAddress,
-                                        textInputAction: TextInputAction.next,
-                                        autofillHints: const [
-                                          AutofillHints.email,
-                                        ],
-                                        decoration: InputDecoration(
-                                          labelText: l.authEmail,
-                                          prefixIcon: const Icon(
-                                            AppIcons.email,
+                                // The account is made and the code is in the
+                                // post: the form has done its work and the six
+                                // digits take its place, on the same page, with
+                                // the address still in sight.
+                                if (state.isVerifying)
+                                  VerifyCodeCard(email: state.pendingEmail!)
+                                else
+                                  GlassCard(
+                                    radius: AppRadius.lg,
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.md,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        TextFormField(
+                                          controller: _email,
+                                          keyboardType:
+                                              TextInputType.emailAddress,
+                                          textInputAction: TextInputAction.next,
+                                          autofillHints: const [
+                                            AutofillHints.email,
+                                          ],
+                                          decoration: InputDecoration(
+                                            labelText: l.authEmail,
+                                            prefixIcon: const Icon(
+                                              AppIcons.email,
+                                            ),
                                           ),
+                                          validator: (v) =>
+                                              Validators.isEmail(v ?? '')
+                                              ? null
+                                              : l.authInvalidEmail,
                                         ),
-                                        validator: (v) =>
-                                            Validators.isEmail(v ?? '')
-                                            ? null
-                                            : l.authInvalidEmail,
+                                        const SizedBox(height: AppSpacing.lg),
+                                        PasswordField(
+                                          controller: _password,
+                                          label: l.authPassword,
+                                          textInputAction: TextInputAction.next,
+                                          autofillHints: const [
+                                            AutofillHints.newPassword,
+                                          ],
+                                          validator: (v) => (v ?? '').length < 8
+                                              ? l.authPasswordTooShort
+                                              : null,
+                                        ),
+                                        _StrengthMeter(value: _password.text),
+                                        const SizedBox(height: AppSpacing.lg),
+                                        PasswordField(
+                                          controller: _confirm,
+                                          label: l.authConfirmPassword,
+                                          textInputAction: TextInputAction.done,
+                                          onFieldSubmitted: (_) =>
+                                              _submit(context),
+                                          validator: (v) => v == _password.text
+                                              ? null
+                                              : l.authPasswordMismatch,
+                                        ),
+                                        const SizedBox(height: AppSpacing.xl),
+                                        FilledButton(
+                                          onPressed: state.isSubmitting
+                                              ? null
+                                              : () => _submit(context),
+                                          child: state.isSubmitting
+                                              ? SizedBox(
+                                                  height: 22,
+                                                  width: 22,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                        strokeWidth: 2.4,
+                                                        strokeCap:
+                                                            StrokeCap.round,
+                                                        color: Theme.of(
+                                                          context,
+                                                        ).colorScheme.onPrimary,
+                                                      ),
+                                                )
+                                              : Text(l.authSignUp),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                // Both hidden behind the code box. Signing in
+                                // with Google, or going to the sign-in form,
+                                // while six digits are waiting to be typed is
+                                // a way to abandon an account halfway made
+                                // without being told that is what it does.
+                                if (!state.isVerifying) ...[
+                                  if (isGoogleSignInSupported) ...[
+                                    const SizedBox(height: AppSpacing.xl),
+                                    GoogleButton(
+                                      label: l.authGoogle,
+                                      onPressed: state.isSubmitting
+                                          ? null
+                                          : () => context
+                                                .read<AuthCubit>()
+                                                .signInWithGoogle(),
+                                    ),
+                                  ],
+                                  const SizedBox(height: AppSpacing.lg),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        l.authHaveAccount,
+                                        style: TextStyle(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
+                                        ),
                                       ),
-                                      const SizedBox(height: AppSpacing.lg),
-                                      PasswordField(
-                                        controller: _password,
-                                        label: l.authPassword,
-                                        textInputAction: TextInputAction.next,
-                                        autofillHints: const [
-                                          AutofillHints.newPassword,
-                                        ],
-                                        validator: (v) => (v ?? '').length < 8
-                                            ? l.authPasswordTooShort
-                                            : null,
-                                      ),
-                                      _StrengthMeter(value: _password.text),
-                                      const SizedBox(height: AppSpacing.lg),
-                                      PasswordField(
-                                        controller: _confirm,
-                                        label: l.authConfirmPassword,
-                                        textInputAction: TextInputAction.done,
-                                        onFieldSubmitted: (_) =>
-                                            _submit(context),
-                                        validator: (v) => v == _password.text
-                                            ? null
-                                            : l.authPasswordMismatch,
-                                      ),
-                                      const SizedBox(height: AppSpacing.xl),
-                                      FilledButton(
-                                        onPressed: state.isSubmitting
-                                            ? null
-                                            : () => _submit(context),
-                                        child: state.isSubmitting
-                                            ? SizedBox(
-                                                height: 22,
-                                                width: 22,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                      strokeWidth: 2.4,
-                                                      strokeCap:
-                                                          StrokeCap.round,
-                                                      color: Theme.of(
-                                                        context,
-                                                      ).colorScheme.onPrimary,
-                                                    ),
-                                              )
-                                            : Text(l.authSignUp),
+                                      TextButton(
+                                        onPressed: () => context.pop(),
+                                        child: Text(l.authSignIn),
                                       ),
                                     ],
                                   ),
-                                ),
-                                if (isGoogleSignInSupported) ...[
-                                  const SizedBox(height: AppSpacing.xl),
-                                  GoogleButton(
-                                    label: l.authGoogle,
-                                    onPressed: state.isSubmitting
-                                        ? null
-                                        : () => context
-                                              .read<AuthCubit>()
-                                              .signInWithGoogle(),
-                                  ),
                                 ],
-                                const SizedBox(height: AppSpacing.lg),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      l.authHaveAccount,
-                                      style: TextStyle(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                    TextButton(
-                                      onPressed: () => context.pop(),
-                                      child: Text(l.authSignIn),
-                                    ),
-                                  ],
-                                ),
                               ]),
                             ),
                           ),

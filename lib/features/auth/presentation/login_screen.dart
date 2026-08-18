@@ -20,6 +20,7 @@ import '../domain/saved_account.dart';
 import 'widgets/google_button.dart';
 import 'widgets/saved_accounts_list.dart';
 import 'widgets/settings_menu_button.dart';
+import 'widgets/verify_code_card.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, this.addingForUserId});
@@ -120,7 +121,24 @@ class _LoginScreenState extends State<LoginScreen> {
             if (state.status == AuthStatus.error && state.error != null) {
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
-                ..showSnackBar(SnackBar(content: Text(friendlyError(context, state.error))));
+                ..showSnackBar(
+                  SnackBar(content: Text(friendlyError(context, state.error))),
+                );
+            } else if (state.codeResent) {
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(SnackBar(content: Text(l.authVerifyResent)));
+            } else if (state.status == AuthStatus.awaitingCode) {
+              // The password was right and the account was never confirmed:
+              // somebody who signed up, closed the app before typing the code,
+              // and has come back. Said out loud, because otherwise the form
+              // they filled in correctly appears to have been swapped for a
+              // different question with no explanation.
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(content: Text(l.authVerifyUnconfirmed)),
+                );
             }
           },
           builder: (context, state) {
@@ -164,68 +182,80 @@ class _LoginScreenState extends State<LoginScreen> {
                                 // been here before this IS the way in, and a
                                 // shortcut under the thing it replaces is a
                                 // shortcut found after the long way round.
-                                if (!widget.isAddingAccount) _SavedAccounts(
-                                  busyUserId: _switching,
-                                  onSelect: _open,
-                                ),
-                                // The credentials sit on their own pane so the
-                                // form reads as one contained task.
-                                GlassCard(
-                                  radius: AppRadius.lg,
-                                  padding: const EdgeInsets.all(AppSpacing.md),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      TextFormField(
-                                        controller: _email,
-                                        keyboardType:
-                                            TextInputType.emailAddress,
-                                        textInputAction: TextInputAction.next,
-                                        autofillHints: const [
-                                          AutofillHints.email,
-                                        ],
-                                        decoration: InputDecoration(
-                                          labelText: l.authEmail,
-                                          prefixIcon: const Icon(
-                                            AppIcons.email,
-                                          ),
-                                        ),
-                                        validator: (v) =>
-                                            Validators.isEmail(v ?? '')
-                                            ? null
-                                            : l.authInvalidEmail,
-                                      ),
-                                      const SizedBox(height: AppSpacing.lg),
-                                      PasswordField(
-                                        controller: _password,
-                                        label: l.authPassword,
-                                        textInputAction: TextInputAction.done,
-                                        autofillHints: const [
-                                          AutofillHints.password,
-                                        ],
-                                        onFieldSubmitted: (_) =>
-                                            _submit(context),
-                                        validator: (v) => (v ?? '').isEmpty
-                                            ? l.commonRequired
-                                            : null,
-                                      ),
-                                      const SizedBox(height: AppSpacing.xl),
-                                      FilledButton(
-                                        onPressed: state.isSubmitting
-                                            ? null
-                                            : () => _submit(context),
-                                        child: state.isSubmitting
-                                            ? const _ButtonSpinner()
-                                            : Text(l.authSignIn),
-                                      ),
-                                    ],
+                                if (!widget.isAddingAccount &&
+                                    !state.isVerifying)
+                                  _SavedAccounts(
+                                    busyUserId: _switching,
+                                    onSelect: _open,
                                   ),
-                                ),
+                                // An account made and never confirmed: the six
+                                // digits take the form's place, here as on the
+                                // sign-up screen, so the two doors into the
+                                // same step look like one step.
+                                if (state.isVerifying)
+                                  VerifyCodeCard(email: state.pendingEmail!)
+                                else
+                                  // The credentials sit on their own pane so
+                                  // the form reads as one contained task.
+                                  GlassCard(
+                                    radius: AppRadius.lg,
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.md,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        TextFormField(
+                                          controller: _email,
+                                          keyboardType:
+                                              TextInputType.emailAddress,
+                                          textInputAction: TextInputAction.next,
+                                          autofillHints: const [
+                                            AutofillHints.email,
+                                          ],
+                                          decoration: InputDecoration(
+                                            labelText: l.authEmail,
+                                            prefixIcon: const Icon(
+                                              AppIcons.email,
+                                            ),
+                                          ),
+                                          validator: (v) =>
+                                              Validators.isEmail(v ?? '')
+                                              ? null
+                                              : l.authInvalidEmail,
+                                        ),
+                                        const SizedBox(height: AppSpacing.lg),
+                                        PasswordField(
+                                          controller: _password,
+                                          label: l.authPassword,
+                                          textInputAction: TextInputAction.done,
+                                          autofillHints: const [
+                                            AutofillHints.password,
+                                          ],
+                                          onFieldSubmitted: (_) =>
+                                              _submit(context),
+                                          validator: (v) => (v ?? '').isEmpty
+                                              ? l.commonRequired
+                                              : null,
+                                        ),
+                                        const SizedBox(height: AppSpacing.xl),
+                                        FilledButton(
+                                          onPressed: state.isSubmitting
+                                              ? null
+                                              : () => _submit(context),
+                                          child: state.isSubmitting
+                                              ? const _ButtonSpinner()
+                                              : Text(l.authSignIn),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 // The divider goes with the button: "or" with
                                 // nothing after it divides one thing from
                                 // nothing.
-                                if (isGoogleSignInSupported) ...[
+                                if (isGoogleSignInSupported &&
+                                    !state.isVerifying) ...[
                                   const SizedBox(height: AppSpacing.xl),
                                   _OrDivider(label: l.authOrContinueWith),
                                   const SizedBox(height: AppSpacing.xl),
@@ -239,33 +269,37 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ],
                                 const SizedBox(height: AppSpacing.lg),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      l.authNoAccount,
-                                      style: TextStyle(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onSurfaceVariant,
+                                // "No account? Sign up" is the wrong offer to
+                                // somebody who has one and is three digits from
+                                // reaching it.
+                                if (!state.isVerifying)
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        l.authNoAccount,
+                                        style: TextStyle(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
+                                        ),
                                       ),
-                                    ),
-                                    TextButton(
-                                      // The exemption has to travel with the
-                                      // link: registering a second account is
-                                      // still done from inside a live session,
-                                      // and a plain /register would be sent
-                                      // straight back home.
-                                      onPressed: () => context.push(
-                                        widget.isAddingAccount
-                                            ? '${Routes.register}'
-                                                  '?add=${widget.addingForUserId}'
-                                            : Routes.register,
+                                      TextButton(
+                                        // The exemption has to travel with the
+                                        // link: registering a second account is
+                                        // still done from inside a live
+                                        // session, and a plain /register would
+                                        // be sent straight back home.
+                                        onPressed: () => context.push(
+                                          widget.isAddingAccount
+                                              ? '${Routes.register}'
+                                                    '?add=${widget.addingForUserId}'
+                                              : Routes.register,
+                                        ),
+                                        child: Text(l.authSignUp),
                                       ),
-                                      child: Text(l.authSignUp),
-                                    ),
-                                  ],
-                                ),
+                                    ],
+                                  ),
                               ]),
                             ),
                           ),

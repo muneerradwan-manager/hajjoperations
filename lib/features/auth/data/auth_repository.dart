@@ -17,10 +17,42 @@ import 'saved_accounts_store.dart';
 
 /// Domain-level auth error carrying a user-presentable message.
 class AuthFailure implements Exception {
-  AuthFailure(this.message);
+  AuthFailure(this.message, {this.code});
+
   final String message;
+
+  /// The machine-readable code, where the provider gave one.
+  ///
+  /// Carried because one of them changes what the app DOES rather than what it
+  /// says: `email_not_confirmed` is not a failure to sign in, it is a sign-in
+  /// interrupted halfway through creating the account — and the answer to it is
+  /// the code box, not an apology.
+  final String? code;
+
+  bool get isEmailNotConfirmed => code == 'email_not_confirmed';
+
+  /// The code was wrong, or it has expired. One sentence for both because the
+  /// provider does not reliably separate them and the reader's next move is the
+  /// same either way: type it again, or ask for another.
+  bool get isBadCode =>
+      code == 'otp_expired' ||
+      code == 'otp_disabled' ||
+      code == 'invalid_credentials' && _looksLikeToken;
+
+  bool get _looksLikeToken => message.toLowerCase().contains('token');
+
   @override
   String toString() => message;
+}
+
+/// What creating an account produced.
+enum SignUpOutcome {
+  /// A session, straight away — the project is not asking for confirmation.
+  signedIn,
+
+  /// A six-digit code was posted to the address, and nothing is signed in until
+  /// it comes back. See [AuthRepository.verifyEmailCode].
+  awaitingCode,
 }
 
 /// Whether Google sign-in exists on the platform the app is running on.
@@ -70,14 +102,70 @@ class AuthRepository {
     _googleInitialized = true;
   }
 
-  Future<void> signUpWithEmail({
+  /// Creates the account.
+  ///
+  /// Which of the two things happens next is the PROJECT's decision, not this
+  /// app's: with email confirmation off, `signUp` hands back a session and the
+  /// person is in; with it on, there is no session and a code has been posted
+  /// to the address. The caller is told which rather than left to guess, and
+  /// the app supports both — a project setting must not be something the client
+  /// has to be rebuilt to follow.
+  Future<SignUpOutcome> signUpWithEmail({
     required String email,
     required String password,
   }) async {
     try {
-      await supabase.auth.signUp(email: email.trim(), password: password);
+      final response = await supabase.auth.signUp(
+        email: email.trim(),
+        password: password,
+      );
+      return response.session == null
+          ? SignUpOutcome.awaitingCode
+          : SignUpOutcome.signedIn;
     } on AuthException catch (e) {
-      throw AuthFailure(e.message);
+      throw AuthFailure(e.message, code: e.code);
+    }
+  }
+
+  /// Hands back the code that was posted to the address, which confirms the
+  /// account and signs it in in one step.
+  ///
+  /// A CODE and not a link, and that is the whole point of this path. A link
+  /// mailed to a phone opens in whichever browser the phone prefers, which is
+  /// not the app: the account is confirmed somewhere the person cannot see, and
+  /// they are left looking at a screen that has not moved. Six digits carried
+  /// back by hand cross that gap without needing deep links to be configured on
+  /// two platforms and a web build.
+  ///
+  /// Requires the project's "Confirm signup" template to contain `{{ .Token }}`.
+  /// Left as the default `{{ .ConfirmationURL }}`, the letter arrives with a
+  /// link and no code, and there is nothing for the reader to type.
+  Future<void> verifyEmailCode({
+    required String email,
+    required String code,
+  }) async {
+    try {
+      await supabase.auth.verifyOTP(
+        email: email.trim(),
+        token: code.trim(),
+        type: OtpType.signup,
+      );
+      unawaited(_logAuthEvent('login'));
+    } on AuthException catch (e) {
+      throw AuthFailure(e.message, code: e.code);
+    }
+  }
+
+  /// Posts another code to the same address.
+  ///
+  /// The first one goes astray often enough to matter — a filter, a typo caught
+  /// too late, a letter that took nine minutes — and without this the only way
+  /// out is to try to sign up again with an address that now exists.
+  Future<void> resendEmailCode(String email) async {
+    try {
+      await supabase.auth.resend(type: OtpType.signup, email: email.trim());
+    } on AuthException catch (e) {
+      throw AuthFailure(e.message, code: e.code);
     }
   }
 
@@ -92,7 +180,13 @@ class AuthRepository {
       );
       unawaited(_logAuthEvent('login'));
     } on AuthException catch (e) {
-      throw AuthFailure(e.message);
+      // `email_not_confirmed` comes back here and is not a wrong password: it
+      // is somebody who signed up, closed the app before typing the code, and
+      // has come back. Passed through with its code so the screen can offer
+      // them the code box instead of telling them their details are wrong —
+      // without that, an interrupted sign-up is an account nobody can ever
+      // reach again.
+      throw AuthFailure(e.message, code: e.code);
     }
   }
 
@@ -123,7 +217,7 @@ class AuthRepository {
       }
       throw AuthFailure(e.description ?? 'Google sign-in failed');
     } on AuthException catch (e) {
-      throw AuthFailure(e.message);
+      throw AuthFailure(e.message, code: e.code);
     } on AuthFailure {
       rethrow;
     } catch (e) {

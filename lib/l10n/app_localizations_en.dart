@@ -181,8 +181,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authPasswordMismatch => 'Passwords do not match';
 
   @override
-  String get authCheckEmail =>
-      'Check your email to confirm your account, then sign in.';
+  String get authVerifyTitle => 'Enter the verification code';
+
+  @override
+  String authVerifySubtitle(String email) {
+    return 'We sent a six-digit code to $email';
+  }
+
+  @override
+  String get authVerifyCode => 'Verification code';
+
+  @override
+  String get authVerifyCodeHint => '6 digits';
+
+  @override
+  String get authVerifyAction => 'Confirm';
+
+  @override
+  String get authVerifyCodeTooShort => 'The code is six digits';
+
+  @override
+  String get authVerifyResend => 'Send again';
+
+  @override
+  String authVerifyResendIn(int seconds) {
+    return 'Send again in ${seconds}s';
+  }
+
+  @override
+  String get authVerifyResent => 'A new code is on its way';
+
+  @override
+  String get authVerifyWrongCode => 'That code is wrong or has expired';
+
+  @override
+  String get authVerifyChangeEmail => 'Change the address';
+
+  @override
+  String get authVerifyJunkHint => 'Nothing arrived? Look in the junk folder';
+
+  @override
+  String get authVerifyUnconfirmed =>
+      'This account was never confirmed. We have sent a new code.';
 
   @override
   String get accountsTitle => 'Accounts';

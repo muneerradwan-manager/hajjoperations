@@ -434,11 +434,83 @@ abstract class AppLocalizations {
   /// **'Passwords do not match'**
   String get authPasswordMismatch;
 
-  /// No description provided for @authCheckEmail.
+  /// No description provided for @authVerifyTitle.
   ///
   /// In en, this message translates to:
-  /// **'Check your email to confirm your account, then sign in.'**
-  String get authCheckEmail;
+  /// **'Enter the verification code'**
+  String get authVerifyTitle;
+
+  /// No description provided for @authVerifySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a six-digit code to {email}'**
+  String authVerifySubtitle(String email);
+
+  /// No description provided for @authVerifyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification code'**
+  String get authVerifyCode;
+
+  /// No description provided for @authVerifyCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'6 digits'**
+  String get authVerifyCodeHint;
+
+  /// No description provided for @authVerifyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get authVerifyAction;
+
+  /// No description provided for @authVerifyCodeTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'The code is six digits'**
+  String get authVerifyCodeTooShort;
+
+  /// No description provided for @authVerifyResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send again'**
+  String get authVerifyResend;
+
+  /// No description provided for @authVerifyResendIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Send again in {seconds}s'**
+  String authVerifyResendIn(int seconds);
+
+  /// No description provided for @authVerifyResent.
+  ///
+  /// In en, this message translates to:
+  /// **'A new code is on its way'**
+  String get authVerifyResent;
+
+  /// No description provided for @authVerifyWrongCode.
+  ///
+  /// In en, this message translates to:
+  /// **'That code is wrong or has expired'**
+  String get authVerifyWrongCode;
+
+  /// No description provided for @authVerifyChangeEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the address'**
+  String get authVerifyChangeEmail;
+
+  /// No description provided for @authVerifyJunkHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing arrived? Look in the junk folder'**
+  String get authVerifyJunkHint;
+
+  /// No description provided for @authVerifyUnconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'This account was never confirmed. We have sent a new code.'**
+  String get authVerifyUnconfirmed;
 
   /// No description provided for @accountsTitle.
   ///
