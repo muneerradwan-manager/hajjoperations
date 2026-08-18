@@ -1,11 +1,17 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/attachments/attachments_view.dart' show AttachmentSigner;
 import '../../../core/supabase/storage_key.dart';
 import '../../../core/supabase/supabase_client.dart';
 import '../domain/app_notification.dart';
 
 class NotificationsRepository {
   static const _bucket = 'notifications';
+
+  /// The other bucket this screen reads from. An urgent report's evidence stays
+  /// with the report — see [AppNotification.incidentId] — and the inbox signs
+  /// for it rather than having it copied over.
+  static const _incidentsBucket = 'incidents';
 
   /// How much of the inbox one read carries. The table grows for as long as
   /// the account lives; without a ceiling every open of the inbox — and every
@@ -58,21 +64,53 @@ class NotificationsRepository {
   /// went to — five hundred recipients share one file, not five hundred copies.
   Future<Map<String, List<NotificationAttachment>>> fetchAttachments(
     List<String> groupIds,
-  ) async {
-    if (groupIds.isEmpty) return const {};
-    final rows = await supabase
-        .from('notification_attachments')
-        .select()
-        .inFilter('group_id', groupIds)
-        .order('sort_order');
+  ) => _attachmentsBy(
+    table: 'notification_attachments',
+    column: 'group_id',
+    ids: groupIds,
+  );
 
-    final byGroup = <String, List<NotificationAttachment>>{};
+  /// The evidence of [incidentIds], keyed by incident. Same shape, another
+  /// table: a "بلاغ عاجل" carries nothing of its own, and what the reader is
+  /// meant to look at is filed under the report it announces.
+  ///
+  /// Readable without a migration, and by exactly the right people: the row
+  /// policy on `incident_attachments` and the storage rule behind the bucket
+  /// both admit whoever holds `incidents.receive` — which is who these
+  /// notifications went to in the first place.
+  Future<Map<String, List<NotificationAttachment>>> fetchIncidentAttachments(
+    List<String> incidentIds,
+  ) => _attachmentsBy(
+    table: 'incident_attachments',
+    column: 'incident_id',
+    ids: incidentIds,
+  );
+
+  /// One query for a whole inbox's worth of files, grouped by what owns them.
+  ///
+  /// `ascending` is stated rather than left off: PostgREST's Dart client
+  /// defaults `order` to DESCENDING, so the un-flagged call that used to be
+  /// here handed back every set of photographs backwards — the last thing
+  /// somebody photographed shown as the first thing they did.
+  Future<Map<String, List<NotificationAttachment>>> _attachmentsBy({
+    required String table,
+    required String column,
+    required List<String> ids,
+  }) async {
+    if (ids.isEmpty) return const {};
+    final rows = await supabase
+        .from(table)
+        .select()
+        .inFilter(column, ids)
+        .order('sort_order', ascending: true);
+
+    final byOwner = <String, List<NotificationAttachment>>{};
     for (final row in (rows as List).cast<Map<String, dynamic>>()) {
-      (byGroup[row['group_id'] as String] ??= []).add(
+      (byOwner[row[column] as String] ??= []).add(
         NotificationAttachment.fromMap(row),
       );
     }
-    return byGroup;
+    return byOwner;
   }
 
   /// A short-lived link to an attachment. Signing goes through RLS, so nobody
@@ -86,9 +124,46 @@ class NotificationsRepository {
     int expiresInSeconds = 3600,
     bool download = false,
     String? downloadName,
+  }) => _signedUrl(
+    _bucket,
+    path,
+    expiresInSeconds: expiresInSeconds,
+    download: download,
+    downloadName: downloadName,
+  );
+
+  /// The same, for a file that belongs to an urgent report.
+  Future<String> signedIncidentUrl(
+    String path, {
+    int expiresInSeconds = 3600,
+    bool download = false,
+    String? downloadName,
+  }) => _signedUrl(
+    _incidentsBucket,
+    path,
+    expiresInSeconds: expiresInSeconds,
+    download: download,
+    downloadName: downloadName,
+  );
+
+  /// Which bucket to sign [n]'s files against.
+  ///
+  /// Asked of the notification rather than of the path, because the two buckets
+  /// lay their files out identically — `{id}/{i}_{name}` — and nothing in a
+  /// path says which one it came out of. What the row is ABOUT is the only
+  /// thing that knows.
+  AttachmentSigner signerFor(AppNotification n) =>
+      n.incidentId == null ? signedUrl : signedIncidentUrl;
+
+  Future<String> _signedUrl(
+    String bucket,
+    String path, {
+    required int expiresInSeconds,
+    required bool download,
+    required String? downloadName,
   }) {
     return supabase.storage
-        .from(_bucket)
+        .from(bucket)
         .createSignedUrl(path, expiresInSeconds)
         .then((url) {
           if (!download) return url;
@@ -105,6 +180,22 @@ class NotificationsRepository {
         .from('notifications')
         .update({'read_at': DateTime.now().toIso8601String()})
         .eq('id', id)
+        .filter('read_at', 'is', null);
+  }
+
+  /// Marks a named set read, in one write.
+  ///
+  /// Exists because the inbox can now be looked at a half at a time. "تعليم
+  /// الكل كمقروء" pressed while the alarms are on screen has to mean the alarms
+  /// — marking the announcements too, silently, off a button labelled "الكل"
+  /// while they are not visible, is the app clearing something the reader never
+  /// saw.
+  Future<void> markManyRead(List<String> ids) async {
+    if (ids.isEmpty) return;
+    await supabase
+        .from('notifications')
+        .update({'read_at': DateTime.now().toIso8601String()})
+        .inFilter('id', ids)
         .filter('read_at', 'is', null);
   }
 

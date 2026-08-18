@@ -79,6 +79,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonSettings => 'Settings';
 
   @override
+  String get commonToday => 'Today';
+
+  @override
+  String get commonYesterday => 'Yesterday';
+
+  @override
   String get settingsLanguage => 'Language';
 
   @override
@@ -673,6 +679,32 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationSend => 'Send notification';
+
+  @override
+  String get notificationFilterAll => 'All';
+
+  @override
+  String get notificationFilterMessages => 'Notices';
+
+  @override
+  String get notificationFilterIncidents => 'Urgent reports';
+
+  @override
+  String notificationFilterCount(String label, int count) {
+    return '$label ($count)';
+  }
+
+  @override
+  String get notificationOpenIncident => 'Open the report';
+
+  @override
+  String get notificationOpenModule => 'Open the file';
+
+  @override
+  String get notificationsEmptyIncidents => 'No urgent reports in the inbox';
+
+  @override
+  String get notificationsEmptyMessages => 'No notices';
 
   @override
   String get notificationTitleField => 'Title';
@@ -4114,6 +4146,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get incidentOpenPage => 'Open the screen';
+
+  @override
+  String get incidentOpenModule => 'Open the file';
+
+  @override
+  String get incidentNotInRegister =>
+      'That report is no longer in the register';
+
+  @override
+  String get incidentsShowAll => 'Show the whole register';
+
+  @override
+  String get incidentsOneReport => 'One report';
 
   @override
   String get incidentNotDeliveredTitle => 'It did not go through';

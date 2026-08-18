@@ -15,51 +15,100 @@ class IncidentsState extends Equatable {
     this.status = IncidentsStatus.loading,
     this.incidents = const [],
     this.includeClosed = false,
+    this.focusId,
     this.error,
   });
 
   final IncidentsStatus status;
   final List<Incident> incidents;
   final bool includeClosed;
+
+  /// The one report the register was opened FOR, when it was opened from an
+  /// alarm in the inbox rather than from the menu.
+  ///
+  /// The register is a screen somebody watches; arriving at it from a tap on
+  /// "بلاغ عاجل" is a different errand — the reader has one report in mind and
+  /// wants it, not a list to find it in. So the list narrows to it and offers
+  /// the way back out to the whole register.
+  final String? focusId;
+
   final String? error;
 
   int get openCount =>
       incidents.where((incident) => incident.state.isOpen).length;
+
+  /// What the screen draws: everything, or the one report it was opened for.
+  List<Incident> get visible => switch (focusId) {
+    final id? => incidents.where((incident) => incident.id == id).toList(),
+    _ => incidents,
+  };
+
+  /// Opened for a report the register no longer holds — struck off since, or
+  /// past the end of what the list fetches. Said in so many words rather than
+  /// drawn as an empty register, which would read as "there are no emergencies"
+  /// to somebody who was just told there was one.
+  bool get focusMissing =>
+      focusId != null && status == IncidentsStatus.ready && visible.isEmpty;
 
   IncidentsState copyWith({
     IncidentsStatus? status,
     List<Incident>? incidents,
     bool? includeClosed,
     String? error,
+    bool clearFocus = false,
   }) => IncidentsState(
     status: status ?? this.status,
     incidents: incidents ?? this.incidents,
     includeClosed: includeClosed ?? this.includeClosed,
+    focusId: clearFocus ? null : focusId,
     error: error,
   );
 
   @override
-  List<Object?> get props => [status, incidents, includeClosed, error];
+  List<Object?> get props => [status, incidents, includeClosed, focusId, error];
 }
 
 /// The register, for whoever receives urgent reports.
 class IncidentsCubit extends SafeCubit<IncidentsState> {
-  IncidentsCubit(this._repo) : super(const IncidentsState()) {
+  IncidentsCubit(this._repo, {String? focusId})
+    : super(
+        IncidentsState(
+          focusId: focusId,
+          // A report tapped in the inbox may well have been dealt with while
+          // the reader was walking to the phone. Opening the register on it and
+          // finding nothing, because closed ones are hidden by default, would
+          // be the app losing something it had just announced.
+          includeClosed: focusId != null,
+        ),
+      ) {
     load();
   }
 
   final IncidentsRepository _repo;
 
+  /// How deep to read when the register was opened for one report.
+  ///
+  /// The list comes back oldest-open-first, so a report raised this minute sits
+  /// at the far end of it. The ordinary hundred is the right size for a screen
+  /// somebody is watching and the wrong size for finding one row in a season's
+  /// worth — and this read happens once, on arrival from a tap.
+  static const _focusedLimit = 500;
+
   Future<void> load() async {
     try {
       final incidents = await _repo.fetchList(
         includeClosed: state.includeClosed,
+        limit: state.focusId == null ? 100 : _focusedLimit,
       );
       emit(state.copyWith(status: IncidentsStatus.ready, incidents: incidents));
     } catch (e) {
       emit(state.copyWith(status: IncidentsStatus.error, error: e.toString()));
     }
   }
+
+  /// Out of the one report and into the whole register — the way back from
+  /// having arrived here through an alarm.
+  void showAll() => emit(state.copyWith(clearFocus: true));
 
   Future<void> setIncludeClosed(bool value) async {
     emit(state.copyWith(includeClosed: value));

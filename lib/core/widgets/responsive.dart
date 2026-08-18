@@ -489,6 +489,28 @@ class AdaptiveGrid extends StatelessWidget {
   }
 }
 
+/// One run of cards under a heading, for [AdaptiveGridView.sectioned].
+///
+/// The cards are given as a count and a builder rather than as a list, for the
+/// same reason the flat grid takes them that way: a section of an inbox is
+/// still part of a lazily-built list, and a heading in the middle of it must
+/// not cost the rows below the fold their laziness.
+class GridSection {
+  const GridSection({
+    required this.header,
+    required this.itemCount,
+    required this.itemBuilder,
+  });
+
+  /// The full-width line above this section's cards. A section with no cards
+  /// draws nothing at all, header included — an empty heading is a promise the
+  /// list then fails to keep.
+  final Widget header;
+
+  final int itemCount;
+  final Widget Function(BuildContext context, int index) itemBuilder;
+}
+
 /// The lazy form of [AdaptiveGrid]: a scrollable whose rows are built as they
 /// are reached.
 ///
@@ -516,10 +538,36 @@ class AdaptiveGridView extends StatelessWidget {
     this.footer,
     this.controller,
     this.onRefresh,
-  });
+  }) : sections = null;
+
+  /// The same grid, cut into headed groups: a day of an inbox, a status, a
+  /// season. The columns are counted once for the whole list, so a heading
+  /// never re-flows the cards under it — every section breaks at the same
+  /// widths, which is what makes the groups read as one list rather than as
+  /// several stacked grids.
+  const AdaptiveGridView.sectioned({
+    super.key,
+    required List<GridSection> this.sections,
+    this.minTileWidth = CardWidth.list,
+    this.maxColumns = 4,
+    this.spacing = AppSpacing.md,
+    this.equalHeights = true,
+    this.padding,
+    this.header,
+    this.footer,
+    this.controller,
+    this.onRefresh,
+  }) : itemCount = 0,
+       itemBuilder = _noItem;
+
+  static Widget _noItem(BuildContext context, int index) =>
+      const SizedBox.shrink();
 
   final int itemCount;
   final Widget Function(BuildContext context, int index) itemBuilder;
+
+  /// The groups, when this grid draws groups; null for the flat form.
+  final List<GridSection>? sections;
   final double minTileWidth;
   final int maxColumns;
   final double spacing;
@@ -545,49 +593,93 @@ class AdaptiveGridView extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        final inner = constraints.maxWidth - (padding?.horizontal ?? 0);
         final columns = columnsFor(
-          constraints.maxWidth - (padding?.horizontal ?? 0),
+          inner,
           minTileWidth: minTileWidth,
           maxColumns: maxColumns,
           spacing: spacing,
         );
-        final rows = (itemCount + columns - 1) ~/ columns;
-        final lead = header == null ? 0 : 1;
-        final tail = footer == null ? 0 : 1;
-        final cellWidth = cellWidthFor(
-          constraints.maxWidth - (padding?.horizontal ?? 0),
-          columns,
-          spacing,
-        );
+        final cellWidth = cellWidthFor(inner, columns, spacing);
 
-        Widget list = ListView.separated(
-          controller: controller,
-          padding: padding,
-          itemCount: rows + lead + tail,
-          separatorBuilder: (_, _) => SizedBox(height: spacing),
-          itemBuilder: (context, i) {
-            if (i < lead) return header!;
-            if (i >= rows + lead) return footer!;
-            final start = (i - lead) * columns;
-            return columns == 1
-                ? itemBuilder(context, start)
-                : gridRow(
-                    start: start,
-                    columns: columns,
-                    itemCount: itemCount,
-                    spacing: spacing,
-                    equalHeights: equalHeights,
-                    cellWidth: cellWidth,
-                    itemBuilder: itemBuilder,
-                  );
-          },
-        );
+        Widget list = sections == null
+            ? _flat(columns, cellWidth)
+            : _sectioned(columns, cellWidth);
 
         if (onRefresh != null) {
           list = RefreshIndicator(onRefresh: onRefresh!, child: list);
         }
         return list;
       },
+    );
+  }
+
+  /// One run of cards: the line number IS the row number, so nothing about the
+  /// list has to be worked out in advance.
+  Widget _flat(int columns, double cellWidth) {
+    final rows = (itemCount + columns - 1) ~/ columns;
+    final lead = header == null ? 0 : 1;
+    final tail = footer == null ? 0 : 1;
+
+    return ListView.separated(
+      controller: controller,
+      padding: padding,
+      itemCount: rows + lead + tail,
+      separatorBuilder: (_, _) => SizedBox(height: spacing),
+      itemBuilder: (context, i) {
+        if (i < lead) return header!;
+        if (i >= rows + lead) return footer!;
+        final start = (i - lead) * columns;
+        return columns == 1
+            ? itemBuilder(context, start)
+            : gridRow(
+                start: start,
+                columns: columns,
+                itemCount: itemCount,
+                spacing: spacing,
+                equalHeights: equalHeights,
+                cellWidth: cellWidth,
+                itemBuilder: itemBuilder,
+              );
+      },
+    );
+  }
+
+  /// Headings interleaved with rows, so the line number no longer says which
+  /// row of which section it is. Which line is what is worked out up front —
+  /// but only as a list of CLOSURES: laying the plan out costs one entry per
+  /// heading and per row, and nothing inside an entry runs until the list is
+  /// scrolled that far, so the cards stay as lazy as they are in [_flat].
+  Widget _sectioned(int columns, double cellWidth) {
+    final lines = <Widget Function(BuildContext context)>[];
+    if (header != null) lines.add((_) => header!);
+    for (final section in sections!) {
+      if (section.itemCount == 0) continue;
+      lines.add((_) => section.header);
+      for (var start = 0; start < section.itemCount; start += columns) {
+        lines.add(
+          (context) => columns == 1
+              ? section.itemBuilder(context, start)
+              : gridRow(
+                  start: start,
+                  columns: columns,
+                  itemCount: section.itemCount,
+                  spacing: spacing,
+                  equalHeights: equalHeights,
+                  cellWidth: cellWidth,
+                  itemBuilder: section.itemBuilder,
+                ),
+        );
+      }
+    }
+    if (footer != null) lines.add((_) => footer!);
+
+    return ListView.separated(
+      controller: controller,
+      padding: padding,
+      itemCount: lines.length,
+      separatorBuilder: (_, _) => SizedBox(height: spacing),
+      itemBuilder: (context, i) => lines[i](context),
     );
   }
 }

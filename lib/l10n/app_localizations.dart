@@ -236,6 +236,18 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get commonSettings;
 
+  /// No description provided for @commonToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get commonToday;
+
+  /// No description provided for @commonYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get commonYesterday;
+
   /// No description provided for @settingsLanguage.
   ///
   /// In en, this message translates to:
@@ -1363,6 +1375,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send notification'**
   String get notificationSend;
+
+  /// No description provided for @notificationFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get notificationFilterAll;
+
+  /// No description provided for @notificationFilterMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Notices'**
+  String get notificationFilterMessages;
+
+  /// No description provided for @notificationFilterIncidents.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent reports'**
+  String get notificationFilterIncidents;
+
+  /// No description provided for @notificationFilterCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} ({count})'**
+  String notificationFilterCount(String label, int count);
+
+  /// No description provided for @notificationOpenIncident.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the report'**
+  String get notificationOpenIncident;
+
+  /// No description provided for @notificationOpenModule.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the file'**
+  String get notificationOpenModule;
+
+  /// No description provided for @notificationsEmptyIncidents.
+  ///
+  /// In en, this message translates to:
+  /// **'No urgent reports in the inbox'**
+  String get notificationsEmptyIncidents;
+
+  /// No description provided for @notificationsEmptyMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'No notices'**
+  String get notificationsEmptyMessages;
 
   /// No description provided for @notificationTitleField.
   ///
@@ -7147,6 +7207,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open the screen'**
   String get incidentOpenPage;
+
+  /// No description provided for @incidentOpenModule.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the file'**
+  String get incidentOpenModule;
+
+  /// No description provided for @incidentNotInRegister.
+  ///
+  /// In en, this message translates to:
+  /// **'That report is no longer in the register'**
+  String get incidentNotInRegister;
+
+  /// No description provided for @incidentsShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the whole register'**
+  String get incidentsShowAll;
+
+  /// No description provided for @incidentsOneReport.
+  ///
+  /// In en, this message translates to:
+  /// **'One report'**
+  String get incidentsOneReport;
 
   /// No description provided for @incidentNotDeliveredTitle.
   ///

@@ -9,6 +9,33 @@ export '../../../core/attachments/attachment.dart';
 /// signed URL, minted on demand for the recipient.
 typedef NotificationAttachment = StoredAttachment;
 
+/// What a notification is about, as far as the inbox is concerned.
+///
+/// Three, and not one per database `type`: the reader is not sorting by trigger
+/// name, they are answering "is this something on fire, something about a file
+/// I am on, or an announcement". Every new `type` the database learns falls
+/// into one of the three without this list changing.
+enum NotificationKind {
+  /// An urgent report from the field. The one kind drawn in the error colour,
+  /// and the reason the inbox can be filtered at all.
+  incident,
+
+  /// About an operational file — an assignment, a broadcast to its members, a
+  /// reminder that a report on it is late.
+  module,
+
+  /// A message to everybody, about nothing in particular. Points nowhere, and
+  /// must not pretend otherwise.
+  broadcast,
+}
+
+/// Where a tap lands.
+///
+/// Named apart from [NotificationKind] because they are not the same question
+/// and will not stay in step: a future kind may be worth drawing differently
+/// and still have nowhere to go.
+enum NotificationDestination { none, module, incident }
+
 class AppNotification {
   const AppNotification({
     required this.id,
@@ -75,8 +102,57 @@ class AppNotification {
     return id is String && id.isNotEmpty ? id : null;
   }
 
+  /// The urgent report this notification announces, when it announces one.
+  ///
+  /// An emergency's photographs are part of the REPORT rather than part of the
+  /// message about it: `raise_incident` files them under `incident_attachments`
+  /// in the `incidents` bucket, and writes these inbox rows with no attachments
+  /// of their own. So a "بلاغ عاجل" whose group holds nothing is not a report
+  /// without a photograph — it is a photograph kept somewhere else, and this is
+  /// what says where to go and look for it.
+  String? get incidentId => incidentIdIn(data);
+
+  /// The same rule, asked of a bare map — see [moduleIdIn] for why it has to
+  /// exist twice over.
+  ///
+  /// An alarm arrives twice: as an inbox row, and as a push in the phone's own
+  /// tray. Tapping either is the same act and must reach the same register.
+  static String? incidentIdIn(Map<String, dynamic> data) {
+    if (data['type'] != 'incident') return null;
+    final id = data['incident_id'];
+    return id is String && id.isNotEmpty ? id : null;
+  }
+
+  /// What this notification IS, which is the first thing a reader wants from
+  /// it and the last thing the old card said.
+  ///
+  /// Every row in the inbox was drawn with the same bell in the same colour: a
+  /// bus that has overturned in منى looked exactly like a message announcing
+  /// that a form had been published. The kind is what lets the card stop
+  /// pretending those are the same event.
+  NotificationKind get kind {
+    if (incidentId != null) return NotificationKind.incident;
+    if (moduleId != null) return NotificationKind.module;
+    return NotificationKind.broadcast;
+  }
+
+  /// Where tapping this goes.
+  ///
+  /// The report comes FIRST when a row is both — an alarm carries `module_id`
+  /// as well, and the file is the place the emergency happened rather than the
+  /// emergency. Somebody woken by "بلاغ عاجل" is going to the register to
+  /// telephone the man, not to the file to read its fields.
+  NotificationDestination get destination => switch (kind) {
+    NotificationKind.incident => NotificationDestination.incident,
+    NotificationKind.module => NotificationDestination.module,
+    NotificationKind.broadcast => NotificationDestination.none,
+  };
+
   /// Whether tapping this has anywhere to go.
-  bool get hasTarget => moduleId != null;
+  bool get hasTarget => destination != NotificationDestination.none;
+
+  /// The one kind the inbox can be filtered down to.
+  bool get isIncident => kind == NotificationKind.incident;
 
   bool get isRead => readAt != null;
 
@@ -131,4 +207,39 @@ class AppNotification {
       (map['data'] as Map?) ?? const <String, dynamic>{},
     ),
   );
+}
+
+/// One day of the inbox: the day itself, and what arrived on it.
+class NotificationDay {
+  const NotificationDay({required this.day, required this.items});
+
+  /// Midnight of the day these arrived on, in the reader's own time zone —
+  /// which is the only place the question means anything. A notification sent
+  /// at 01:30 in Mecca belongs to that morning for the man who was woken by it,
+  /// whatever date UTC was on at the time.
+  final DateTime day;
+
+  final List<AppNotification> items;
+
+  /// The inbox cut into days.
+  ///
+  /// A hundred rows of "21/08 09:14, 21/08 09:02, 20/08 22:40" is a wall of
+  /// numbers to be read one line at a time; the eye cannot see where yesterday
+  /// started without doing the arithmetic itself. Cutting it into days moves
+  /// that work into the headings, where it is done once.
+  ///
+  /// Order follows [items], which arrives newest first — so the days come out
+  /// newest first too, and a row that lands out of order joins the day it
+  /// belongs to rather than opening a second copy of it further down.
+  static List<NotificationDay> byDay(List<AppNotification> items) {
+    final byDay = <DateTime, List<AppNotification>>{};
+    for (final n in items) {
+      final at = n.createdAt;
+      (byDay[DateTime(at.year, at.month, at.day)] ??= []).add(n);
+    }
+    return [
+      for (final entry in byDay.entries)
+        NotificationDay(day: entry.key, items: entry.value),
+    ];
+  }
 }

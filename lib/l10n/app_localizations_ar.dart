@@ -79,6 +79,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commonSettings => 'الإعدادات';
 
   @override
+  String get commonToday => 'اليوم';
+
+  @override
+  String get commonYesterday => 'أمس';
+
+  @override
   String get settingsLanguage => 'اللغة';
 
   @override
@@ -670,6 +676,32 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notificationSend => 'إرسال إشعار';
+
+  @override
+  String get notificationFilterAll => 'الكل';
+
+  @override
+  String get notificationFilterMessages => 'إشعارات';
+
+  @override
+  String get notificationFilterIncidents => 'بلاغات عاجلة';
+
+  @override
+  String notificationFilterCount(String label, int count) {
+    return '$label ($count)';
+  }
+
+  @override
+  String get notificationOpenIncident => 'فتح البلاغ';
+
+  @override
+  String get notificationOpenModule => 'فتح الملف التشغيلي';
+
+  @override
+  String get notificationsEmptyIncidents => 'لا بلاغات عاجلة في الوارد';
+
+  @override
+  String get notificationsEmptyMessages => 'لا إشعارات';
 
   @override
   String get notificationTitleField => 'العنوان';
@@ -4148,6 +4180,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get incidentOpenPage => 'افتح الصفحة';
+
+  @override
+  String get incidentOpenModule => 'افتح الملف التشغيلي';
+
+  @override
+  String get incidentNotInRegister => 'لم يعد هذا البلاغ في السجل';
+
+  @override
+  String get incidentsShowAll => 'عرض السجل كامل';
+
+  @override
+  String get incidentsOneReport => 'بلاغ واحد';
 
   @override
   String get incidentNotDeliveredTitle => 'لم يصل البلاغ';

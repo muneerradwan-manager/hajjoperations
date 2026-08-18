@@ -81,7 +81,10 @@ void main() {
 
     test('a known type with no id points nowhere rather than at empty', () {
       expect(_n({'type': 'module_assigned'}).hasTarget, isFalse);
-      expect(_n({'type': 'module_assigned', 'module_id': ''}).hasTarget, isFalse);
+      expect(
+        _n({'type': 'module_assigned', 'module_id': ''}).hasTarget,
+        isFalse,
+      );
     });
 
     test('an unknown type is not followed, whatever it carries', () {
@@ -96,6 +99,58 @@ void main() {
       final n = _n({'type': 'module_assigned', 'module_id': 'm-42'});
       expect(n.markedRead().moduleId, 'm-42');
       expect(n.withAttachments(const []).moduleId, 'm-42');
+    });
+  });
+
+  /// Where the inbox goes looking for what a notification carries.
+  ///
+  /// An urgent report's photographs are filed under the REPORT — another table,
+  /// another bucket — and the row announcing it carries none of its own. The
+  /// inbox read only `notification_attachments`, so a "بلاغ عاجل" sent with a
+  /// photograph arrived as a line of text and the photograph was visible
+  /// nowhere in the app.
+  group('what a notification carries', () {
+    test('an alarm points at its report, and that is where its files are', () {
+      // Exactly the payload raise_incident writes (0088).
+      final n = _n({
+        'type': 'incident',
+        'incident_id': 'i-7',
+        'module_id': 'm-42',
+      });
+      expect(n.incidentId, 'i-7');
+    });
+
+    test(
+      'an alarm raised from nowhere in particular still names its report',
+      () {
+        // `module_id` is null when the report was raised outside a file — the
+        // photographs are no less attached for it.
+        final n = _n({
+          'type': 'incident',
+          'incident_id': 'i-9',
+          'module_id': null,
+        });
+        expect(n.incidentId, 'i-9');
+      },
+    );
+
+    test('anything else keeps its files in its own group', () {
+      expect(
+        _n({'type': 'module_broadcast', 'module_id': 'm-1'}).incidentId,
+        isNull,
+      );
+      expect(_n(const {}).incidentId, isNull);
+    });
+
+    test('an incident id that is not one is not followed', () {
+      expect(_n({'type': 'incident', 'incident_id': ''}).incidentId, isNull);
+      expect(_n({'type': 'incident'}).incidentId, isNull);
+    });
+
+    test('the pointer survives being marked read and being filled in', () {
+      final n = _n({'type': 'incident', 'incident_id': 'i-7'});
+      expect(n.markedRead().incidentId, 'i-7');
+      expect(n.withAttachments(const []).incidentId, 'i-7');
     });
   });
 }

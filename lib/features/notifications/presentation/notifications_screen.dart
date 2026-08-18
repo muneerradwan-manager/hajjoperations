@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/animations/animations.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
+import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
+import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
+import '../../../core/constants/permission_codes.dart';
+import '../../incidents/presentation/incidents_screen.dart';
 import '../../modules/data/modules_repository.dart';
 import '../../modules/domain/operational_module.dart';
 import '../../modules/presentation/module_detail_screen.dart';
@@ -70,12 +75,26 @@ class _ViewState extends State<_View> {
   void _onPendingTap() {
     if (!mounted) return;
     final tap = PushService.instance.takePendingTap();
-    final moduleId = tap == null ? null : AppNotification.moduleIdIn(tap);
-    if (moduleId == null) return;
+    if (tap == null) return;
+
+    // The same two journeys the inbox rows make, from the phone's own tray.
+    // A push carrying an alarm used to land on the inbox and stop there, which
+    // is the one notification in this app where the extra tap costs something.
+    final incidentId = AppNotification.incidentIdIn(tap);
+    final moduleId = AppNotification.moduleIdIn(tap);
+    if (incidentId == null && moduleId == null) return;
+
     // Waited for a frame because opening it may fail: the file can have been
     // deleted since, and saying so needs a Scaffold that exists.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _openModule(context, moduleId);
+      if (!mounted) return;
+      if (incidentId != null) {
+        Navigator.of(context).push(
+          fadeThroughRoute((_) => IncidentsScreen(focusIncidentId: incidentId)),
+        );
+        return;
+      }
+      _openModule(context, moduleId!);
     });
   }
 
@@ -94,9 +113,23 @@ class _ViewState extends State<_View> {
     final cubit = context.read<NotificationsCubit>();
     if (!n.isRead) cubit.markRead(n.id);
 
-    final moduleId = n.moduleId;
-    if (moduleId == null) return;
-    await _openModule(context, moduleId);
+    switch (n.destination) {
+      case NotificationDestination.none:
+        return;
+      // The register, opened ON this report. Everything a person woken by an
+      // alarm needs is there and nowhere else — the reporter's number, the
+      // subject's, the map pin, the photographs, and the button that says
+      // somebody is going. The card in the inbox is the announcement; this is
+      // the thing itself.
+      case NotificationDestination.incident:
+        Navigator.of(context).push(
+          fadeThroughRoute(
+            (_) => IncidentsScreen(focusIncidentId: n.incidentId),
+          ),
+        );
+      case NotificationDestination.module:
+        await _openModule(context, n.moduleId!);
+    }
   }
 
   /// Opens a file a notification pointed at, from either door: a row tapped in
@@ -155,7 +188,11 @@ class _ViewState extends State<_View> {
         actions: [
           BlocBuilder<NotificationsCubit, NotificationsState>(
             builder: (context, state) {
-              if (state.unread == 0) return const SizedBox.shrink();
+              // Counted over what is on screen, because that is what the button
+              // now clears. Over the alarms with none unread it has nothing to
+              // do, whatever is waiting in the other half.
+              final unread = state.visible.where((n) => !n.isRead).length;
+              if (unread == 0) return const SizedBox.shrink();
               return IconButton(
                 tooltip: l.notificationMarkAllRead,
                 icon: const Icon(AppIcons.selected),
@@ -175,43 +212,38 @@ class _ViewState extends State<_View> {
             if (state.items.isEmpty) {
               return _Empty(message: l.notificationsEmpty);
             }
-            // Two columns at most, and the page stops at 1200 — narrower than
-            // any other list here. These cards hold sentences somebody wrote,
-            // not fields; a notification stretched across a monitor is a line
-            // of prose two feet long, and the eye loses the next one on the way
-            // back. Twice as many messages on the screen is the whole gain
-            // available, and it is worth having.
-            return ResponsivePage(
-              builder: (context, size) => AdaptiveGridView(
-                padding: EdgeInsets.fromLTRB(
-                  size.gutter,
-                  12,
-                  size.gutter,
-                  24 + MediaQuery.viewPaddingOf(context).bottom,
-                ),
-                onRefresh: () => context.read<NotificationsCubit>().refresh(),
-                spacing: 10,
-                itemCount: state.items.length,
-                itemBuilder: (context, i) {
-                  final n = state.items[i];
-                  return FadeSlideIn(
-                    // Cap the cascade so a row first built deep in the scroll doesn't
-                    // sit invisible for seconds (same rule as the directory).
-                    delay: Duration(milliseconds: 25 * (i < 8 ? i : 8)),
-                    child: _NotificationCard(
-                      notification: n,
-                      repo: repo,
-                      // Tappable whenever there is something to do — opening
-                      // what it is about, marking it read, or both. A notice
-                      // already read still points at its file, so being read
-                      // must not make it inert.
-                      onTap: (n.isRead && !n.hasTarget)
-                          ? null
-                          : () => _open(context, n),
-                    ),
-                  );
-                },
-              ),
+
+            // The chips only where they govern something. A reader who does
+            // not receive urgent reports never has one in this list — the
+            // alarm is sent to holders of `incidents.receive` and nobody else
+            // — so for everybody else this is a two-position control with one
+            // position permanently empty.
+            final canFilter =
+                state.hasIncidents &&
+                context.select<SessionCubit, bool>(
+                  (s) => s.state.can(PermissionCodes.incidentsReceive),
+                );
+
+            final items = canFilter ? state.visible : state.items;
+            final days = NotificationDay.byDay(items);
+
+            final body = items.isEmpty
+                ? _Empty(
+                    message: switch (state.filter) {
+                      NotificationFilter.incidents =>
+                        l.notificationsEmptyIncidents,
+                      _ => l.notificationsEmptyMessages,
+                    },
+                  )
+                : _Days(days: days, repo: repo, onOpen: _open);
+
+            if (!canFilter) return body;
+
+            return Column(
+              children: [
+                _FilterBar(state: state),
+                Expanded(child: body),
+              ],
             );
           },
         ),
@@ -220,6 +252,197 @@ class _ViewState extends State<_View> {
   }
 }
 
+/// Announcements, or emergencies.
+///
+/// Two things arrive in one list and are not read for the same reason: an
+/// announcement is read when there is a minute, an urgent report is read
+/// because somebody is standing in منى waiting for an answer. Mixed together at
+/// three in the morning the second is found by scrolling past the first, and
+/// this is the control that stops that.
+///
+/// The counts are UNREAD counts and they are on the chips rather than in a
+/// heading, because the number is the reason to press the chip: "بلاغات
+/// عاجلة (٣)" is a sentence about what is waiting, and a bare label is not.
+class _FilterBar extends StatelessWidget {
+  const _FilterBar({required this.state});
+
+  final NotificationsState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final cubit = context.read<NotificationsCubit>();
+
+    String label(String text, int unread) =>
+        unread == 0 ? text : l.notificationFilterCount(text, unread);
+
+    return ResponsivePage(
+      builder: (context, size) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          size.gutter,
+          AppSpacing.md,
+          size.gutter,
+          AppSpacing.sm,
+        ),
+        child: Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
+            children: [
+              ChoiceChip(
+                label: Text(label(l.notificationFilterAll, state.unread)),
+                selected: state.filter == NotificationFilter.all,
+                visualDensity: VisualDensity.compact,
+                onSelected: (_) => cubit.setFilter(NotificationFilter.all),
+              ),
+              ChoiceChip(
+                label: Text(
+                  label(l.notificationFilterMessages, state.unreadMessages),
+                ),
+                selected: state.filter == NotificationFilter.messages,
+                visualDensity: VisualDensity.compact,
+                onSelected: (_) => cubit.setFilter(NotificationFilter.messages),
+              ),
+              // Drawn in the error colour when there is one unread, and only
+              // then. A chip permanently painted red is a decoration; a chip
+              // that turns red the minute something is waiting is the screen
+              // telling the room to look.
+              ChoiceChip(
+                avatar: Icon(
+                  AppIcons.warning,
+                  size: 16,
+                  color: state.unreadIncidents > 0 ? scheme.error : null,
+                ),
+                label: Text(
+                  label(l.notificationFilterIncidents, state.unreadIncidents),
+                ),
+                labelStyle: state.unreadIncidents > 0
+                    ? TextStyle(
+                        color: state.filter == NotificationFilter.incidents
+                            ? null
+                            : scheme.error,
+                        fontWeight: FontWeight.w700,
+                      )
+                    : null,
+                selected: state.filter == NotificationFilter.incidents,
+                visualDensity: VisualDensity.compact,
+                onSelected: (_) =>
+                    cubit.setFilter(NotificationFilter.incidents),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The inbox cut into days, each day's cards under its name.
+class _Days extends StatelessWidget {
+  const _Days({required this.days, required this.repo, required this.onOpen});
+
+  final List<NotificationDay> days;
+  final NotificationsRepository repo;
+  final Future<void> Function(BuildContext context, AppNotification n) onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    // Two columns at most, and the page stops at 1200 — narrower than any
+    // other list here. These cards hold sentences somebody wrote, not fields; a
+    // notification stretched across a monitor is a line of prose two feet long,
+    // and the eye loses the next one on the way back. Twice as many messages on
+    // the screen is the whole gain available, and it is worth having.
+    return ResponsivePage(
+      builder: (context, size) => AdaptiveGridView.sectioned(
+        padding: EdgeInsets.fromLTRB(
+          size.gutter,
+          12,
+          size.gutter,
+          24 + MediaQuery.viewPaddingOf(context).bottom,
+        ),
+        onRefresh: () => context.read<NotificationsCubit>().refresh(),
+        spacing: 10,
+        sections: [
+          for (var d = 0; d < days.length; d++)
+            GridSection(
+              header: Padding(
+                // Room above every heading but the first: without it a
+                // day's name sits as close to the last card of the day
+                // before as to the first card of its own, and the cut
+                // it is there to mark stops reading as a cut.
+                padding: EdgeInsets.only(top: d == 0 ? 0 : AppSpacing.md),
+                child: SectionHeader(_dayLabel(context, days[d].day)),
+              ),
+              itemCount: days[d].items.length,
+              itemBuilder: (context, i) {
+                final n = days[d].items[i];
+                return FadeSlideIn(
+                  // Cap the cascade so a row first built deep in the
+                  // scroll doesn't sit invisible for seconds (same rule
+                  // as the directory).
+                  delay: Duration(milliseconds: 25 * (i < 8 ? i : 8)),
+                  child: _NotificationCard(
+                    notification: n,
+                    repo: repo,
+                    // Tappable whenever there is something to do —
+                    // opening what it is about, marking it read, or
+                    // both. A notice already read still points at its
+                    // file, so being read must not make it inert.
+                    onTap: (n.isRead && !n.hasTarget)
+                        ? null
+                        : () => onOpen(context, n),
+                  ),
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// What to call a day at the head of its cards.
+///
+/// "اليوم" and "أمس" first, because those two are how a reader actually holds
+/// the last forty-eight hours — a date printed over this morning's messages
+/// makes them look filed rather than new. Past that the day is named: the
+/// weekday and the month spelled out, since by then the question has stopped
+/// being "how long ago" and become "which day was that".
+///
+/// The year appears only when it is not this one. Carrying it on every heading
+/// costs the same four characters on every line to answer a question that is
+/// asked once a year.
+String _dayLabel(BuildContext context, DateTime day) {
+  final l = context.l10n;
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final days = today.difference(day).inDays;
+  if (days == 0) return l.commonToday;
+  if (days == 1) return l.commonYesterday;
+  return DateFormat(
+    day.year == today.year ? 'EEEE d MMMM' : 'EEEE d MMMM y',
+    Localizations.localeOf(context).toString(),
+  ).format(day);
+}
+
+/// One notification.
+///
+/// The card used to draw everything identically: the same bell, the same
+/// colour, the same weight for a bus that has overturned and for an
+/// announcement that a form was published. And half of them went nowhere when
+/// tapped, with nothing on the card to say which half — so the reader learned
+/// that tapping was not worth trying.
+///
+/// Three things fixed, in the order they matter:
+///
+///   * the KIND is drawn — a tinted medallion carrying the right glyph, and the
+///     error colour reserved for the one kind that means somebody is waiting;
+///   * where the tap GOES is written on the card, in words, above a chevron.
+///     A destination the reader can read is a destination they will use;
+///   * the time moved up beside the title, which leaves the foot of the card
+///     free for that line instead of stacking two muted rows.
 class _NotificationCard extends StatelessWidget {
   const _NotificationCard({
     required this.notification,
@@ -231,85 +454,177 @@ class _NotificationCard extends StatelessWidget {
   final NotificationsRepository repo;
   final VoidCallback? onTap;
 
-  /// Whether this card leads anywhere, which decides the chevron. Tapping to
-  /// mark something read is not "leading somewhere" — the card stays put.
-
   @override
   Widget build(BuildContext context) {
+    final l = context.l10n;
     final scheme = Theme.of(context).colorScheme;
-    final unread = !notification.isRead;
+    final text = Theme.of(context).textTheme;
+    final n = notification;
+    final unread = !n.isRead;
+    final urgent = n.isIncident;
+
+    // The error colour is spent on emergencies alone. An unread announcement is
+    // worth the primary; a read one is worth neither, and going grey is how a
+    // list of forty says which four still want reading.
+    final accent = urgent
+        ? scheme.error
+        : unread
+        ? scheme.primary
+        : scheme.onSurfaceVariant;
+
+    final glyph = switch (n.kind) {
+      NotificationKind.incident => AppIcons.warning,
+      NotificationKind.module => AppIcons.modules,
+      NotificationKind.broadcast => AppIcons.notifications,
+    };
+
     return GlassCard(
       onTap: onTap,
-      tint: unread ? scheme.primary : null,
+      // An alarm keeps its tint after it has been read. The others drop theirs:
+      // being read is the end of an announcement and is not the end of an
+      // emergency, and the register — not the inbox — is where that ends.
+      tint: urgent ? scheme.error : (unread ? scheme.primary : null),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              AppIcons.notifications,
-              color: unread ? scheme.primary : scheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: 14),
+            _Medallion(icon: glyph, color: accent, filled: urgent || unread),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    notification.title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: unread ? FontWeight.w700 : FontWeight.w500,
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          n.title,
+                          style: text.titleSmall?.copyWith(
+                            fontWeight: unread
+                                ? FontWeight.w700
+                                : FontWeight.w600,
+                            color: urgent ? scheme.error : null,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      // Beside the title rather than under the body. The eye
+                      // reads title-then-time as one line the way it reads a
+                      // message header, and the foot of the card is worth more
+                      // to the destination row than to four digits.
+                      Text(
+                        _fmt(n.createdAt),
+                        style: text.labelSmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                      if (unread) ...[
+                        const SizedBox(width: AppSpacing.sm),
+                        Container(
+                          width: 8,
+                          height: 8,
+                          margin: const EdgeInsets.only(top: 4),
+                          decoration: BoxDecoration(
+                            color: accent,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                  if (notification.body != null &&
-                      notification.body!.isNotEmpty) ...[
-                    const SizedBox(height: 4),
+                  if (n.body case final body? when body.trim().isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
-                      notification.body!,
-                      style: Theme.of(context).textTheme.bodyMedium,
+                      body,
+                      // Capped, and this is the card that needed it: an alarm's
+                      // body is the first 120 characters of what somebody typed
+                      // while running, and one card five lines tall pushes the
+                      // next three off the screen.
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.bodyMedium?.copyWith(height: 1.35),
                     ),
                   ],
                   AttachmentsView(
-                    attachments: notification.attachments,
-                    signer: repo.signedUrl,
+                    attachments: n.attachments,
+                    // Not always this repository's own bucket: a "بلاغ عاجل"
+                    // shows the report's photographs, and those are signed for
+                    // against `incidents`.
+                    signer: repo.signerFor(n),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    _fmt(notification.createdAt),
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
+                  // Where the tap goes, said in words. Without it the only way
+                  // to find out was to press and see, and an alarm that went
+                  // nowhere at all taught the reader not to bother pressing.
+                  if (n.destination case final destination
+                      when destination != NotificationDestination.none) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Row(
+                      children: [
+                        Text(
+                          switch (destination) {
+                            NotificationDestination.incident =>
+                              l.notificationOpenIncident,
+                            _ => l.notificationOpenModule,
+                          },
+                          style: text.labelMedium?.copyWith(
+                            color: accent,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        NavChevron(color: accent),
+                      ],
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
-            if (unread)
-              Container(
-                width: 10,
-                height: 10,
-                margin: const EdgeInsets.only(top: 4),
-                decoration: BoxDecoration(
-                  color: scheme.primary,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            // Says the card goes somewhere. Without it the only way to find
-            // out is to tap, and half of these cards go nowhere — a broadcast
-            // names no place to open.
-            if (notification.hasTarget)
-              Padding(
-                padding: EdgeInsetsDirectional.only(start: unread ? 6 : 0),
-                child: const NavChevron(),
-              ),
           ],
         ),
       ),
     );
   }
 
+  /// The time alone. The date used to be here because nothing else on the
+  /// screen said it; the heading above the card says it now, and printing it
+  /// again on all ninety cards under that heading is ninety repetitions of one
+  /// fact.
   String _fmt(DateTime d) =>
-      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')} '
       '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+}
+
+/// The glyph in its own tinted disc.
+///
+/// A bare icon floating beside a title reads as decoration; a disc reads as a
+/// stamp on a piece of paper, which is what a notification is. Filled while the
+/// thing still wants attention and outlined once it does not — so a screenful
+/// of read announcements goes quiet without going invisible.
+class _Medallion extends StatelessWidget {
+  const _Medallion({
+    required this.icon,
+    required this.color,
+    required this.filled,
+  });
+
+  final IconData icon;
+  final Color color;
+  final bool filled;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color.withValues(alpha: filled ? 0.16 : 0.08),
+        border: Border.all(color: color.withValues(alpha: filled ? 0.38 : 0.2)),
+      ),
+      child: Icon(icon, size: 18, color: color),
+    );
+  }
 }
 
 class _Empty extends StatelessWidget {

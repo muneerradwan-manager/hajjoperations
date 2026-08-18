@@ -121,6 +121,100 @@ void main() {
     expect(columnsAt(tester), 4);
   });
 
+  testWidgets('a section heading breaks the rows without breaking the grid', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      inWindow(
+        1300,
+        AdaptiveGridView.sectioned(
+          minTileWidth: 300,
+          sections: [
+            GridSection(
+              header: const Text('Today'),
+              // Five, so the day ends on a short row: the next heading has to
+              // start a row of its own rather than filling the gap left over.
+              itemCount: 5,
+              itemBuilder: (context, i) => tile(context, i),
+            ),
+            GridSection(
+              header: const Text('Yesterday'),
+              itemCount: 2,
+              itemBuilder: (context, i) => tile(context, 100 + i),
+            ),
+            // Nothing under it, so it must not appear at all — an empty
+            // heading is a promise the list then fails to keep.
+            GridSection(
+              header: const Text('Older'),
+              itemCount: 0,
+              itemBuilder: (context, i) => tile(context, i),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Older'), findsNothing);
+
+    final today = tester.getTopLeft(find.text('Today')).dy;
+    final yesterday = tester.getTopLeft(find.text('Yesterday')).dy;
+    final firstOfYesterday = tester.getTopLeft(find.text('Row 100')).dy;
+
+    // Every card of the first day sits between the two headings, and every
+    // card of the second below the one that names it.
+    for (var i = 0; i < 5; i++) {
+      final row = tester.getTopLeft(find.text('Row $i')).dy;
+      expect(row, greaterThan(today));
+      expect(row, lessThan(yesterday));
+    }
+    expect(firstOfYesterday, greaterThan(yesterday));
+
+    // Four across, counted once for the whole list: a card of the second day
+    // stands in the same column as the card above it in the first.
+    expect(columnsAt(tester), 4);
+    Finder cardOf(String label) =>
+        find.ancestor(of: find.text(label), matching: find.byType(Card));
+    expect(
+      tester.getTopLeft(cardOf('Row 100')).dx,
+      tester.getTopLeft(cardOf('Row 0')).dx,
+    );
+  });
+
+  testWidgets('sections stay lazy below the fold', (tester) async {
+    tester.view.physicalSize = const Size(400, 600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    var built = 0;
+    await tester.pumpWidget(
+      inWindow(
+        392,
+        AdaptiveGridView.sectioned(
+          minTileWidth: 300,
+          sections: [
+            for (var s = 0; s < 10; s++)
+              GridSection(
+                header: Text('Day $s'),
+                itemCount: 50,
+                itemBuilder: (context, i) {
+                  built++;
+                  return tile(context, i);
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+
+    expect(built, lessThan(60));
+    expect(built, greaterThan(0));
+  });
+
   testWidgets('the padding is taken off before the columns are counted', (
     tester,
   ) async {

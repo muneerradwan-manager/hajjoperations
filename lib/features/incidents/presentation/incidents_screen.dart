@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/animations/animations.dart';
 import '../../../core/constants/permission_codes.dart';
 import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
@@ -14,6 +15,7 @@ import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../auth/application/session_cubit.dart';
+import '../../modules/presentation/module_detail_screen.dart';
 import '../application/incidents_cubit.dart';
 import '../data/incidents_repository.dart';
 import '../domain/incident.dart';
@@ -26,11 +28,17 @@ import '../domain/incident.dart';
 /// putting the newest on top is exactly how the old one is never looked at
 /// again.
 class IncidentsScreen extends StatelessWidget {
-  const IncidentsScreen({super.key});
+  const IncidentsScreen({super.key, this.focusIncidentId});
+
+  /// Opened FOR one report, which is how the inbox arrives here: a reader who
+  /// tapped "بلاغ عاجل" has that report in mind and nothing else. Null from the
+  /// menu, where the register is a list to be watched.
+  final String? focusIncidentId;
 
   @override
   Widget build(BuildContext context) => BlocProvider(
-    create: (_) => IncidentsCubit(IncidentsRepository()),
+    create: (_) =>
+        IncidentsCubit(IncidentsRepository(), focusId: focusIncidentId),
     child: const _IncidentsView(),
   );
 }
@@ -89,21 +97,52 @@ class _IncidentsView extends StatelessWidget {
                 // other, which is right on a phone and absurd at 1680 — the
                 // word and the thing it governs end up a hand's width apart
                 // with nothing between them.
-                Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 360),
-                    child: SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(l.incidentsShowClosed),
-                      value: state.includeClosed,
-                      onChanged: context
-                          .read<IncidentsCubit>()
-                          .setIncludeClosed,
+                // Arrived from an alarm: one report, and the door back to the
+                // register it came out of. The switch has nothing to govern
+                // here — a focused list is one row long — so it stands down.
+                if (state.focusId != null)
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: TextButton.icon(
+                        onPressed: context.read<IncidentsCubit>().showAll,
+                        icon: const Icon(AppIcons.warning, size: 16),
+                        label: Text(l.incidentsShowAll),
+                      ),
+                    ),
+                  )
+                else
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 360),
+                      child: SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(l.incidentsShowClosed),
+                        value: state.includeClosed,
+                        onChanged: context
+                            .read<IncidentsCubit>()
+                            .setIncludeClosed,
+                      ),
                     ),
                   ),
-                ),
-                if (state.incidents.isEmpty)
+                // "There is no such report" and "there are no emergencies" are
+                // opposite sentences, and a reader who just tapped an alarm
+                // must not be told the second when the first is what happened.
+                if (state.focusMissing)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSpacing.xxl),
+                    child: EmptyState(
+                      icon: AppIcons.warning,
+                      title: l.incidentNotInRegister,
+                      action: FilledButton(
+                        onPressed: context.read<IncidentsCubit>().showAll,
+                        child: Text(l.incidentsShowAll),
+                      ),
+                    ),
+                  )
+                else if (state.visible.isEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: AppSpacing.xxl),
                     child: EmptyState(
@@ -126,7 +165,7 @@ class _IncidentsView extends StatelessWidget {
                 // reading order carries that across the columns unchanged.
                 AdaptiveGrid(
                   children: [
-                    for (final incident in state.incidents)
+                    for (final incident in state.visible)
                       _IncidentCard(incident: incident),
                   ],
                 ),
@@ -231,9 +270,7 @@ Future<void> _delete(BuildContext context, Incident incident) async {
     ..showSnackBar(
       SnackBar(
         content: Text(
-          error == null
-              ? l.incidentDeleted
-              : friendlyErrorL(l, error),
+          error == null ? l.incidentDeleted : friendlyErrorL(l, error),
         ),
       ),
     );
@@ -422,8 +459,9 @@ class _IncidentCard extends StatelessWidget {
                 },
                 actionHint: l.incidentCall,
                 onAction: switch (incident.subjectPhone?.trim()) {
-                  final phone? when phone.isNotEmpty =>
-                    () => launchUrl(Uri.parse('tel:$phone')),
+                  final phone? when phone.isNotEmpty => () => launchUrl(
+                    Uri.parse('tel:$phone'),
+                  ),
                   _ => null,
                 },
               )
@@ -434,10 +472,28 @@ class _IncidentCard extends StatelessWidget {
                 actionIcon: incident.appRoute == null ? null : AppIcons.link,
                 actionHint: l.incidentOpenPage,
                 onAction: switch (incident.appRoute) {
-                  final route? when route.isNotEmpty => () =>
-                      context.push(route),
+                  final route? when route.isNotEmpty => () => context.push(
+                    route,
+                  ),
                   _ => null,
                 },
+              )
+            // The file, when the report named one and named nothing more
+            // specific. Last of the four because it is the least specific: a
+            // report about a man in a file is about the MAN, and the line above
+            // has already said so.
+            else if (incident.moduleId case final moduleId?
+                when (incident.moduleName?.trim().isNotEmpty ?? false))
+              _AboutLine(
+                icon: AppIcons.modules,
+                label: incident.nodeLabel ?? incident.moduleName!,
+                actionIcon: AppIcons.link,
+                actionHint: l.incidentOpenModule,
+                onAction: () => Navigator.of(context).push(
+                  fadeThroughRoute(
+                    (_) => ModuleDetailScreen(moduleId: moduleId),
+                  ),
+                ),
               ),
             if (incident.handledByName case final name?
                 when name.trim().isNotEmpty)
