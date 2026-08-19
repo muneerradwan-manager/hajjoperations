@@ -122,8 +122,14 @@ class _ExportView extends StatelessWidget {
                   for (final option in state.dataset!.options)
                     _OptionPicker(option: option, state: state),
                   const SizedBox(height: AppSpacing.md),
+                  // Named by the dataset. A list is narrowed by COLUMNS; a
+                  // thing taken whole — one file, one decision — is narrowed by
+                  // which of its PARTS come along, and «الأعمدة» over a tick
+                  // beside «الأعضاء» reads as a promise to add a column.
                   SectionHeader(
-                    l.exportWhichColumns,
+                    state.dataset!.partsLabel.inLanguage(
+                      Localizations.localeOf(context).languageCode,
+                    ),
                     trailing: _ColumnActions(state: state),
                   ),
                   _ColumnPicker(state: state),

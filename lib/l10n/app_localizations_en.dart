@@ -4605,9 +4605,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Once you have, the columns you can take, the shape of the file, and the save and send buttons appear here.';
 
   @override
-  String get exportWhichColumns => 'Columns';
-
-  @override
   String get exportColumnsDefault => 'Default';
 
   @override

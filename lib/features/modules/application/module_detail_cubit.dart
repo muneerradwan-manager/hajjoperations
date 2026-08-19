@@ -136,8 +136,14 @@ class ModuleDetailState extends Equatable {
       members.where((m) => m.roleId == roleId).toList();
 
   /// Everyone in the file, wherever they sit — what the header counts.
-  int get peopleCount =>
-      members.length + nodes.fold(0, (sum, n) => sum + n.members.length);
+  ///
+  /// PEOPLE, counted once each. It was rows before, and a row is a POST: on
+  /// تشكيل فرق المشاعر, where most of the file holds three posts apiece — منى
+  /// يوم التروية, عرفات, منى أيام التشريق — the heading said «١٢٠ عضواً» over a
+  /// roster of forty men. It also decides when the file is long enough to be
+  /// worth a search box and worth folding, and both of those questions are
+  /// about how much there is to READ, which is people.
+  int get peopleCount => _holders.length;
 
   /// Whose duties are being read: the person the screen was opened for, or the
   /// viewer themselves.

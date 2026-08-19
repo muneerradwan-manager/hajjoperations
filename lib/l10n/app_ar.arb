@@ -1585,7 +1585,6 @@
   "exportWhat": "ما الذي تريد تصديره؟",
   "exportPickFirst": "اختر جدولاً من الأعلى",
   "exportPickFirstHint": "بعد الاختيار تظهر هنا الأعمدة التي يمكن أخذها، وصيغة الملف، وزرّا الحفظ والإرسال.",
-  "exportWhichColumns": "الأعمدة",
   "exportColumnsDefault": "الافتراضية",
   "exportColumnsAll": "الكل",
   "exportPickAtLeastOne": "اختر عموداً واحداً على الأقل",

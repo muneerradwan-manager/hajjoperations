@@ -37,15 +37,29 @@ class ExportOption {
     required this.label,
     required this.choices,
     this.required = true,
+    this.dependsOn = const {},
   });
 
   final String key;
   final LocalizedName label;
 
   /// Resolved when the screen opens, because most of these are database lists.
-  final Future<List<ExportChoice>> Function() choices;
+  ///
+  /// It is handed the answers given SO FAR, so an option can narrow itself by
+  /// one above it: naming the season and then being offered every decision the
+  /// mission has ever issued is the screen contradicting itself in the space of
+  /// two rows.
+  final Future<List<ExportChoice>> Function(Map<String, String> answers)
+  choices;
 
   final bool required;
+
+  /// The options whose answers change THIS one's list.
+  ///
+  /// Declared rather than inferred, and re-resolved rather than filtered in
+  /// place: an answer that is no longer among the choices has to be dropped,
+  /// not left sitting in the request where nothing on screen shows it.
+  final Set<String> dependsOn;
 }
 
 class ExportChoice {
@@ -124,15 +138,65 @@ abstract class ExportDataset {
   Future<List<ExportColumn>> extraColumns(Map<String, String> options) async =>
       const [];
 
-  /// Reads the rows. Each row is keyed by [ExportColumn.key]; a key the row has
-  /// nothing for is simply absent and comes out as an empty cell.
-  Future<List<Map<String, String>>> fetch(ExportRequest request);
+  /// What the ticked list is CALLED on this dataset's card.
+  ///
+  /// A list of people is narrowed by columns. A thing exported whole — one
+  /// file, one decision — is not: its parts are a roster and a set of duties
+  /// and a body of text, each with columns of its own that the reader never
+  /// chooses between. Calling both "الأعمدة" made the second read as though
+  /// ticking «الأعضاء» would add a column called members.
+  LocalizedName get partsLabel =>
+      const LocalizedName(ar: 'الأعمدة', en: 'Columns');
+
+  /// The whole export, as one or more titled tables.
+  ///
+  /// A list is one table. A THING is several — the file's own particulars, then
+  /// its roster, then its duties — and they cannot be one table because they do
+  /// not share a set of columns. That is the difference this method exists to
+  /// carry; see [ExportListDataset] for the common case.
+  ///
+  /// [chosen] is what was ticked, already narrowed and in this dataset's own
+  /// order.
+  Future<List<ExportTable>> build(
+    ExportRequest request,
+    List<ExportColumn> chosen,
+  );
 
   /// The columns the person gets before touching anything.
   Set<String> get defaultColumns => {
     for (final column in columns)
       if (column.byDefault) column.key,
   };
+}
+
+/// A dataset that is ONE list: a set of columns, and the rows under them.
+///
+/// Nearly all of them. It states its columns, it fetches its rows keyed by
+/// those columns, and the narrowing is done here rather than in each of them.
+abstract class ExportListDataset extends ExportDataset {
+  const ExportListDataset();
+
+  /// Reads the rows. Each row is keyed by [ExportColumn.key]; a key the row has
+  /// nothing for is simply absent and comes out as an empty cell.
+  Future<List<Map<String, String>>> fetch(ExportRequest request);
+
+  @override
+  Future<List<ExportTable>> build(
+    ExportRequest request,
+    List<ExportColumn> chosen,
+  ) async {
+    final rows = await fetch(request);
+    return [
+      ExportTable(
+        title: request.text(name),
+        headers: [for (final column in chosen) request.text(column.label)],
+        rows: [
+          for (final row in rows)
+            [for (final column in chosen) row[column.key] ?? ''],
+        ],
+      ),
+    ];
+  }
 }
 
 /// A finished export: the headings, and the rows under them, both already
@@ -142,11 +206,35 @@ class ExportTable {
     required this.title,
     required this.headers,
     required this.rows,
+    this.note,
   });
 
   final String title;
   final List<String> headers;
   final List<List<String>> rows;
 
+  /// A line under the heading, where the section needs one — the body of a
+  /// decision, which is prose and not a table, and would otherwise arrive as a
+  /// one-column sheet with no explanation of why.
+  final String? note;
+
   bool get isEmpty => rows.isEmpty;
+}
+
+/// A finished export: the sections, in the order they are read.
+///
+/// One section for a list, several for a thing taken whole. The writers take
+/// this rather than a table so that neither of them has to know which it is.
+class ExportDocument {
+  const ExportDocument({required this.title, required this.sections});
+
+  final String title;
+  final List<ExportTable> sections;
+
+  /// Counted across every section, because that is the number the person is
+  /// told afterwards and "exported nothing" is the thing it has to catch.
+  int get rowCount =>
+      sections.fold(0, (total, section) => total + section.rows.length);
+
+  bool get isEmpty => sections.every((section) => section.isEmpty);
 }

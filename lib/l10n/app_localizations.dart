@@ -7922,12 +7922,6 @@ abstract class AppLocalizations {
   /// **'Once you have, the columns you can take, the shape of the file, and the save and send buttons appear here.'**
   String get exportPickFirstHint;
 
-  /// No description provided for @exportWhichColumns.
-  ///
-  /// In en, this message translates to:
-  /// **'Columns'**
-  String get exportWhichColumns;
-
   /// No description provided for @exportColumnsDefault.
   ///
   /// In en, this message translates to:

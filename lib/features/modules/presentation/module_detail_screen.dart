@@ -412,21 +412,25 @@ class _BodyState extends State<_Body> {
     return (all.where((r) => counts.containsKey(r.id)).toList(), counts);
   }
 
-  /// How many postings survive the filter, over the whole file.
+  /// How many PEOPLE survive the filter, over the whole file.
+  ///
+  /// People and not postings, so that it can be compared with the total beside
+  /// it — «يُعرض ٣ من ١٢٠» has to be two counts of the same kind of thing, and
+  /// a file where most people hold two posts made the pair meaningless.
   int _showing() {
     if (!_filter.isActive) return state.peopleCount;
-    var n = 0;
+    final seen = <String>{};
     for (final role in state.type?.roles ?? const <ModuleRole>[]) {
       for (final m in state.membersOf(role.id)) {
-        if (_filter.keeps(m, role)) n++;
+        if (_filter.keeps(m, role)) seen.add(m.profileId);
       }
     }
     for (final level in state.type?.levels ?? const <ModuleLevel>[]) {
       for (final node in state.nodes.where((n) => n.levelId == level.id)) {
-        n += _filter.survivorsIn(node, level);
+        seen.addAll(_filter.survivorIdsIn(node, level));
       }
     }
-    return n;
+    return seen.length;
   }
 
   @override
@@ -780,6 +784,62 @@ class _BodyState extends State<_Body> {
   }
 }
 
+/// One person on a roster, with every post they hold in that one place.
+class RosterEntry {
+  RosterEntry(this.member, this.roleNames);
+
+  final ModuleMember member;
+
+  /// The posts this person holds HERE, in the order the type declares them.
+  /// Empty where the surrounding card already names the post.
+  final List<String> roleNames;
+}
+
+/// Postings folded into people.
+///
+/// A file records one row per POST, so a man holding three of them in the same
+/// place is three rows — and the roster drew three of him. On تشكيل فرق المشاعر
+/// that is the normal case rather than the exception: the same supervisor
+/// serves منى يوم التروية, عرفات and منى أيام التشريق, and his name, his face,
+/// his two telephone numbers and his rating stars were printed three times in a
+/// column, with only a small line of role text differing between them. Reading
+/// that column, nobody can tell whether they are looking at one man or three
+/// men who share a name.
+///
+/// So the PERSON is the row and the posts ride on it. Order is first
+/// appearance, which keeps the type's declared order — the manager before his
+/// deputy before the members — rather than sorting the people by anything the
+/// reader did not ask for.
+///
+/// Folding is per PLACE and never across the file: a man serving in two towers
+/// is genuinely in two towers, and one tile for him would take him out of one
+/// of them.
+///
+/// Top-level and public so it can be tested without standing a file page up.
+List<RosterEntry> foldRoster(Iterable<(String?, ModuleMember)> postings) {
+  final order = <String>[];
+  final byProfile = <String, RosterEntry>{};
+
+  for (final (roleName, member) in postings) {
+    final entry = byProfile[member.profileId];
+    if (entry == null) {
+      order.add(member.profileId);
+      byProfile[member.profileId] = RosterEntry(member, [
+        if (roleName != null && roleName.isNotEmpty) roleName,
+      ]);
+      continue;
+    }
+    // The same post twice over is a duplicate row, not a second duty.
+    if (roleName != null &&
+        roleName.isNotEmpty &&
+        !entry.roleNames.contains(roleName)) {
+      entry.roleNames.add(roleName);
+    }
+  }
+
+  return [for (final id in order) byProfile[id]!];
+}
+
 /// What the reader is currently looking for in a file's roster.
 ///
 /// A file is not a small thing — تشكيل فرق المشاعر holds two hundred and
@@ -822,15 +882,19 @@ class _RosterFilter {
     ], query);
   }
 
-  /// How many of [node]'s postings survive, under [level]'s roles.
-  int survivorsIn(ModuleNode node, ModuleLevel level) {
-    var n = 0;
+  /// WHO survives in [node], under [level]'s roles.
+  ///
+  /// Ids rather than a count, because the same man may hold three posts in the
+  /// one برج and "٣ أعضاء" over a card showing one tile is the card calling
+  /// itself a liar.
+  Set<String> survivorIdsIn(ModuleNode node, ModuleLevel level) {
+    final ids = <String>{};
     for (final role in level.roles) {
       for (final member in node.membersOf(role.id)) {
-        if (keeps(member, role)) n++;
+        if (keeps(member, role)) ids.add(member.profileId);
       }
     }
-    return n;
+    return ids;
   }
 }
 
@@ -998,13 +1062,13 @@ class _RoleRosterCard extends StatelessWidget {
     // posts owes the reader; a group of ONE post is already named by its
     // heading and repeating it on twenty tiles says the same word twenty times.
     final tiles = <Widget>[
-      for (final role in group.roles)
-        for (final member in state.membersOf(role.id))
-          if (filter.keeps(member, role))
-            _MemberTile(
-              member: member,
-              roleName: group.namesItsPosts ? role.name.of(context) : null,
-            ),
+      for (final entry in foldRoster([
+        for (final role in group.roles)
+          for (final member in state.membersOf(role.id))
+            if (filter.keeps(member, role))
+              (group.namesItsPosts ? role.name.of(context) : null, member),
+      ]))
+        _MemberTile(member: entry.member, roleNames: entry.roleNames),
     ];
     // A team nobody on it matches is not an empty team — it is a team the
     // reader is not asking about, so it goes rather than showing a heading
@@ -1082,11 +1146,14 @@ class _SectorCard extends StatelessWidget {
     final towers = state.childrenOf(sector.id);
 
     // Whoever runs the sector itself, in the order the level lists the roles.
-    final supervisors = <Widget>[
+    final staff = foldRoster([
       for (final role in level.roles)
         for (final member in sector.membersOf(role.id))
-          if (filter.keeps(member, role))
-            _MemberTile(member: member, roleName: role.name.of(context)),
+          if (filter.keeps(member, role)) (role.name.of(context), member),
+    ]);
+    final supervisors = <Widget>[
+      for (final entry in staff)
+        _MemberTile(member: entry.member, roleNames: entry.roleNames),
     ];
 
     // A whole قطاع with nobody matching in it, nor in any برج beneath it, is
@@ -1097,7 +1164,7 @@ class _SectorCard extends StatelessWidget {
           ? 0
           : towers.fold<int>(
               0,
-              (n, t) => n + filter.survivorsIn(t, towerLevel),
+              (n, t) => n + filter.survivorIdsIn(t, towerLevel).length,
             );
       if (supervisors.isEmpty && below == 0) return const SizedBox.shrink();
     }
@@ -1106,14 +1173,16 @@ class _SectorCard extends StatelessWidget {
     // so that a folded sector still says how much is inside it — a row that
     // hides its contents and does not say how many is a row nobody opens.
     final towerLevel2 = towerLevel;
-    final headcount =
-        supervisors.length +
-        (towerLevel2 == null
-            ? 0
-            : towers.fold<int>(
-                0,
-                (n, t) => n + const _RosterFilter().survivorsIn(t, towerLevel2),
-              ));
+    // The people under this قطاع, counted once each. A man who runs the sector
+    // AND serves in a برج beneath it is one member of it, and the union is what
+    // says so — «٤٠ عضواً» over a sector holding thirty-one people is the
+    // heading disagreeing with what opening it shows.
+    final headcount = <String>{
+      for (final entry in staff) entry.member.profileId,
+      if (towerLevel2 != null)
+        for (final t in towers)
+          ...const _RosterFilter().survivorIdsIn(t, towerLevel2),
+    }.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1280,10 +1349,12 @@ class _TowerCard extends StatelessWidget {
     // Everyone serving in this tower — the supervisor, his deputies and the
     // mission members — each carrying the role he is here under.
     final serving = <Widget>[
-      for (final role in level.roles)
-        for (final member in tower.membersOf(role.id))
-          if (filter.keeps(member, role))
-            _MemberTile(member: member, roleName: role.name.of(context)),
+      for (final entry in foldRoster([
+        for (final role in level.roles)
+          for (final member in tower.membersOf(role.id))
+            if (filter.keeps(member, role)) (role.name.of(context), member),
+      ]))
+        _MemberTile(member: entry.member, roleNames: entry.roleNames),
     ];
 
     // The برج itself is only shown while it still has somebody the reader is
@@ -1544,13 +1615,14 @@ class _TaskCard extends StatelessWidget {
 /// tap: coordinating between a tower and its sector is the everyday use of
 /// this screen, and it is why members can see each other at all.
 class _MemberTile extends StatelessWidget {
-  const _MemberTile({required this.member, this.roleName});
+  const _MemberTile({required this.member, this.roleNames = const []});
 
   final ModuleMember member;
 
-  /// Shown as a badge — inside a tower the same card carries a supervisor, his
-  /// deputies and the mission members, so the role has to be on the row.
-  final String? roleName;
+  /// Every post this person holds here — inside a tower the same card carries a
+  /// supervisor, his deputies and the mission members, so the post has to be on
+  /// the row. Empty where the card above already names it.
+  final List<String> roleNames;
 
   @override
   Widget build(BuildContext context) {
@@ -1619,9 +1691,30 @@ class _MemberTile extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 2),
-                  if (roleName != null)
+                  // One post reads as a line under the name, which is what it
+                  // is. Several read as a set of things, so they are drawn as
+                  // one — run together as prose, "مشرف فريق التروية، مشرف فريق
+                  // عرفات، مشرف فريق التشريق" is a sentence the eye has to
+                  // parse before it can count.
+                  if (roleNames.length > 1)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Wrap(
+                        spacing: AppSpacing.xs,
+                        runSpacing: AppSpacing.xs,
+                        children: [
+                          for (final name in roleNames)
+                            GlassBadge(
+                              label: name,
+                              icon: AppIcons.roles,
+                              dense: true,
+                            ),
+                        ],
+                      ),
+                    )
+                  else if (roleNames.length == 1)
                     Text(
-                      roleName!,
+                      roleNames.first,
                       style: text.bodySmall?.copyWith(color: scheme.primary),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

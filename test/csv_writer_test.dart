@@ -4,28 +4,45 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hajjoperations/features/export/data/csv_writer.dart';
 import 'package:hajjoperations/features/export/domain/export_dataset.dart';
 
-ExportTable table(List<String> headers, List<List<String>> rows) =>
-    ExportTable(title: 'اختبار', headers: headers, rows: rows);
+/// One section, which is what every case below is about: these tests are the
+/// half the writer owns — the mark, the line endings, the quoting — and none of
+/// them changes because a document may now carry several.
+ExportDocument table(List<String> headers, List<List<String>> rows) =>
+    ExportDocument(
+      title: 'اختبار',
+      sections: [ExportTable(title: 'اختبار', headers: headers, rows: rows)],
+    );
 
 void main() {
   group('what makes an Arabic CSV open correctly', () {
     test('it starts with a byte-order mark', () {
-      final bytes = CsvWriter.write(table(['الاسم'], [
-        ['منير']
-      ]));
+      final bytes = CsvWriter.write(
+        table(
+          ['الاسم'],
+          [
+            ['منير'],
+          ],
+        ),
+      );
 
       expect(
         bytes.take(3),
         [0xEF, 0xBB, 0xBF],
-        reason: 'without it Excel reads the file in the machine ANSI code page '
+        reason:
+            'without it Excel reads the file in the machine ANSI code page '
             'and every Arabic name arrives as mojibake',
       );
     });
 
     test('the Arabic survives the round trip', () {
-      final bytes = CsvWriter.write(table(['الاسم'], [
-        ['منير عبدالله رضوان']
-      ]));
+      final bytes = CsvWriter.write(
+        table(
+          ['الاسم'],
+          [
+            ['منير عبدالله رضوان'],
+          ],
+        ),
+      );
       final text = utf8.decode(bytes.skip(3).toList());
 
       expect(text, contains('منير عبدالله رضوان'));
@@ -44,9 +61,14 @@ void main() {
       //
       // Readable text in one column is a ten-second fix. An unreadable file is
       // not a file.
-      final bytes = CsvWriter.write(table(['الاسم'], [
-        ['منير']
-      ]));
+      final bytes = CsvWriter.write(
+        table(
+          ['الاسم'],
+          [
+            ['منير'],
+          ],
+        ),
+      );
       final text = utf8.decode(bytes.skip(3).toList());
 
       expect(text.startsWith('الاسم'), isTrue);
@@ -58,9 +80,14 @@ void main() {
     });
 
     test('rows end CRLF', () {
-      final bytes = CsvWriter.write(table(['a'], [
-        ['b']
-      ]));
+      final bytes = CsvWriter.write(
+        table(
+          ['a'],
+          [
+            ['b'],
+          ],
+        ),
+      );
       final text = utf8.decode(bytes.skip(3).toList());
 
       expect(text, 'a\r\nb\r\n');
@@ -77,9 +104,14 @@ void main() {
     });
 
     test('a newline inside a note keeps the row one row', () {
-      final bytes = CsvWriter.write(table(['ملاحظة'], [
-        ['الغرف ٤٠١\nو٤٠٢ مغلقة']
-      ]));
+      final bytes = CsvWriter.write(
+        table(
+          ['ملاحظة'],
+          [
+            ['الغرف ٤٠١\nو٤٠٢ مغلقة'],
+          ],
+        ),
+      );
       final text = utf8.decode(bytes.skip(3).toList());
 
       expect(text, contains('"الغرف ٤٠١\nو٤٠٢ مغلقة"'));
@@ -143,16 +175,16 @@ void main() {
     // are UTF-8 and nothing else, with no preamble of any kind in front of the
     // first heading.
     final bytes = CsvWriter.write(
-      table(['الاسم الكامل', 'المهنة'], [
-        ['منير عبدالله رضوان', 'مشرف برج'],
-      ]),
+      table(
+        ['الاسم الكامل', 'المهنة'],
+        [
+          ['منير عبدالله رضوان', 'مشرف برج'],
+        ],
+      ),
     );
 
     expect(bytes.take(3), [0xEF, 0xBB, 0xBF]);
     final text = utf8.decode(bytes.skip(3).toList());
-    expect(
-      text,
-      'الاسم الكامل,المهنة\r\nمنير عبدالله رضوان,مشرف برج\r\n',
-    );
+    expect(text, 'الاسم الكامل,المهنة\r\nمنير عبدالله رضوان,مشرف برج\r\n');
   });
 }

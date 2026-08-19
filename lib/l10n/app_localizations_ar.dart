@@ -4641,9 +4641,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'بعد الاختيار تظهر هنا الأعمدة التي يمكن أخذها، وصيغة الملف، وزرّا الحفظ والإرسال.';
 
   @override
-  String get exportWhichColumns => 'الأعمدة';
-
-  @override
   String get exportColumnsDefault => 'الافتراضية';
 
   @override

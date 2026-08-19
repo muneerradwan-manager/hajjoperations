@@ -53,16 +53,16 @@ abstract final class ExportRunner {
     required String subtitle,
     required String pageLabel,
   }) async {
-    final table = await buildTable(
+    final document = await buildDocument(
       dataset: dataset,
       request: request,
       columns: columns,
     );
 
     final bytes = switch (format) {
-      ExportFormat.csv => CsvWriter.write(table),
+      ExportFormat.csv => CsvWriter.write(document),
       ExportFormat.pdf => await PdfWriter.write(
-        table,
+        document,
         subtitle: subtitle,
         pageLabel: pageLabel,
       ),
@@ -72,7 +72,7 @@ abstract final class ExportRunner {
       name: fileName(dataset, format),
       bytes: bytes,
       format: format,
-      rowCount: table.rows.length,
+      rowCount: document.rowCount,
     );
   }
 
@@ -82,7 +82,7 @@ abstract final class ExportRunner {
   /// resolved from a chosen option — and the request says which of them were
   /// ticked. Ordering comes from this list rather than from the ticking, so
   /// that two people exporting the same dataset get columns in the same places.
-  static Future<ExportTable> buildTable({
+  static Future<ExportDocument> buildDocument({
     required ExportDataset dataset,
     required ExportRequest request,
     required List<ExportColumn> columns,
@@ -92,18 +92,9 @@ abstract final class ExportRunner {
         if (request.wants(column.key)) column,
     ];
 
-    final rows = await dataset.fetch(request);
-
-    return ExportTable(
+    return ExportDocument(
       title: request.text(dataset.name),
-      headers: [for (final column in chosen) request.text(column.label)],
-      rows: [
-        for (final row in rows)
-          [
-            for (final column in chosen)
-              ExportValues.text(row[column.key]),
-          ],
-      ],
+      sections: await dataset.build(request, chosen),
     );
   }
 

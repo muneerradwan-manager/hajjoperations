@@ -39,15 +39,42 @@ class CsvWriter {
   static const _bom = [0xEF, 0xBB, 0xBF];
   static const _crlf = '\r\n';
 
-  static Uint8List write(ExportTable table) {
-    final buffer = StringBuffer()
-      ..write(table.headers.map(escape).join(','))
-      ..write(_crlf);
+  /// One section is a plain sheet, exactly as it always was.
+  ///
+  /// Several — one file taken whole, one decision with its tables — are written
+  /// one after another with the section's name on a line of its own and a blank
+  /// line between them. Not one wide table with the sections side by side, and
+  /// not one file per section: a spreadsheet reads down, a person who asked for
+  /// a file expects a file, and the blank line is the break every importer and
+  /// every reader already understands.
+  static Uint8List write(ExportDocument document) {
+    final buffer = StringBuffer();
+    final sections = document.sections;
+    final many = sections.length > 1;
 
-    for (final row in table.rows) {
-      buffer
-        ..write(row.map(escape).join(','))
-        ..write(_crlf);
+    for (var i = 0; i < sections.length; i++) {
+      final section = sections[i];
+      if (i > 0) buffer.write(_crlf);
+      if (many) {
+        buffer
+          ..write(escape(section.title))
+          ..write(_crlf);
+        if (section.note case final note? when note.isNotEmpty) {
+          buffer
+            ..write(escape(note))
+            ..write(_crlf);
+        }
+      }
+      if (section.headers.isNotEmpty) {
+        buffer
+          ..write(section.headers.map(escape).join(','))
+          ..write(_crlf);
+      }
+      for (final row in section.rows) {
+        buffer
+          ..write(row.map(escape).join(','))
+          ..write(_crlf);
+      }
     }
 
     return Uint8List.fromList([..._bom, ...utf8.encode(buffer.toString())]);

@@ -242,7 +242,7 @@ class PdfWriter {
   }
 
   static Future<Uint8List> write(
-    ExportTable table, {
+    ExportDocument doc, {
     required String subtitle,
     required String pageLabel,
   }) async {
@@ -252,7 +252,8 @@ class PdfWriter {
     final theme = pw.ThemeData.withFont(base: _regular!, bold: _bold!);
     final document = pw.Document(theme: theme);
 
-    final sheet = _rightToLeft(table);
+    final sheets = [for (final section in doc.sections) _rightToLeft(section)];
+    final many = sheets.length > 1;
 
     // Landscape, because these are wide things: a roster with a name, a trade,
     // two telephone numbers and an email does not fit a portrait page without
@@ -266,10 +267,16 @@ class PdfWriter {
     // six columns is exactly the A4 landscape it always was, and the wide one
     // becomes a wide sheet rather than a broken one.
     const margin = 24.0;
-    final widths = _columnWidths(sheet);
-    final wanted = widths == null
-        ? 0.0
-        : widths.fold(0.0, (sum, width) => sum + width) + margin * 2;
+    final widths = [for (final sheet in sheets) _columnWidths(sheet)];
+    // The widest section decides the paper. Sections on different-sized pages
+    // would be a document that changes shape halfway down, and the narrow ones
+    // simply share out the spare width in their own ratios.
+    var wanted = 0.0;
+    for (final width in widths) {
+      if (width == null) continue;
+      final total = width.fold(0.0, (sum, w) => sum + w) + margin * 2;
+      if (total > wanted) wanted = total;
+    }
     final pageWidth = math.max(
       PdfPageFormat.a4.landscape.width,
       math.min(wanted, _maxPageWidth),
@@ -289,10 +296,10 @@ class PdfWriter {
           theme: theme,
           textDirection: pw.TextDirection.rtl,
         ),
-        header: (context) => _header(table.title, subtitle, context),
+        header: (context) => _header(doc.title, subtitle, context),
         footer: (context) => _footer(context, pageLabel),
         build: (context) => [
-          if (table.isEmpty)
+          if (doc.isEmpty)
             pw.Padding(
               padding: const pw.EdgeInsets.only(top: 40),
               child: pw.Text(
@@ -302,49 +309,78 @@ class PdfWriter {
                   color: PdfColors.grey600,
                 ),
               ),
-            )
-          else
-            pw.TableHelper.fromTextArray(
-              headers: sheet.headers,
-              data: sheet.rows,
-              // Proportional to what each column needs rather than fixed at it,
-              // so the row still fills the sheet: where the page was widened to
-              // the measured total every column lands on its own figure, and
-              // where it was held at the A4 floor — a narrow export, three
-              // columns — the spare width is shared out in the same ratio
-              // instead of leaving a third of the paper blank.
-              columnWidths: widths == null
-                  ? null
-                  : {
-                      for (var i = 0; i < widths.length; i++)
-                        i: pw.FlexColumnWidth(widths[i]),
-                    },
-              border: pw.TableBorder.all(color: PdfColors.grey400, width: .4),
-              headerStyle: pw.TextStyle(
-                fontSize: _headerSize,
-                fontWeight: pw.FontWeight.bold,
-                color: PdfColors.white,
-              ),
-              headerDecoration: const pw.BoxDecoration(
-                color: PdfColor.fromInt(0xFF016D5D),
-              ),
-              cellStyle: const pw.TextStyle(fontSize: _cellSize),
-              // Alternating rows: forty names in one block is a block a reader
-              // loses his line in.
-              oddRowDecoration: const pw.BoxDecoration(
-                color: PdfColor.fromInt(0xFFF3F6F5),
-              ),
-              cellAlignment: pw.Alignment.centerRight,
-              headerAlignment: pw.Alignment.centerRight,
-              cellPadding: const pw.EdgeInsets.symmetric(
-                horizontal: 4,
-                vertical: 3,
-              ),
-              headerPadding: const pw.EdgeInsets.symmetric(
-                horizontal: 4,
-                vertical: 5,
-              ),
             ),
+          for (var i = 0; i < sheets.length; i++)
+            if (!sheets[i].isEmpty) ...[
+              // Named only when there is more than one. A single section is
+              // already named by the title at the head of the page, and
+              // printing it a second time immediately under itself is the
+              // sheet stuttering.
+              if (many) ...[
+                if (i > 0) pw.SizedBox(height: 14),
+                pw.Text(
+                  sheets[i].title,
+                  style: pw.TextStyle(
+                    fontSize: 12,
+                    fontWeight: pw.FontWeight.bold,
+                    color: const PdfColor.fromInt(0xFF00594F),
+                  ),
+                ),
+                if (sheets[i].note case final note? when note.isNotEmpty)
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.only(top: 2),
+                    child: pw.Text(
+                      note,
+                      style: const pw.TextStyle(
+                        fontSize: 8.5,
+                        color: PdfColors.grey700,
+                      ),
+                    ),
+                  ),
+                pw.SizedBox(height: 5),
+              ],
+              pw.TableHelper.fromTextArray(
+                headers: sheets[i].headers,
+                data: sheets[i].rows,
+                // Proportional to what each column needs rather than fixed at it,
+                // so the row still fills the sheet: where the page was widened to
+                // the measured total every column lands on its own figure, and
+                // where it was held at the A4 floor — a narrow export, three
+                // columns — the spare width is shared out in the same ratio
+                // instead of leaving a third of the paper blank.
+                columnWidths: widths[i] == null
+                    ? null
+                    : {
+                        for (var c = 0; c < widths[i]!.length; c++)
+                          c: pw.FlexColumnWidth(widths[i]![c]),
+                      },
+                border: pw.TableBorder.all(color: PdfColors.grey400, width: .4),
+                headerStyle: pw.TextStyle(
+                  fontSize: _headerSize,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.white,
+                ),
+                headerDecoration: const pw.BoxDecoration(
+                  color: PdfColor.fromInt(0xFF016D5D),
+                ),
+                cellStyle: const pw.TextStyle(fontSize: _cellSize),
+                // Alternating rows: forty names in one block is a block a reader
+                // loses his line in.
+                oddRowDecoration: const pw.BoxDecoration(
+                  color: PdfColor.fromInt(0xFFF3F6F5),
+                ),
+                cellAlignment: pw.Alignment.centerRight,
+                headerAlignment: pw.Alignment.centerRight,
+                cellPadding: const pw.EdgeInsets.symmetric(
+                  horizontal: 4,
+                  vertical: 3,
+                ),
+                headerPadding: const pw.EdgeInsets.symmetric(
+                  horizontal: 4,
+                  vertical: 5,
+                ),
+              ),
+            ],
         ],
       ),
     );

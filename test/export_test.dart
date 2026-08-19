@@ -13,7 +13,7 @@ LocalizedName n(String ar, [String? en]) => LocalizedName(ar: ar, en: en);
 /// from the fetching. They fail differently and should be caught apart:
 /// fetching is where the wrong ROWS come from, assembling is where the wrong
 /// COLUMNS do.
-class _Fake extends ExportDataset {
+class _Fake extends ExportListDataset {
   _Fake({this.rows = const []});
 
   final List<Map<String, String>> rows;
@@ -49,6 +49,19 @@ void main() {
     en = await AppLocalizations.delegate.load(const Locale('en'));
   });
 
+  /// The one section a list dataset produces. The runner returns a document
+  /// now — a thing exported whole is several tables — and every assertion here
+  /// is about a list, which has exactly one.
+  Future<ExportTable> one({
+    required ExportDataset dataset,
+    required ExportRequest request,
+    required List<ExportColumn> columns,
+  }) async => (await ExportRunner.buildDocument(
+    dataset: dataset,
+    request: request,
+    columns: columns,
+  )).sections.single;
+
   ExportRequest request(Set<String> columns, {bool arabic = true}) =>
       ExportRequest(
         columnKeys: columns,
@@ -65,7 +78,7 @@ void main() {
     );
 
     test('only what was ticked comes out', () async {
-      final table = await ExportRunner.buildTable(
+      final table = await one(
         dataset: dataset,
         request: request({'name', 'job'}),
         columns: dataset.columns,
@@ -79,7 +92,7 @@ void main() {
       // A sheet whose columns land in different places depending on which
       // checkbox somebody pressed first is a sheet nobody can put beside
       // another one.
-      final table = await ExportRunner.buildTable(
+      final table = await one(
         dataset: dataset,
         request: request({'email', 'name'}),
         columns: dataset.columns,
@@ -97,27 +110,33 @@ void main() {
       );
     });
 
-    test('a column no row has anything for is an empty cell, not a gap', () async {
-      final sparse = _Fake(rows: [
-        {'name': 'منير'},
-      ]);
+    test(
+      'a column no row has anything for is an empty cell, not a gap',
+      () async {
+        final sparse = _Fake(
+          rows: [
+            {'name': 'منير'},
+          ],
+        );
 
-      final table = await ExportRunner.buildTable(
-        dataset: sparse,
-        request: request({'name', 'job', 'email'}),
-        columns: sparse.columns,
-      );
+        final table = await one(
+          dataset: sparse,
+          request: request({'name', 'job', 'email'}),
+          columns: sparse.columns,
+        );
 
-      expect(
-        table.rows.single,
-        ['منير', '', ''],
-        reason: 'a short row would shift every cell after it into the wrong '
-            'column, and nothing would say so',
-      );
-    });
+        expect(
+          table.rows.single,
+          ['منير', '', ''],
+          reason:
+              'a short row would shift every cell after it into the wrong '
+              'column, and nothing would say so',
+        );
+      },
+    );
 
     test('no rows still produces the headings', () async {
-      final table = await ExportRunner.buildTable(
+      final table = await one(
         dataset: _Fake(),
         request: request({'name'}),
         columns: _Fake().columns,
@@ -131,7 +150,7 @@ void main() {
   group('language', () {
     test('the headings follow the language the export was asked for', () async {
       final dataset = _Fake();
-      final table = await ExportRunner.buildTable(
+      final table = await one(
         dataset: dataset,
         request: request({'name', 'job'}, arabic: false),
         columns: dataset.columns,
@@ -158,7 +177,8 @@ void main() {
       expect(
         name.codeUnits.every((c) => c < 128),
         isTrue,
-        reason: 'it goes through a file system, a share sheet and an email, '
+        reason:
+            'it goes through a file system, a share sheet and an email, '
             'and an Arabic file name survives only some of those',
       );
     });
@@ -178,7 +198,8 @@ void main() {
       expect(
         offered.map((d) => d.id),
         isNot(contains('employees')),
-        reason: 'employees.view opens the directory; without it there is '
+        reason:
+            'employees.view opens the directory; without it there is '
             'nothing to take out of it either',
       );
     });
@@ -203,8 +224,9 @@ void main() {
 
       expect(
         offered.map((d) => d.id),
-        containsAll(['modules', 'reports']),
-        reason: 'these are narrowed by row security rather than by a code, '
+        containsAll(['module', 'reports']),
+        reason:
+            'these are narrowed by row security rather than by a code, '
             'and a person sees exactly what he sees on their screens',
       );
     });
@@ -224,7 +246,8 @@ void main() {
         expect(
           keys.toSet().length,
           keys.length,
-          reason: 'in ${dataset.id}, a duplicate key means one column silently '
+          reason:
+              'in ${dataset.id}, a duplicate key means one column silently '
               'takes the other\'s values',
         );
       }

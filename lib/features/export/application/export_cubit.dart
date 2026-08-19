@@ -149,7 +149,7 @@ class ExportCubit extends SafeCubit<ExportState> {
     try {
       final choices = <String, List<ExportChoice>>{};
       for (final option in dataset.options) {
-        choices[option.key] = await option.choices();
+        choices[option.key] = await option.choices(const {});
       }
       emit(state.copyWith(choices: choices, status: ExportStatus.choosing));
     } catch (e) {
@@ -165,6 +165,23 @@ class ExportCubit extends SafeCubit<ExportState> {
     emit(state.copyWith(options: options, status: ExportStatus.preparing));
 
     try {
+      // Whatever hung off this answer is asked again.
+      //
+      // Choosing 1447 and then being offered every decision the mission has
+      // ever issued is the screen disagreeing with itself two rows apart — and
+      // worse, the answer already given may no longer be among them, so it is
+      // DROPPED here rather than left in the request where nothing on screen
+      // shows it any more.
+      final choices = {...state.choices};
+      for (final option in dataset.options) {
+        if (!option.dependsOn.contains(key)) continue;
+        choices[option.key] = await option.choices(options);
+        final still = choices[option.key]!.any(
+          (choice) => choice.id == options[option.key],
+        );
+        if (!still) options.remove(option.key);
+      }
+
       // The extra columns depend on the answers, so they are re-resolved rather
       // than added to: changing the chosen list from the hotels to the camps
       // must take the hotels' own fields away with it, or the sheet offers
@@ -174,6 +191,8 @@ class ExportCubit extends SafeCubit<ExportState> {
       final live = {for (final column in columns) column.key};
       emit(
         state.copyWith(
+          options: options,
+          choices: choices,
           columns: columns,
           selected: state.selected.where(live.contains).toSet(),
           status: ExportStatus.choosing,
@@ -222,11 +241,8 @@ class ExportCubit extends SafeCubit<ExportState> {
   /// Moved to `core/share/shareable.dart` when the place-code card needed the
   /// same fallback; kept here as one line so the call sites below read as they
   /// did.
-  Future<XFile> _asShareable(ExportFile file) => asShareable(
-    file.bytes,
-    name: file.name,
-    mimeType: file.format.mimeType,
-  );
+  Future<XFile> _asShareable(ExportFile file) =>
+      asShareable(file.bytes, name: file.name, mimeType: file.format.mimeType);
 
   /// Builds the file and delivers it the way [delivery] says.
   ///
