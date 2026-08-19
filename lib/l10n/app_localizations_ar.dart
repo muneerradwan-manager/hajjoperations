@@ -185,20 +185,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String authVerifySubtitle(String email) {
-    return 'أرسلنا رمزاً من ستة أرقام إلى $email';
+    return 'أرسلنا رمز التحقّق إلى $email';
   }
 
   @override
-  String get authVerifyCode => 'رمز التحقّق';
-
-  @override
-  String get authVerifyCodeHint => '٦ أرقام';
-
-  @override
   String get authVerifyAction => 'تأكيد';
-
-  @override
-  String get authVerifyCodeTooShort => 'الرمز ستة أرقام';
 
   @override
   String get authVerifyResend => 'إعادة الإرسال';

@@ -185,20 +185,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String authVerifySubtitle(String email) {
-    return 'We sent a six-digit code to $email';
+    return 'We sent a verification code to $email';
   }
 
   @override
-  String get authVerifyCode => 'Verification code';
-
-  @override
-  String get authVerifyCodeHint => '6 digits';
-
-  @override
   String get authVerifyAction => 'Confirm';
-
-  @override
-  String get authVerifyCodeTooShort => 'The code is six digits';
 
   @override
   String get authVerifyResend => 'Send again';

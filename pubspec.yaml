@@ -157,6 +157,7 @@ dependencies:
   # community licence is conditional on company revenue
   # and headcount and would have to be re-checked every year.
   fl_chart: 1.2.0
+  pinput: ^6.0.2
 
 
 # ============================================================

@@ -443,32 +443,14 @@ abstract class AppLocalizations {
   /// No description provided for @authVerifySubtitle.
   ///
   /// In en, this message translates to:
-  /// **'We sent a six-digit code to {email}'**
+  /// **'We sent a verification code to {email}'**
   String authVerifySubtitle(String email);
-
-  /// No description provided for @authVerifyCode.
-  ///
-  /// In en, this message translates to:
-  /// **'Verification code'**
-  String get authVerifyCode;
-
-  /// No description provided for @authVerifyCodeHint.
-  ///
-  /// In en, this message translates to:
-  /// **'6 digits'**
-  String get authVerifyCodeHint;
 
   /// No description provided for @authVerifyAction.
   ///
   /// In en, this message translates to:
   /// **'Confirm'**
   String get authVerifyAction;
-
-  /// No description provided for @authVerifyCodeTooShort.
-  ///
-  /// In en, this message translates to:
-  /// **'The code is six digits'**
-  String get authVerifyCodeTooShort;
 
   /// No description provided for @authVerifyResend.
   ///

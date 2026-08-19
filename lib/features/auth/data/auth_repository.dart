@@ -45,6 +45,19 @@ class AuthFailure implements Exception {
   String toString() => message;
 }
 
+/// How many digits the posted code has.
+///
+/// **It must equal the project's own setting** — Supabase, Authentication →
+/// Providers → Email → *Email OTP Length* (six by default, and settable from
+/// six to ten). The two are not negotiated at runtime: nothing in the API
+/// reports the length, so this number and that one are two copies of one fact
+/// and the only thing keeping them in step is that they are written down.
+///
+/// Get it wrong and the failure is silent and total: the field refuses to
+/// accept the code the reader is holding, and no message anywhere says why.
+/// That is exactly how it was first shipped — six here, eight in the project.
+const kEmailCodeLength = 8;
+
 /// What creating an account produced.
 enum SignUpOutcome {
   /// A session, straight away — the project is not asking for confirmation.

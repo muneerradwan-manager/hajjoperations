@@ -44,6 +44,21 @@ void main() {
     });
   });
 
+  group('how long the code is', () {
+    test('one number, and the field is built from it', () {
+      // It shipped as 6 in the client while the project was set to 8, and the
+      // failure was silent and total: the field would not accept the code the
+      // reader was holding, and nothing anywhere said why. Nothing in the API
+      // reports the length, so this is a fact written in two places — here and
+      // in Supabase's "Email OTP Length" — and the only thing keeping them in
+      // step is that both are written down.
+      expect(kEmailCodeLength, 8);
+
+      // Supabase accepts six to ten. A value outside that cannot be right.
+      expect(kEmailCodeLength, inInclusiveRange(6, 10));
+    });
+  });
+
   group('the state the screen reads', () {
     test('an address pending is what puts the code box on screen', () {
       const idle = AuthUiState();
