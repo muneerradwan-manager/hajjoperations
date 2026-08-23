@@ -21,6 +21,31 @@ import 'package:hajjoperations/l10n/app_localizations.dart';
 /// does not complete — so a card built on the real one is frozen on "جارٍ
 /// تحديد موقعك…" forever and there is nothing to assert about it.
 void main() {
+  /// The Arabic the card actually speaks, read out of the same table it draws
+  /// from rather than typed again here.
+  ///
+  /// It used to be typed again here, and the strings are now vocalised —
+  /// الْفَجْرُ, not الفجر — so every literal in this file stopped matching at
+  /// once. A copy of a sentence in a test is a second place that sentence is
+  /// written, and the second place is never the one that gets corrected.
+  late AppLocalizations ar;
+
+  /// The six marks, in the order the strip lays them out.
+  late List<String> arabicNames;
+
+  setUpAll(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    ar = await AppLocalizations.delegate.load(const Locale('ar'));
+    arabicNames = [
+      ar.prayerFajr,
+      ar.prayerSunrise,
+      ar.prayerDhuhr,
+      ar.prayerAsr,
+      ar.prayerMaghrib,
+      ar.prayerIsha,
+    ];
+  });
+
   /// Answers where the platform would, and hands back whichever day the test
   /// needs to put the clock inside a particular window.
   ///
@@ -88,8 +113,6 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await cubit.close();
   }
-
-  const arabicNames = ['الفجر', 'الشروق', 'الظهر', 'العصر', 'المغرب', 'العشاء'];
 
   /// Whether [name] reached the screen WHOLE, rather than trimmed to an
   /// ellipsis.
@@ -232,7 +255,7 @@ void main() {
       final cubit = stubbed();
       await show(tester, cubit, width: 360);
 
-      expect(find.text('موقع تقريبي'), findsOneWidget);
+      expect(find.text(ar.prayerApproximate), findsOneWidget);
       expect(cubit.state.approximate, isTrue);
       // And there is something to be done about it, so the chip takes a tap.
       expect(cubit.state.canAskForLocation, isTrue);
@@ -246,8 +269,8 @@ void main() {
       final cubit = stubbed(fix: _mina, outcome: LocationOutcome.located);
       await show(tester, cubit, width: 360);
 
-      expect(find.text('منى'), findsOneWidget);
-      expect(find.text('موقع تقريبي'), findsNothing);
+      expect(find.text(ar.prayerPlaceMina), findsOneWidget);
+      expect(find.text(ar.prayerApproximate), findsNothing);
 
       await dismiss(tester, cubit);
     });
@@ -266,7 +289,7 @@ void main() {
       );
       await show(tester, cubit, width: 360);
 
-      expect(find.text('موقعك'), findsOneWidget);
+      expect(find.text(ar.prayerYourLocation), findsOneWidget);
 
       await dismiss(tester, cubit);
     });
@@ -282,9 +305,9 @@ void main() {
       final cubit = stubbed(fix: _mina, dayBuilder: _dayInSunriseGap);
       await show(tester, cubit, width: 360);
 
-      expect(find.text('وقت الشروق — لا صلاة حتى الظهر'), findsOneWidget);
+      expect(find.text(ar.prayerSunriseGapNote), findsOneWidget);
       // And what it counts down to is الظهر, which IS a prayer.
-      expect(find.textContaining('الظهر ·'), findsOneWidget);
+      expect(find.textContaining('${ar.prayerDhuhr} ·'), findsOneWidget);
       expect(cubit.state.window!.inSunriseGap, isTrue);
 
       await dismiss(tester, cubit);
@@ -298,11 +321,11 @@ void main() {
 
       // Not "الصلاة القادمة: الشروق" — الشروق is not a prayer and is never
       // announced as the next one.
-      expect(find.text('ينتهي وقت الفجر'), findsOneWidget);
-      expect(find.text('الصلاة القادمة'), findsNothing);
-      expect(find.textContaining('الشروق ·'), findsOneWidget);
+      expect(find.text(ar.prayerFajrEndsLabel), findsOneWidget);
+      expect(find.text(ar.prayerNextLabel), findsNothing);
+      expect(find.textContaining('${ar.prayerSunrise} ·'), findsOneWidget);
       // No gap note here: الفجر is open, and something IS due.
-      expect(find.text('وقت الشروق — لا صلاة حتى الظهر'), findsNothing);
+      expect(find.text(ar.prayerSunriseGapNote), findsNothing);
 
       await dismiss(tester, cubit);
     });
@@ -313,9 +336,9 @@ void main() {
       final cubit = stubbed(fix: _mina, dayBuilder: _dayInAsr);
       await show(tester, cubit, width: 360);
 
-      expect(find.text('الصلاة القادمة'), findsOneWidget);
-      expect(find.textContaining('المغرب ·'), findsOneWidget);
-      expect(find.text('ينتهي وقت الفجر'), findsNothing);
+      expect(find.text(ar.prayerNextLabel), findsOneWidget);
+      expect(find.textContaining('${ar.prayerMaghrib} ·'), findsOneWidget);
+      expect(find.text(ar.prayerFajrEndsLabel), findsNothing);
 
       await dismiss(tester, cubit);
     });

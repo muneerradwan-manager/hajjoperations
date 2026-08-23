@@ -299,10 +299,12 @@ class _ManagerRow extends StatelessWidget {
                 color: evaluation.isSubmitted ? scheme.primary : scheme.tertiary,
                 dense: true,
               ),
+              // A name is identity, not status — it wears the muted tone.
               if (evaluation.evaluatorName != null)
                 GlassBadge(
                   label: evaluation.evaluatorName!,
                   icon: AppIcons.employees,
+                  color: scheme.onSurfaceVariant,
                   dense: true,
                 ),
             ],

@@ -12,8 +12,14 @@ import '../../../core/widgets/creator_page.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
+import '../../../core/widgets/app_sheet.dart';
 import '../../auth/application/session_cubit.dart';
+import '../../modules/data/modules_repository.dart';
+import '../../modules/domain/module_task.dart';
+import '../../modules/domain/operational_module.dart';
 import '../../modules/presentation/employee_picker_screen.dart';
+import '../../modules/presentation/widgets/duty_composer_sheet.dart';
+import '../../modules/presentation/widgets/picker_sheet.dart';
 import '../application/tasks_board_cubit.dart';
 import '../data/tasks_repository.dart';
 import '../domain/personal_task.dart';
@@ -50,6 +56,36 @@ class TasksBoardScreen extends StatelessWidget {
 class _View extends StatelessWidget {
   const _View();
 
+  /// One button, three destinations: a task lands on PEOPLE's lists, or is
+  /// written as a duty on a FILE, or on a ROLE in a file. The first is the
+  /// tasks system's own tracked exchange; the other two are the operational
+  /// files' descriptive lists (§25.1), reached from here so that handing work
+  /// out is one place whatever the work is attached to.
+  ///
+  /// The chooser is skipped for a reader who may only do the first — writing
+  /// duties on files is `modules.tasks`, a different trust than
+  /// `tasks.assign`, and a menu with one live entry is a menu wasting a tap.
+  Future<void> _assign(BuildContext context) async {
+    final canWriteDuties = context.read<SessionCubit>().state.can(
+      PermissionCodes.modulesTasks,
+    );
+    if (!canWriteDuties) return _assignToPeople(context);
+
+    final target = await showAppSheet<_AssignTarget>(
+      context: context,
+      builder: (_) => const _AssignTargetSheet(),
+    );
+    if (target == null || !context.mounted) return;
+    switch (target) {
+      case _AssignTarget.people:
+        await _assignToPeople(context);
+      case _AssignTarget.file:
+        await _assignDuty(context, scope: TaskScope.file);
+      case _AssignTarget.role:
+        await _assignDuty(context, scope: TaskScope.role);
+    }
+  }
+
   /// Assigning: name the people first, then write the task once.
   ///
   /// The mission's own roster page — the same one postings are made on — and
@@ -64,7 +100,7 @@ class _View extends StatelessWidget {
   /// The assigner is kept off the list: a task pointed back at its own author
   /// is by definition not an assignment, and it would land on «مهامي» and
   /// vanish from this page — reading exactly like a failure.
-  Future<void> _assign(BuildContext context) async {
+  Future<void> _assignToPeople(BuildContext context) async {
     final cubit = context.read<TasksBoardCubit>();
     final me = context.read<SessionCubit>().state.profile?.id;
     final seasonId = cubit.state.seasonId;
@@ -100,6 +136,86 @@ class _View extends StatelessWidget {
             : SaveOutcome.failed(error);
       },
     );
+  }
+
+  /// A duty onto a file, or onto a role in one: the file first, the role
+  /// second when asked for, and then only the words — the same row the file's
+  /// own page writes, reached from here.
+  Future<void> _assignDuty(
+    BuildContext context, {
+    required TaskScope scope,
+  }) async {
+    final l = context.l10n;
+    final messenger = ScaffoldMessenger.of(context);
+    final seasonId = context.read<TasksBoardCubit>().state.seasonId;
+    void say(String message) => messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+
+    if (seasonId == null) return say(l.moduleNoCurrentSeason);
+
+    final List<OperationalModule> modules;
+    try {
+      modules = await ModulesRepository().fetchModules(seasonId: seasonId);
+    } catch (_) {
+      return say(l.commonConnectionErrorTitle);
+    }
+    if (!context.mounted) return;
+    if (modules.isEmpty) return say(l.modulesEmpty);
+
+    final moduleChoice = await showPickerSheet(
+      context,
+      title: l.tasksAssignPickModule,
+      options: [
+        for (final m in modules)
+          PickerOption(id: m.id, label: m.moduleTypeName?.of(context) ?? '—'),
+      ],
+      selected: const {},
+    );
+    if (moduleChoice == null || moduleChoice.isEmpty || !context.mounted) {
+      return;
+    }
+    final module = modules.firstWhere((m) => m.id == moduleChoice.first);
+    final moduleName = module.moduleTypeName?.of(context) ?? '—';
+
+    String? roleId;
+    String? roleName;
+    if (scope == TaskScope.role) {
+      final type = await ModulesRepository().fetchModuleType(
+        module.moduleTypeId,
+      );
+      if (!context.mounted) return;
+      final roles = type?.allRoles ?? const [];
+      if (roles.isEmpty) return say(l.tasksAssignNoRoles);
+
+      final roleChoice = await showPickerSheet(
+        context,
+        title: l.tasksAssignPickRole,
+        options: [
+          for (final role in roles)
+            PickerOption(id: role.id, label: role.name.of(context)),
+        ],
+        selected: const {},
+      );
+      if (roleChoice == null || roleChoice.isEmpty || !context.mounted) {
+        return;
+      }
+      roleId = roleChoice.first;
+      roleName = roles
+          .firstWhere((role) => role.id == roleId)
+          .name
+          .of(context);
+    }
+
+    final created = await showDutyComposerSheet(
+      context,
+      moduleId: module.id,
+      moduleName: moduleName,
+      scope: scope,
+      roleId: roleId,
+      roleName: roleName,
+    );
+    if (created == true) say(l.tasksAssignDutySaved);
   }
 
   Future<void> _open(BuildContext context, PersonalTask task) async {
@@ -180,6 +296,113 @@ class _View extends StatelessWidget {
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+/// The three things one press of «إسناد مهمة» can write onto.
+enum _AssignTarget { people, file, role }
+
+/// The question the button asks before anything opens: who — or what — is
+/// this task for. Three rows, each saying what its choice actually leaves
+/// behind, because "a task to a person" and "a duty on a file" are different
+/// objects and the difference is the reason this sheet exists.
+class _AssignTargetSheet extends StatelessWidget {
+  const _AssignTargetSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+
+    Widget option({
+      required _AssignTarget target,
+      required IconData icon,
+      required String label,
+      required String hint,
+    }) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+        child: GlassCard(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          onTap: () => Navigator.of(context).pop(target),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(AppRadius.xs),
+                  border: Border.all(
+                    color: scheme.primary.withValues(alpha: 0.18),
+                  ),
+                ),
+                child: Icon(icon, size: 20, color: scheme.primary),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: text.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      hint,
+                      style: text.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const NavChevron(),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        0,
+        AppSpacing.lg,
+        AppSpacing.xl,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l.tasksAssignTargetTitle, style: text.titleLarge),
+          const SizedBox(height: AppSpacing.lg),
+          option(
+            target: _AssignTarget.people,
+            icon: AppIcons.employees,
+            label: l.tasksAssignToPeople,
+            hint: l.tasksAssignToPeopleHint,
+          ),
+          option(
+            target: _AssignTarget.file,
+            icon: AppIcons.modules,
+            label: l.tasksAssignToFile,
+            hint: l.tasksAssignToFileHint,
+          ),
+          option(
+            target: _AssignTarget.role,
+            icon: AppIcons.roles,
+            label: l.tasksAssignToRole,
+            hint: l.tasksAssignToRoleHint,
+          ),
+        ],
       ),
     );
   }

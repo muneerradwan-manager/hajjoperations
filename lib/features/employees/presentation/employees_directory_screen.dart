@@ -15,12 +15,14 @@ import '../../../core/widgets/search_field.dart';
 import '../../../core/widgets/saved_copy_banner.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
+import '../../modules/presentation/widgets/picker_sheet.dart';
 import '../../profile/domain/profile.dart';
 import '../application/employees_directory_cubit.dart';
 import '../../seasons/data/seasons_repository.dart';
 import '../data/employees_repository.dart';
 import 'create_employee_screen.dart';
 import 'employee_detail_screen.dart';
+import '../../../core/l10n/localized_name.dart';
 
 class EmployeesDirectoryScreen extends StatelessWidget {
   const EmployeesDirectoryScreen({super.key});
@@ -45,6 +47,15 @@ class _View extends StatefulWidget {
 class _ViewState extends State<_View> {
   final _search = TextEditingController();
   String _query = '';
+
+  // The narrowing knobs, keyed by the Arabic name — it is the half of a
+  // [LocalizedName] that is always present, so the same choice keeps matching
+  // when the reader flips the app's language.
+  String? _jobTitle;
+  String? _city;
+  bool _suspendedOnly = false;
+
+  bool get _isNarrowed => _jobTitle != null || _city != null || _suspendedOnly;
 
   @override
   void dispose() {
@@ -75,8 +86,12 @@ class _ViewState extends State<_View> {
   /// someone reading an English list may still search "طبيب", and the two names
   /// are the same title.
   List<Profile> _filter(List<Profile> source) {
-    if (_query.isEmpty) return source;
     return source.where((e) {
+      // The knobs first — they are exact — and the words last.
+      if (_suspendedOnly && !e.isSuspended) return false;
+      if (_jobTitle != null && e.jobTitleName?.ar != _jobTitle) return false;
+      if (_city != null && e.cityName?.ar != _city) return false;
+      if (_query.isEmpty) return true;
       final title = e.jobTitleName;
       return arabicMatchesAll([
         e.firstName,
@@ -88,6 +103,107 @@ class _ViewState extends State<_View> {
         e.externalOrganization,
       ], _query);
     }).toList();
+  }
+
+  /// One knob: a pill naming what it narrows by, or the choice it is holding.
+  ///
+  /// A picker sheet rather than a row of chips, because a season's directory
+  /// carries dozens of job titles and cities — a Wrap of forty chips is a wall,
+  /// and the sheet is already the way every long list in this app is chosen
+  /// from.
+  Future<void> _pick({
+    required String title,
+    required Map<String, LocalizedName> options,
+    required String? current,
+    required ValueChanged<String?> onChanged,
+  }) async {
+    final entries = options.values.toList()
+      ..sort((a, b) => a.of(context).compareTo(b.of(context)));
+    final result = await showPickerSheet(
+      context,
+      title: title,
+      options: [
+        for (final name in entries)
+          PickerOption(id: name.ar, label: name.of(context)),
+      ],
+      selected: {?current},
+    );
+    if (result == null || !mounted) return;
+    setState(() => onChanged(result.isEmpty ? null : result.first));
+  }
+
+  /// The knobs, built from what is actually in the directory — a filter
+  /// offering a title nobody holds is a menu of dead ends.
+  Widget? _filters(EmployeesDirectoryState state) {
+    final l = context.l10n;
+    final all = [...state.permanent, ...state.external];
+
+    final titles = <String, LocalizedName>{
+      for (final e in all)
+        if (e.jobTitleName != null) e.jobTitleName!.ar: e.jobTitleName!,
+    };
+    final cities = <String, LocalizedName>{
+      for (final e in all)
+        if (e.cityName != null) e.cityName!.ar: e.cityName!,
+    };
+    final anySuspended = all.any((e) => e.isSuspended);
+
+    if (titles.length < 2 && cities.length < 2 && !anySuspended) return null;
+
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.xs,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        if (titles.length > 1)
+          _FilterPill(
+            label: _jobTitle == null
+                ? l.profileJobTitle
+                : (titles[_jobTitle]?.of(context) ?? l.profileJobTitle),
+            active: _jobTitle != null,
+            onTap: () => _pick(
+              title: l.profileJobTitle,
+              options: titles,
+              current: _jobTitle,
+              onChanged: (v) => _jobTitle = v,
+            ),
+          ),
+        if (cities.length > 1)
+          _FilterPill(
+            label: _city == null
+                ? l.profileCity
+                : (cities[_city]?.of(context) ?? l.profileCity),
+            active: _city != null,
+            onTap: () => _pick(
+              title: l.profileCity,
+              options: cities,
+              current: _city,
+              onChanged: (v) => _city = v,
+            ),
+          ),
+        // Only once somebody in the list IS suspended — a switch that can
+        // never match anybody is furniture.
+        if (anySuspended)
+          FilterChip(
+            label: Text(l.employeesFilterSuspended),
+            selected: _suspendedOnly,
+            visualDensity: VisualDensity.compact,
+            onSelected: (v) => setState(() => _suspendedOnly = v),
+          ),
+        if (_isNarrowed || _query.isNotEmpty)
+          TextButton.icon(
+            onPressed: () => setState(() {
+              _search.clear();
+              _query = '';
+              _jobTitle = null;
+              _city = null;
+              _suspendedOnly = false;
+            }),
+            icon: const Icon(AppIcons.reject, size: 16),
+            label: Text(l.moduleRosterClear),
+          ),
+      ],
+    );
   }
 
   @override
@@ -147,6 +263,7 @@ class _ViewState extends State<_View> {
                       controller: _search,
                       onChanged: (v) => setState(() => _query = v.trim()),
                       above: SavedCopyBanner(savedAt: state.savedAt),
+                      filters: _filters(state),
                     ),
                     Expanded(
                       child: TabBarView(
@@ -154,7 +271,7 @@ class _ViewState extends State<_View> {
                           _EmployeeList(
                             employees: _filter(state.permanent),
                             emptyTitle: l.employeesEmpty,
-                            searching: _query.isNotEmpty,
+                            searching: _query.isNotEmpty || _isNarrowed,
                             gutter: size.gutter,
                             onRefresh: () =>
                                 context.read<EmployeesDirectoryCubit>().load(),
@@ -162,7 +279,7 @@ class _ViewState extends State<_View> {
                           _EmployeeList(
                             employees: _filter(state.external),
                             emptyTitle: l.employeesExternalEmpty,
-                            searching: _query.isNotEmpty,
+                            searching: _query.isNotEmpty || _isNarrowed,
                             gutter: size.gutter,
                             onRefresh: () =>
                                 context.read<EmployeesDirectoryCubit>().load(),
@@ -176,6 +293,55 @@ class _ViewState extends State<_View> {
             },
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// A knob that opens a picker — the same face the audit log's filters wear, so
+/// "this narrows the list and holds a choice" reads the same on both screens.
+class _FilterPill extends StatelessWidget {
+  const _FilterPill({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return GlassCard(
+      emphasised: active,
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: 8,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: active ? scheme.primary : scheme.onSurfaceVariant,
+                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Icon(
+            Icons.arrow_drop_down,
+            size: 18,
+            color: active ? scheme.primary : scheme.onSurfaceVariant,
+          ),
+        ],
       ),
     );
   }

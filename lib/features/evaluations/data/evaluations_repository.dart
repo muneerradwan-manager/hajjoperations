@@ -121,6 +121,36 @@ class EvaluationsRepository {
         .toList();
   }
 
+  /// The register as the office actually asks it: one row per thing under
+  /// judgement, carrying its counts, its marks, and everyone who was asked —
+  /// each with their own sheet's id inside it.
+  ///
+  /// One call rather than a list and then a read per card: twenty evaluators
+  /// on a file is one fact about that file, and fetching them separately would
+  /// be twenty round trips to draw one card. See `evaluation_subjects_list` in
+  /// migration 0127.
+  Future<List<EvaluationSubject>> fetchSubjects({
+    bool all = true,
+    EvaluationTarget? target,
+    String? templateId,
+    String? query,
+  }) async {
+    final rows = await supabase.rpc(
+      'evaluation_subjects_list',
+      params: {
+        'p_scope': all ? 'all' : 'mine',
+        'p_target_type': target?.name,
+        'p_template_id': templateId,
+        'p_query': query,
+        'p_limit': listLimit,
+      },
+    );
+    return (rows as List)
+        .cast<Map<String, dynamic>>()
+        .map(EvaluationSubject.fromMap)
+        .toList();
+  }
+
   /// One sheet: the errand, the form and the filling. The same call serves the
   /// screen that fills a draft and the screen that reads a finished one,
   /// because they are the same screen.

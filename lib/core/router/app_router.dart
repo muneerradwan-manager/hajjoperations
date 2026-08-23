@@ -20,6 +20,7 @@ import '../../features/home/presentation/home_screen.dart';
 import '../../features/checkin/presentation/check_in_screen.dart';
 import '../../features/checkin/presentation/my_check_ins_screen.dart';
 import '../../features/checkin/presentation/presence_board_screen.dart';
+import '../../features/incidents/application/incidents_cubit.dart';
 import '../../features/incidents/presentation/incidents_screen.dart';
 import '../../features/map/presentation/season_map_screen.dart';
 import '../../features/incidents/presentation/raise_incident_screen.dart';
@@ -93,6 +94,13 @@ abstract class Routes {
 
   /// The register. Guarded — see [_sectionGuards].
   static const incidents = '/incidents';
+
+  /// One person's own reports. Unguarded, for the reason [raiseIncident] is:
+  /// reading what you raised needs no grant, any more than raising it did.
+  /// `IncidentsScope.mine` is the whole difference from [incidents] — the
+  /// database asks the same question of both and answers each honestly, see
+  /// 0126.
+  static const myIncidents = '/my-incidents';
 
   /// The season drawn. **Guarded since 0100.** The RPC still narrows per reader
   /// — a member would get the places of files he is in — and that narrowing is
@@ -183,7 +191,8 @@ final sectionGuards = <String, bool Function(SessionState)>{
       s.can(PermissionCodes.evaluationsAssign),
   // The register of urgent reports — the operations room's screen. RAISING one
   // is `/incident` and is deliberately not in this table: anybody may say that
-  // something has gone wrong.
+  // something has gone wrong. Neither is `/my-incidents` — reading what YOU
+  // raised is not a grant either, any more than filing it was.
   Routes.incidents: (s) => s.can(PermissionCodes.incidentsReceive),
 
   // Who is where, across the season. Filing your own arrival is `/check-in` and
@@ -399,6 +408,18 @@ GoRouter buildRouter(SessionCubit session) {
             path: Routes.incidents,
             pageBuilder: (c, s) =>
                 fadeThroughPage(key: s.pageKey, child: const IncidentsScreen()),
+          ),
+          GoRoute(
+            path: Routes.myIncidents,
+            // `?compose=1` opens the reporting form on arrival, exactly as it
+            // does for tasks, complaints and my check-ins.
+            pageBuilder: (c, s) => fadeThroughPage(
+              key: s.pageKey,
+              child: IncidentsScreen(
+                scope: IncidentsScope.mine,
+                compose: s.uri.queryParameters['compose'] == '1',
+              ),
+            ),
           ),
           GoRoute(
             path: Routes.checkIn,

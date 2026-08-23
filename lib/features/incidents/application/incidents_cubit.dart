@@ -10,8 +10,19 @@ import '../domain/incident.dart';
 
 enum IncidentsStatus { loading, ready, error }
 
+/// Whose reports the screen is showing.
+///
+/// The same split [ComplaintsScope] draws, and for the same reason: `mine` is
+/// عام ← بلاغاتي and is everybody's — what this account raised, whatever else
+/// it may hold — and `all` is the operations room's register, gated by
+/// `incidents.receive`. One screen answers both; what differs is which
+/// question it asks the server (see `IncidentsRepository.fetchList`'s
+/// `mineOnly`), not two lists kept in sync by hand.
+enum IncidentsScope { mine, all }
+
 class IncidentsState extends Equatable {
   const IncidentsState({
+    this.scope = IncidentsScope.all,
     this.status = IncidentsStatus.loading,
     this.incidents = const [],
     this.includeClosed = false,
@@ -19,6 +30,7 @@ class IncidentsState extends Equatable {
     this.error,
   });
 
+  final IncidentsScope scope;
   final IncidentsStatus status;
   final List<Incident> incidents;
   final bool includeClosed;
@@ -57,6 +69,7 @@ class IncidentsState extends Equatable {
     String? error,
     bool clearFocus = false,
   }) => IncidentsState(
+    scope: scope,
     status: status ?? this.status,
     incidents: incidents ?? this.incidents,
     includeClosed: includeClosed ?? this.includeClosed,
@@ -65,22 +78,38 @@ class IncidentsState extends Equatable {
   );
 
   @override
-  List<Object?> get props => [status, incidents, includeClosed, focusId, error];
+  List<Object?> get props => [
+    scope,
+    status,
+    incidents,
+    includeClosed,
+    focusId,
+    error,
+  ];
 }
 
-/// The register, for whoever receives urgent reports.
+/// The register, for whoever receives urgent reports — or one person's own.
 class IncidentsCubit extends SafeCubit<IncidentsState> {
-  IncidentsCubit(this._repo, {String? focusId})
-    : super(
-        IncidentsState(
-          focusId: focusId,
-          // A report tapped in the inbox may well have been dealt with while
-          // the reader was walking to the phone. Opening the register on it and
-          // finding nothing, because closed ones are hidden by default, would
-          // be the app losing something it had just announced.
-          includeClosed: focusId != null,
-        ),
-      ) {
+  IncidentsCubit(
+    this._repo, {
+    IncidentsScope scope = IncidentsScope.all,
+    String? focusId,
+  }) : super(
+         IncidentsState(
+           scope: scope,
+           focusId: focusId,
+           // A report tapped in the inbox may well have been dealt with while
+           // the reader was walking to the phone. Opening the register on it
+           // and finding nothing, because closed ones are hidden by default,
+           // would be the app losing something it had just announced.
+           //
+           // بلاغاتي carries the same true default for a plainer reason: it
+           // is a short personal history, not a live board to keep tidy, and
+           // "was this ever dealt with" is exactly what somebody checking on
+           // their own report wants answered without a switch to find first.
+           includeClosed: focusId != null || scope == IncidentsScope.mine,
+         ),
+       ) {
     load();
   }
 
@@ -99,6 +128,7 @@ class IncidentsCubit extends SafeCubit<IncidentsState> {
       final incidents = await _repo.fetchList(
         includeClosed: state.includeClosed,
         limit: state.focusId == null ? 100 : _focusedLimit,
+        mineOnly: state.scope == IncidentsScope.mine,
       );
       emit(state.copyWith(status: IncidentsStatus.ready, incidents: incidents));
     } catch (e) {

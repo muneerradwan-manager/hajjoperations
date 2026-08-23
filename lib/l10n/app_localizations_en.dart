@@ -476,6 +476,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permissionEditorTitle => 'Permissions';
 
   @override
+  String get permissionAssignIntro =>
+      'Choose the permissions you need, then assign them to several employees at once. One person\'s permissions are edited from their page in the directory.';
+
+  @override
+  String permissionAssignSelectedCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count permissions selected',
+      one: '1 permission selected',
+      zero: 'No permissions selected yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get permissionAssignAction => 'Assign to employees';
+
+  @override
+  String get permissionAssignPickEmployees => 'Choose employees';
+
+  @override
+  String permissionAssignDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Permissions assigned to $count employees',
+      one: 'Permissions assigned to 1 employee',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get permissionAssignNothingNew =>
+      'Nothing to add — they already hold these permissions';
+
+  @override
   String get employeesEmpty => 'No employees yet';
 
   @override
@@ -1162,6 +1199,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get employeesExternalSection => 'External participants';
 
   @override
+  String get employeesFilterSuspended => 'Suspended only';
+
+  @override
   String get employeesExternalEmpty => 'No external employees';
 
   @override
@@ -1211,6 +1251,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get employeePermissionsAdmin =>
       'An administrator — holds every permission, without needing to be granted them.';
+
+  @override
+  String get employeePermissionsEdit => 'Edit permissions';
 
   @override
   String get employeeEditDetailsTitle => 'Edit employee details';
@@ -2206,13 +2249,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tasksBoardTitle => 'Task board';
 
   @override
-  String get tasksBoardView => 'Board';
+  String get tasksBoardView => 'By state';
 
   @override
-  String get tasksBatchesView => 'Batches';
+  String get tasksBatchesView => 'By task';
 
   @override
   String get tasksPeopleView => 'By person';
+
+  @override
+  String get tasksAssignTargetTitle => 'Who is the task for?';
+
+  @override
+  String get tasksAssignToPeople => 'People';
+
+  @override
+  String get tasksAssignToPeopleHint =>
+      'A tracked task on each chosen person\'s list, sent back to you for acceptance';
+
+  @override
+  String get tasksAssignToFile => 'An operational file';
+
+  @override
+  String get tasksAssignToFileHint =>
+      'A duty written on the file itself, read and shared by all its members';
+
+  @override
+  String get tasksAssignToRole => 'A role in a file';
+
+  @override
+  String get tasksAssignToRoleHint =>
+      'A duty on one post — the tower supervisor, say — whoever holds it';
+
+  @override
+  String get tasksAssignPickModule => 'Choose the file';
+
+  @override
+  String get tasksAssignPickRole => 'Choose the role';
+
+  @override
+  String get tasksAssignNoRoles => 'This file\'s type defines no roles';
+
+  @override
+  String get tasksAssignDutySaved => 'The duty was written on the file';
 
   @override
   String get tasksScopeMine => 'Assigned by me';
@@ -3219,35 +3298,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get prayerWidgetTitle => 'On the phone\'s home screen';
-
-  @override
-  String get prayerWidgetHint =>
-      'The next prayer and its countdown, on the phone\'s home screen — without opening the app.';
-
-  @override
-  String get prayerWidgetAdd => 'Add to home screen';
-
-  @override
-  String get prayerWidgetAddManually =>
-      'Long-press an empty spot on the home screen, choose Widgets, and pick this app.';
-
-  @override
-  String prayerWidgetInstalled(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 'Added, $count copies',
-      one: 'Added',
-      zero: 'Not added yet',
-    );
-    return '$_temp0';
-  }
-
-  @override
-  String get prayerWidgetStale => 'Open the app to refresh the times';
-
-  @override
   String get navMyComplaints => 'Complaints';
 
   @override
@@ -4051,6 +4101,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get evaluationFormShowEvaluations => 'Show the evaluations on it';
 
   @override
+  String evaluationSubjectEvaluators(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count evaluators',
+      one: '1 evaluator',
+      zero: 'No evaluator',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get evaluationSubjectProgressLabel => 'Progress';
+
+  @override
+  String get evaluationStatAverage => 'Average';
+
+  @override
+  String get evaluationStatBest => 'Highest';
+
+  @override
+  String get evaluationStatWorst => 'Lowest';
+
+  @override
+  String get evaluationSubjectNoMarks => 'No marks yet';
+
+  @override
   String get commonOk => 'OK';
 
   @override
@@ -4325,6 +4402,20 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get navMyIncidentsSubtitle =>
+      'The urgent reports you raised, and their status now';
+
+  @override
+  String get myIncidentsTitle => 'My reports';
+
+  @override
+  String get myIncidentsEmpty => 'You have not raised an urgent report yet';
+
+  @override
+  String get myIncidentsEmptyHint =>
+      'Your urgent reports appear here the moment you raise one, with their status';
 
   @override
   String durationMinutes(int count) {
@@ -4997,11 +5088,4 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get roadmapNoteArchive =>
       'Everything filed against a past season stays readable exactly as it was. Closing a year hides nothing.';
-
-  @override
-  String get settingsShowPrayerCard => 'Prayer times card';
-
-  @override
-  String get settingsShowPrayerCardHint =>
-      'The next prayer and its countdown, at the top of the home screen';
 }

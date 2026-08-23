@@ -138,6 +138,7 @@ void main() {
           Routes.tasks,
           Routes.complaints,
           Routes.myCheckIns,
+          Routes.myIncidents,
         },
         reason:
             'the doors that belong to everyone changed — which is either a '
@@ -187,9 +188,11 @@ void main() {
     });
 
     test('two doors never share a route', () {
-      // Two entries onto one screen is what the evaluations register was
-      // before it left this list, and what it looked like was a section with no
-      // way out standing beside an orphan.
+      // Two entries onto one screen is what the evaluations register was once
+      // drawn as, and what it looked like was a section with no way out
+      // standing beside an orphan. It is back on this list now — on the
+      // oversight shelf, once — and `/evaluations/manage` must stay the only
+      // route that reaches it.
       for (final (description, session) in sessions()) {
         final routes = homeDestinations(
           session,

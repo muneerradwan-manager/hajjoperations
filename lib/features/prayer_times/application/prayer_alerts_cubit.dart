@@ -1,13 +1,9 @@
-import 'dart:async';
-
 import 'package:equatable/equatable.dart';
-import 'package:flutter/widgets.dart';
 
 import '../../../core/bloc/safe_cubit.dart';
 import '../data/prayer_alerts_store.dart';
 import '../data/prayer_notifications.dart';
 import '../data/prayer_times_repository.dart';
-import '../data/prayer_widget_bridge.dart';
 import '../domain/prayer_alerts.dart';
 import '../domain/prayer_day.dart';
 import 'prayer_scheduler.dart';
@@ -17,7 +13,6 @@ class PrayerAlertsState extends Equatable {
     this.alerts = const PrayerAlerts(),
     this.readiness = PrayerAlertReadiness.ready,
     this.locatable = true,
-    this.widgets = 0,
     this.loaded = false,
   });
 
@@ -40,9 +35,6 @@ class PrayerAlertsState extends Equatable {
   /// plainly why nothing will arrive until the card's location chip is tapped.
   final bool locatable;
 
-  /// How many copies of the home-screen widget are placed.
-  final int widgets;
-
   /// False for the frame or two before disk answers.
   final bool loaded;
 
@@ -50,20 +42,18 @@ class PrayerAlertsState extends Equatable {
     PrayerAlerts? alerts,
     PrayerAlertReadiness? readiness,
     bool? locatable,
-    int? widgets,
     bool? loaded,
   }) {
     return PrayerAlertsState(
       alerts: alerts ?? this.alerts,
       readiness: readiness ?? this.readiness,
       locatable: locatable ?? this.locatable,
-      widgets: widgets ?? this.widgets,
       loaded: loaded ?? this.loaded,
     );
   }
 
   @override
-  List<Object?> get props => [alerts, readiness, locatable, widgets, loaded];
+  List<Object?> get props => [alerts, readiness, locatable, loaded];
 }
 
 /// The settings page's half of the prayer alarms.
@@ -75,42 +65,15 @@ class PrayerAlertsState extends Equatable {
 class PrayerAlertsCubit extends SafeCubit<PrayerAlertsState> {
   PrayerAlertsCubit() : super(const PrayerAlertsState()) {
     _load();
-    // Two ways to hear that a widget has appeared, because there are two ways
-    // for one to appear. The first is the reader pressing the button in this
-    // pane, which Android answers on the stream below. The second is them
-    // putting one there from the launcher's own tray, with this app in the
-    // background or closed — nothing tells us about that at all, so the next
-    // resume goes and looks.
-    _pinned = PrayerWidgetBridge.instance.pinned.listen(
-      (_) => refreshWidgetCount(),
-    );
-    _lifecycle = AppLifecycleListener(onResume: refreshWidgetCount);
   }
 
   final _store = const PrayerAlertsStore();
   final _repository = PrayerTimesRepository();
 
-  late final StreamSubscription<void> _pinned;
-  late final AppLifecycleListener _lifecycle;
-
-  @override
-  Future<void> close() {
-    _pinned.cancel();
-    _lifecycle.dispose();
-    return super.close();
-  }
-
   Future<void> _load() async {
     final alerts = await _store.read();
     final fix = await _repository.lastKnownFix();
-    emit(
-      state.copyWith(
-        alerts: alerts,
-        locatable: fix != null,
-        loaded: true,
-        widgets: await PrayerWidgetBridge.instance.installedCount(),
-      ),
-    );
+    emit(state.copyWith(alerts: alerts, locatable: fix != null, loaded: true));
     // A platform that cannot announce anything at all has to be known BEFORE
     // the reader presses anything. [readiness] defaults to `ready` and was only
     // ever asked for once the switch was already on — so on Windows the switch
@@ -173,23 +136,6 @@ class PrayerAlertsCubit extends SafeCubit<PrayerAlertsState> {
     );
     await PrayerScheduler.instance.refresh();
   }
-
-  /// Offers the launcher's own "add this widget" dialog.
-  ///
-  /// Returns false where the launcher has none, which the page turns into an
-  /// instruction rather than a button that appears to do nothing.
-  ///
-  /// True means the DIALOG OPENED — nothing more. It used to re-read the count
-  /// here on the strength of that, which is a count taken while the question is
-  /// still on screen: the answer was always the old one, so the pane went on
-  /// saying "not added yet" underneath a widget the reader had just watched
-  /// themselves add. The count is now left to [PrayerWidgetBridge.pinned],
-  /// which Android fires after the yes.
-  Future<bool> addWidget() => PrayerWidgetBridge.instance.requestPin();
-
-  Future<void> refreshWidgetCount() async => emit(
-    state.copyWith(widgets: await PrayerWidgetBridge.instance.installedCount()),
-  );
 
   Future<void> _apply(PrayerAlerts alerts) async {
     emit(state.copyWith(alerts: alerts));

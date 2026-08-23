@@ -974,6 +974,42 @@ abstract class AppLocalizations {
   /// **'Permissions'**
   String get permissionEditorTitle;
 
+  /// No description provided for @permissionAssignIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the permissions you need, then assign them to several employees at once. One person\'s permissions are edited from their page in the directory.'**
+  String get permissionAssignIntro;
+
+  /// No description provided for @permissionAssignSelectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No permissions selected yet} =1{1 permission selected} other{{count} permissions selected}}'**
+  String permissionAssignSelectedCount(int count);
+
+  /// No description provided for @permissionAssignAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign to employees'**
+  String get permissionAssignAction;
+
+  /// No description provided for @permissionAssignPickEmployees.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose employees'**
+  String get permissionAssignPickEmployees;
+
+  /// No description provided for @permissionAssignDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Permissions assigned to 1 employee} other{Permissions assigned to {count} employees}}'**
+  String permissionAssignDone(int count);
+
+  /// No description provided for @permissionAssignNothingNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to add — they already hold these permissions'**
+  String get permissionAssignNothingNew;
+
   /// No description provided for @employeesEmpty.
   ///
   /// In en, this message translates to:
@@ -2258,6 +2294,12 @@ abstract class AppLocalizations {
   /// **'External participants'**
   String get employeesExternalSection;
 
+  /// No description provided for @employeesFilterSuspended.
+  ///
+  /// In en, this message translates to:
+  /// **'Suspended only'**
+  String get employeesFilterSuspended;
+
   /// No description provided for @employeesExternalEmpty.
   ///
   /// In en, this message translates to:
@@ -2341,6 +2383,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'An administrator — holds every permission, without needing to be granted them.'**
   String get employeePermissionsAdmin;
+
+  /// No description provided for @employeePermissionsEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit permissions'**
+  String get employeePermissionsEdit;
 
   /// No description provided for @employeeEditDetailsTitle.
   ///
@@ -4043,13 +4091,13 @@ abstract class AppLocalizations {
   /// No description provided for @tasksBoardView.
   ///
   /// In en, this message translates to:
-  /// **'Board'**
+  /// **'By state'**
   String get tasksBoardView;
 
   /// No description provided for @tasksBatchesView.
   ///
   /// In en, this message translates to:
-  /// **'Batches'**
+  /// **'By task'**
   String get tasksBatchesView;
 
   /// No description provided for @tasksPeopleView.
@@ -4057,6 +4105,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'By person'**
   String get tasksPeopleView;
+
+  /// No description provided for @tasksAssignTargetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is the task for?'**
+  String get tasksAssignTargetTitle;
+
+  /// No description provided for @tasksAssignToPeople.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get tasksAssignToPeople;
+
+  /// No description provided for @tasksAssignToPeopleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A tracked task on each chosen person\'s list, sent back to you for acceptance'**
+  String get tasksAssignToPeopleHint;
+
+  /// No description provided for @tasksAssignToFile.
+  ///
+  /// In en, this message translates to:
+  /// **'An operational file'**
+  String get tasksAssignToFile;
+
+  /// No description provided for @tasksAssignToFileHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A duty written on the file itself, read and shared by all its members'**
+  String get tasksAssignToFileHint;
+
+  /// No description provided for @tasksAssignToRole.
+  ///
+  /// In en, this message translates to:
+  /// **'A role in a file'**
+  String get tasksAssignToRole;
+
+  /// No description provided for @tasksAssignToRoleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A duty on one post — the tower supervisor, say — whoever holds it'**
+  String get tasksAssignToRoleHint;
+
+  /// No description provided for @tasksAssignPickModule.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the file'**
+  String get tasksAssignPickModule;
+
+  /// No description provided for @tasksAssignPickRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the role'**
+  String get tasksAssignPickRole;
+
+  /// No description provided for @tasksAssignNoRoles.
+  ///
+  /// In en, this message translates to:
+  /// **'This file\'s type defines no roles'**
+  String get tasksAssignNoRoles;
+
+  /// No description provided for @tasksAssignDutySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'The duty was written on the file'**
+  String get tasksAssignDutySaved;
 
   /// No description provided for @tasksScopeMine.
   ///
@@ -5720,42 +5834,6 @@ abstract class AppLocalizations {
   /// **'The call is at {clock}'**
   String prayerAlertBeforeBody(String clock);
 
-  /// No description provided for @prayerWidgetTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'On the phone\'s home screen'**
-  String get prayerWidgetTitle;
-
-  /// No description provided for @prayerWidgetHint.
-  ///
-  /// In en, this message translates to:
-  /// **'The next prayer and its countdown, on the phone\'s home screen — without opening the app.'**
-  String get prayerWidgetHint;
-
-  /// No description provided for @prayerWidgetAdd.
-  ///
-  /// In en, this message translates to:
-  /// **'Add to home screen'**
-  String get prayerWidgetAdd;
-
-  /// No description provided for @prayerWidgetAddManually.
-  ///
-  /// In en, this message translates to:
-  /// **'Long-press an empty spot on the home screen, choose Widgets, and pick this app.'**
-  String get prayerWidgetAddManually;
-
-  /// No description provided for @prayerWidgetInstalled.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =0{Not added yet} =1{Added} other{Added, {count} copies}}'**
-  String prayerWidgetInstalled(int count);
-
-  /// No description provided for @prayerWidgetStale.
-  ///
-  /// In en, this message translates to:
-  /// **'Open the app to refresh the times'**
-  String get prayerWidgetStale;
-
   /// No description provided for @navMyComplaints.
   ///
   /// In en, this message translates to:
@@ -7028,6 +7106,42 @@ abstract class AppLocalizations {
   /// **'Show the evaluations on it'**
   String get evaluationFormShowEvaluations;
 
+  /// No description provided for @evaluationSubjectEvaluators.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No evaluator} =1{1 evaluator} other{{count} evaluators}}'**
+  String evaluationSubjectEvaluators(int count);
+
+  /// No description provided for @evaluationSubjectProgressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get evaluationSubjectProgressLabel;
+
+  /// No description provided for @evaluationStatAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Average'**
+  String get evaluationStatAverage;
+
+  /// No description provided for @evaluationStatBest.
+  ///
+  /// In en, this message translates to:
+  /// **'Highest'**
+  String get evaluationStatBest;
+
+  /// No description provided for @evaluationStatWorst.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowest'**
+  String get evaluationStatWorst;
+
+  /// No description provided for @evaluationSubjectNoMarks.
+  ///
+  /// In en, this message translates to:
+  /// **'No marks yet'**
+  String get evaluationSubjectNoMarks;
+
   /// No description provided for @commonOk.
   ///
   /// In en, this message translates to:
@@ -7483,6 +7597,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{and 1 more} other{and {count} more}}'**
   String incidentAlarmMore(int count);
+
+  /// No description provided for @navMyIncidentsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The urgent reports you raised, and their status now'**
+  String get navMyIncidentsSubtitle;
+
+  /// No description provided for @myIncidentsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My reports'**
+  String get myIncidentsTitle;
+
+  /// No description provided for @myIncidentsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'You have not raised an urgent report yet'**
+  String get myIncidentsEmpty;
+
+  /// No description provided for @myIncidentsEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your urgent reports appear here the moment you raise one, with their status'**
+  String get myIncidentsEmptyHint;
 
   /// No description provided for @durationMinutes.
   ///
@@ -8539,18 +8677,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Everything filed against a past season stays readable exactly as it was. Closing a year hides nothing.'**
   String get roadmapNoteArchive;
-
-  /// No description provided for @settingsShowPrayerCard.
-  ///
-  /// In en, this message translates to:
-  /// **'Prayer times card'**
-  String get settingsShowPrayerCard;
-
-  /// No description provided for @settingsShowPrayerCardHint.
-  ///
-  /// In en, this message translates to:
-  /// **'The next prayer and its countdown, at the top of the home screen'**
-  String get settingsShowPrayerCardHint;
 }
 
 class _AppLocalizationsDelegate

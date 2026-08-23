@@ -21,6 +21,7 @@ import '../../evaluations/presentation/widgets/evaluations_about_section.dart';
 import '../../modules/data/modules_repository.dart';
 import '../../permissions/data/permissions_repository.dart';
 import '../../permissions/domain/permission.dart';
+import '../../permissions/presentation/permission_editor_screen.dart';
 import '../../modules/domain/operational_module.dart';
 import '../../modules/presentation/module_detail_screen.dart';
 import '../../profile/domain/profile.dart';
@@ -96,7 +97,7 @@ class _View extends StatelessWidget {
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     final gone = await cubit.deleteEmployee();
-    if (!gone) return;                 // the cubit already surfaced the error
+    if (!gone) return; // the cubit already surfaced the error
     messenger
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text(l.employeeDeleted)));
@@ -154,6 +155,7 @@ class _View extends StatelessWidget {
     final canSetPassword = session.can(PermissionCodes.employeesPassword);
     final canSetEmail = session.can(PermissionCodes.employeesEmail);
     final canSeePermissions = session.can(PermissionCodes.permissionsView);
+    final canManagePermissions = session.can(PermissionCodes.permissionsManage);
     final canSeeParticipation = session.can(
       PermissionCodes.seasonsParticipantsView,
     );
@@ -190,19 +192,15 @@ class _View extends StatelessWidget {
                 MenuAction(
                   icon: AppIcons.password,
                   label: l.employeePassword,
-                  onSelected: () => _changePassword(
-                    context,
-                    viewerIsAdmin: session.isAdmin,
-                  ),
+                  onSelected: () =>
+                      _changePassword(context, viewerIsAdmin: session.isAdmin),
                 ),
               if (canSetEmail)
                 MenuAction(
                   icon: AppIcons.email,
                   label: l.employeeEmail,
-                  onSelected: () => _changeEmail(
-                    context,
-                    viewerIsAdmin: session.isAdmin,
-                  ),
+                  onSelected: () =>
+                      _changeEmail(context, viewerIsAdmin: session.isAdmin),
                 ),
               if (canDelete)
                 MenuAction(
@@ -221,7 +219,9 @@ class _View extends StatelessWidget {
           listener: (context, state) {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
-              ..showSnackBar(SnackBar(content: Text(friendlyError(context, state.error))));
+              ..showSnackBar(
+                SnackBar(content: Text(friendlyError(context, state.error))),
+              );
           },
           builder: (context, state) {
             final p = state.profile;
@@ -366,10 +366,14 @@ class _View extends StatelessWidget {
               ),
               // What this person is ALLOWED to do, for whoever may read grant
               // sheets: seeing is permissions.view, changing is
-              // permissions.manage, and this card only reads.
+              // permissions.manage — and for whoever holds the second, the
+              // card is also the way into this person's own grant sheet.
               if (canSeePermissions) ...[
                 const SizedBox(height: AppSpacing.lg),
-                _GrantedPermissionsSection(profile: p),
+                _GrantedPermissionsSection(
+                  profile: p,
+                  canManage: canManagePermissions,
+                ),
               ],
               if (p.isExternal) ...[
                 const SizedBox(height: AppSpacing.lg),
@@ -546,9 +550,18 @@ class _SeasonHistorySection extends StatelessWidget {
 /// listing: `is_admin` outranks the whole table, so printing his handful of
 /// explicit grants would understate what he can do.
 class _GrantedPermissionsSection extends StatefulWidget {
-  const _GrantedPermissionsSection({required this.profile});
+  const _GrantedPermissionsSection({
+    required this.profile,
+    this.canManage = false,
+  });
 
   final Profile profile;
+
+  /// Whether the reader may CHANGE the grants — `permissions.manage`. It turns
+  /// the card from a summary into a door: the button below opens this
+  /// employee's own sheet in the permission editor, so granting no longer
+  /// means walking to الإدارة ← الصلاحيات and finding the same name again.
+  final bool canManage;
 
   @override
   State<_GrantedPermissionsSection> createState() =>
@@ -557,13 +570,27 @@ class _GrantedPermissionsSection extends StatefulWidget {
 
 class _GrantedPermissionsSectionState
     extends State<_GrantedPermissionsSection> {
-  late final Future<(List<Permission>, Set<String>)> _data = _load();
+  late Future<(List<Permission>, Set<String>)> _data = _load();
 
   Future<(List<Permission>, Set<String>)> _load() async {
     final repo = PermissionsRepository();
     final catalog = await repo.fetchCatalog();
     final granted = await repo.fetchGranted(widget.profile.id);
     return (catalog, granted);
+  }
+
+  /// Into this person's own grant sheet, and re-read on the way back: what was
+  /// granted or revoked in there is exactly what this card lists.
+  Future<void> _openEditor() async {
+    await Navigator.of(context).push(
+      fadeThroughRoute(
+        (_) => PermissionEditorScreen(
+          userId: widget.profile.id,
+          employeeName: widget.profile.fullName,
+        ),
+      ),
+    );
+    if (mounted) setState(() => _data = _load());
   }
 
   @override
@@ -583,85 +610,112 @@ class _GrantedPermissionsSectionState
       ),
     );
 
+    // One child, deliberately: [InfoSection] lays its children into columns on
+    // a wide window, and the edit button must stand under the grants, not
+    // beside them in a column of its own.
     return InfoSection(
       title: l.employeePermissionsSection,
       icon: AppIcons.shield,
       children: [
-        if (widget.profile.isAdmin)
-          note(l.employeePermissionsAdmin)
-        else
-          FutureBuilder<(List<Permission>, Set<String>)>(
-            future: _data,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
-                  child: Center(
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (widget.profile.isAdmin)
+              note(l.employeePermissionsAdmin)
+            else ...[
+              _grants(context, note),
+              // No editor door on an administrator: is_admin outranks the
+              // whole table, so a sheet of switches would change nothing.
+              if (widget.canManage)
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: TextButton.icon(
+                    onPressed: _openEditor,
+                    icon: const Icon(AppIcons.permissions, size: 18),
+                    label: Text(l.employeePermissionsEdit),
                   ),
-                );
-              }
-              if (snapshot.hasError) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-                  child: Text('${snapshot.error}', style: text.bodySmall),
-                );
-              }
-              final (catalog, granted) = snapshot.data!;
-              final byId = {for (final p in catalog) p.id: p};
-              final held = catalog
-                  .where((p) => granted.contains(p.id) && !p.isParent)
-                  .toList()
-                ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-              if (held.isEmpty) return note(l.employeePermissionsEmpty);
-
-              // Group the actions under their section, in catalog order, so
-              // the card reads the way the permission editor is laid out.
-              final sections = <String, List<Permission>>{};
-              for (final p in held) {
-                final parent = byId[p.parentId]?.code ?? '';
-                sections.putIfAbsent(parent, () => []).add(p);
-              }
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (final entry in sections.entries) ...[
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        top: AppSpacing.md,
-                        bottom: AppSpacing.sm,
-                      ),
-                      child: Text(
-                        permissionLabel(l, entry.key),
-                        style: text.labelLarge?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                    Wrap(
-                      spacing: AppSpacing.sm,
-                      runSpacing: AppSpacing.sm,
-                      children: [
-                        for (final p in entry.value)
-                          GlassBadge(
-                            label: permissionLabel(l, p.code),
-                            color: scheme.secondary,
-                            icon: AppIcons.selected,
-                          ),
-                      ],
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.sm),
-                ],
-              );
-            },
-          ),
+                ),
+            ],
+          ],
+        ),
       ],
+    );
+  }
+
+  Widget _grants(BuildContext context, Widget Function(String) note) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+
+    return FutureBuilder<(List<Permission>, Set<String>)>(
+      future: _data,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+            child: Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          );
+        }
+        if (snapshot.hasError) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+            child: Text('${snapshot.error}', style: text.bodySmall),
+          );
+        }
+        final (catalog, granted) = snapshot.data!;
+        final byId = {for (final p in catalog) p.id: p};
+        final held =
+            catalog.where((p) => granted.contains(p.id) && !p.isParent).toList()
+              ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+        if (held.isEmpty) return note(l.employeePermissionsEmpty);
+
+        // Group the actions under their section, in catalog order, so
+        // the card reads the way the permission editor is laid out.
+        final sections = <String, List<Permission>>{};
+        for (final p in held) {
+          final parent = byId[p.parentId]?.code ?? '';
+          sections.putIfAbsent(parent, () => []).add(p);
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final entry in sections.entries) ...[
+              Padding(
+                padding: const EdgeInsets.only(
+                  top: AppSpacing.md,
+                  bottom: AppSpacing.sm,
+                ),
+                child: Text(
+                  permissionLabel(l, entry.key),
+                  style: text.labelLarge?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  for (final p in entry.value)
+                    GlassBadge(
+                      label: permissionLabel(l, p.code),
+                      color: scheme.secondary,
+                      icon: AppIcons.selected,
+                    ),
+                ],
+              ),
+            ],
+            const SizedBox(height: AppSpacing.sm),
+          ],
+        );
+      },
     );
   }
 }

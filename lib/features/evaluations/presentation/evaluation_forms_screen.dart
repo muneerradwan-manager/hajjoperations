@@ -231,35 +231,22 @@ class _View extends StatelessWidget {
     final canEdit = session.can(PermissionCodes.evaluationsTemplates);
     final canAssign = session.can(PermissionCodes.evaluationsAssign);
 
-    // Reading the register is its own trust, and it is the one that decides
-    // whether the door below is drawn at all.
+    // Reading the register is its own trust. It no longer decides whether the
+    // whole-register door is drawn here — there is none — but it still decides
+    // whether a form card may offer to show the sheets standing on IT.
     final canSeeRegister = session.can(PermissionCodes.evaluationsView);
 
     return Scaffold(
-      appBar: GlassAppBar(
-        title: Text(l.evaluationFormsTitle),
-        // The way to the whole register — every sheet issued on every form.
-        //
-        // It is here because this is where somebody goes looking for it: the
-        // register only means anything beside the papers it was written from,
-        // and it used to be reachable ONLY through a snack bar that appeared
-        // when you tried to delete a form that was in use. A brand-new form
-        // showed no count badge either, so a person who had just written one
-        // saw a "new evaluation" button and no way at all to see what came of
-        // it.
-        actions: [
-          if (canSeeRegister)
-            IconButton(
-              tooltip: l.navEvaluationsManage,
-              onPressed: () => Navigator.of(context).push(
-                fadeThroughRoute(
-                  (_) => const EvaluationsScreen(scope: EvaluationsScope.all),
-                ),
-              ),
-              icon: const Icon(AppIcons.evaluations),
-            ),
-        ],
-      ),
+      // No way to the whole register from up here any more.
+      //
+      // It sat in this app bar on the reasoning that the register only means
+      // anything beside the papers it was written from — which is true of ONE
+      // form's sheets, and that door is still on every card below. It is not
+      // true of the register itself: سجل التقييمات is every sheet on every
+      // form, read to see how the season's appraisals are going, and that is
+      // oversight work. It belongs on the shelf with the dashboard and the
+      // log, which is where it now is — الإدارة ← الإشراف والسجلات.
+      appBar: GlassAppBar(title: Text(l.evaluationFormsTitle)),
       floatingActionButton: canEdit
           ? FloatingActionButton.extended(
               onPressed: () => _edit(context),
@@ -387,6 +374,10 @@ class _FormCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
 
+    // A form that is switched off is drawn in the muted tone throughout — the
+    // whole card says "on the shelf", not just one badge in the pile.
+    final tone = form.isActive ? scheme.primary : scheme.onSurfaceVariant;
+
     return GlassCard(
       // Tapping the card edits it, which is only a thing for whoever may. For a
       // reader who is here to issue evaluations the card is not a door, and the
@@ -397,11 +388,20 @@ class _FormCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                evaluationTargetIcon(form.target),
-                color: form.isActive ? scheme.primary : scheme.onSurfaceVariant,
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: tone.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(AppRadius.xs),
+                  border: Border.all(color: tone.withValues(alpha: 0.18)),
+                ),
+                child: Icon(
+                  evaluationTargetIcon(form.target),
+                  size: 22,
+                  color: tone,
+                ),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -410,21 +410,28 @@ class _FormCard extends StatelessWidget {
                   children: [
                     Text(
                       form.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: text.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
                         color: form.isActive ? null : scheme.onSurfaceVariant,
                       ),
                     ),
-                    if ((form.description ?? '').trim().isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        form.description!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: text.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+                    const SizedBox(height: 2),
+                    // The form's anatomy in one quiet line — what it is about,
+                    // how many stages, how many questions. Facts about the
+                    // paper are identity, not status, and only status earns a
+                    // coloured pill.
+                    Text(
+                      '${evaluationTargetLabel(l, form.target)}'
+                      ' · ${l.evaluationFormStages(form.stageCount)}'
+                      ' · ${l.evaluationFormQuestions(form.questionCount)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
                       ),
-                    ],
+                    ),
                   ],
                 ),
               ),
@@ -458,31 +465,26 @@ class _FormCard extends StatelessWidget {
               ],
             ],
           ),
+          if ((form.description ?? '').trim().isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              form.description!,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+          ],
           const SizedBox(height: AppSpacing.md),
           Wrap(
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.xs,
             children: [
               GlassBadge(
-                label: evaluationTargetLabel(l, form.target),
-                icon: evaluationTargetIcon(form.target),
-                dense: true,
-              ),
-              GlassBadge(
                 label: form.isActive
                     ? l.evaluationFormActive
                     : l.evaluationFormInactive,
                 icon: form.isActive ? AppIcons.approve : AppIcons.suspend,
                 color: form.isActive ? scheme.primary : scheme.onSurfaceVariant,
-                dense: true,
-              ),
-              GlassBadge(
-                label: l.evaluationFormStages(form.stageCount),
-                icon: AppIcons.evaluationStage,
-                dense: true,
-              ),
-              GlassBadge(
-                label: l.evaluationFormQuestions(form.questionCount),
                 dense: true,
               ),
               GlassBadge(

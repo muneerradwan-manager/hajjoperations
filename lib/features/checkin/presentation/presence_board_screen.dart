@@ -247,15 +247,28 @@ class _PlaceCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(AppIcons.location, size: 18, color: scheme.primary),
-              const SizedBox(width: AppSpacing.sm),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(AppRadius.xs),
+                  border: Border.all(
+                    color: scheme.primary.withValues(alpha: 0.18),
+                  ),
+                ),
+                child: Icon(AppIcons.location, size: 19, color: scheme.primary),
+              ),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       group.placeName,
-                      style: Theme.of(context).textTheme.titleSmall,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     if (group.groupName != null)
                       Text(
@@ -267,10 +280,9 @@ class _PlaceCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Text(
-                '${group.lines.length}',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              // The headcount as a pill rather than a bare digit — it is the
+              // answer the room opened this board for.
+              GlassBadge(label: '${group.lines.length}', dense: true),
             ],
           ),
           const Divider(height: AppSpacing.lg),
@@ -464,6 +476,10 @@ class _GapCard extends StatelessWidget {
 
     // Spaced by the grid, not by the card — see [_PlaceCard].
     return GlassCard(
+      // A man never seen at all washes his card red the way an open incident
+      // does: on a board of gaps, the sharpest gap must be findable before it
+      // is readable.
+      tint: never ? scheme.error : null,
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -472,7 +488,10 @@ class _GapCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(gap.fullName, style: text.titleSmall),
+                Text(
+                  gap.fullName,
+                  style: text.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                ),
                 const SizedBox(height: 2),
                 Text(
                   [

@@ -38,8 +38,17 @@ class EvaluationEditorState extends Equatable {
       ? form.stages[stageIndex]
       : null;
 
+  /// Whether there is anything to write.
+  ///
+  /// [isDirty] is half of it, and the half that was missing: a form that has
+  /// just been saved is identical to the one on the server, and offering to
+  /// save it again is offering to do nothing. Worse than useless on this
+  /// screen — the editor is also where a form is READ, so a live Save button
+  /// standing over an untouched form reads as work not yet done.
   bool get canSave =>
-      status != EvaluationEditorStatus.saving && form.title.trim().isNotEmpty;
+      status != EvaluationEditorStatus.saving &&
+      isDirty &&
+      form.title.trim().isNotEmpty;
 
   EvaluationEditorState copyWith({
     EvaluationEditorStatus? status,
@@ -329,6 +338,33 @@ class EvaluationEditorCubit extends SafeCubit<EvaluationEditorState> {
       options[optionIndex] = change(options[optionIndex]);
       return q.copyWith(options: options);
     });
+  }
+
+  /// Removes the form outright. Returns null on success, the error otherwise.
+  ///
+  /// Here as well as on the list, because this screen is where a form is read
+  /// in full — and deciding a form is not worth keeping is a thing you decide
+  /// after reading its questions, not while looking at a card that shows three
+  /// of them. Sending the reader back to the list to do it there is asking them
+  /// to remember which of six similar titles they had just opened.
+  ///
+  /// The server refuses while a single sheet stands on it — `on delete
+  /// restrict` — and that refusal is the truth; the check in the screen above
+  /// only says it earlier and better.
+  Future<String?> delete() async {
+    final id = _templateId;
+    if (id == null) return null;
+    try {
+      await _repo.deleteForm(id);
+      // Clean, so the screen's PopScope lets it leave. The edits on it belonged
+      // to a form that no longer exists — there is nothing left to discard, and
+      // asking "keep your changes?" about a deleted form is asking about
+      // nothing.
+      emit(state.copyWith(isDirty: false, error: null));
+      return null;
+    } catch (e) {
+      return e.toString();
+    }
   }
 
   /// Writes the whole tree in one call. Returns the form's id, or null with

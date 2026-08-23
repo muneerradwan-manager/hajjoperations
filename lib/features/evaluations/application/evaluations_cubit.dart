@@ -14,6 +14,12 @@ enum EvaluationsStatus { loading, ready, error }
 /// while [all] asks for `evaluations.view` and hangs under الإدارة. The same
 /// screen answers both; what differs is which question it asked the server, and
 /// the server refuses [all] to whoever may not ask it.
+///
+/// They are also drawn differently, and that follows from the same split. A
+/// person's own list is a list of errands, one card each, because each one is
+/// a separate thing HE must go and do. The register is not a list of rows at
+/// all — it is a shelf of things under judgement, and twenty people appraising
+/// one file is one entry on it. See [EvaluationsState.isGrouped].
 enum EvaluationsScope { mine, all }
 
 class EvaluationsState extends Equatable {
@@ -21,6 +27,7 @@ class EvaluationsState extends Equatable {
     this.scope = EvaluationsScope.mine,
     this.status = EvaluationsStatus.loading,
     this.evaluations = const [],
+    this.subjects = const [],
     this.query = '',
     this.target,
     this.filterStatus,
@@ -29,16 +36,25 @@ class EvaluationsState extends Equatable {
 
   final EvaluationsScope scope;
   final EvaluationsStatus status;
+
+  /// The flat errands, read only in [EvaluationsScope.mine].
   final List<Evaluation> evaluations;
+
+  /// The register's own unit, read only in [EvaluationsScope.all].
+  final List<EvaluationSubject> subjects;
+
   final String query;
   final EvaluationTarget? target;
   final EvaluationStatus? filterStatus;
   final String? error;
 
+  /// Whether this screen is drawing subjects rather than sheets.
+  bool get isGrouped => scope == EvaluationsScope.all;
+
   bool get isNarrowed =>
       query.trim().isNotEmpty || target != null || filterStatus != null;
 
-  /// The list after the reader's narrowing.
+  /// The errands after the reader's narrowing.
   ///
   /// The server can narrow too — `evaluations_list` takes the same three — but
   /// it is asked only on the first read. A hundred rows are already in hand and
@@ -54,18 +70,46 @@ class EvaluationsState extends Equatable {
     ], query);
   }).toList();
 
-  /// Errands in hand, for the badge on the list this person owns. Counted over
-  /// everything rather than over [visible]: a filter that hides the two
-  /// outstanding sheets should not report that there are none.
-  int get openCount =>
-      evaluations.where((e) => !e.isSubmitted).length;
+  /// The same narrowing over the register's cards.
+  ///
+  /// The status chips mean one level up here, and the reading is the honest
+  /// one: a subject is «قيد التعبئة» while anybody still owes a sheet on it,
+  /// and «مكتمل» once nobody does. Asking whether a FILE is a draft would be
+  /// asking nothing.
+  List<EvaluationSubject> get visibleSubjects => subjects.where((s) {
+    if (target != null && s.target != target) return false;
+    if (filterStatus == EvaluationStatus.draft && s.openCount == 0) return false;
+    if (filterStatus == EvaluationStatus.submitted && s.openCount > 0) {
+      return false;
+    }
+    return arabicMatchesAll([
+      s.targetLabel,
+      s.templateTitle,
+      for (final e in s.evaluators) e.evaluatorName,
+    ], query);
+  }).toList();
 
-  int get overdueCount => evaluations.where((e) => e.isOverdue).length;
+  /// Sheets still owed, for the badge above the filters. Counted over
+  /// everything rather than over what is visible: a filter that hides the two
+  /// outstanding sheets should not report that there are none.
+  int get openCount => isGrouped
+      ? subjects.fold(0, (sum, s) => sum + s.openCount)
+      : evaluations.where((e) => !e.isSubmitted).length;
+
+  int get overdueCount => isGrouped
+      ? subjects.fold(0, (sum, s) => sum + s.overdueCount)
+      : evaluations.where((e) => e.isOverdue).length;
+
+  /// Which kinds are actually present, so the filter offers no dead ends.
+  Set<EvaluationTarget> get kinds => isGrouped
+      ? {for (final s in subjects) s.target}
+      : {for (final e in evaluations) e.target};
 
   EvaluationsState copyWith({
     EvaluationsScope? scope,
     EvaluationsStatus? status,
     List<Evaluation>? evaluations,
+    List<EvaluationSubject>? subjects,
     String? query,
     EvaluationTarget? target,
     bool clearTarget = false,
@@ -76,6 +120,7 @@ class EvaluationsState extends Equatable {
     scope: scope ?? this.scope,
     status: status ?? this.status,
     evaluations: evaluations ?? this.evaluations,
+    subjects: subjects ?? this.subjects,
     query: query ?? this.query,
     target: clearTarget ? null : (target ?? this.target),
     filterStatus: clearStatus ? null : (filterStatus ?? this.filterStatus),
@@ -87,6 +132,7 @@ class EvaluationsState extends Equatable {
     scope,
     status,
     evaluations,
+    subjects,
     query,
     target,
     filterStatus,
@@ -115,16 +161,23 @@ class EvaluationsCubit extends SafeCubit<EvaluationsState> {
   Future<void> load() async {
     emit(state.copyWith(status: EvaluationsStatus.loading, error: null));
     try {
-      final evaluations = await _repo.fetchList(
-        all: state.scope == EvaluationsScope.all,
-        templateId: templateId,
-      );
-      emit(
-        state.copyWith(
-          status: EvaluationsStatus.ready,
-          evaluations: evaluations,
-        ),
-      );
+      if (state.isGrouped) {
+        final subjects = await _repo.fetchSubjects(templateId: templateId);
+        emit(
+          state.copyWith(
+            status: EvaluationsStatus.ready,
+            subjects: subjects,
+          ),
+        );
+      } else {
+        final evaluations = await _repo.fetchList(templateId: templateId);
+        emit(
+          state.copyWith(
+            status: EvaluationsStatus.ready,
+            evaluations: evaluations,
+          ),
+        );
+      }
     } catch (e) {
       emit(
         state.copyWith(status: EvaluationsStatus.error, error: e.toString()),
@@ -153,17 +206,26 @@ class EvaluationsCubit extends SafeCubit<EvaluationsState> {
   /// Deleting from the register, which is the office's act and never the
   /// evaluator's — except for an untouched errand he was given and the person
   /// who gave it wants back, which the database decides rather than this.
+  ///
+  /// The grouped view re-reads rather than pruning in place: removing one
+  /// sheet changes its subject's counts and its average, and a card left
+  /// holding the arithmetic of a row that is gone is worse than a moment's
+  /// spinner.
   Future<String?> delete(String evaluationId) async {
     try {
       await _repo.delete(evaluationId);
-      emit(
-        state.copyWith(
-          evaluations: [
-            for (final e in state.evaluations)
-              if (e.id != evaluationId) e,
-          ],
-        ),
-      );
+      if (state.isGrouped) {
+        await load();
+      } else {
+        emit(
+          state.copyWith(
+            evaluations: [
+              for (final e in state.evaluations)
+                if (e.id != evaluationId) e,
+            ],
+          ),
+        );
+      }
       return null;
     } catch (e) {
       return e.toString();

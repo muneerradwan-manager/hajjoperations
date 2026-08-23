@@ -13,12 +13,11 @@
          and an arrival can still be reported by position alone. -->
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
-    <!-- Prayer alerts and the home-screen widget both live in Android's alarm
-         service rather than in this app: the process is not running when الفجر
-         comes in, and there is no timer to rely on. A reboot clears every alarm
-         set, so both have to be laid down again when the phone comes back — the
-         plugin's boot receiver does that for the notifications, and
-         PrayerWidgetProvider for the widget. -->
+    <!-- Prayer alerts live in Android's alarm service rather than in this app:
+         the process is not running when الفجر comes in, and there is no timer
+         to rely on. A reboot clears every alarm set, so they have to be laid
+         down again when the phone comes back — the plugin's boot receiver
+         does that for the notifications. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <!-- SCHEDULE_EXACT_ALARM rather than USE_EXACT_ALARM: the second needs no
          permission dialog but is audited by Play as an alarm-clock capability,
@@ -84,36 +83,6 @@
                 <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
             </intent-filter>
-        </receiver>
-
-        <!-- مواقيت الصلاة on the launcher. Not exported: everything that
-             addresses it — the widget host, this app's own boundary alarm, the
-             clock broadcasts below — names the component directly. -->
-        <receiver
-            android:name=".PrayerWidgetProvider"
-            android:label="@string/prayer_widget_label"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-                <!-- The widget's own re-draw, set for the next mark of the day. -->
-                <action android:name="com.shud.hajjoperations.PRAYER_BOUNDARY"/>
-                <!-- Fired by Android once the reader confirms the launcher's
-                     "add this widget" dialog — and never if they back out. See
-                     PrayerWidgetProvider.requestPin. -->
-                <action android:name="com.shud.hajjoperations.PRAYER_PINNED"/>
-                <!-- A reboot clears that alarm; an update replaces the code that
-                     set it. Both need the widget drawn and the alarm re-armed. -->
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
-                <!-- And the three ways the clock can move under a face that is
-                     already drawn: a manual change, a flight, midnight. -->
-                <action android:name="android.intent.action.TIME_SET"/>
-                <action android:name="android.intent.action.TIMEZONE_CHANGED"/>
-                <action android:name="android.intent.action.DATE_CHANGED"/>
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/prayer_widget_info" />
         </receiver>
 
         <!-- Don't delete the meta-data below.

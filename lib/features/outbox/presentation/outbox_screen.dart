@@ -36,7 +36,9 @@ class OutboxScreen extends StatelessWidget {
     // route being typed or restored rather than anybody arriving by tapping.
     if (!Outbox.isInstalled) {
       return Scaffold(
-        appBar: AppBar(title: Text(l.outboxTitle)),
+        // Glass, like every other bar — this screen was the one still wearing
+        // the Material default.
+        appBar: GlassAppBar(title: Text(l.outboxTitle)),
         body: EmptyState(
           icon: AppIcons.outbox,
           title: l.outboxEmpty,
@@ -47,7 +49,7 @@ class OutboxScreen extends StatelessWidget {
     final outbox = Outbox.instance;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l.outboxTitle)),
+      appBar: GlassAppBar(title: Text(l.outboxTitle)),
       body: StreamBuilder<List<OutboxEntry>>(
         stream: outbox.changes,
         initialData: outbox.entries,
@@ -104,6 +106,7 @@ class _EntryCard extends StatelessWidget {
       OutboxStatus.blocked => l.outboxStateBlocked,
       OutboxStatus.waiting => l.outboxStateWaiting,
     };
+    final tone = entry.isBlocked ? scheme.error : scheme.tertiary;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -115,29 +118,50 @@ class _EntryCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(
-                    entry.isBlocked ? AppIcons.warning : AppIcons.outbox,
-                    size: 18,
-                    color: entry.isBlocked ? scheme.error : scheme.tertiary,
+                  // The framed glyph every card leads with, in the entry's own
+                  // state colour — a blocked entry is findable down the edge of
+                  // the list before a word is read.
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: tone.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(AppRadius.xs),
+                      border: Border.all(color: tone.withValues(alpha: 0.18)),
+                    ),
+                    child: Icon(
+                      entry.isBlocked ? AppIcons.warning : AppIcons.outbox,
+                      size: 19,
+                      color: tone,
+                    ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
-                    child: Text(
-                      entry.label == null ? kind : '$kind — ${entry.label}',
-                      style: text.titleSmall,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          entry.label == null ? kind : '$kind — ${entry.label}',
+                          style: text.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '$stateLabel · '
+                          '${DateFormat.yMd().add_jm().format(entry.createdAt)}',
+                          style: text.bodySmall?.copyWith(
+                            color: entry.isBlocked
+                                ? scheme.error
+                                : scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                '$stateLabel · '
-                '${DateFormat.yMd().add_jm().format(entry.createdAt)}',
-                style: text.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
               ),
               if (entry.files.isNotEmpty)
                 Padding(

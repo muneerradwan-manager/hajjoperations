@@ -121,16 +121,12 @@ class AppIcons {
   /// The rail's own hamburger, on a window too narrow to stand one open.
   static const menu = Icons.menu;
 
-  /// Folding the rail down to its icons, and opening it again.
-  ///
-  /// Material's chevrons rather than Iconsax's arrows, and for the reason the
-  /// whole of [NavChevron] exists: these two are declared with
-  /// `matchTextDirection`, so "collapse" points at the start edge in both
-  /// directions — left in English, right in Arabic — without anybody naming a
-  /// side. An Iconsax arrow would point the same way in both, which on the
-  /// Arabic build is an arrow inviting you to fold the rail INTO the page.
-  static const sidebarCollapse = Icons.chevron_left_rounded;
-  static const sidebarExpand = Icons.chevron_right_rounded;
+  // Folding the rail down to its icons, and opening it again, is drawn with
+  // [layoutSidebar] in both states and told apart by the wash behind it — see
+  // `_RailFoldButton`. There were chevrons here once, pointing at the start
+  // edge in each direction, and they were retired for standing an arrow sixty
+  // pixels above the account block's [NavChevron]: two arrows in one narrow
+  // column read as one offer repeated rather than as two different ones.
 
   // ── The operational map ─────────────────────────────────────────────────
 

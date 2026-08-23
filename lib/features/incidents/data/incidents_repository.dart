@@ -90,13 +90,27 @@ class IncidentsRepository {
   }
 
   /// The register. Open ones first, oldest first within that.
+  ///
+  /// [mineOnly] asks a DIFFERENT question from the default, not a narrower
+  /// one. Without it, what comes back depends on who is calling: the room
+  /// sees everyone's, an ordinary reporter sees only their own — a fact of
+  /// the predicate `incidents_list` has always evaluated, not a promise it
+  /// made. `مين، بلاغاتي` needs the promise: a supervisor who both answers
+  /// the register AND once raised a report of his own must get back exactly
+  /// what he filed, not the whole season's register with his row somewhere
+  /// inside it — see 0126.
   Future<List<Incident>> fetchList({
     bool includeClosed = false,
     int limit = 100,
+    bool mineOnly = false,
   }) async {
     final rows = await supabase.rpc(
       'incidents_list',
-      params: {'p_include_closed': includeClosed, 'p_limit': limit},
+      params: {
+        'p_include_closed': includeClosed,
+        'p_limit': limit,
+        'p_mine_only': mineOnly,
+      },
     );
     return ((rows as List?) ?? const [])
         .cast<Map<String, dynamic>>()

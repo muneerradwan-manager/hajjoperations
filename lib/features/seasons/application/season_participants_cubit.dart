@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../core/bloc/safe_cubit.dart';
+import '../../../core/utils/arabic_search.dart';
 import '../../profile/domain/profile.dart';
 import '../data/seasons_repository.dart';
 
@@ -25,9 +26,8 @@ class SeasonParticipantsState extends Equatable {
 
   List<Profile> get filtered {
     if (query.trim().isEmpty) return employees;
-    final q = query.trim().toLowerCase();
     return employees
-        .where((e) => e.fullName.toLowerCase().contains(q))
+        .where((e) => arabicMatchesAll([e.fullName], query))
         .toList();
   }
 

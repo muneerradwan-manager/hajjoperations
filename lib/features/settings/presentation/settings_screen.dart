@@ -34,12 +34,9 @@ import '../../prayer_times/presentation/widgets/prayer_alerts_section.dart';
 ///     to make a sound. Three preferences that are about the screen in this
 ///     man's hand rather than about who he is — which is exactly why they are
 ///     stored per device, and now says so out loud.
-///  3. **مواقيت الصلاة.** The three places this app can put a prayer time: at
-///     the top of its own home page, on the phone's home screen, and in the
-///     notification shade. They were scattered down the page under three
-///     unrelated headings — two of which read «الشاشة الرئيسية», the same words
-///     for two different screens — and a reader wanting the times off had to
-///     find all three.
+///  3. **مواقيت الصلاة.** What the notification shade announces, and when —
+///     under its own heading, so a reader wanting the times off finds them in
+///     one place.
 ///
 /// The groups are what makes this a page rather than a pile. Before them it was
 /// seven glass panes of equal weight in two grids, and nothing on it said which
@@ -53,37 +50,9 @@ class SettingsScreen extends StatelessWidget {
     final settings = context.watch<SettingsCubit>();
     final state = settings.state;
 
-    // Both prayer panes are dropped on a platform that cannot run them, rather
-    // than hidden inside themselves: a pane that returned an empty box would
-    // still hold its column and put a hole in the row. On Windows this group is
-    // the in-app card alone, which is the honest answer — the whole of what a
-    // desktop can be told about prayer times.
-    final prayer = <Widget>[
-      InfoSection(
-        title: l.settingsInApp,
-        icon: AppIcons.layoutSidebar,
-        children: [
-          _SettingSwitch(
-            title: l.settingsShowPrayerCard,
-            hint: l.settingsShowPrayerCardHint,
-            value: state.showPrayerCard,
-            onChanged: settings.setShowPrayerCard,
-          ),
-        ],
-      ),
-      // The widget pane reads as a footnote to the alerts pane, and this order
-      // survives every width: three cells in a three-column grid can never fall
-      // far enough apart to break that — at two columns they share a row, at
-      // one they are adjacent.
-      if (PrayerAlertsSection.available) const PrayerAlertsSection(),
-      if (PrayerWidgetSection.available) const PrayerWidgetSection(),
-    ];
-
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: GlassAppBar(title: Text(l.commonSettings)),
-      // Over the whole page rather than around the grid: the two prayer panes
-      // are separate cells of it, and they are two views of one state.
       body: PrayerAlertsScope(
         child: Builder(
           builder: (context) => ResponsivePage(
@@ -162,19 +131,16 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xl),
 
-                _GroupLabel(l.prayerTimesTitle),
-                // Measured by the same grid as the row above, so the two line
-                // up in the same columns.
-                //
-                // These were once three panes in three separate one-child
-                // grids, stacked. A one-child grid still counts its columns:
-                // each pane took the FIRST of them and left the other two
-                // empty, so the whole lower half of the page came out as a
-                // narrow ribbon down one edge — the RIGHT edge in Arabic, where
-                // the first column is — with two thirds of a monitor blank
-                // beside it. Handed to one grid they fill the row instead.
-                AdaptiveGrid(children: prayer),
-                const SizedBox(height: AppSpacing.xl),
+                // The whole group is dropped on a platform that cannot
+                // announce anything — a heading over an empty row is a
+                // question with no answers under it.
+                if (PrayerAlertsSection.available) ...[
+                  _GroupLabel(l.prayerTimesTitle),
+                  // In the same grid as the rows above, so the pane lines up
+                  // in the same columns.
+                  const AdaptiveGrid(children: [PrayerAlertsSection()]),
+                  const SizedBox(height: AppSpacing.xl),
+                ],
 
                 const _SignOutCard(),
               ]),

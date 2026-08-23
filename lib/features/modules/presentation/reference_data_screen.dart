@@ -161,15 +161,23 @@ class _SetCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 46,
+            height: 46,
             decoration: BoxDecoration(
               color: scheme.primary.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(AppRadius.sm),
+              borderRadius: BorderRadius.circular(AppRadius.xs),
+              border: Border.all(
+                color: scheme.primary.withValues(alpha: 0.18),
+              ),
             ),
+            // The shelf's glyph rather than one generic "data" icon on every
+            // card — a list of hotels should look like a place before it is
+            // read.
             child: Icon(
-              AppIcons.referenceData,
-              size: 20,
+              _shelfIcon(
+                _shelfOrder.contains(set.section) ? set.section : null,
+              ),
+              size: 22,
               color: scheme.primary,
             ),
           ),
@@ -180,7 +188,9 @@ class _SetCard extends StatelessWidget {
               children: [
                 Text(
                   set.name.of(context),
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(

@@ -1,19 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hajjoperations/features/prayer_times/application/prayer_scheduler.dart';
 import 'package:hajjoperations/features/prayer_times/domain/prayer_alerts.dart';
 import 'package:hajjoperations/features/prayer_times/domain/prayer_day.dart';
-import 'package:hajjoperations/features/prayer_times/domain/prayer_place.dart';
 import 'package:hajjoperations/features/prayer_times/domain/prayer_schedule.dart';
-import 'package:hajjoperations/l10n/app_localizations.dart';
-import 'package:hajjoperations/l10n/app_localizations_ar.dart';
 
 /// What has to be true of a prayer alert BEFORE a phone is involved.
 ///
 /// Everything below is the part of this feature that runs with no platform
-/// under it: which occurrences get laid down, what id each one is given, and
-/// what the home-screen widget is handed. The parts that cannot be tested here
-/// — whether Android actually fires the alarm, whether the launcher draws the
-/// widget — are the parts this deliberately keeps thin.
+/// under it: which occurrences get laid down, and what id each one is given.
+/// The part that cannot be tested here — whether Android actually fires the
+/// alarm — is the part this deliberately keeps thin.
 void main() {
   PrayerDay dayAt(int day) => PrayerDay(
     day: DateTime(2026, 8, day),
@@ -165,66 +160,6 @@ void main() {
       expect(alarms.every((a) => PrayerSchedule.owns(a.id)), isTrue);
       expect(PrayerSchedule.owns(PrayerSchedule.idFloor - 1), isFalse);
       expect(PrayerSchedule.owns(PrayerSchedule.idCeiling), isFalse);
-    });
-  });
-
-  group('what the home screen is handed', () {
-    final AppLocalizations l = AppLocalizationsAr();
-
-    Map<String, Object?> payload({bool approximate = false}) =>
-        PrayerScheduler.widgetPayload(
-          l: l,
-          days: week,
-          now: DateTime(2026, 8, 2, 13),
-          place: approximate ? null : PrayerPlace.makkah,
-          approximate: approximate,
-          rtl: true,
-        );
-
-    test('carries every mark of the week, الشروق included', () {
-      final marks = payload()['marks'] as List;
-      // Six and not five: the widget draws the strip the card draws, and
-      // الشروق is on the wall of every mosque. It is flagged, not omitted —
-      // see `prayer`, which is what stops it being coloured as a prayer.
-      expect(marks.length, 6 * 7);
-      expect(
-        marks.where((m) => (m as Map)['slot'] == 'sunrise').length,
-        7,
-      );
-      expect(
-        marks.firstWhere((m) => (m as Map)['slot'] == 'sunrise')['prayer'],
-        isFalse,
-      );
-    });
-
-    test('every mark is finished text, not something to format later', () {
-      // The launcher redraws this at three in the morning with no Dart alive
-      // to ask. Anything it would have to compute has to be computed here.
-      final first = (payload()['marks'] as List).first as Map;
-      expect(first['name'], 'الفجر');
-      expect(first['clock'], '4:30');
-      expect(first['day'], '2026-08-02');
-      expect(first['at'], DateTime(2026, 8, 2, 4, 30).millisecondsSinceEpoch);
-    });
-
-    test('the marks are in order, which is what makes "next" the first ahead', () {
-      final marks = (payload()['marks'] as List).cast<Map>();
-      final times = [for (final m in marks) m['at'] as int];
-      expect(times, orderedEquals([...times]..sort()));
-    });
-
-    test('an unknown position is named as approximate rather than as a place', () {
-      expect(payload(approximate: true)['place'], l.prayerApproximate);
-      expect(payload()['place'], l.prayerPlaceMakkah);
-      expect(payload(approximate: true)['approximate'], isTrue);
-    });
-
-    test('the labels the widget needs are all there', () {
-      final labels = payload()['labels'] as Map;
-      for (final key in ['title', 'next', 'fajrEnds', 'remaining', 'gap',
-          'tomorrow', 'stale']) {
-        expect(labels[key], isNotEmpty, reason: 'missing label: $key');
-      }
     });
   });
 

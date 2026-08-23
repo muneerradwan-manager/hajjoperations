@@ -201,6 +201,14 @@ class ReportCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
 
+    // The kind decides the card's face: a قرار binds the reader and a تعميم
+    // tells him something, and he is sorting by that without being asked to
+    // (0102) — so it is the framed glyph and its colour, not one pill among
+    // pills.
+    final circular = report.kind == DecisionKind.circular;
+    final tone = circular ? scheme.tertiary : scheme.primary;
+    final kindLabel = circular ? l.reportKindCircular : l.reportKindDecision;
+
     return GlassCard(
       onTap:
           onOpen ??
@@ -209,46 +217,53 @@ class ReportCard extends StatelessWidget {
           ),
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(AppIcons.reports, color: scheme.primary),
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: tone.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(AppRadius.xs),
+              border: Border.all(color: tone.withValues(alpha: 0.18)),
+            ),
+            child: Icon(
+              circular ? AppIcons.send : AppIcons.file,
+              size: 22,
+              color: tone,
+            ),
+          ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(report.title, style: text.titleMedium),
-                if (report.typeName != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    report.typeName!.of(context),
-                    style: text.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                Text(
+                  report.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
-                ],
+                ),
+                const SizedBox(height: 2),
+                // The kind in words and the type it was filed under, as one
+                // quiet line — identity, not status.
+                Text(
+                  [
+                    kindLabel,
+                    ?report.typeName?.of(context),
+                  ].join(' · '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.sm),
                 Wrap(
                   spacing: AppSpacing.sm,
                   runSpacing: AppSpacing.xs,
                   children: [
-                    // First, because it is what the reader is sorting by
-                    // without being asked to: a قرار binds him and a تعميم
-                    // tells him something. In one undifferentiated list he
-                    // reads past everything he merely needs to know to find
-                    // what he must do (0102).
-                    GlassBadge(
-                      label: report.kind == DecisionKind.circular
-                          ? l.reportKindCircular
-                          : l.reportKindDecision,
-                      icon: report.kind == DecisionKind.circular
-                          ? AppIcons.send
-                          : AppIcons.file,
-                      color: report.kind == DecisionKind.circular
-                          ? scheme.tertiary
-                          : scheme.primary,
-                      dense: true,
-                    ),
                     // Which of the two it is, said plainly — a reader looking
                     // at a meal timetable needs to know whether it is THIS
                     // year's.
@@ -270,6 +285,7 @@ class ReportCard extends StatelessWidget {
                       GlassBadge(
                         label: l.reportNumberBadge(report.number!),
                         icon: AppIcons.document,
+                        color: scheme.onSurfaceVariant,
                         dense: true,
                       ),
                     if (!report.isPublished)

@@ -9,26 +9,22 @@ import '../../../l10n/app_localizations.dart';
 import '../data/prayer_alerts_store.dart';
 import '../data/prayer_notifications.dart';
 import '../data/prayer_times_repository.dart';
-import '../data/prayer_widget_bridge.dart';
 import '../domain/prayer_alerts.dart';
-import '../domain/prayer_day.dart';
-import '../domain/prayer_place.dart';
 import '../domain/prayer_schedule.dart';
 import '../domain/prayer_text.dart';
 
-/// Keeps the two things OUTSIDE the app in step with the two inside it: the
-/// alarms sitting in Android's scheduler, and the times drawn on the home
-/// screen.
+/// Keeps the one thing OUTSIDE the app in step with the choices inside it:
+/// the alarms sitting in Android's scheduler.
 ///
-/// Both survive the app being closed, and neither can ask a question when it
-/// wakes up — so both have to be given a week of answers in advance, and both
-/// have to be re-given them whenever an answer changes. There are exactly four
-/// things that change one:
+/// They survive the app being closed, and cannot ask a question when they
+/// wake up — so they have to be given a week of answers in advance, and
+/// re-given them whenever an answer changes. There are exactly four things
+/// that change one:
 ///
 ///   * the position moved (a new fix, or the first one);
 ///   * the reader changed what they want announced;
-///   * the reader changed the app's language, which the notification text and
-///     the widget's labels are written in;
+///   * the reader changed the app's language, which the notification text is
+///     written in;
 ///   * a week went by — which is caught by re-laying everything at start-up.
 ///
 /// Rather than four call sites each assembling their own arguments, every one
@@ -47,7 +43,7 @@ class PrayerScheduler {
   Future<void>? _running;
   bool _asked = false;
 
-  /// Re-lays the alarms and redraws the widget from whatever is on disk.
+  /// Re-lays the alarms from whatever is on disk.
   ///
   /// Calls made while one is already in flight do not queue up one behind the
   /// other — they collapse into a single extra pass at the end, because they
@@ -95,9 +91,8 @@ class PrayerScheduler {
 
       // No fix means the times on screen are مكة's, shown to somebody who may
       // be a thousand miles from it and labelled "موقع تقريبي" for exactly that
-      // reason. A card may say so; a phone that goes off in the dark may not.
-      // So the widget still draws them — with the same warning — and nothing
-      // is scheduled until the app knows where it is standing.
+      // reason. A card may say so; a phone that goes off in the dark may not —
+      // so nothing is scheduled until the app knows where it is standing.
       if (alerts.announces && fix != null) {
         await PrayerNotifications.instance.apply(
           PrayerSchedule.alarmsFor(days: days, alerts: alerts, now: now),
@@ -107,19 +102,6 @@ class PrayerScheduler {
       } else {
         await PrayerNotifications.instance.cancelAll();
       }
-
-      await PrayerWidgetBridge.instance.push(
-        widgetPayload(
-          l: l,
-          days: days,
-          now: now,
-          place: fix == null
-              ? null
-              : PrayerPlace.nearestTo(latitude, longitude),
-          approximate: fix == null,
-          rtl: _isRtl(l.localeName),
-        ),
-      );
     } catch (e, s) {
       AppLogger.error('prayer', 'scheduler refresh failed', e, s);
     }
@@ -154,60 +136,6 @@ class PrayerScheduler {
           );
   }
 
-  // ── What the home screen is given ──────────────────────────────────────
-
-  /// Everything the widget needs for a week, as finished strings.
-  ///
-  /// Public and pure so that a test can read what the launcher will be handed
-  /// without a platform channel in sight.
-  static Map<String, Object?> widgetPayload({
-    required AppLocalizations l,
-    required List<PrayerDay> days,
-    required DateTime now,
-    required PrayerPlace? place,
-    required bool approximate,
-    required bool rtl,
-  }) {
-    return {
-      'updatedAt': now.millisecondsSinceEpoch,
-      'rtl': rtl,
-      'approximate': approximate,
-      'place': place == null
-          ? (approximate ? l.prayerApproximate : l.prayerYourLocation)
-          : placeName(l, place),
-      'labels': {
-        'title': l.prayerTimesTitle,
-        'next': l.prayerNextLabel,
-        'fajrEnds': l.prayerFajrEndsLabel,
-        'remaining': l.prayerRemainingLabel,
-        'gap': l.prayerSunriseGapNote,
-        'tomorrow': l.prayerTomorrow,
-        'stale': l.prayerWidgetStale,
-      },
-      // Every mark of every day in the horizon, in order. The provider picks
-      // the row for today out of it by the `day` key and the next mark by the
-      // first `at` still ahead — which is all the arithmetic a launcher has to
-      // do, and none of it needs a calendar or a timezone.
-      'marks': [
-        for (final day in days)
-          for (final slot in PrayerSlot.values)
-            {
-              'day': _dayKey(day.day),
-              'slot': slot.name,
-              'name': slotName(l, slot),
-              'clock': shortClockText(day.timeOf(slot)),
-              'at': day.timeOf(slot).millisecondsSinceEpoch,
-              'prayer': slot.isPrayer,
-            },
-      ],
-    };
-  }
-
-  static String _dayKey(DateTime day) =>
-      '${day.year.toString().padLeft(4, '0')}-'
-      '${day.month.toString().padLeft(2, '0')}-'
-      '${day.day.toString().padLeft(2, '0')}';
-
   // ── Which language all of that is in ───────────────────────────────────
 
   /// The app's own language, not the phone's.
@@ -239,7 +167,4 @@ class PrayerScheduler {
     }
     return AppLocalizations.supportedLocales.first;
   }
-
-  /// The two languages this app speaks, one of which is written right to left.
-  static bool _isRtl(String localeName) => localeName.startsWith('ar');
 }

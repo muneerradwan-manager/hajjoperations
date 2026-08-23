@@ -55,30 +55,6 @@ void main() {
       );
     });
 
-    test('shows the prayer card at the top of the home page', () async {
-      final settings = await cubitWith({});
-
-      expect(
-        settings.state.showPrayerCard,
-        isTrue,
-        reason: 'the times are the one thing on this screen a man looks at '
-            'without having decided to look at anything',
-      );
-    });
-  });
-
-  group('what stands at the top of the home page', () {
-    test('the choice survives a restart', () async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final first = SettingsCubit(prefs);
-
-      await first.setShowPrayerCard(false);
-
-      final second = SettingsCubit(prefs);
-
-      expect(second.state.showPrayerCard, isFalse);
-    });
   });
 
   group('the rail', () {

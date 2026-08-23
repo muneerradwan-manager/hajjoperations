@@ -8,14 +8,17 @@ import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
 import '../../../core/widgets/glass.dart';
+import '../../../core/widgets/overflow_menu.dart';
 import '../../../core/widgets/responsive.dart';
 import '../../../core/widgets/states.dart';
 import '../../auth/application/session_cubit.dart';
 import '../application/evaluation_editor_cubit.dart';
+import '../application/evaluations_cubit.dart';
 import '../data/evaluations_repository.dart';
 import '../domain/evaluation.dart';
 import 'assign_evaluation_screen.dart';
 import 'evaluation_sheet_screen.dart';
+import 'evaluations_screen.dart';
 import 'widgets/evaluation_labels.dart';
 
 /// Building a form: stages, questions, answers, marks.
@@ -76,6 +79,86 @@ class _View extends StatelessWidget {
       );
   }
 
+  /// The sheets standing on this form — and the way out of the dead end when
+  /// deleting is refused because of them.
+  Future<void> _openEvaluations(BuildContext context) async {
+    final cubit = context.read<EvaluationEditorCubit>();
+    final id = cubit.templateId;
+    if (id == null) return;
+    await Navigator.of(context).push(
+      fadeThroughRoute(
+        (_) => EvaluationsScreen(
+          scope: EvaluationsScope.all,
+          templateId: id,
+          title: cubit.state.form.title,
+        ),
+      ),
+    );
+  }
+
+  /// Deleting the form from the screen that shows it whole.
+  ///
+  /// The list has this too, and both are wanted: there it is a decision about
+  /// a card, here it is a decision about the questions you have just read.
+  Future<void> _delete(BuildContext context) async {
+    final l = context.l10n;
+    final cubit = context.read<EvaluationEditorCubit>();
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+
+    // Said before the dialog rather than after the refusal: the database will
+    // refuse it — `on delete restrict` — and being told why in advance is the
+    // difference between a rule and a failure.
+    if (cubit.state.isInUse) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(l.evaluationFormInUseDelete),
+            // Not merely "you cannot": here is where they are.
+            action: SnackBarAction(
+              label: l.evaluationFormShowEvaluations,
+              onPressed: () => _openEvaluations(context),
+            ),
+          ),
+        );
+      return;
+    }
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialog) => AlertDialog(
+        title: Text(cubit.state.form.title),
+        content: Text(l.evaluationFormDeleteConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialog).pop(false),
+            child: Text(l.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialog).pop(true),
+            child: Text(l.commonDelete),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    final error = await cubit.delete();
+    messenger.hideCurrentSnackBar();
+    if (error != null) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(friendlyErrorL(l, error))),
+      );
+      return;
+    }
+    // Straight out. The cubit dropped the dirty flag on the way, so the
+    // PopScope above lets this through rather than asking whether to keep
+    // edits to a form that is gone.
+    navigator.pop(true);
+    messenger.showSnackBar(SnackBar(content: Text(l.evaluationFormDeleted)));
+  }
+
   Future<bool> _confirmLeave(BuildContext context) async {
     final l = context.l10n;
     if (!context.read<EvaluationEditorCubit>().state.isDirty) return true;
@@ -122,6 +205,32 @@ class _View extends StatelessWidget {
                     ? l.evaluationEditorNewTitle
                     : l.evaluationEditorTitle,
               ),
+              actions: [
+                // Only on a form the server has seen — there is nothing to
+                // delete, and nothing to list sheets against, until then. Left
+                // OUT rather than disabled for a reader without the trust: a
+                // greyed-out Delete says the form can be deleted and that they
+                // are the wrong person, which is more than this screen means.
+                if (cubit.templateId != null &&
+                    context.watch<SessionCubit>().state.can(
+                      PermissionCodes.evaluationsTemplates,
+                    ))
+                  OverflowMenu(
+                    actions: [
+                      MenuAction(
+                        icon: AppIcons.evaluations,
+                        label: l.evaluationFormShowEvaluations,
+                        onSelected: () => _openEvaluations(context),
+                      ),
+                      MenuAction(
+                        icon: AppIcons.delete,
+                        label: l.evaluationFormDelete,
+                        isDestructive: true,
+                        onSelected: () => _delete(context),
+                      ),
+                    ],
+                  ),
+              ],
             ),
             body: SafeArea(
               child: switch (state.status) {
@@ -180,6 +289,7 @@ class _Editor extends StatelessWidget {
               key: ValueKey('stage-$index-${state.form.stages[index].id}'),
               stage: state.form.stages[index],
               index: index,
+              canRemove: state.form.stages.length > 1,
             ),
             const SizedBox(height: AppSpacing.md),
             for (var q = 0; q < state.form.stages[index].questions.length; q++)
@@ -436,10 +546,18 @@ class _StageCard extends StatefulWidget {
     super.key,
     required this.stage,
     required this.index,
+    required this.canRemove,
   });
 
   final EvaluationStage stage;
   final int index;
+
+  /// A form with no stage has nowhere to put a question, so
+  /// [EvaluationEditorCubit.removeStage] refuses to leave it empty — deleting
+  /// the last stage just hands back an identical blank one. Hiding the
+  /// control here is the honest version of that refusal: without it, the
+  /// last stage's delete button looks broken rather than unavailable.
+  final bool canRemove;
 
   @override
   State<_StageCard> createState() => _StageCardState();
@@ -517,11 +635,12 @@ class _StageCardState extends State<_StageCard> {
                     cubit.moveStage(widget.index, widget.index + 1),
                 icon: const Icon(Icons.keyboard_arrow_down_rounded),
               ),
-              IconButton(
-                tooltip: l.evaluationEditorRemoveStage,
-                onPressed: _remove,
-                icon: Icon(AppIcons.delete, color: scheme.error),
-              ),
+              if (widget.canRemove)
+                IconButton(
+                  tooltip: l.evaluationEditorRemoveStage,
+                  onPressed: _remove,
+                  icon: Icon(AppIcons.delete, color: scheme.error),
+                ),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -920,6 +1039,9 @@ class _Bar extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final saving = state.status == EvaluationEditorStatus.saving;
 
+    /// Whether the Save button has anything to be about.
+    final hasEdits = templateId == null || state.isDirty || saving;
+
     // Every one of these has to hold. A form the server has not seen cannot be
     // assigned; one that is switched off is refused by the database; and one
     // with unsaved edits would be opened against the version on the server
@@ -967,19 +1089,33 @@ class _Bar extends StatelessWidget {
                     ),
                     const SizedBox(width: AppSpacing.sm),
                   ],
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: state.canSave && !saving ? onSave : null,
-                      icon: saving
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2.2),
-                            )
-                          : const Icon(AppIcons.selected, size: 18),
-                      label: Text(l.evaluationEditorSave),
+                  // Absent, not disabled, on a saved form with nothing changed
+                  // on it — which is how this screen stands most of the time it
+                  // is open, because it is also where a form is READ. A Save
+                  // button over an untouched form is an unfinished errand that
+                  // does not exist; it comes back the moment a word is typed,
+                  // and its absence is what tells you the work is in.
+                  //
+                  // A form the server has never seen keeps it throughout, in
+                  // the disabled state, because there the button is the whole
+                  // point of the screen and hiding it would leave a new form
+                  // with no visible way to become one.
+                  if (hasEdits)
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: state.canSave && !saving ? onSave : null,
+                        icon: saving
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.2,
+                                ),
+                              )
+                            : const Icon(AppIcons.selected, size: 18),
+                        label: Text(l.evaluationEditorSave),
+                      ),
                     ),
-                  ),
                 ],
               ),
               // Why the button above is absent on a form that is otherwise

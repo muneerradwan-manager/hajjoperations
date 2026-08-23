@@ -463,6 +463,167 @@ class Evaluation {
     myRole: EvaluationRole.fromDb(map['my_role'] as String?),
   );
 }
+/// One person who was asked to judge a subject, as it appears inside that
+/// subject's card — enough to name them, say where they have gotten to, and
+/// open their sheet.
+///
+/// [id] is the sheet's, not the person's: it is what the card leads into, and
+/// the same person can hold two of these on two different papers.
+class EvaluationSubjectMember {
+  const EvaluationSubjectMember({
+    required this.id,
+    required this.status,
+    this.evaluatorId,
+    this.evaluatorName,
+    this.evaluatorPhotoUrl,
+    this.score,
+    this.maxScore,
+    this.percent,
+    this.dueOn,
+    this.submittedAt,
+    this.answeredCount = 0,
+    this.questionCount = 0,
+  });
+
+  final String id;
+  final EvaluationStatus status;
+  final String? evaluatorId;
+  final String? evaluatorName;
+  final String? evaluatorPhotoUrl;
+  final double? score;
+  final double? maxScore;
+
+  /// Set only once the sheet is finished and the form was worth something — a
+  /// questionnaire of written questions is a legitimate form with no
+  /// percentage to give.
+  final double? percent;
+
+  final DateTime? dueOn;
+  final DateTime? submittedAt;
+  final int answeredCount;
+  final int questionCount;
+
+  bool get isSubmitted => status.isSubmitted;
+
+  double get progress =>
+      questionCount == 0 ? 0 : (answeredCount / questionCount).clamp(0, 1);
+
+  /// Past its date and not finished — the same rule [Evaluation.isOverdue]
+  /// uses, and enforced by nothing but the reading of it.
+  bool get isOverdue {
+    final due = dueOn;
+    if (due == null || isSubmitted) return false;
+    final today = DateTime.now();
+    return due.isBefore(DateTime(today.year, today.month, today.day));
+  }
+
+  factory EvaluationSubjectMember.fromMap(Map<String, dynamic> map) =>
+      EvaluationSubjectMember(
+        id: map['id'] as String,
+        status: EvaluationStatus.fromDb(map['status'] as String?),
+        evaluatorId: map['evaluator_id'] as String?,
+        evaluatorName: map['evaluator_name'] as String?,
+        evaluatorPhotoUrl: map['evaluator_photo_url'] as String?,
+        score: _nullableNum(map['score']),
+        maxScore: _nullableNum(map['max_score']),
+        percent: _nullableNum(map['percent']),
+        dueOn: _date(map['due_on']),
+        submittedAt: _date(map['submitted_at']),
+        answeredCount: (map['answered_count'] as num?)?.toInt() ?? 0,
+        questionCount: (map['question_count'] as num?)?.toInt() ?? 0,
+      );
+}
+
+/// One thing under judgement, on one form: what it is, everyone who was asked
+/// to judge it, and what their marks have come to.
+///
+/// This is the register's unit rather than the sheet, because it is the unit
+/// the question is asked in. Twenty people appraising one file is one thing
+/// happening, not twenty — and the office reads it to learn how that one
+/// thing is going.
+///
+/// The three marks are over FINISHED sheets only and are percentages, not
+/// scores: a half-filled form adds up to a number nobody should quote, and
+/// two sheets on a form that was re-marked in between are only comparable
+/// once both are out of a hundred.
+class EvaluationSubject {
+  const EvaluationSubject({
+    required this.templateId,
+    required this.templateTitle,
+    required this.target,
+    required this.openedAt,
+    this.targetId,
+    this.targetLabel,
+    this.dueOn,
+    this.totalCount = 0,
+    this.submittedCount = 0,
+    this.overdueCount = 0,
+    this.averagePercent,
+    this.bestPercent,
+    this.worstPercent,
+    this.evaluators = const [],
+  });
+
+  final String templateId;
+  final String templateTitle;
+  final EvaluationTarget target;
+  final DateTime openedAt;
+
+  /// Null for [EvaluationTarget.other], which points at nothing.
+  final String? targetId;
+  final String? targetLabel;
+
+  /// The earliest date asked for across this subject's sheets — they can have
+  /// been opened in more than one act, with more than one deadline.
+  final DateTime? dueOn;
+
+  final int totalCount;
+  final int submittedCount;
+  final int overdueCount;
+
+  final double? averagePercent;
+  final double? bestPercent;
+  final double? worstPercent;
+
+  final List<EvaluationSubjectMember> evaluators;
+
+  int get openCount => totalCount - submittedCount;
+
+  /// How much of the judging is done — sheets finished out of sheets asked
+  /// for. Never a mark.
+  double get progress => totalCount == 0 ? 0 : submittedCount / totalCount;
+
+  /// Whether there is any mark to show at all. False until somebody submits,
+  /// and false forever on a form worth nothing.
+  bool get hasMarks => averagePercent != null;
+
+  /// A stable identity for the card, since the row has no id of its own —
+  /// the group IS the pair it was grouped by.
+  String get key => '$templateId/${targetId ?? 'other'}';
+
+  factory EvaluationSubject.fromMap(Map<String, dynamic> map) =>
+      EvaluationSubject(
+        templateId: (map['template_id'] as String?) ?? '',
+        templateTitle: (map['template_title'] as String?) ?? '',
+        target: EvaluationTarget.fromDb(map['target_type'] as String?),
+        openedAt: DateTime.parse(map['opened_at'] as String).toLocal(),
+        targetId: map['target_id'] as String?,
+        targetLabel: map['target_label'] as String?,
+        dueOn: _date(map['due_on']),
+        totalCount: (map['total_count'] as num?)?.toInt() ?? 0,
+        submittedCount: (map['submitted_count'] as num?)?.toInt() ?? 0,
+        overdueCount: (map['overdue_count'] as num?)?.toInt() ?? 0,
+        averagePercent: _nullableNum(map['avg_percent']),
+        bestPercent: _nullableNum(map['best_percent']),
+        worstPercent: _nullableNum(map['worst_percent']),
+        evaluators: [
+          for (final row in (map['evaluators'] as List? ?? const []))
+            EvaluationSubjectMember.fromMap(
+              Map<String, dynamic>.from(row as Map),
+            ),
+        ],
+      );
+}
 
 /// One question inside a sheet: what was asked, what may be answered, and what
 /// was.

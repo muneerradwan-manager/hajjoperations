@@ -21,6 +21,16 @@ import 'package:hajjoperations/l10n/app_localizations.dart';
 /// So: the rail is built at both widths, in both directions, and asked whether
 /// it threw. `takeException` returns the overflow assertion when it did.
 void main() {
+  /// The labels as the rail draws them, not a copy of them typed here — the
+  /// Arabic is vocalised, and a literal would be a second spelling of the
+  /// same word for the first edit to leave behind.
+  late AppLocalizations ar;
+
+  setUpAll(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    ar = await AppLocalizations.delegate.load(const Locale('ar'));
+  });
+
   final admin = SessionState(
     status: SessionStatus.approved,
     profile: const Profile(
@@ -118,8 +128,8 @@ void main() {
     await tester.pump();
 
     expect(tester.takeException(), isNull);
-    expect(find.text('الموظفون'), findsNothing);
-    expect(find.text('الملفات التشغيلية'), findsOneWidget);
+    expect(find.text(ar.navEmployees), findsNothing);
+    expect(find.text(ar.navModules), findsOneWidget);
   });
 
   testWidgets('exactly one entry is drawn as current', (tester) async {

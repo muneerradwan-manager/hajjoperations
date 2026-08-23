@@ -149,7 +149,9 @@ class _PendingCard extends StatelessWidget {
                 children: [
                   Text(
                     profile.fullName.isEmpty ? '—' : profile.fullName,
-                    style: text.titleMedium,
+                    style: text.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -164,13 +166,9 @@ class _PendingCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                  const SizedBox(height: AppSpacing.sm),
-                  GlassBadge(
-                    label: context.l10n.approvalQueueTitle,
-                    color: scheme.secondary,
-                    icon: AppIcons.pending,
-                    dense: true,
-                  ),
+                  // No "pending" badge: every card in this queue is pending —
+                  // the gold wash already says so once, and a pill repeated on
+                  // every row is furniture, not information.
                 ],
               ),
             ),

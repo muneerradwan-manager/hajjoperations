@@ -354,7 +354,7 @@ class _RailHeader extends StatelessWidget {
 
   /// The width kept clear at the end of the strip for the fold button.
   ///
-  /// The button is an [IconButton] with its own 48-pixel target and is drawn
+  /// The button is a [_RailFoldButton] with its own square target and is drawn
   /// OVER this row rather than inside it, because it has to be able to move to
   /// the centre of a 76-pixel column while the row it sits on fades out. A
   /// reserved gap is how the name knows not to run underneath it.
@@ -476,20 +476,101 @@ class _RailHeader extends StatelessWidget {
                   padding: expanded
                       ? const EdgeInsetsDirectional.only(end: AppSpacing.sm)
                       : EdgeInsets.zero,
-                  child: IconButton(
-                    tooltip: expanded ? l.sidebarCollapse : l.sidebarExpand,
-                    onPressed: () {
-                      HapticFeedback.selectionClick();
-                      toggle();
-                    },
-                    icon: Icon(
-                      expanded ? AppIcons.sidebarCollapse : AppIcons.menu,
-                      size: 26,
-                    ),
-                  ),
+                  child: _RailFoldButton(expanded: expanded, onToggle: toggle),
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The control that folds the rail, drawn as a switch ON the panel rather than
+/// as an arrow pointing at it.
+///
+/// It used to be a chevron, and a chevron here was one arrow too many. The
+/// account block sits sixty pixels under this button and ends in a
+/// [NavChevron]; two arrows that close together in one narrow column read as
+/// the same offer repeated, when they are not the same offer at all — one says
+/// "this opens your page" and the other said "this shuts the panel". The
+/// duplicate is the thing the eye catches, and after that neither one means
+/// anything.
+///
+/// So this one no longer points. The glyph is [AppIcons.layoutSidebar] — the
+/// mark this app already spends on the rail itself — and it is the SAME glyph
+/// in both states; what moves is the wash behind it, pressed in while the panel
+/// stands open and bare once it is folded, which is how a toggle has always
+/// said which way it is thrown. That also settles an older oddity: the control was a
+/// hamburger when shut and a chevron when open, two unrelated glyphs for one
+/// button, so a reader who folded the rail was not looking at the same control
+/// he had just pressed.
+///
+/// Side-neutral by construction, which matters more here than anywhere else in
+/// the rail: [AppIcons.layoutSidebar] is a plain vertical split, so it neither
+/// names an edge nor needs mirroring when the app turns around into Arabic.
+class _RailFoldButton extends StatelessWidget {
+  const _RailFoldButton({required this.expanded, required this.onToggle});
+
+  final bool expanded;
+  final VoidCallback onToggle;
+
+  /// Forty, not the [IconButton] default of forty-eight: the strip reserves
+  /// [_RailHeader._controlGap] for this control, and forty plus the end inset
+  /// is the largest square that keeps the app's name clear of it while staying
+  /// a comfortable target.
+  static const _size = 40.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+
+    return Tooltip(
+      message: expanded ? l.sidebarCollapse : l.sidebarExpand,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+          onTap: () {
+            HapticFeedback.selectionClick();
+            onToggle();
+          },
+          child: AnimatedContainer(
+            // The same 220ms the column itself folds in, so the button lights
+            // and dims WITH the panel instead of snapping ahead of it.
+            duration: _fold,
+            curve: _curve,
+            width: _size,
+            height: _size,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.sm),
+              // Ink, not the accent. In this column a primary wash means one
+              // thing only — you are HERE — and it is spent on the current
+              // destination and on nothing else; a fold button glowing in the
+              // same colour would put a second candidate at the top of the
+              // rail every time it stood open. A neutral wash still reads as
+              // pressed-in without claiming to be a place.
+              color: expanded
+                  ? scheme.onSurface.withValues(alpha: 0.07)
+                  : Colors.transparent,
+            ),
+            // The glyph's own colour, tweened alongside the wash rather than
+            // swapped: the box above can animate its fill but not its child's
+            // ink, and an icon that snaps on the first frame of a 220ms fold is
+            // the one part of this that would still read as a switch thrown by
+            // somebody else.
+            child: TweenAnimationBuilder<Color?>(
+              duration: _fold,
+              curve: _curve,
+              tween: ColorTween(
+                end: expanded ? scheme.onSurface : scheme.onSurfaceVariant,
+              ),
+              builder: (context, color, _) =>
+                  Icon(AppIcons.layoutSidebar, size: 20, color: color),
+            ),
+          ),
         ),
       ),
     );

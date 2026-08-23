@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">عمليات الحج</string>
-    <string name="prayer_widget_label">مواقيت الصلاة</string>
-    <string name="prayer_widget_description">الصلاة القادمة والوقت المتبقي ومواقيت اليوم الستة.</string>
 </resources>

@@ -8,6 +8,7 @@ import '../../../core/l10n/error_text.dart';
 import '../../../core/l10n/l10n_extension.dart';
 import '../../../core/theme/app_icons.dart';
 import '../../../core/theme/glass_tokens.dart';
+import '../../../core/utils/arabic_search.dart';
 import '../../../core/widgets/blocking_progress.dart';
 import '../../../core/widgets/glass.dart';
 import '../../../core/widgets/overflow_menu.dart';
@@ -48,10 +49,11 @@ class _ReferenceSetScreenState extends State<ReferenceSetScreen> {
   String _query = '';
 
   bool _matches(BuildContext context, ReferenceItem item) {
-    final q = _query.trim().toLowerCase();
-    if (q.isEmpty) return true;
-    return item.name.of(context).toLowerCase().contains(q) ||
-        item.data.values.any((v) => '$v'.toLowerCase().contains(q));
+    if (_query.trim().isEmpty) return true;
+    return arabicMatchesAll([
+      item.name.of(context),
+      ...item.data.values.map((v) => '$v'),
+    ], _query);
   }
 
   /// The tabs this list is read through, or a single unnamed one when it has no

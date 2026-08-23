@@ -575,7 +575,7 @@ class _Cell extends StatelessWidget {
         _ => slotName(l, slot),
       },
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 1),
+        margin: const EdgeInsets.symmetric(horizontal: 5),
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
         decoration: BoxDecoration(
           color: state == _CellState.current

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/settings/settings_cubit.dart';
 import '../../../../core/theme/glass_tokens.dart';
 import '../../../prayer_times/presentation/widgets/prayer_times_card.dart';
 
@@ -15,17 +13,14 @@ import '../../../prayer_times/presentation/widgets/prayer_times_card.dart';
 ///
 /// It used to carry two other things. The animated sky went because a
 /// decoration that costs a running particle system on a field handset is not
-/// worth what it costs. The urgent report went somewhere better: it is in the
-/// app bar now, in the same position on every screen in the app, rather than a
-/// full-width red slab that only existed here — see `IncidentButton`.
+/// worth what it costs. The urgent report went somewhere else entirely: عام ←
+/// بلاغاتي carries its own "raise one" button now, and the register no longer
+/// needs a chip riding along on every app bar to be reachable.
 class MomentPanel extends StatelessWidget {
   const MomentPanel({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsCubit>().state;
-    if (!settings.showPrayerCard) return const SizedBox.shrink();
-
     return const Padding(
       padding: EdgeInsets.only(bottom: AppSpacing.sm),
       child: PrayerTimesCard(),

@@ -395,13 +395,16 @@ class _ModuleCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 46,
+            height: 46,
             decoration: BoxDecoration(
               color: scheme.primary.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(AppRadius.sm),
+              borderRadius: BorderRadius.circular(AppRadius.xs),
+              border: Border.all(
+                color: scheme.primary.withValues(alpha: 0.18),
+              ),
             ),
-            child: Icon(AppIcons.modules, size: 20, color: scheme.primary),
+            child: Icon(AppIcons.modules, size: 22, color: scheme.primary),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -412,7 +415,9 @@ class _ModuleCard extends StatelessWidget {
                 // so there is nothing to tell two of them apart by.
                 Text(
                   module.moduleTypeName?.of(context) ?? '—',
-                  style: text.titleMedium,
+                  style: text.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -449,10 +454,14 @@ class _ModuleCard extends StatelessWidget {
                   spacing: AppSpacing.sm,
                   runSpacing: AppSpacing.xs,
                   children: [
+                    // Year and decision are identity, not status, so they wear
+                    // the muted tone — colour stays with the draft badge below,
+                    // which is the one thing on this row that asks for an eye.
                     if (module.seasonHijriYear != null)
                       GlassBadge(
                         label: l.seasonHijriYear(module.seasonHijriYear!),
                         icon: AppIcons.seasons,
+                        color: scheme.onSurfaceVariant,
                         dense: true,
                       ),
                     // Beside the year, and worded: "1448 هـ" says what it is
@@ -461,6 +470,7 @@ class _ModuleCard extends StatelessWidget {
                       GlassBadge(
                         label: l.moduleDecisionBadge(module.decisionNumber!),
                         icon: AppIcons.file,
+                        color: scheme.onSurfaceVariant,
                         dense: true,
                       ),
                     // Two different silences, and they can both be true: a

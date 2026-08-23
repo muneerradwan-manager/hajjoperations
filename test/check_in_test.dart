@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hajjoperations/core/l10n/error_text.dart';
+import 'package:hajjoperations/core/utils/arabic_search.dart';
 import 'package:hajjoperations/features/checkin/domain/check_in.dart';
 import 'package:hajjoperations/l10n/app_localizations.dart';
 
@@ -203,8 +204,12 @@ void main() {
       // These are the only two a man standing there can fix himself. The rest
       // are somebody else's job, and saying "turn something on" for those would
       // send him hunting for a setting that would not help.
-      expect(ar.checkInNeedsAPosition, contains('الموقع'));
-      expect(ar.checkInCodeExpired, contains('الجديد'));
+      // Folded before it is searched: the sentences are vocalised —
+      // «فَعِّلْ خِدْمَةَ الْمَوْقِعِ» — and a bare `contains('الموقع')` asks
+      // after a spelling nothing on screen uses. What is being asserted is
+      // that the WORD is in there, which is exactly what foldArabic compares.
+      expect(foldArabic(ar.checkInNeedsAPosition), contains('الموقع'));
+      expect(foldArabic(ar.checkInCodeExpired), contains('الجديد'));
     });
 
     test('the local refusals and the server\'s are one sentence', () {

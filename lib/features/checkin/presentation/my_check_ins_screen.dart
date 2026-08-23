@@ -275,11 +275,31 @@ class _CheckInRow extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           children: [
+            // The framed glyph every card leads with — an arrival is a place,
+            // and the row should read as one at a glance.
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: scheme.primary.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(AppRadius.xs),
+                border: Border.all(
+                  color: scheme.primary.withValues(alpha: 0.18),
+                ),
+              ),
+              child: Icon(AppIcons.checkIn, size: 19, color: scheme.primary),
+            ),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(line.placeName, style: text.titleSmall),
+                  Text(
+                    line.placeName,
+                    style: text.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     DateFormat(
@@ -296,10 +316,12 @@ class _CheckInRow extends StatelessWidget {
             // The distance is kept because it is what the row MEANS: the
             // database accepted this arrival by measuring it, and a record that
             // hid the measurement would be asking to be taken on trust — which
-            // is the one thing 0098 built this table not to require.
+            // is the one thing 0098 built this table not to require. Muted,
+            // though: it is evidence, not an alert.
             GlassBadge(
               label: '${line.distanceM.round()} m',
               icon: AppIcons.checkIn,
+              color: scheme.onSurfaceVariant,
               dense: true,
             ),
           ],

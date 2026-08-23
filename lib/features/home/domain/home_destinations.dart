@@ -257,6 +257,22 @@ List<HomeDestination> homeDestinations(
       action: '${Routes.complaints}?compose=1',
       actionLabel: l.complaintsNew,
     ),
+    // Gated by nothing, for the reason [Routes.myIncidents] gives: reading
+    // what you raised needs no grant, any more than raising it did. It used
+    // to be a chip riding along on every app bar in the app instead of a door
+    // of its own — reachable everywhere and found, by the same token, nowhere
+    // in particular. Here it is a fact about a person's own reports, beside
+    // the rest of what is his.
+    HomeDestination(
+      group: HomeGroup.general,
+      icon: AppIcons.warning,
+      title: l.myIncidentsTitle,
+      subtitle: l.navMyIncidentsSubtitle,
+      route: Routes.myIncidents,
+      accent: Accent.redDeep,
+      action: '${Routes.myIncidents}?compose=1',
+      actionLabel: l.incidentTitle,
+    ),
     // Where this person has been, and the way to add to it. Two verbs on one
     // door, and they belong together: the man about to scan a code is the same
     // man wondering whether last night's scan registered.
@@ -311,13 +327,13 @@ List<HomeDestination> homeDestinations(
     // paperwork. Filling one is neither; that is an errand, and it stands above
     // under العام with the rest of a person's own work.
     //
-    // سجل التقييمات is deliberately NOT a door here. It is reached from inside
-    // إدارة التقييمات, where the forms are — and that is where somebody looking
-    // for it actually goes, because the register only makes sense next to the
-    // papers it was written from. Two doors to it from the home page made
-    // إدارة a list of forms with no way out and the register an orphan beside
-    // it. The permission has not changed: `/evaluations/manage` is still
-    // guarded by `evaluations.view` in sectionGuards.
+    // سجل التقييمات is not here either — but it is no longer nowhere. It used
+    // to be reached only from inside إدارة التقييمات, on the reasoning that a
+    // register means nothing away from the papers it was written from. That
+    // reasoning holds for ONE form's sheets, and that door is still on every
+    // form card. It does not hold for the register itself: every sheet on
+    // every form, read to see how the season's appraisals are going, is
+    // oversight — so it stands with the dashboard and the log, below.
     if (session.can(PermissionCodes.evaluationsTemplates))
       HomeDestination(
         group: HomeGroup.files,
@@ -432,6 +448,20 @@ List<HomeDestination> homeDestinations(
         title: l.navDashboard,
         subtitle: l.navDashboardSubtitle,
         route: Routes.dashboard,
+      ),
+    // Every appraisal in the mission, by the thing being appraised. It reads
+    // like the dashboard rather than like a queue — nothing on it is worked
+    // THROUGH, it is looked at — which is what puts it on this shelf and not
+    // beside the forms it was written from. Those stay in الملفات: writing the
+    // questions and reading everyone's answers are two different trusts, and
+    // §26.1 keeps them two different doors.
+    if (session.can(PermissionCodes.evaluationsView))
+      HomeDestination(
+        group: HomeGroup.oversight,
+        icon: AppIcons.evaluations,
+        title: l.navEvaluationsManage,
+        subtitle: l.navEvaluationsManageSubtitle,
+        route: Routes.evaluationsManage,
       ),
     // Beside the dashboard, and the pairing is the meaning: one is the season
     // from above, the other is the season act by act.

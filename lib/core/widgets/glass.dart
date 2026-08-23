@@ -3,7 +3,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../features/incidents/presentation/widgets/incident_button.dart';
 import '../l10n/l10n_extension.dart';
 import '../theme/app_icons.dart';
 import '../theme/glass_tokens.dart';
@@ -281,7 +280,6 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.automaticallyImplyLeading = true,
     this.bottom,
     this.centerTitle,
-    this.showIncidentButton = true,
   });
 
   final Widget? title;
@@ -290,18 +288,6 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool automaticallyImplyLeading;
   final PreferredSizeWidget? bottom;
   final bool? centerTitle;
-
-  /// Whether the urgent-report chip appears in this bar.
-  ///
-  /// Default TRUE rather than opt-in, and that is the whole point of putting it
-  /// here: a hatch each screen must remember to add is one the screen written
-  /// next month will not have, and nothing about the bar tells the reader which
-  /// screens were the ones where pressing it would have worked.
-  ///
-  /// It is turned off in one place only — a screen that is ALREADY about the
-  /// emergency, where a second door to what you are looking at reads as a
-  /// different thing.
-  final bool showIncidentButton;
 
   @override
   Size get preferredSize =>
@@ -317,26 +303,7 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading:
           leading ??
           (automaticallyImplyLeading ? _shellMenuButton(context) : null),
-      // The report goes FIRST, ahead of whatever the screen puts here.
-      //
-      // Last would have put it hard against the screen edge — easier to reach,
-      // and the wrong trade. That edge is where the overflow menu sits on the
-      // screens that have one, so an emergency would be adjacent to "delete" on
-      // some bars and adjacent to nothing on others. First is the one position
-      // that is the same on all forty-nine, and being in the SAME PLACE every
-      // time is what this button is for; a fixed point you can hit without
-      // reading is worth more than a few millimetres of thumb travel.
-      //
-      // It draws nothing at all when there is no approved session, so the login
-      // and pre-approval bars are untouched.
-      //
-      // The screen that RAISES a report needs no opt-out: it wears a plain bar
-      // in the error colours instead of this one. See [showIncidentButton] for
-      // who does.
-      actions: [
-        if (showIncidentButton) const IncidentButton(),
-        ...?actions,
-      ],
+      actions: actions,
       automaticallyImplyLeading: automaticallyImplyLeading,
       bottom: bottom,
       centerTitle: centerTitle,

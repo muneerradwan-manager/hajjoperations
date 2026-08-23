@@ -170,6 +170,14 @@
   "navPermissionsSubtitle": "Grant permissions to employees",
   "permissionsEmployeesTitle": "Employees",
   "permissionEditorTitle": "Permissions",
+  "permissionAssignIntro": "Choose the permissions you need, then assign them to several employees at once. One person's permissions are edited from their page in the directory.",
+  "permissionAssignSelectedCount": "{count, plural, =0{No permissions selected yet} =1{1 permission selected} other{{count} permissions selected}}",
+  "@permissionAssignSelectedCount": { "placeholders": { "count": { "type": "int" } } },
+  "permissionAssignAction": "Assign to employees",
+  "permissionAssignPickEmployees": "Choose employees",
+  "permissionAssignDone": "{count, plural, =1{Permissions assigned to 1 employee} other{Permissions assigned to {count} employees}}",
+  "@permissionAssignDone": { "placeholders": { "count": { "type": "int" } } },
+  "permissionAssignNothingNew": "Nothing to add — they already hold these permissions",
   "employeesEmpty": "No employees yet",
   "permissionSaved": "Permissions updated",
   "permissionGrantedCount": "{count} of {total} granted",
@@ -418,6 +426,7 @@
   "navEmployeesSubtitle": "Staff directory and externals",
   "employeesPermanentSection": "Permanent staff",
   "employeesExternalSection": "External participants",
+  "employeesFilterSuspended": "Suspended only",
   "employeesExternalEmpty": "No external employees",
   "employeeDetailTitle": "Employee",
   "modulePickerOnlyFree": "Unassigned only",
@@ -450,6 +459,7 @@
   "employeePermissionsSection": "Granted permissions",
   "employeePermissionsEmpty": "No permissions granted",
   "employeePermissionsAdmin": "An administrator — holds every permission, without needing to be granted them.",
+  "employeePermissionsEdit": "Edit permissions",
   "employeeEditDetailsTitle": "Edit employee details",
   "employeeEditSaved": "Employee details updated",
   "employeeEdit": "Edit details",
@@ -796,9 +806,20 @@
   "tasksNoMatch": "Nothing matches what you searched for",
   "tasksClearFilters": "Clear filters",
   "tasksBoardTitle": "Task board",
-  "tasksBoardView": "Board",
-  "tasksBatchesView": "Batches",
+  "tasksBoardView": "By state",
+  "tasksBatchesView": "By task",
   "tasksPeopleView": "By person",
+  "tasksAssignTargetTitle": "Who is the task for?",
+  "tasksAssignToPeople": "People",
+  "tasksAssignToPeopleHint": "A tracked task on each chosen person's list, sent back to you for acceptance",
+  "tasksAssignToFile": "An operational file",
+  "tasksAssignToFileHint": "A duty written on the file itself, read and shared by all its members",
+  "tasksAssignToRole": "A role in a file",
+  "tasksAssignToRoleHint": "A duty on one post — the tower supervisor, say — whoever holds it",
+  "tasksAssignPickModule": "Choose the file",
+  "tasksAssignPickRole": "Choose the role",
+  "tasksAssignNoRoles": "This file's type defines no roles",
+  "tasksAssignDutySaved": "The duty was written on the file",
   "tasksScopeMine": "Assigned by me",
   "tasksScopeAll": "The whole mission",
   "tasksReviewQueue": "Awaiting your acceptance",
@@ -1139,18 +1160,6 @@
       "clock": { "type": "String" }
     }
   },
-  "prayerWidgetTitle": "On the phone's home screen",
-  "prayerWidgetHint": "The next prayer and its countdown, on the phone's home screen — without opening the app.",
-  "prayerWidgetAdd": "Add to home screen",
-  "prayerWidgetAddManually": "Long-press an empty spot on the home screen, choose Widgets, and pick this app.",
-  "prayerWidgetInstalled": "{count, plural, =0{Not added yet} =1{Added} other{Added, {count} copies}}",
-  "@prayerWidgetInstalled": {
-    "placeholders": {
-      "count": { "type": "int" }
-    }
-  },
-  "prayerWidgetStale": "Open the app to refresh the times",
-
   "navMyComplaints": "Complaints",
   "navMyComplaintsSubtitle": "What you filed, and what came back",
   "navComplaints": "Complaints register",
@@ -1417,6 +1426,13 @@
   "@evaluationAssignCross": { "placeholders": { "targets": { "type": "int" }, "evaluators": { "type": "int" } } },
   "@evaluationAssignedMany": { "placeholders": { "count": { "type": "int" } } },
   "evaluationFormShowEvaluations": "Show the evaluations on it",
+  "evaluationSubjectEvaluators": "{count, plural, =0{No evaluator} =1{1 evaluator} other{{count} evaluators}}",
+  "evaluationSubjectProgressLabel": "Progress",
+  "evaluationStatAverage": "Average",
+  "evaluationStatBest": "Highest",
+  "evaluationStatWorst": "Lowest",
+  "evaluationSubjectNoMarks": "No marks yet",
+  "@evaluationSubjectEvaluators": { "placeholders": { "count": { "type": "int" } } },
 
   "commonOk": "OK",
 
@@ -1506,6 +1522,12 @@
   "incidentAlarmDismiss": "Dismiss",
   "incidentAlarmMore": "{count, plural, =1{and 1 more} other{and {count} more}}",
   "@incidentAlarmMore": { "placeholders": { "count": { "type": "int" } } },
+
+  "navMyIncidentsSubtitle": "The urgent reports you raised, and their status now",
+  "myIncidentsTitle": "My reports",
+  "myIncidentsEmpty": "You have not raised an urgent report yet",
+  "myIncidentsEmptyHint": "Your urgent reports appear here the moment you raise one, with their status",
+
   "durationMinutes": "{count}m",
   "@durationMinutes": { "placeholders": { "count": { "type": "int" } } },
   "durationHours": "{count}h",
@@ -1710,8 +1732,5 @@
   "roadmapStepExport": "Take any list out of the app as a file, with the columns you choose — for a report, an archive, or anything that has to be worked on outside.",
   "roadmapStepArchiveTitle": "Close the year, open the next",
   "roadmapStepArchive": "Nothing is deleted at the end of a season. The year stops being the current one and becomes the archive, and a new season is opened beside it — which puts you back at the first step of this map.",
-  "roadmapNoteArchive": "Everything filed against a past season stays readable exactly as it was. Closing a year hides nothing.",
-
-  "settingsShowPrayerCard": "Prayer times card",
-  "settingsShowPrayerCardHint": "The next prayer and its countdown, at the top of the home screen"
+  "roadmapNoteArchive": "Everything filed against a past season stays readable exactly as it was. Closing a year hides nothing."
 }

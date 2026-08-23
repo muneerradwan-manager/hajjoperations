@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import '../../../core/bloc/safe_cubit.dart';
 import '../../../core/offline/outbox.dart';
 import '../../../core/offline/save_outcome.dart';
+import '../../../core/utils/arabic_search.dart';
 import '../../../core/utils/device_position.dart';
 import '../../../core/utils/network_error.dart';
 import '../data/check_in_outbox.dart';
@@ -64,10 +65,8 @@ class PresenceState extends Equatable {
   bool _keeps(PresenceLine line) {
     final group = line.groupName ?? line.setName ?? '—';
     if (hiddenGroups.contains(group)) return false;
-    final q = query.trim().toLowerCase();
-    if (q.isEmpty) return true;
-    return line.fullName.toLowerCase().contains(q) ||
-        line.placeName.toLowerCase().contains(q);
+    if (query.trim().isEmpty) return true;
+    return arabicMatchesAll([line.fullName, line.placeName], query);
   }
 
   /// The board as it is read: by PLACE, not by person. The room's question is
@@ -101,13 +100,10 @@ class PresenceState extends Equatable {
   /// never checked in has no such row to derive one from. Hiding him by a
   /// filter he cannot be measured against is how an absence disappears twice.
   List<PresenceGap> get shownGaps {
-    final q = query.trim().toLowerCase();
-    if (q.isEmpty) return gaps;
+    if (query.trim().isEmpty) return gaps;
     return [
       for (final gap in gaps)
-        if (gap.fullName.toLowerCase().contains(q) ||
-            gap.placeName.toLowerCase().contains(q))
-          gap,
+        if (arabicMatchesAll([gap.fullName, gap.placeName], query)) gap,
     ];
   }
 

@@ -43,6 +43,7 @@ class EvaluationCard extends StatelessWidget {
     final subject = (evaluation.targetLabel ?? '').trim().isEmpty
         ? evaluationTargetLabel(l, evaluation.target)
         : evaluation.targetLabel!;
+    final tone = evaluation.isOverdue ? scheme.error : scheme.primary;
 
     return GlassCard(
       onTap: onOpen,
@@ -51,24 +52,46 @@ class EvaluationCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                evaluationTargetIcon(evaluation.target),
-                color: evaluation.isOverdue ? scheme.error : scheme.primary,
+              // The kind's glyph in a tinted frame, as everywhere a card leads
+              // with an icon — a bare glyph floating beside a title reads as
+              // decoration; a seated one reads as structure.
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: tone.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(AppRadius.xs),
+                  border: Border.all(color: tone.withValues(alpha: 0.18)),
+                ),
+                child: Icon(
+                  evaluationTargetIcon(evaluation.target),
+                  size: 22,
+                  color: tone,
+                ),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(subject, style: text.titleMedium),
-                    const SizedBox(height: 2),
-                    // The form's name second, in the smaller type: two sheets on
-                    // the same subject differ by their paper, but it is the
-                    // subject a reader scans the list for.
                     Text(
-                      evaluation.templateTitle,
+                      subject,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    // The kind and the form's name second, in the smaller type,
+                    // as one quiet line: two sheets on the same subject differ
+                    // by their paper, but it is the subject a reader scans the
+                    // list for. Identity as text, not a pill — only status
+                    // earns a colour.
+                    Text(
+                      '${evaluationTargetLabel(l, evaluation.target)}'
+                      ' · ${evaluation.templateTitle}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: text.bodySmall?.copyWith(
@@ -105,11 +128,6 @@ class EvaluationCard extends StatelessWidget {
             runSpacing: AppSpacing.xs,
             children: [
               GlassBadge(
-                label: evaluationTargetLabel(l, evaluation.target),
-                icon: evaluationTargetIcon(evaluation.target),
-                dense: true,
-              ),
-              GlassBadge(
                 label: evaluation.isSubmitted
                     ? l.evaluationStatusSubmitted
                     : l.evaluationStatusDraft,
@@ -130,18 +148,24 @@ class EvaluationCard extends StatelessWidget {
                 GlassBadge(
                   label: l.evaluationDueOn(formatDate(evaluation.dueOn)),
                   icon: AppIcons.seasons,
+                  color: scheme.onSurfaceVariant,
                   dense: true,
                 ),
+              // Who and when are facts, not states, so they wear the muted
+              // tone — the coloured pills above are reserved for what stands
+              // out: finished, pending, late.
               if (showEvaluator && evaluation.evaluatorName != null)
                 GlassBadge(
                   label: evaluation.evaluatorName!,
                   icon: AppIcons.employees,
+                  color: scheme.onSurfaceVariant,
                   dense: true,
                 ),
               GlassBadge(
                 label: evaluation.isSubmitted
                     ? l.evaluationSubmittedOn(formatDate(evaluation.submittedAt))
                     : l.evaluationOpenedOn(formatDate(evaluation.createdAt)),
+                color: scheme.onSurfaceVariant,
                 dense: true,
               ),
             ],
