@@ -8810,6 +8810,48 @@ abstract class AppLocalizations {
   /// **'Current location'**
   String get travelCurrentLocation;
 
+  /// No description provided for @travelDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days'**
+  String travelDays(int count);
+
+  /// No description provided for @travelDaysSoFar.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days so far'**
+  String travelDaysSoFar(int count);
+
+  /// No description provided for @travelSince.
+  ///
+  /// In en, this message translates to:
+  /// **'since {date}'**
+  String travelSince(String date);
+
+  /// No description provided for @travelStayPlaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Where he is staying'**
+  String get travelStayPlaceTitle;
+
+  /// No description provided for @travelStayHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get travelStayHome;
+
+  /// No description provided for @travelStayResidence.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay'**
+  String get travelStayResidence;
+
+  /// No description provided for @travelStayRites.
+  ///
+  /// In en, this message translates to:
+  /// **'The rites'**
+  String get travelStayRites;
+
   /// No description provided for @travelHereNow.
   ///
   /// In en, this message translates to:

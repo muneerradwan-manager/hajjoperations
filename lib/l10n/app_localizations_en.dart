@@ -5166,6 +5166,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get travelCurrentLocation => 'Current location';
 
   @override
+  String travelDays(int count) {
+    return '$count days';
+  }
+
+  @override
+  String travelDaysSoFar(int count) {
+    return '$count days so far';
+  }
+
+  @override
+  String travelSince(String date) {
+    return 'since $date';
+  }
+
+  @override
+  String get travelStayPlaceTitle => 'Where he is staying';
+
+  @override
+  String get travelStayHome => 'Home';
+
+  @override
+  String get travelStayResidence => 'Stay';
+
+  @override
+  String get travelStayRites => 'The rites';
+
+  @override
   String get travelHereNow => 'Here now';
 
   @override

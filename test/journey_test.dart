@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hajjoperations/core/l10n/localized_name.dart';
 import 'package:hajjoperations/features/travel/domain/journey.dart';
 import 'package:hajjoperations/features/travel/domain/journey_leg.dart';
+import 'package:hajjoperations/features/travel/domain/journey_stay.dart';
 import 'package:hajjoperations/features/travel/domain/trip.dart';
 
 /// [Journey] is the one place in this feature where "where is he, and when does
@@ -47,8 +48,29 @@ JourneyLeg _leg({
   actualArrivalAt: actualArrival,
 );
 
-Journey _journey(List<JourneyLeg> legs) =>
-    Journey(participantId: 'p1', legs: legs);
+JourneyStay _stay({
+  required String city,
+  StayKind kind = StayKind.residence,
+  String? place,
+  DateTime? arrived,
+  DateTime? departed,
+  String? arrivalLegId,
+  int? nights,
+}) => JourneyStay(
+  id: 'stay${_id++}',
+  kind: kind,
+  cityItemId: city,
+  city: LocalizedName(ar: city),
+  placeItemId: place,
+  place: place == null ? null : LocalizedName(ar: place),
+  arrivedAt: arrived,
+  departedAt: departed,
+  arrivalLegId: arrivalLegId,
+  nights: nights,
+);
+
+Journey _journey(List<JourneyLeg> legs, {List<JourneyStay> stays = const []}) =>
+    Journey(participantId: 'p1', legs: legs, stays: stays);
 
 void main() {
   final now = DateTime.now();
@@ -69,37 +91,46 @@ void main() {
   });
 
   group('where he is', () {
-    test('is the destination of the last COMPLETED leg', () {
-      final j = _journey([
-        _leg(
-          role: LegRole.inbound,
-          from: 'دمشق',
-          to: 'جدة',
-          status: LegStatus.completed,
-          actualDeparture: aWeekAgo,
-          actualArrival: aWeekAgo.add(const Duration(hours: 3)),
-        ),
-        _leg(
-          role: LegRole.internal,
-          from: 'مكة',
-          to: 'المدينة',
-          plannedDeparture: now.add(const Duration(days: 2)),
-        ),
-      ]);
-      expect(j.currentPlace?.ar, 'جدة');
+    test('is the city of the stay he has arrived at and not left', () {
+      // Not the destination of the last movement — that is an airport. 0135.
+      final inbound = _leg(
+        role: LegRole.inbound,
+        from: 'مطار دمشق',
+        to: 'مطار جدة',
+        status: LegStatus.completed,
+        actualDeparture: aWeekAgo,
+        actualArrival: aWeekAgo.add(const Duration(hours: 3)),
+      );
+      final j = _journey(
+        [inbound],
+        stays: [
+          _stay(city: 'دمشق', kind: StayKind.home, departed: aWeekAgo),
+          _stay(
+            city: 'مكة المكرمة',
+            arrived: aWeekAgo,
+            arrivalLegId: inbound.id,
+            nights: 7,
+          ),
+        ],
+      );
+      expect(j.currentPlace?.ar, 'مكة المكرمة');
       expect(j.hasDeparted, isTrue);
       expect(j.isHome, isFalse);
     });
 
-    test('is his starting point before he has set off', () {
-      final j = _journey([
-        _leg(
-          role: LegRole.inbound,
-          from: 'دمشق',
-          to: 'جدة',
-          plannedDeparture: now.add(const Duration(days: 3)),
-        ),
-      ]);
+    test('is nowhere in particular before he has set off', () {
+      // The home stay has not been left, so it IS the current one.
+      final j = _journey(
+        [
+          _leg(
+            role: LegRole.inbound,
+            from: 'مطار دمشق',
+            to: 'مطار جدة',
+            plannedDeparture: now.add(const Duration(days: 3)),
+          ),
+        ],
+        stays: [_stay(city: 'دمشق', kind: StayKind.home, arrived: aWeekAgo)],
+      );
       expect(j.currentPlace?.ar, 'دمشق');
       expect(j.hasDeparted, isFalse);
     });
@@ -108,15 +139,15 @@ void main() {
       final j = _journey([
         _leg(
           role: LegRole.inbound,
-          from: 'دمشق',
-          to: 'جدة',
+          from: 'مطار دمشق',
+          to: 'مطار جدة',
           status: LegStatus.completed,
           actualArrival: aWeekAgo,
         ),
         _leg(
           role: LegRole.outbound,
-          from: 'جدة',
-          to: 'دمشق',
+          from: 'مطار المدينة',
+          to: 'مطار دمشق',
           status: LegStatus.completed,
           actualArrival: now,
         ),
@@ -196,18 +227,31 @@ void main() {
     });
 
     test('once completed it moves him, exactly like a flight', () {
-      final j = _journey([
-        _leg(
-          role: LegRole.internal,
-          from: 'مكة',
-          to: 'المدينة',
-          mode: TravelMode.road,
-          selfArranged: true,
-          status: LegStatus.completed,
-          actualArrival: now.subtract(const Duration(days: 1)),
-        ),
-      ]);
-      expect(j.currentPlace?.ar, 'المدينة');
+      final car = _leg(
+        role: LegRole.internal,
+        from: 'مكة المكرمة',
+        to: 'المدينة المنورة',
+        mode: TravelMode.road,
+        selfArranged: true,
+        status: LegStatus.completed,
+        actualArrival: now.subtract(const Duration(days: 1)),
+      );
+      final j = _journey(
+        [car],
+        stays: [
+          _stay(
+            city: 'مكة المكرمة',
+            departed: now.subtract(const Duration(days: 1)),
+          ),
+          _stay(
+            city: 'المدينة المنورة',
+            arrived: now.subtract(const Duration(days: 1)),
+            arrivalLegId: car.id,
+            nights: 1,
+          ),
+        ],
+      );
+      expect(j.currentPlace?.ar, 'المدينة المنورة');
       expect(j.overdueLegs, isEmpty);
     });
   });
@@ -239,74 +283,130 @@ void main() {
   });
 
   group('the drawn line', () {
-    test('alternates places and movements, marking where he is', () {
-      final j = _journey([
-        _leg(
-          role: LegRole.inbound,
-          from: 'دمشق',
-          to: 'جدة',
-          status: LegStatus.completed,
-          actualArrival: aWeekAgo,
-        ),
-        _leg(
-          role: LegRole.outbound,
-          from: 'جدة',
-          to: 'دمشق',
-          plannedDeparture: inTwelveDays,
-        ),
-      ]);
-
-      final line = j.line;
-      expect(line[0], isA<JourneyStop>());
-      expect(line[1], isA<JourneyMove>());
-      expect(line[2], isA<JourneyStop>());
-
-      final stops = line.whereType<JourneyStop>().toList();
-      expect(stops.map((s) => s.place?.ar), ['دمشق', 'جدة', 'دمشق']);
-      expect(stops[0].state, JourneyStopState.done);
-      expect(stops[1].state, JourneyStopState.current);
-      expect(stops[2].state, JourneyStopState.upcoming);
-    });
-
-    test('emits a neutral gap where two legs do not join up', () {
-      // He lands at جدة; his next recorded movement starts at مكة. The coach
-      // between them is nobody's record — and must not read as a fault.
-      final j = _journey([
-        _leg(
-          role: LegRole.inbound,
-          from: 'دمشق',
-          to: 'جدة',
-          status: LegStatus.completed,
-          actualArrival: aWeekAgo,
-        ),
-        _leg(
-          role: LegRole.internal,
-          from: 'مكة',
-          to: 'المدينة',
-          plannedDeparture: now.add(const Duration(days: 1)),
-        ),
-      ]);
-
-      final gaps = j.line.whereType<JourneyGap>().toList();
-      expect(gaps, hasLength(1));
-      // It names both ends, so the reader is not left inferring which move the
-      // line is asking about from the rows above and below it.
-      expect(gaps.single.from?.ar, 'جدة');
-      expect(gaps.single.to?.ar, 'مكة');
-      expect(
-        j.line.whereType<JourneyStop>().map((s) => s.place?.ar),
-        ['دمشق', 'جدة', 'مكة', 'المدينة'],
+    test('is a line of PLACES HE STAYED, joined by movements', () {
+      // The correction 0135 exists for. He lands at مطار الملك عبدالعزيز and
+      // lives in مكة; the airport belongs to the flight, not to the spine.
+      final inbound = _leg(
+        role: LegRole.inbound,
+        from: 'مطار دمشق',
+        to: 'مطار جدة',
+        status: LegStatus.completed,
+        actualArrival: aWeekAgo,
       );
-      // No leg is a failure. The gap is drawn, not blamed.
-      expect(j.legs.any((l) => l.status.isFailure), isFalse);
+      final outbound = _leg(
+        role: LegRole.outbound,
+        from: 'مطار المدينة',
+        to: 'مطار دمشق',
+        plannedDeparture: inTwelveDays,
+      );
+      final j = _journey(
+        [inbound, outbound],
+        stays: [
+          _stay(city: 'دمشق', kind: StayKind.home, departed: aWeekAgo),
+          _stay(
+            city: 'مكة المكرمة',
+            place: 'فندق الصفوة',
+            arrived: aWeekAgo,
+            arrivalLegId: inbound.id,
+            nights: 7,
+          ),
+          _stay(
+            city: 'دمشق',
+            kind: StayKind.home,
+            arrived: inTwelveDays,
+            arrivalLegId: outbound.id,
+          ),
+        ],
+      );
+
+      expect(j.line[0], isA<JourneyStop>());
+      expect(j.line[1], isA<JourneyMove>());
+      expect(j.line[2], isA<JourneyStop>());
+
+      // Not one airport among the nodes.
+      expect(
+        j.line.whereType<JourneyStop>().map((s) => s.stay.city?.ar),
+        ['دمشق', 'مكة المكرمة', 'دمشق'],
+      );
     });
 
-    test('emits no gap when the legs join up', () {
+    test('the current stay is where he is, and it names the hotel', () {
+      final inbound = _leg(
+        role: LegRole.inbound,
+        from: 'مطار دمشق',
+        to: 'مطار جدة',
+        status: LegStatus.completed,
+        actualArrival: aWeekAgo,
+      );
+      final j = _journey(
+        [inbound],
+        stays: [
+          _stay(city: 'دمشق', kind: StayKind.home, departed: aWeekAgo),
+          _stay(
+            city: 'مكة المكرمة',
+            place: 'فندق الصفوة',
+            arrived: aWeekAgo,
+            arrivalLegId: inbound.id,
+            nights: 7,
+          ),
+        ],
+      );
+
+      expect(j.currentPlace?.ar, 'مكة المكرمة');
+      expect(j.currentResidence?.ar, 'فندق الصفوة');
+      expect(j.daysInCurrentStay, 7);
+      expect(j.currentStay?.isCurrent, isTrue);
+    });
+
+    test('the مسكن comes from the files, and its absence is silent', () {
+      // 0136: nobody types a hotel. It is the place an operational file posts
+      // him to, resolved on every read — so a stay without one is a statement
+      // about the paperwork and the card simply omits the line.
+      final j = _journey(
+        [],
+        stays: [
+          _stay(
+            city: 'مكة المكرمة',
+            place: 'فيوليت',
+            arrived: aWeekAgo,
+            nights: 7,
+          ),
+          _stay(city: 'المدينة المنورة', arrived: now),
+        ],
+      );
+      expect(j.currentResidence?.ar, 'فيوليت');
+      expect(j.stays.last.place, isNull);
+      // And nothing anywhere treats the missing one as a failure.
+      expect(j.stays.last.kind.isHoused, isTrue);
+    });
+
+    test('a man who never travels still has a spine', () {
+      // travels = false: no legs at all, and certainly still somewhere. This is
+      // the case that settled stays being stored rather than derived.
+      final j = _journey(
+        [],
+        stays: [
+          _stay(
+            city: 'مكة المكرمة',
+            place: 'فندق الصفوة',
+            arrived: aWeekAgo,
+            nights: 7,
+          ),
+        ],
+      );
+      expect(j.isEmpty, isFalse);
+      expect(j.legs, isEmpty);
+      expect(j.currentPlace?.ar, 'مكة المكرمة');
+      expect(j.line.whereType<JourneyStop>(), hasLength(1));
+      expect(j.dayOfJourney, 8);
+    });
+
+    test('falls back to the movements when no spine has been built yet', () {
       final j = _journey([
-        _leg(role: LegRole.inbound, from: 'دمشق', to: 'جدة'),
-        _leg(role: LegRole.internal, from: 'جدة', to: 'المدينة'),
+        _leg(role: LegRole.inbound, from: 'مطار دمشق', to: 'مطار جدة'),
       ]);
-      expect(j.line.whereType<JourneyGap>(), isEmpty);
+      expect(j.line, hasLength(1));
+      expect(j.line.single, isA<JourneyMove>());
     });
   });
 

@@ -5214,6 +5214,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String get travelCurrentLocation => 'الموقع الحالي';
 
   @override
+  String travelDays(int count) {
+    return '$count يوماً';
+  }
+
+  @override
+  String travelDaysSoFar(int count) {
+    return '$count يوماً حتى الآن';
+  }
+
+  @override
+  String travelSince(String date) {
+    return 'منذ $date';
+  }
+
+  @override
+  String get travelStayPlaceTitle => 'مكان الإقامة';
+
+  @override
+  String get travelStayHome => 'الوطن';
+
+  @override
+  String get travelStayResidence => 'إقامة';
+
+  @override
+  String get travelStayRites => 'المشاعر';
+
+  @override
   String get travelHereNow => 'هنا الآن';
 
   @override

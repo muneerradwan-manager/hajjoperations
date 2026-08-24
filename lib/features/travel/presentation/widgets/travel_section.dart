@@ -120,6 +120,15 @@ class _TravelSectionState extends State<TravelSection> {
               label: l.travelCurrentLocation,
               value: journey.currentPlace?.of(context),
             ),
+            // Where to find him tonight, which is the more useful half of the
+            // answer once the city is known — and the whole reason 0135 made
+            // the stay the spine rather than the terminal.
+            if (journey.currentResidence != null)
+              InfoRow(
+                icon: AppIcons.organization,
+                label: l.travelStayPlaceTitle,
+                value: journey.currentResidence?.of(context),
+              ),
             InfoRow(
               icon: AppIcons.travelReturn,
               label: l.travelRoleOutbound,

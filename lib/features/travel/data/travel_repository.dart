@@ -6,6 +6,7 @@ import '../../../core/supabase/storage_key.dart';
 import '../../../core/supabase/supabase_client.dart';
 import '../domain/journey.dart';
 import '../domain/journey_leg.dart';
+import '../domain/journey_stay.dart';
 import '../domain/trip.dart';
 
 /// Reading and writing the season's travel.
@@ -25,17 +26,54 @@ class TravelRepository {
 
   // ---------------------------------------------------------------- reading
 
-  /// One man's whole journey for a season, resolved and in order.
+  /// One man's whole journey for a season: where he stayed, and what carried
+  /// him between.
+  ///
+  /// Two calls rather than one joined query, because they answer two different
+  /// questions and the spine has to be readable on its own — a man resident in
+  /// the Kingdom has stays and no legs at all.
   Future<Journey> fetchJourney(String participantId) async {
-    final rows = await supabase.rpc(
+    final legs = await supabase.rpc(
       'employee_journey',
+      params: {'p_participant_id': participantId},
+    );
+    final stays = await supabase.rpc(
+      'employee_stays',
       params: {'p_participant_id': participantId},
     );
     return Journey.fromRows(
       participantId,
-      ((rows as List?) ?? const []).cast<Map<String, dynamic>>(),
+      ((legs as List?) ?? const []).cast<Map<String, dynamic>>(),
+      stayRows: ((stays as List?) ?? const []).cast<Map<String, dynamic>>(),
     );
   }
+
+  /// A stay nothing carried him to — the man already resident in the Kingdom,
+  /// or the المشاعر days somebody wants on the record.
+  Future<String> addStay({
+    required String participantId,
+    required StayKind kind,
+    String? cityItemId,
+    DateTime? arrivedAt,
+    DateTime? departedAt,
+    String? note,
+  }) async {
+    final id = await supabase.rpc(
+      'add_stay',
+      params: {
+        'p_participant_id': participantId,
+        'p_kind': kind.dbName,
+        'p_city_item_id': cityItemId,
+        'p_arrived_at': arrivedAt?.toUtc().toIso8601String(),
+        'p_departed_at': departedAt?.toUtc().toIso8601String(),
+        'p_note': note,
+      },
+    );
+    return id as String;
+  }
+
+  Future<void> deleteStay(String stayId) =>
+      supabase.rpc('delete_stay', params: {'p_stay_id': stayId});
 
   /// Which participation row is this man's, for this season. Null when he is
   /// not in the season at all — an ordinary answer, not an error, and it reads

@@ -112,7 +112,7 @@ class AuditLabels {
     AuditEntityGroup(
       key: 'travel',
       name: LocalizedName(ar: 'السفر والتنقّل', en: 'Travel'),
-      tables: ['trips', 'journey_legs'],
+      tables: ['trips', 'journey_legs', 'journey_stays'],
     ),
     AuditEntityGroup(
       key: 'reference',
@@ -247,6 +247,7 @@ class AuditLabels {
     'report_misses': LocalizedName(ar: 'تقرير متأخر', en: 'Late report'),
     'trips': LocalizedName(ar: 'رحلة', en: 'Trip'),
     'journey_legs': LocalizedName(ar: 'حركة تنقّل', en: 'Movement'),
+    'journey_stays': LocalizedName(ar: 'إقامة', en: 'Stay'),
     'module_type_teams': LocalizedName(ar: 'فريق نوع ملف', en: 'File type team'),
     'module_reports': LocalizedName(ar: 'تقرير ملف', en: 'File report'),
     'module_report_attachments': LocalizedName(

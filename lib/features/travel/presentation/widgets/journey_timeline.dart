@@ -6,34 +6,36 @@ import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/glass_tokens.dart';
 import '../../domain/journey.dart';
 import '../../domain/journey_leg.dart';
+import '../../domain/journey_stay.dart';
 import '../travel_labels.dart';
 
-/// A man's season drawn as a line: where he started, where he has got to, and
-/// what is still ahead.
+/// A man's season drawn as a line of PLACES HE LIVED, connected by the
+/// movements that carried him between them.
 ///
-/// The shape is borrowed on purpose from [SeasonRoadmapView], which draws the
-/// season's WORK as a spine with numbered stops. This draws the same season in
-/// space rather than in task order, and using the same visual language means a
-/// reader who has seen one understands the other without being taught.
+/// The proportions are the point. A season is thirty-five days — about thirty
+/// in مكة and five in المدينة — and a few hours of aeroplane and train. So a
+/// stay is a card carrying its city, its مسكن and its length, and a movement is
+/// a thin line between two cards with its terminals in small type.
 ///
-/// Two rules govern every colour on it, and both exist because the obvious
-/// implementation gets them backwards:
+/// The first version of this widget had it the other way round and drew a spine
+/// of airports. That put the hours on the page and left the month off it, and
+/// it invented a "gap" between مطار جدة and محطة مكة that had never been a gap:
+/// جدة is where the aeroplane touched down on the way to مكة.
 ///
-///   * **A movement he arranged himself is drawn exactly like a booked one.**
-///     Same row, same weight, a car for an icon instead of an aeroplane. It is
-///     not annotated as an exception, because it is not one — «بسيارة خاصة» is
-///     a complete answer to how he got to المدينة.
-///   * **Absence is never red.** An unrecorded step is a dotted connector and a
-///     grey sentence with a button on it. A return that has not been booked is
-///     plain text. Red is kept for `missed` and `cancelled` — for movements
-///     that happened and went wrong.
+/// Two rules still govern every colour, both from 0129:
+///
+///   * **A movement he arranged himself is drawn exactly like a booked one** —
+///     same weight, a car for an icon. «بسيارة خاصة» is a complete answer.
+///   * **Absence is never red.** A stay whose مسكن the files have not resolved
+///     simply omits the line; a return not yet booked is plain text. Red
+///     belongs to `missed` and `cancelled` — movements that happened and went
+///     wrong.
 class JourneyTimeline extends StatelessWidget {
   const JourneyTimeline({
     super.key,
     required this.journey,
     this.busyLegId,
     this.onConfirm,
-    this.onRecordGap,
     this.onOpenLeg,
   });
 
@@ -45,9 +47,6 @@ class JourneyTimeline extends StatelessWidget {
   /// Offered on a movement waiting for somebody's word. Null when this reader
   /// may not confirm anything — the row then simply states its status.
   final void Function(JourneyLeg leg)? onConfirm;
-
-  /// Offered on an unrecorded step between two places.
-  final VoidCallback? onRecordGap;
 
   final void Function(JourneyLeg leg)? onOpenLeg;
 
@@ -66,7 +65,6 @@ class JourneyTimeline extends StatelessWidget {
             isLast: i == entries.length - 1,
             busyLegId: busyLegId,
             onConfirm: onConfirm,
-            onRecordGap: onRecordGap,
             onOpenLeg: onOpenLeg,
           ),
       ],
@@ -76,7 +74,7 @@ class JourneyTimeline extends StatelessWidget {
 
 /// The width of the spine column — the node plus the air around it.
 const double _spineWidth = 44;
-const double _nodeSize = 22;
+const double _nodeSize = 26;
 
 class _Entry extends StatelessWidget {
   const _Entry({
@@ -85,7 +83,6 @@ class _Entry extends StatelessWidget {
     required this.isLast,
     this.busyLegId,
     this.onConfirm,
-    this.onRecordGap,
     this.onOpenLeg,
   });
 
@@ -94,7 +91,6 @@ class _Entry extends StatelessWidget {
   final bool isLast;
   final String? busyLegId;
   final void Function(JourneyLeg leg)? onConfirm;
-  final VoidCallback? onRecordGap;
   final void Function(JourneyLeg leg)? onOpenLeg;
 
   @override
@@ -111,16 +107,12 @@ class _Entry extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.sm),
               child: switch (entry) {
-                JourneyStop() => _StopCard(stop: entry as JourneyStop),
+                JourneyStop() => _StayCard(stay: (entry as JourneyStop).stay),
                 JourneyMove() => _MoveCard(
                   leg: (entry as JourneyMove).leg,
                   busy: busyLegId == (entry as JourneyMove).leg.id,
                   onConfirm: onConfirm,
                   onOpen: onOpenLeg,
-                ),
-                JourneyGap() => _GapCard(
-                  gap: entry as JourneyGap,
-                  onRecord: onRecordGap,
                 ),
               },
             ),
@@ -148,12 +140,10 @@ class _Spine extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final dim = scheme.outlineVariant;
 
-    // A stop carries the node; a movement is just the line passing through,
-    // with its mode drawn small on it.
     final stop = entry is JourneyStop ? entry as JourneyStop : null;
     final move = entry is JourneyMove ? entry as JourneyMove : null;
 
-    final reached = stop != null && stop.state != JourneyStopState.upcoming;
+    final reached = stop != null && !stop.stay.isFuture;
     final lineColor = reached ? Accent.green.of(context) : dim;
 
     return Column(
@@ -165,25 +155,13 @@ class _Spine extends StatelessWidget {
           ),
         ),
         if (stop != null)
-          _Node(state: stop.state)
+          _StayNode(stay: stop.stay)
         else if (move != null)
-          _ModeDot(leg: move.leg)
-        else
-          // A gap: the line breaks. Dotted, and in the ordinary outline colour
-          // — this is "we do not know", not "something is wrong".
-          SizedBox(
-            height: _nodeSize,
-            child: CustomPaint(
-              painter: _DottedLinePainter(color: dim),
-              size: const Size(2, _nodeSize),
-            ),
-          ),
+          _ModeDot(leg: move.leg),
         Expanded(
           child: Container(
             width: 2,
-            color: isLast
-                ? Colors.transparent
-                : (entry is JourneyStop && reached ? lineColor : dim),
+            color: isLast ? Colors.transparent : (reached ? lineColor : dim),
           ),
         ),
       ],
@@ -191,28 +169,26 @@ class _Spine extends StatelessWidget {
   }
 }
 
-/// A place on the line.
-class _Node extends StatelessWidget {
-  const _Node({required this.state});
+/// A place he stayed. Larger than the mode dot, because it is the larger fact.
+class _StayNode extends StatelessWidget {
+  const _StayNode({required this.stay});
 
-  final JourneyStopState state;
+  final JourneyStay stay;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final green = Accent.green.of(context);
+    final icon = switch (stay.kind) {
+      StayKind.home => AppIcons.myProfile,
+      StayKind.rites => AppIcons.checkIn,
+      StayKind.residence => AppIcons.organization,
+    };
 
-    return switch (state) {
-      // Been and gone: filled, with a tick.
-      JourneyStopState.done => Container(
-        width: _nodeSize,
-        height: _nodeSize,
-        decoration: BoxDecoration(color: green, shape: BoxShape.circle),
-        child: Icon(Icons.check, size: 14, color: scheme.surface),
-      ),
-      // Where he is now: a ring, heavier than the rest, so the eye finds it
-      // before it reads anything.
-      JourneyStopState.current => Container(
+    if (stay.isCurrent) {
+      // Where he is now: a heavier ring, so the eye finds it before it reads
+      // anything else on the page.
+      return Container(
         width: _nodeSize + 6,
         height: _nodeSize + 6,
         decoration: BoxDecoration(
@@ -220,29 +196,33 @@ class _Node extends StatelessWidget {
           color: green.withValues(alpha: 0.16),
           border: Border.all(color: green, width: 2.5),
         ),
-        child: Center(
-          child: Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(color: green, shape: BoxShape.circle),
-          ),
-        ),
-      ),
-      // Ahead of him: an empty outline.
-      JourneyStopState.upcoming => Container(
+        child: Icon(icon, size: 14, color: green),
+      );
+    }
+
+    if (stay.isPast) {
+      return Container(
         width: _nodeSize,
         height: _nodeSize,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: scheme.surface,
-          border: Border.all(color: scheme.outlineVariant, width: 2),
-        ),
+        decoration: BoxDecoration(color: green, shape: BoxShape.circle),
+        child: Icon(icon, size: 13, color: scheme.surface),
+      );
+    }
+
+    return Container(
+      width: _nodeSize,
+      height: _nodeSize,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: scheme.surface,
+        border: Border.all(color: scheme.outlineVariant, width: 2),
       ),
-    };
+      child: Icon(icon, size: 13, color: scheme.onSurfaceVariant),
+    );
   }
 }
 
-/// The way he travelled, drawn on the line itself.
+/// The way he travelled, drawn small on the line itself.
 class _ModeDot extends StatelessWidget {
   const _ModeDot({required this.leg});
 
@@ -251,10 +231,9 @@ class _ModeDot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final done = leg.status.isDone;
     final colour = leg.status.isFailure
         ? scheme.error
-        : done
+        : leg.status.isDone
         ? Accent.green.of(context)
         : scheme.onSurfaceVariant;
 
@@ -267,42 +246,98 @@ class _ModeDot extends StatelessWidget {
   }
 }
 
-class _StopCard extends StatelessWidget {
-  const _StopCard({required this.stop});
+/// Where he was based: the city, the مسكن, and how long — the substantial card.
+class _StayCard extends StatelessWidget {
+  const _StayCard({required this.stay});
 
-  final JourneyStop stop;
+  final JourneyStay stay;
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
-    final isHere = stop.state == JourneyStopState.current;
+    final nights = stay.nights;
 
     return Padding(
-      padding: const EdgeInsets.only(top: 2),
-      child: Row(
+      padding: const EdgeInsets.only(top: 2, bottom: AppSpacing.xs),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Flexible(
-            child: Text(
-              stop.place?.of(context) ?? '—',
-              style: text.titleSmall?.copyWith(
-                fontWeight: isHere ? FontWeight.w700 : FontWeight.w600,
-                color: stop.state == JourneyStopState.upcoming
-                    ? scheme.onSurfaceVariant
-                    : scheme.onSurface,
+          Row(
+            children: [
+              Flexible(
+                child: Text(
+                  stay.city?.of(context) ?? '—',
+                  style: text.titleSmall?.copyWith(
+                    fontWeight: stay.isCurrent
+                        ? FontWeight.w700
+                        : FontWeight.w600,
+                    color: stay.isFuture
+                        ? scheme.onSurfaceVariant
+                        : scheme.onSurface,
+                  ),
+                ),
               ),
-            ),
+              if (stay.isCurrent) ...[
+                const SizedBox(width: AppSpacing.sm),
+                _Pill(label: l.travelHereNow, color: Accent.green.of(context)),
+              ],
+              const Spacer(),
+              // How long he was there — the number this whole arrangement
+              // exists to put on the page.
+              if (nights != null && (nights > 0 || stay.isCurrent))
+                Text(
+                  stay.isCurrent
+                      ? l.travelDaysSoFar(nights)
+                      : l.travelDays(nights),
+                  style: text.labelMedium?.copyWith(
+                    color: stay.isCurrent
+                        ? Accent.green.of(context)
+                        : scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+            ],
           ),
-          if (isHere) ...[
-            const SizedBox(width: AppSpacing.sm),
-            _Pill(label: l.travelHereNow, color: Accent.green.of(context)),
-          ],
-          const Spacer(),
-          if (stop.at != null)
+          const SizedBox(height: 2),
+          // The مسكن, when the operational files post him to one (0136). It is
+          // never asked for here: nobody types a hotel, and a stay with none
+          // resolved simply does not draw the line — that is a fact about the
+          // paperwork, not a blank the traveller should be handed.
+          if (stay.place != null)
+            Row(
+              children: [
+                Icon(
+                  AppIcons.organization,
+                  size: 14,
+                  color: scheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Flexible(
+                  child: Text(
+                    stay.place!.of(context),
+                    style: text.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          if (stay.arrivedAt != null)
             Text(
-              travelWhen(context, stop.at, withTime: false),
-              style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              stay.departedAt == null
+                  ? l.travelSince(
+                      travelWhen(context, stay.arrivedAt, withTime: false),
+                    )
+                  : '${travelWhen(context, stay.arrivedAt, withTime: false)}'
+                        ' — '
+                        '${travelWhen(context, stay.departedAt, withTime: false)}',
+              style: text.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
+              ),
             ),
         ],
       ),
@@ -310,7 +345,7 @@ class _StopCard extends StatelessWidget {
   }
 }
 
-/// One movement: what carried him, when, and — when nothing else can say —
+/// One movement: what carried him, when, and — where nothing else can say —
 /// the button that closes it out.
 class _MoveCard extends StatelessWidget {
   const _MoveCard({
@@ -341,6 +376,8 @@ class _MoveCard extends StatelessWidget {
             : travelModeLabel(context, leg.mode));
 
     final when = leg.actualDepartureAt ?? leg.plannedDepartureAt;
+    final from = leg.fromPoint?.of(context);
+    final to = leg.toPoint?.of(context);
 
     return InkWell(
       onTap: onOpen == null ? null : () => onOpen!(leg),
@@ -358,7 +395,7 @@ class _MoveCard extends StatelessWidget {
                 Flexible(
                   child: Text(
                     title,
-                    style: text.bodyMedium?.copyWith(
+                    style: text.bodySmall?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
                     maxLines: 1,
@@ -366,43 +403,34 @@ class _MoveCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                _Pill(
-                  label: legStatusLabel(context, leg.status),
-                  color: legStatusColor(context, leg.status),
-                ),
-                if (leg.attachmentCount > 0) ...[
-                  const SizedBox(width: AppSpacing.xs),
-                  Icon(
-                    AppIcons.travelTicket,
-                    size: 14,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ],
-              ],
-            ),
-            const SizedBox(height: 2),
-            Row(
-              children: [
                 Text(
-                  travelWhen(context, when),
+                  travelWhen(context, when, withTime: false),
                   style: text.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
                 ),
-                // The plan, struck through, but only when it actually differs.
-                // Showing it beside every punctual departure would be noise.
-                if (leg.departedLate) ...[
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    travelWhen(context, leg.plannedDepartureAt),
-                    style: text.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-                      decoration: TextDecoration.lineThrough,
-                    ),
+                if (leg.status.isFailure) ...[
+                  const SizedBox(width: AppSpacing.xs),
+                  _Pill(
+                    label: legStatusLabel(context, leg.status),
+                    color: legStatusColor(context, leg.status),
                   ),
                 ],
               ],
             ),
+            // The terminals, small and underneath — a detail of the vehicle,
+            // not somewhere he went. Drawing these as destinations is exactly
+            // what 0135 was written to undo.
+            if (from != null && to != null)
+              Text(
+                '$from ← $to',
+                style: text.bodySmall?.copyWith(
+                  fontSize: 11,
+                  color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             if (busy)
               const Padding(
                 padding: EdgeInsets.only(top: AppSpacing.sm),
@@ -435,8 +463,7 @@ class _MoveCard extends StatelessWidget {
                   ),
                 ),
               ),
-            ] else if (leg.isOverdue && onConfirm != null) ...[
-              const SizedBox(height: AppSpacing.xs),
+            ] else if (leg.isOverdue && onConfirm != null)
               Align(
                 alignment: AlignmentDirectional.centerStart,
                 child: TextButton.icon(
@@ -445,81 +472,12 @@ class _MoveCard extends StatelessWidget {
                   label: Text(l.travelConfirmArrival),
                   style: TextButton.styleFrom(
                     visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
                   ),
                 ),
               ),
-            ],
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// A step nobody recorded.
-///
-/// Grey, dotted, and phrased as a statement of fact. The commonest cause by far
-/// is the coach from جدة airport to مكة, which the mission does not track and
-/// has no reason to — so this must never look like a fault, and it offers
-/// rather than demands.
-class _GapCard extends StatelessWidget {
-  const _GapCard({required this.gap, this.onRecord});
-
-  final JourneyGap gap;
-  final VoidCallback? onRecord;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-
-    final from = gap.from?.of(context);
-    final to = gap.to?.of(context);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: AppSpacing.xs,
-        horizontal: AppSpacing.xs,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Which move, in words. Without this the line reads as a complaint
-          // about nothing in particular: the reader sees مطار جدة above and
-          // محطة مكة below and is left to infer what is being asked.
-          if (from != null && to != null)
-            Text(
-              l.travelBetween(from, to),
-              style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-          Row(
-            children: [
-              Flexible(
-                child: Text(
-                  // Says «اختياري» in the same breath. The commonest cause of
-                  // this line by far is the coach from the airport, which the
-                  // mission does not track and has no reason to — so it must
-                  // not read as a form somebody failed to fill in.
-                  l.travelUntrackedTransferOptional,
-                  style: text.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
-                  ),
-                ),
-              ),
-              if (onRecord != null) ...[
-                const SizedBox(width: AppSpacing.sm),
-                TextButton(
-                  onPressed: onRecord,
-                  style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  child: Text(l.travelRecordTransferShort),
-                ),
-              ],
-            ],
-          ),
-        ],
       ),
     );
   }
@@ -550,33 +508,4 @@ class _Pill extends StatelessWidget {
       ),
     );
   }
-}
-
-class _DottedLinePainter extends CustomPainter {
-  const _DottedLinePainter({required this.color});
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round;
-    const dash = 3.0;
-    const gap = 4.0;
-    var y = 0.0;
-    final x = size.width / 2;
-    while (y < size.height) {
-      canvas.drawLine(
-        Offset(x, y),
-        Offset(x, (y + dash).clamp(0, size.height)),
-        paint,
-      );
-      y += dash + gap;
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DottedLinePainter old) => old.color != color;
 }

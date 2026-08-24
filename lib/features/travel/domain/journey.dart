@@ -1,75 +1,97 @@
 import '../../../core/l10n/localized_name.dart';
 import 'journey_leg.dart';
+import 'journey_stay.dart';
 import 'trip.dart';
 
-/// One man's whole season of travel, **derived and never stored**.
+/// One man's whole season of travel.
 ///
-/// 0064 wrote the argument down once and it is the same one here: a cluster's
-/// capacity is a column and the sum of its groups is not, because the second is
-/// a function of rows that already exist and a column would only be a second
-/// place for it to be wrong. Where a man is now, what is next, how many days
-/// until he flies home — every one of these is a function of his legs. Stored,
-/// they would go stale the first time somebody edited a leg and nothing
-/// recomputed; computed here, they cannot.
+/// **The spine is where he STAYS; the legs are what carry him between.** That
+/// inversion is the whole of 0135, and it is worth stating plainly because the
+/// first version of this class had it the other way round: the timeline was
+/// made of airports — مطار دمشق, مطار جدة, محطة مكة — every one of which is
+/// somewhere a man stands for an hour holding a bag.
 ///
-/// So this class holds no state of its own. It is built from the rows
-/// `employee_journey` (0130) returns, and everything on it is a getter over
-/// that list — which is also what makes it testable with no database at all.
+/// A season is thirty-five days: about thirty in مكة and five in المدينة, in a
+/// hotel or a camp, with a few hours of aeroplane and train between them. So
+/// the substantial thing on the page is «مكة المكرمة · 30 يوماً · فندق الصفوة»,
+/// and the flight underneath it prints its terminals in small type, where a
+/// terminal belongs.
+///
+/// What is DERIVED here and never stored — 0130's argument, which still stands:
+/// where he is now, what is next, how many days until he flies home. What IS
+/// stored is the stay ITSELF — its city and its dates — because a man with
+/// `travels = false` has no legs at all and is certainly still somewhere. The
+/// hotel is not stored either: it follows from his operational-file postings
+/// (0136), and the file is the one record of where the mission houses him.
 class Journey {
-  Journey({required this.participantId, required List<JourneyLeg> legs})
-    : _all = List.unmodifiable(legs);
+  Journey({
+    required this.participantId,
+    required List<JourneyLeg> legs,
+    List<JourneyStay> stays = const [],
+  }) : _all = List.unmodifiable(legs),
+       stays = List.unmodifiable(stays);
 
   final String participantId;
   final List<JourneyLeg> _all;
 
-  /// Every leg ever recorded, including the ones that were superseded. The
-  /// history is here for whoever wants it.
+  /// Where he was based, in order. Empty only before the spine has been built —
+  /// `ensure_participant_stays` runs on every assignment.
+  final List<JourneyStay> stays;
+
+  /// Every leg ever recorded, superseded ones included.
   List<JourneyLeg> get allLegs => _all;
 
-  /// The legs that still stand, in the order they happen. This is what the
-  /// timeline draws and what every derivation below reads.
+  /// The legs that still stand, in the order they happen.
   late final List<JourneyLeg> legs = _all
       .where((l) => l.status.isLive)
       .toList(growable: false);
 
-  /// Nothing has been recorded at all. Not an error and not a broken screen —
-  /// most of the roster looks like this until the flights are entered — so the
-  /// UI says so in a sentence rather than drawing an empty skeleton.
-  bool get isEmpty => legs.isEmpty;
+  /// Nothing recorded at all — not an error, and the ordinary state of most of
+  /// the roster until the flights are entered.
+  bool get isEmpty => legs.isEmpty && stays.isEmpty;
 
   // ------------------------------------------------------------ where he is
 
-  /// The legs he has actually completed, in order.
   late final List<JourneyLeg> _done = legs
       .where((l) => l.status.isDone)
       .toList(growable: false);
 
-  /// **Where he is now**: the destination of the last movement he completed.
+  /// **Where he is based now** — the stay he has arrived at and not yet left.
   ///
-  /// Null before he has completed anything, which reads as "he has not set off
-  /// yet" — and the origin of his first leg is the honest thing to show then.
-  LocalizedName? get currentPlace =>
-      _done.isEmpty ? legs.firstOrNull?.fromPoint : _done.last.toPoint;
+  /// Read off the spine rather than off the last completed movement, which is
+  /// the point of the spine existing: the last movement landed him at an
+  /// airport, and he does not live in airports.
+  JourneyStay? get currentStay {
+    for (final stay in stays) {
+      if (stay.isCurrent) return stay;
+    }
+    return null;
+  }
 
-  /// When he got there.
-  DateTime? get currentPlaceSince =>
-      _done.isEmpty ? null : _done.last.effectiveArrivalAt;
+  /// The city he is in, for the headline.
+  LocalizedName? get currentPlace => currentStay?.city;
 
-  /// Whether he has set off at all yet.
+  /// The مسكن — the hotel the operational files post him to (0136). Null when
+  /// they have not posted him anywhere in this city, which is a fact about the
+  /// paperwork rather than a question for anybody.
+  LocalizedName? get currentResidence => currentStay?.place;
+
+  DateTime? get currentPlaceSince => currentStay?.arrivedAt;
+
+  /// How long he has been where he is.
+  int? get daysInCurrentStay => currentStay?.nights;
+
   bool get hasDeparted =>
       _done.isNotEmpty || legs.any((l) => l.actualDepartureAt != null);
 
-  /// Whether the whole journey is behind him — he has completed a return.
+  /// Whether the whole journey is behind him.
   bool get isHome =>
       _done.any((l) => l.role == LegRole.outbound && l.status.isDone);
 
   // --------------------------------------------------------- what is next
 
-  /// The movement he is in the middle of, or about to make: the first live leg
-  /// he has not completed. Null once everything recorded is done.
   JourneyLeg? get currentLeg => legs.where((l) => !l.status.isDone).firstOrNull;
 
-  /// The one after that.
   JourneyLeg? get nextLeg {
     final rest = legs.where((l) => !l.status.isDone).toList();
     return rest.length > 1 ? rest[1] : null;
@@ -79,14 +101,12 @@ class Journey {
 
   /// His flight home, if one has been booked. **Null is the ordinary state**
   /// for most of the season — a charter return is very often set two days out —
-  /// and the UI must say «لم تُحدَّد رحلة العودة بعد» in the plain text colour
-  /// rather than as a warning (BR-12).
+  /// so the UI says so in the plain text colour, never as a warning.
   JourneyLeg? get returnLeg =>
       legs.where((l) => l.role == LegRole.outbound).firstOrNull;
 
   DateTime? get returnAt => returnLeg?.effectiveDepartureAt;
 
-  /// The leg that brought him in, once it has happened.
   JourneyLeg? get arrivalLeg =>
       legs.where((l) => l.role == LegRole.inbound).firstOrNull;
 
@@ -95,28 +115,31 @@ class Journey {
     return leg != null && leg.status.isDone ? leg.effectiveArrivalAt : null;
   }
 
-  /// Whole days until he flies home, counted the way a person counts them —
-  /// by the calendar, not by elapsed hours. "tomorrow" is 1 even at 23:00.
-  ///
-  /// Negative once the date has passed with nothing confirmed, which the gaps
-  /// board is the right place to notice; here it just stops being a countdown.
+  /// Whole days until he flies home, counted by the calendar rather than by
+  /// elapsed hours — nobody has ever meant "48 hours" by «بعد يومين».
   int? get daysToReturn {
     final at = returnAt;
     return at == null ? null : _wholeDaysBetween(DateTime.now(), at);
   }
 
-  /// Which day of his stay it is. 1 on the day he landed.
+  /// Which day of his season it is. 1 on the day he landed.
+  ///
+  /// Falls back to the first housed stay, so a man already resident in the
+  /// Kingdom — who has no arrival flight and never will — still gets a count.
   int? get dayOfJourney {
-    final from = arrivedAt;
+    final from = arrivedAt ?? _firstHousedArrival;
     return from == null ? null : _wholeDaysBetween(from, DateTime.now()) + 1;
   }
 
-  /// How far through he is, 0 to 1.
-  ///
-  /// Provisional while [returnLeg] is null: a journey with no way home booked
-  /// has no known end, so the figure is over what is KNOWN and the UI should
-  /// not present it as a percentage of the whole. [isProgressProvisional] says
-  /// which case this is.
+  DateTime? get _firstHousedArrival {
+    for (final stay in stays) {
+      if (stay.kind.isHoused && stay.arrivedAt != null) return stay.arrivedAt;
+    }
+    return null;
+  }
+
+  /// How far through he is, 0 to 1. Provisional while [returnLeg] is null — a
+  /// journey with no way home booked has no known end.
   double get progress {
     if (legs.isEmpty) return 0;
     return _done.length / legs.length;
@@ -126,66 +149,47 @@ class Journey {
 
   // -------------------------------------------------------- what is missing
 
-  /// Movements whose hour passed with nobody saying what happened. The private
-  /// car lands here, and so does a flight nobody ticked off.
   List<JourneyLeg> get overdueLegs =>
       legs.where((l) => l.isOverdue).toList(growable: false);
 
-  /// Legs only he can close out, because nothing else in the world can.
   List<JourneyLeg> get awaitingHisWord =>
       legs.where((l) => l.needsManualConfirmation).toList(growable: false);
 
   // ------------------------------------------------------------ the drawing
 
-  /// The journey as an ordered line of places and movements — what the timeline
-  /// renders, built once here so the widget stays a widget.
-  ///
-  /// Where two consecutive legs do not join up (he landed at جدة and his next
-  /// recorded movement starts at مكة) a [JourneyGap] is emitted between them.
-  /// That gap is drawn as a **neutral** connector, never as an error: the
-  /// commonest cause by far is the airport coach, which nobody tracks and
-  /// nobody needs to.
+  /// The journey as an ordered line: a place he stayed, the movement that took
+  /// him on, the next place he stayed.
   late final List<JourneyEntry> line = _buildLine();
 
   List<JourneyEntry> _buildLine() {
-    if (legs.isEmpty) return const [];
-
-    final out = <JourneyEntry>[];
-    final reached = _done.length;
-
-    // Where he stands on the line, as an index into the stops: 0 is the origin
-    // he has not left, 1 is the destination of his first completed leg.
-    var stopIndex = 0;
-
-    void addStop(LocalizedName? place, DateTime? at) {
-      final state = stopIndex < reached
-          ? JourneyStopState.done
-          : stopIndex == reached
-          ? JourneyStopState.current
-          : JourneyStopState.upcoming;
-      out.add(JourneyStop(place: place, state: state, at: at));
-      stopIndex++;
+    // No spine yet. The server builds it the moment anybody is assigned, so
+    // this is a brief window rather than a supported shape — but the screen
+    // should still say something true while it lasts.
+    if (stays.isEmpty) {
+      return List.unmodifiable([for (final leg in legs) JourneyMove(leg)]);
     }
 
-    addStop(legs.first.fromPoint, legs.first.actualDepartureAt);
+    final byId = {for (final leg in legs) leg.id: leg};
+    final out = <JourneyEntry>[];
 
-    for (var i = 0; i < legs.length; i++) {
-      final leg = legs[i];
-      out.add(JourneyMove(leg));
-      addStop(leg.toPoint, leg.effectiveArrivalAt);
-
-      final next = i + 1 < legs.length ? legs[i + 1] : null;
-      if (next != null &&
-          leg.toPointId != null &&
-          next.fromPointId != null &&
-          leg.toPointId != next.fromPointId) {
-        // Named at both ends. A bare «لم تُسجَّل وسيلة الانتقال» floating
-        // between two rows does not say WHICH move it is asking about, and a
-        // reader looking at جدة above it and مكة below it should not have to
-        // work that out.
-        out.add(JourneyGap(from: leg.toPoint, to: next.fromPoint));
-        addStop(next.fromPoint, next.effectiveDepartureAt);
+    for (var i = 0; i < stays.length; i++) {
+      final stay = stays[i];
+      // The movement that brought him here goes above it, looked up by the
+      // stay's own `arrival_leg_id` — so the two halves cannot drift out of
+      // step the way two independently sorted lists would.
+      if (i > 0) {
+        final leg = byId[stay.arrivalLegId];
+        if (leg != null) out.add(JourneyMove(leg));
       }
+      out.add(JourneyStop(stay));
+    }
+
+    // Anything the spine does not account for — a movement recorded since the
+    // last rebuild. Appended rather than dropped: a leg that exists is a fact,
+    // and silently omitting it would be the drawing deciding what is true.
+    final drawn = out.whereType<JourneyMove>().map((m) => m.leg.id).toSet();
+    for (final leg in legs) {
+      if (!drawn.contains(leg.id)) out.add(JourneyMove(leg));
     }
 
     return List.unmodifiable(out);
@@ -193,7 +197,7 @@ class Journey {
 
   /// Whole calendar days from [from] to [to]. Date arithmetic and not
   /// `Duration.inDays`, because the second answers "how many 24-hour blocks"
-  /// and nobody has ever meant that by "بعد يومين".
+  /// and nobody has ever meant that by «بعد يومين».
   static int _wholeDaysBetween(DateTime from, DateTime to) {
     final a = DateTime(from.year, from.month, from.day);
     final b = DateTime(to.year, to.month, to.day);
@@ -202,60 +206,34 @@ class Journey {
 
   static Journey fromRows(
     String participantId,
-    List<Map<String, dynamic>> rows,
-  ) => Journey(
+    List<Map<String, dynamic>> legRows, {
+    List<Map<String, dynamic>> stayRows = const [],
+  }) => Journey(
     participantId: participantId,
-    legs: rows.map(JourneyLeg.fromRow).toList(growable: false),
+    legs: legRows.map(JourneyLeg.fromRow).toList(growable: false),
+    stays: stayRows.map(JourneyStay.fromRow).toList(growable: false),
   );
 }
 
-/// One thing on the drawn line: a place, a movement between places, or an
-/// unrecorded step between them.
+/// One thing on the drawn line: a place he stayed, or a movement between two.
 sealed class JourneyEntry {
   const JourneyEntry();
 }
 
-enum JourneyStopState {
-  /// He has been and gone.
-  done,
-
-  /// Where he is now.
-  current,
-
-  /// Ahead of him.
-  upcoming,
-}
-
-/// Somewhere he stands, or stood, or will.
+/// Somewhere he was based — the substantial thing on the page.
 class JourneyStop extends JourneyEntry {
-  const JourneyStop({required this.place, required this.state, this.at});
+  const JourneyStop(this.stay);
 
-  final LocalizedName? place;
-  final JourneyStopState state;
-
-  /// When he reached it — or, for the origin, when he left it.
-  final DateTime? at;
+  final JourneyStay stay;
 }
 
-/// A recorded movement between two places.
+/// A recorded movement between two stays.
+///
+/// Its terminals are printed small, underneath: مطار الملك عبدالعزيز is a
+/// detail of the flight, not a destination. Drawing it as a destination is
+/// exactly the mistake 0135 was written to undo.
 class JourneyMove extends JourneyEntry {
   const JourneyMove(this.leg);
 
   final JourneyLeg leg;
-}
-
-/// Two legs that do not join up.
-///
-/// **Not an error, and not a demand.** Almost always the coach from the
-/// airport, which nobody tracks and nobody needs to — so it is drawn as a
-/// dotted connector in the plain text colour, says which two places it falls
-/// between, and calls itself optional. The button beside it is an invitation
-/// for the cases where somebody DOES want the move on the record, not a blank
-/// the timeline is refusing to accept.
-class JourneyGap extends JourneyEntry {
-  const JourneyGap({this.from, this.to});
-
-  /// Where the movement before it ended, and where the next one starts.
-  final LocalizedName? from;
-  final LocalizedName? to;
 }

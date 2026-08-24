@@ -137,7 +137,6 @@ class _View extends StatelessWidget {
                       journey: journey,
                       busyLegId: state.busyLegId,
                       onConfirm: (leg) => _confirm(context, leg),
-                      onRecordGap: () => _record(context),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),

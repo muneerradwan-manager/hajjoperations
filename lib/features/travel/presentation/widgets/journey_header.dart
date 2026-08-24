@@ -59,12 +59,44 @@ class JourneyHeader extends StatelessWidget {
               ),
             ],
           ),
+          // The مسكن under the city. This is the line the room actually wants —
+          // «مكة المكرمة» says which half of the season he is in, «فندق الصفوة»
+          // says where to find him tonight.
+          if (journey.currentResidence case final residence?) ...[
+            const SizedBox(height: 2),
+            Padding(
+              padding: const EdgeInsetsDirectional.only(start: 28),
+              child: Row(
+                children: [
+                  Icon(
+                    AppIcons.organization,
+                    size: 15,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Flexible(
+                    child: Text(
+                      residence.of(context),
+                      style: text.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.sm),
           Wrap(
             spacing: AppSpacing.md,
             runSpacing: AppSpacing.xs,
             children: [
-              if (journey.dayOfJourney case final day? when day > 0)
+              if (journey.daysInCurrentStay case final days?
+                  when days > 0 && journey.currentStay?.kind.isHoused == true)
+                _Fact(icon: AppIcons.travelWhen, label: l.travelDaysSoFar(days))
+              else if (journey.dayOfJourney case final day? when day > 0)
                 _Fact(icon: AppIcons.travelWhen, label: l.travelDayOf(day)),
               _ReturnFact(journey: journey),
             ],
