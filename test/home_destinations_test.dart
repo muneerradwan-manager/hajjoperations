@@ -139,6 +139,10 @@ void main() {
           Routes.complaints,
           Routes.myCheckIns,
           Routes.myIncidents,
+          // Where he is being sent, and when he comes home (0129). On the same
+          // shelf and for the same reason as the rest of العام: it reaches him
+          // by being about him, not by a grant.
+          Routes.myJourney,
         },
         reason:
             'the doors that belong to everyone changed — which is either a '

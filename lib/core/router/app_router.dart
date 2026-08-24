@@ -41,6 +41,8 @@ import '../../features/status/presentation/splash_screen.dart';
 import '../../features/status/presentation/suspended_screen.dart';
 import '../../features/tasks/presentation/tasks_board_screen.dart';
 import '../../features/tasks/presentation/tasks_screen.dart';
+import '../../features/travel/presentation/my_journey_screen.dart';
+import '../../features/travel/presentation/trips_board_screen.dart';
 import '../animations/animations.dart';
 import '../constants/permission_codes.dart';
 import 'go_router_refresh_stream.dart';
@@ -137,6 +139,18 @@ abstract class Routes {
   /// on it: that page is a person's work, this one is authority over other
   /// people's, and the two were never the same screen.
   static const tasksManage = '/tasks/manage';
+
+  /// A man's own journey through the season — where he is, and when he flies
+  /// home. Unguarded on purpose, and for the same reason [tasks] is: reading
+  /// where you yourself are being sent is not a privilege anybody grants. See
+  /// migration 0129, where the same judgement is written into RLS.
+  static const myJourney = '/my-journey';
+
+  /// The season's trips, and putting people on them. Guarded — see
+  /// [sectionGuards]. A different door from [myJourney] because it is a
+  /// different thing: one is a man's own arrangements, the other is authority
+  /// over four hundred people's.
+  static const travel = '/travel';
 }
 
 /// What each administered section asks of whoever tries to open it.
@@ -211,6 +225,10 @@ final sectionGuards = <String, bool Function(SessionState)>{
   // deliberately not in this table, for the same reason `/complaints` is not:
   // owning a list is not a permission somebody grants.
   Routes.tasksManage: (s) => s.can(PermissionCodes.tasksAssign),
+
+  // The season's travel board. `/my-journey` — a man's own route home — is
+  // deliberately not in this table, for the same reason `/tasks` is not.
+  Routes.travel: (s) => s.can(PermissionCodes.travelViewAll),
 };
 
 GoRouter buildRouter(SessionCubit session) {
@@ -466,6 +484,18 @@ GoRouter buildRouter(SessionCubit session) {
               child: TasksScreen(
                 compose: s.uri.queryParameters['compose'] == '1',
               ),
+            ),
+          ),
+          GoRoute(
+            path: Routes.myJourney,
+            pageBuilder: (c, s) =>
+                fadeThroughPage(key: s.pageKey, child: const JourneyScreen()),
+          ),
+          GoRoute(
+            path: Routes.travel,
+            pageBuilder: (c, s) => fadeThroughPage(
+              key: s.pageKey,
+              child: const TripsBoardScreen(),
             ),
           ),
           GoRoute(

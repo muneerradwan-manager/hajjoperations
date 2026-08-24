@@ -254,6 +254,10 @@ class _ViewState extends State<_View> {
                 onOnlyFree: cubit.setOnlyFree,
                 onClear: cubit.clearFilters,
               ),
+              // Only where choosing many is the point. A single-holder role has
+              // nothing to select all OF.
+              if (widget.multiple && state.status == PickerStatus.ready)
+                _SelectAllBar(state: state, cubit: cubit),
               Expanded(
                 child: switch (state.status) {
                   PickerStatus.loading => const SkeletonList(height: 84),
@@ -570,6 +574,88 @@ class _CandidateTile extends StatelessWidget {
                     dense: true,
                   ),
               ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Choosing everybody at once, and letting go of everybody at once.
+///
+/// The count is the important part of this bar, not the checkbox. Assignment at
+/// this scale — a whole intake onto one flight — is an act somebody has to be
+/// able to check before they commit it, and "312 مُحدَّد" is the only thing on
+/// the screen that can be checked at a glance.
+///
+/// «تحديد الكل» means everybody the current FILTERS match, not everybody on
+/// screen. The list arrives forty at a time, so the other reading would quietly
+/// choose forty of four hundred and look identical to success — see
+/// [EmployeePickerCubit.selectAllMatching], which fetches the rest first and is
+/// why this row can show a spinner.
+class _SelectAllBar extends StatelessWidget {
+  const _SelectAllBar({required this.state, required this.cubit});
+
+  final EmployeePickerState state;
+  final EmployeePickerCubit cubit;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    final count = state.selected.length;
+    final all = cubit.allShownSelected && !state.hasMore;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.xs,
+      ),
+      child: Row(
+        children: [
+          if (state.loadingMore)
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2.2),
+            )
+          else
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: Checkbox(
+                value: all,
+                // Tristate in appearance only: something-but-not-everything is
+                // the ordinary state here and should not read as "none".
+                tristate: true,
+                onChanged: (_) =>
+                    all ? cubit.clearSelection() : cubit.selectAllMatching(),
+              ),
+            ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              all ? l.commonClearAll : l.commonSelectAll,
+              style: text.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+          if (count > 0) ...[
+            Text(
+              l.pickerSelectedCount(count),
+              style: text.labelMedium?.copyWith(color: scheme.primary),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            IconButton(
+              tooltip: l.commonClearAll,
+              visualDensity: VisualDensity.compact,
+              icon: Icon(
+                AppIcons.reject,
+                size: 18,
+                color: scheme.onSurfaceVariant,
+              ),
+              onPressed: cubit.clearSelection,
             ),
           ],
         ],

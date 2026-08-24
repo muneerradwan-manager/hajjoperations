@@ -230,4 +230,41 @@ class PermissionCodes {
   /// with more confidence. Until 0121 the table had no delete policy at all, so
   /// this was nobody's — not even an administrator's.
   static const incidentsDelete = 'incidents.delete';
+
+  // ----------------------------------------------------------------- travel
+  /// Seeing his OWN journey is deliberately absent, for the same reason raising
+  /// an incident is: a record of where a man is being sent that he himself
+  /// cannot read is not a record worth keeping. Confirming his own arrival is
+  /// absent for a sharper reason still — for a private car there is no airline
+  /// feed and no gate, so the only person who can say he reached المدينة is the
+  /// man who drove there (see migration 0129).
+
+  /// Reading somebody else's travel — the section on an employee's page. The
+  /// door of the feature, and it requires [employeesView]: you cannot read
+  /// whose journey it is otherwise.
+  static const travelView = 'travel.view';
+
+  /// The whole season's board rather than one man's page.
+  static const travelViewAll = 'travel.view_all';
+
+  /// Entering and changing the flights themselves.
+  static const travelEdit = 'travel.edit';
+
+  /// Putting people on them, and moving them between them. Separate from
+  /// [travelEdit] because whoever knows which people travel together is rarely
+  /// the same person who types in flight numbers.
+  static const travelAssign = 'travel.assign';
+
+  /// Recording what actually happened — departures and arrivals.
+  ///
+  /// Its own code, and this is the split that matters most in the feature: the
+  /// man standing at the gate ticking off sixty arrivals should be able to do
+  /// exactly that and not to rewrite the timetable. The same argument
+  /// [employeesPassword] makes against being folded into [employeesEdit].
+  static const travelConfirm = 'travel.confirm';
+
+  /// Erasing a trip entered by mistake. Cancelling one is a status and belongs
+  /// to [travelEdit]; this is the other thing, and the database refuses it
+  /// outright while anybody is still aboard.
+  static const travelDelete = 'travel.delete';
 }

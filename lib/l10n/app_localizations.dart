@@ -1034,6 +1034,18 @@ abstract class AppLocalizations {
   /// **'Search'**
   String get commonSearch;
 
+  /// No description provided for @commonClearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear selection'**
+  String get commonClearAll;
+
+  /// No description provided for @pickerSelectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String pickerSelectedCount(int count);
+
   /// No description provided for @commonSelectAll.
   ///
   /// In en, this message translates to:
@@ -8677,6 +8689,690 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Everything filed against a past season stays readable exactly as it was. Closing a year hides nothing.'**
   String get roadmapNoteArchive;
+
+  /// No description provided for @navMyJourney.
+  ///
+  /// In en, this message translates to:
+  /// **'My journey'**
+  String get navMyJourney;
+
+  /// No description provided for @navMyJourneySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your arrival, your movements and when you fly home, from end to end.'**
+  String get navMyJourneySubtitle;
+
+  /// No description provided for @navTravel.
+  ///
+  /// In en, this message translates to:
+  /// **'Travel and movement'**
+  String get navTravel;
+
+  /// No description provided for @navTravelSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The season\'s trips, and who is on each of them.'**
+  String get navTravelSubtitle;
+
+  /// No description provided for @perm_travel.
+  ///
+  /// In en, this message translates to:
+  /// **'Travel and movement'**
+  String get perm_travel;
+
+  /// No description provided for @permTravelView.
+  ///
+  /// In en, this message translates to:
+  /// **'Read a colleague\'s journey on their page'**
+  String get permTravelView;
+
+  /// No description provided for @permTravelViewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Read every trip of the season'**
+  String get permTravelViewAll;
+
+  /// No description provided for @permTravelEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Create trips and change their details'**
+  String get permTravelEdit;
+
+  /// No description provided for @permTravelAssign.
+  ///
+  /// In en, this message translates to:
+  /// **'Put people on trips and move them between them'**
+  String get permTravelAssign;
+
+  /// No description provided for @permTravelConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Record what actually happened — departures and arrivals'**
+  String get permTravelConfirm;
+
+  /// No description provided for @permTravelDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete a trip'**
+  String get permTravelDelete;
+
+  /// No description provided for @travelMyJourneyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My journey'**
+  String get travelMyJourneyTitle;
+
+  /// No description provided for @travelJourneyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Journey'**
+  String get travelJourneyTitle;
+
+  /// No description provided for @travelSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Travel and movement'**
+  String get travelSectionTitle;
+
+  /// No description provided for @travelViewFullJourney.
+  ///
+  /// In en, this message translates to:
+  /// **'See the whole journey'**
+  String get travelViewFullJourney;
+
+  /// No description provided for @travelNoJourney.
+  ///
+  /// In en, this message translates to:
+  /// **'No travel recorded for this season yet'**
+  String get travelNoJourney;
+
+  /// No description provided for @travelNoJourneyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The arrival flight, the movements and the return will appear here as they are recorded.'**
+  String get travelNoJourneyHint;
+
+  /// No description provided for @travelNotInSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is not among this season\'s participants'**
+  String get travelNotInSeason;
+
+  /// No description provided for @travelCurrentlyIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Now in {place}'**
+  String travelCurrentlyIn(String place);
+
+  /// No description provided for @travelCurrentLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Current location'**
+  String get travelCurrentLocation;
+
+  /// No description provided for @travelHereNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Here now'**
+  String get travelHereNow;
+
+  /// No description provided for @travelNotDepartedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'The journey has not begun'**
+  String get travelNotDepartedYet;
+
+  /// No description provided for @travelJourneyComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'The journey is over'**
+  String get travelJourneyComplete;
+
+  /// No description provided for @travelDayOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Day {day} of the journey'**
+  String travelDayOf(int day);
+
+  /// No description provided for @travelSinceDays.
+  ///
+  /// In en, this message translates to:
+  /// **'for {days} days'**
+  String travelSinceDays(int days);
+
+  /// No description provided for @travelReturnIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Home in {days} days'**
+  String travelReturnIn(int days);
+
+  /// No description provided for @travelReturnTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Flies home tomorrow'**
+  String get travelReturnTomorrow;
+
+  /// No description provided for @travelReturnToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Flies home today'**
+  String get travelReturnToday;
+
+  /// No description provided for @travelReturnPassed.
+  ///
+  /// In en, this message translates to:
+  /// **'The return date has passed'**
+  String get travelReturnPassed;
+
+  /// No description provided for @travelNoReturnYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No return flight set yet'**
+  String get travelNoReturnYet;
+
+  /// No description provided for @travelNoReturnYetHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A return is usually booked only a few days beforehand.'**
+  String get travelNoReturnYetHint;
+
+  /// No description provided for @travelBetween.
+  ///
+  /// In en, this message translates to:
+  /// **'From {from} to {to}'**
+  String travelBetween(String from, String to);
+
+  /// No description provided for @travelUntrackedTransferOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'No means of travel recorded — optional'**
+  String get travelUntrackedTransferOptional;
+
+  /// No description provided for @travelRecordTransferShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Record'**
+  String get travelRecordTransferShort;
+
+  /// No description provided for @travelUntrackedTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'No means of travel recorded'**
+  String get travelUntrackedTransfer;
+
+  /// No description provided for @travelRecordTransfer.
+  ///
+  /// In en, this message translates to:
+  /// **'Record how he travelled'**
+  String get travelRecordTransfer;
+
+  /// No description provided for @travelSelfArranged.
+  ///
+  /// In en, this message translates to:
+  /// **'Self-arranged'**
+  String get travelSelfArranged;
+
+  /// No description provided for @travelConfirmArrival.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm arrival'**
+  String get travelConfirmArrival;
+
+  /// No description provided for @travelConfirmedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed by {name}'**
+  String travelConfirmedBy(String name);
+
+  /// No description provided for @travelNeedsYourWord.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing else can confirm this one — it is yours to record'**
+  String get travelNeedsYourWord;
+
+  /// No description provided for @travelPlannedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned {time}'**
+  String travelPlannedAt(String time);
+
+  /// No description provided for @travelActualAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Actual {time}'**
+  String travelActualAt(String time);
+
+  /// No description provided for @travelDepartedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Left {time}'**
+  String travelDepartedAt(String time);
+
+  /// No description provided for @travelArrivedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrived {time}'**
+  String travelArrivedAt(String time);
+
+  /// No description provided for @travelRoleInbound.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrival'**
+  String get travelRoleInbound;
+
+  /// No description provided for @travelRoleInternal.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal movement'**
+  String get travelRoleInternal;
+
+  /// No description provided for @travelRoleOutbound.
+  ///
+  /// In en, this message translates to:
+  /// **'Return'**
+  String get travelRoleOutbound;
+
+  /// No description provided for @travelModeAir.
+  ///
+  /// In en, this message translates to:
+  /// **'Flight'**
+  String get travelModeAir;
+
+  /// No description provided for @travelModeRail.
+  ///
+  /// In en, this message translates to:
+  /// **'Train'**
+  String get travelModeRail;
+
+  /// No description provided for @travelModeRoad.
+  ///
+  /// In en, this message translates to:
+  /// **'By road'**
+  String get travelModeRoad;
+
+  /// No description provided for @travelModeOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get travelModeOther;
+
+  /// No description provided for @travelLegPlanned.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned'**
+  String get travelLegPlanned;
+
+  /// No description provided for @travelLegConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get travelLegConfirmed;
+
+  /// No description provided for @travelLegCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get travelLegCompleted;
+
+  /// No description provided for @travelLegMissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Did not travel'**
+  String get travelLegMissed;
+
+  /// No description provided for @travelLegCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get travelLegCancelled;
+
+  /// No description provided for @travelLegRebooked.
+  ///
+  /// In en, this message translates to:
+  /// **'Moved to another'**
+  String get travelLegRebooked;
+
+  /// No description provided for @travelTripState.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip status'**
+  String get travelTripState;
+
+  /// No description provided for @travelTripScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'On time'**
+  String get travelTripScheduled;
+
+  /// No description provided for @travelTripDelayed.
+  ///
+  /// In en, this message translates to:
+  /// **'Delayed'**
+  String get travelTripDelayed;
+
+  /// No description provided for @travelTripDeparted.
+  ///
+  /// In en, this message translates to:
+  /// **'Departed'**
+  String get travelTripDeparted;
+
+  /// No description provided for @travelTripArrived.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrived'**
+  String get travelTripArrived;
+
+  /// No description provided for @travelTripCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get travelTripCancelled;
+
+  /// No description provided for @travelTripsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Season trips'**
+  String get travelTripsTitle;
+
+  /// No description provided for @travelNewTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'New trip'**
+  String get travelNewTrip;
+
+  /// No description provided for @travelEditTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit trip'**
+  String get travelEditTrip;
+
+  /// No description provided for @travelTripDetailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip'**
+  String get travelTripDetailTitle;
+
+  /// No description provided for @travelNoTrips.
+  ///
+  /// In en, this message translates to:
+  /// **'No trips in this season yet'**
+  String get travelNoTrips;
+
+  /// No description provided for @travelNoTripsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a trip, then assign people to it in one go.'**
+  String get travelNoTripsHint;
+
+  /// No description provided for @travelNoTripsMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No trip matches the search'**
+  String get travelNoTripsMatch;
+
+  /// No description provided for @travelAssignedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} assigned'**
+  String travelAssignedCount(int count);
+
+  /// No description provided for @travelConfirmedOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} confirmed'**
+  String travelConfirmedOf(int done, int total);
+
+  /// No description provided for @travelAssign.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign people'**
+  String get travelAssign;
+
+  /// No description provided for @travelPassengers.
+  ///
+  /// In en, this message translates to:
+  /// **'Passengers'**
+  String get travelPassengers;
+
+  /// No description provided for @travelNoPassengers.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody is on this trip yet'**
+  String get travelNoPassengers;
+
+  /// No description provided for @travelAssignOutcome.
+  ///
+  /// In en, this message translates to:
+  /// **'{assigned} assigned, {rebooked} moved, {skipped} left alone'**
+  String travelAssignOutcome(int assigned, int rebooked, int skipped);
+
+  /// No description provided for @travelAssignNotInSeason.
+  ///
+  /// In en, this message translates to:
+  /// **'and {count} are not participants this season'**
+  String travelAssignNotInSeason(int count);
+
+  /// No description provided for @travelConfirmAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm everybody arrived'**
+  String get travelConfirmAll;
+
+  /// No description provided for @travelConfirmAllPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all {count} assigned as arrived? This records what happened; it never happens on its own.'**
+  String travelConfirmAllPrompt(int count);
+
+  /// No description provided for @travelRemoveFromTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Take off this trip'**
+  String get travelRemoveFromTrip;
+
+  /// No description provided for @travelRemoveFromTripConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Take {name} off this trip? The movement is kept in the record, not deleted.'**
+  String travelRemoveFromTripConfirm(String name);
+
+  /// No description provided for @travelCancelTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel the trip'**
+  String get travelCancelTrip;
+
+  /// No description provided for @travelDeleteTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the trip'**
+  String get travelDeleteTrip;
+
+  /// No description provided for @travelDeleteTripConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this trip for good? A trip with passengers cannot be deleted — cancel it instead.'**
+  String get travelDeleteTripConfirm;
+
+  /// No description provided for @travelFieldMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Mode'**
+  String get travelFieldMode;
+
+  /// No description provided for @travelFieldRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Kind of movement'**
+  String get travelFieldRole;
+
+  /// No description provided for @travelFieldFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get travelFieldFrom;
+
+  /// No description provided for @travelFieldTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get travelFieldTo;
+
+  /// No description provided for @travelFieldNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip number'**
+  String get travelFieldNumber;
+
+  /// No description provided for @travelFieldDeparture.
+  ///
+  /// In en, this message translates to:
+  /// **'Departs'**
+  String get travelFieldDeparture;
+
+  /// No description provided for @travelFieldArrival.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrives'**
+  String get travelFieldArrival;
+
+  /// No description provided for @travelFieldNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get travelFieldNote;
+
+  /// No description provided for @travelFieldTicket.
+  ///
+  /// In en, this message translates to:
+  /// **'Ticket number'**
+  String get travelFieldTicket;
+
+  /// No description provided for @travelFieldSeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Seat'**
+  String get travelFieldSeat;
+
+  /// No description provided for @travelFieldRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required'**
+  String get travelFieldRequired;
+
+  /// No description provided for @travelPickDateTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a date and time'**
+  String get travelPickDateTime;
+
+  /// No description provided for @travelSameEndpoints.
+  ///
+  /// In en, this message translates to:
+  /// **'The start and the destination cannot be the same'**
+  String get travelSameEndpoints;
+
+  /// No description provided for @travelGapsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What is unanswered'**
+  String get travelGapsTitle;
+
+  /// No description provided for @travelGapsClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing outstanding'**
+  String get travelGapsClear;
+
+  /// No description provided for @travelGapsClearHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No participant without a flight, and no movement past its hour without a word.'**
+  String get travelGapsClearHint;
+
+  /// No description provided for @travelGapNoInbound.
+  ///
+  /// In en, this message translates to:
+  /// **'No arrival flight'**
+  String get travelGapNoInbound;
+
+  /// No description provided for @travelGapNoOutbound.
+  ///
+  /// In en, this message translates to:
+  /// **'No return flight'**
+  String get travelGapNoOutbound;
+
+  /// No description provided for @travelGapUnconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Past its hour, unconfirmed'**
+  String get travelGapUnconfirmed;
+
+  /// No description provided for @travelGapCancelledTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'On a cancelled trip'**
+  String get travelGapCancelledTrip;
+
+  /// No description provided for @travelMarkDoesNotTravel.
+  ///
+  /// In en, this message translates to:
+  /// **'Does not travel this season'**
+  String get travelMarkDoesNotTravel;
+
+  /// No description provided for @travelMarkDoesNotTravelConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark {name} as not travelling this season? They come off this list, and movements may still be recorded for them.'**
+  String travelMarkDoesNotTravelConfirm(String name);
+
+  /// No description provided for @travelRecordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Record a movement'**
+  String get travelRecordTitle;
+
+  /// No description provided for @travelRecordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'For movements arranged privately — a car, or anything else.'**
+  String get travelRecordSubtitle;
+
+  /// No description provided for @travelRecordAlreadyHappened.
+  ///
+  /// In en, this message translates to:
+  /// **'It has already happened'**
+  String get travelRecordAlreadyHappened;
+
+  /// No description provided for @travelRecordSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Movement recorded'**
+  String get travelRecordSaved;
+
+  /// No description provided for @travelAttachments.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments'**
+  String get travelAttachments;
+
+  /// No description provided for @travelNoAttachments.
+  ///
+  /// In en, this message translates to:
+  /// **'No attachments'**
+  String get travelNoAttachments;
+
+  /// No description provided for @travelNoAttachmentsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Attach a ticket, a manifest or a photograph — PDF or image.'**
+  String get travelNoAttachmentsHint;
+
+  /// No description provided for @travelAddAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an attachment'**
+  String get travelAddAttachment;
 }
 
 class _AppLocalizationsDelegate

@@ -532,6 +532,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get commonSearch => 'بحث';
 
   @override
+  String get commonClearAll => 'إلغاء التحديد';
+
+  @override
+  String pickerSelectedCount(int count) {
+    return '$count مُحدَّد';
+  }
+
+  @override
   String get commonSelectAll => 'تحديد الكل';
 
   @override
@@ -5139,4 +5147,391 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get roadmapNoteArchive =>
       'كل ما قُيّد على موسم ماضٍ يبقى مقروءاً كما كُتب تماماً. وإغلاق السنة لا يُخفي شيئاً.';
+
+  @override
+  String get navMyJourney => 'مساري';
+
+  @override
+  String get navMyJourneySubtitle =>
+      'رحلة قدومك وتنقّلاتك وموعد عودتك، من البداية إلى النهاية.';
+
+  @override
+  String get navTravel => 'السفر والتنقّل';
+
+  @override
+  String get navTravelSubtitle =>
+      'رحلات الموسم وحركات التنقّل، وإسناد الموظفين إليها.';
+
+  @override
+  String get perm_travel => 'السفر والتنقّل';
+
+  @override
+  String get permTravelView => 'قراءة مسار سفر زميل في صفحته';
+
+  @override
+  String get permTravelViewAll => 'قراءة رحلات الموسم كلها';
+
+  @override
+  String get permTravelEdit => 'إنشاء الرحلات وتعديل بياناتها';
+
+  @override
+  String get permTravelAssign => 'إسناد الموظفين إلى الرحلات ونقلهم بينها';
+
+  @override
+  String get permTravelConfirm => 'تسجيل ما حدث فعلاً — المغادرة والوصول';
+
+  @override
+  String get permTravelDelete => 'حذف رحلة';
+
+  @override
+  String get travelMyJourneyTitle => 'مساري';
+
+  @override
+  String get travelJourneyTitle => 'مسار الرحلة';
+
+  @override
+  String get travelSectionTitle => 'السفر والتنقّل';
+
+  @override
+  String get travelViewFullJourney => 'عرض المسار الكامل';
+
+  @override
+  String get travelNoJourney => 'لم يُسجَّل أي سفر لهذا الموسم بعد';
+
+  @override
+  String get travelNoJourneyHint =>
+      'تظهر هنا رحلة القدوم وحركات التنقّل ورحلة العودة فور تسجيلها.';
+
+  @override
+  String get travelNotInSeason => 'هذا الحساب ليس ضمن مشاركي الموسم الحالي';
+
+  @override
+  String travelCurrentlyIn(String place) {
+    return 'الآن في $place';
+  }
+
+  @override
+  String get travelCurrentLocation => 'الموقع الحالي';
+
+  @override
+  String get travelHereNow => 'هنا الآن';
+
+  @override
+  String get travelNotDepartedYet => 'لم تبدأ الرحلة بعد';
+
+  @override
+  String get travelJourneyComplete => 'انتهت الرحلة';
+
+  @override
+  String travelDayOf(int day) {
+    return 'اليوم $day من الرحلة';
+  }
+
+  @override
+  String travelSinceDays(int days) {
+    return 'منذ $days يوماً';
+  }
+
+  @override
+  String travelReturnIn(int days) {
+    return 'العودة بعد $days يوماً';
+  }
+
+  @override
+  String get travelReturnTomorrow => 'العودة غداً';
+
+  @override
+  String get travelReturnToday => 'العودة اليوم';
+
+  @override
+  String get travelReturnPassed => 'مضى موعد العودة';
+
+  @override
+  String get travelNoReturnYet => 'لم تُحدَّد رحلة العودة بعد';
+
+  @override
+  String get travelNoReturnYetHint =>
+      'تُحدَّد رحلة العودة عادةً قبل موعدها بأيام قليلة.';
+
+  @override
+  String travelBetween(String from, String to) {
+    return 'من $from إلى $to';
+  }
+
+  @override
+  String get travelUntrackedTransferOptional =>
+      'لم تُسجَّل وسيلة الانتقال — اختياري';
+
+  @override
+  String get travelRecordTransferShort => 'تسجيل';
+
+  @override
+  String get travelUntrackedTransfer => 'لم تُسجَّل وسيلة الانتقال';
+
+  @override
+  String get travelRecordTransfer => 'تسجيل وسيلة الانتقال';
+
+  @override
+  String get travelSelfArranged => 'ترتيب ذاتي';
+
+  @override
+  String get travelConfirmArrival => 'تأكيد الوصول';
+
+  @override
+  String travelConfirmedBy(String name) {
+    return 'أكّدها $name';
+  }
+
+  @override
+  String get travelNeedsYourWord => 'لا مصدر آلي لهذه الحركة — تأكيدها بيدك';
+
+  @override
+  String travelPlannedAt(String time) {
+    return 'المخطط $time';
+  }
+
+  @override
+  String travelActualAt(String time) {
+    return 'الفعلي $time';
+  }
+
+  @override
+  String travelDepartedAt(String time) {
+    return 'غادر $time';
+  }
+
+  @override
+  String travelArrivedAt(String time) {
+    return 'وصل $time';
+  }
+
+  @override
+  String get travelRoleInbound => 'رحلة القدوم';
+
+  @override
+  String get travelRoleInternal => 'تنقّل داخلي';
+
+  @override
+  String get travelRoleOutbound => 'رحلة العودة';
+
+  @override
+  String get travelModeAir => 'طيران';
+
+  @override
+  String get travelModeRail => 'قطار';
+
+  @override
+  String get travelModeRoad => 'برّاً';
+
+  @override
+  String get travelModeOther => 'وسيلة أخرى';
+
+  @override
+  String get travelLegPlanned => 'مخطط';
+
+  @override
+  String get travelLegConfirmed => 'مؤكَّد';
+
+  @override
+  String get travelLegCompleted => 'تم';
+
+  @override
+  String get travelLegMissed => 'لم يسافر';
+
+  @override
+  String get travelLegCancelled => 'أُلغيت';
+
+  @override
+  String get travelLegRebooked => 'نُقل إلى غيرها';
+
+  @override
+  String get travelTripState => 'حالة الرحلة';
+
+  @override
+  String get travelTripScheduled => 'في موعدها';
+
+  @override
+  String get travelTripDelayed => 'متأخرة';
+
+  @override
+  String get travelTripDeparted => 'غادرت';
+
+  @override
+  String get travelTripArrived => 'وصلت';
+
+  @override
+  String get travelTripCancelled => 'ملغاة';
+
+  @override
+  String get travelTripsTitle => 'رحلات الموسم';
+
+  @override
+  String get travelNewTrip => 'رحلة جديدة';
+
+  @override
+  String get travelEditTrip => 'تعديل الرحلة';
+
+  @override
+  String get travelTripDetailTitle => 'تفاصيل الرحلة';
+
+  @override
+  String get travelNoTrips => 'لا رحلات في هذا الموسم بعد';
+
+  @override
+  String get travelNoTripsHint =>
+      'أنشئ رحلة، ثم أسند إليها الموظفين دفعةً واحدة.';
+
+  @override
+  String get travelNoTripsMatch => 'لا رحلة تطابق البحث';
+
+  @override
+  String travelAssignedCount(int count) {
+    return '$count مسنَد';
+  }
+
+  @override
+  String travelConfirmedOf(int done, int total) {
+    return '$done من $total مؤكَّد';
+  }
+
+  @override
+  String get travelAssign => 'إسناد موظفين';
+
+  @override
+  String get travelPassengers => 'الركّاب';
+
+  @override
+  String get travelNoPassengers => 'لم يُسند أحد إلى هذه الرحلة بعد';
+
+  @override
+  String travelAssignOutcome(int assigned, int rebooked, int skipped) {
+    return 'أُسند $assigned، ونُقل $rebooked، وتُرك $skipped';
+  }
+
+  @override
+  String travelAssignNotInSeason(int count) {
+    return 'و$count ليسوا ضمن مشاركي الموسم';
+  }
+
+  @override
+  String get travelConfirmAll => 'تأكيد وصول الجميع';
+
+  @override
+  String travelConfirmAllPrompt(int count) {
+    return 'هل نعتبر الـ$count المسنَدين قد وصلوا؟ هذا تسجيلٌ لما حدث، ولا يقع تلقائياً.';
+  }
+
+  @override
+  String get travelRemoveFromTrip => 'إزالة من الرحلة';
+
+  @override
+  String travelRemoveFromTripConfirm(String name) {
+    return 'إزالة $name من هذه الرحلة؟ تُحفظ الحركة في السجل ولا تُحذف.';
+  }
+
+  @override
+  String get travelCancelTrip => 'إلغاء الرحلة';
+
+  @override
+  String get travelDeleteTrip => 'حذف الرحلة';
+
+  @override
+  String get travelDeleteTripConfirm =>
+      'حذف هذه الرحلة نهائياً؟ لا يمكن حذف رحلة عليها ركّاب — ألغِها بدلاً من ذلك.';
+
+  @override
+  String get travelFieldMode => 'الوسيلة';
+
+  @override
+  String get travelFieldRole => 'نوع الحركة';
+
+  @override
+  String get travelFieldFrom => 'من';
+
+  @override
+  String get travelFieldTo => 'إلى';
+
+  @override
+  String get travelFieldNumber => 'رقم الرحلة';
+
+  @override
+  String get travelFieldDeparture => 'موعد المغادرة';
+
+  @override
+  String get travelFieldArrival => 'موعد الوصول';
+
+  @override
+  String get travelFieldNote => 'ملاحظة';
+
+  @override
+  String get travelFieldTicket => 'رقم التذكرة';
+
+  @override
+  String get travelFieldSeat => 'المقعد';
+
+  @override
+  String get travelFieldRequired => 'هذا الحقل مطلوب';
+
+  @override
+  String get travelPickDateTime => 'اختر التاريخ والوقت';
+
+  @override
+  String get travelSameEndpoints =>
+      'نقطة الانطلاق والوصول لا يمكن أن تكونا واحدة';
+
+  @override
+  String get travelGapsTitle => 'ما لم يُجَب عنه';
+
+  @override
+  String get travelGapsClear => 'لا ثغرات — كل شيء مُجاب عنه';
+
+  @override
+  String get travelGapsClearHint =>
+      'لا مشارك بلا رحلة، ولا حركة مضى موعدها بلا تأكيد.';
+
+  @override
+  String get travelGapNoInbound => 'بلا رحلة قدوم';
+
+  @override
+  String get travelGapNoOutbound => 'بلا رحلة عودة';
+
+  @override
+  String get travelGapUnconfirmed => 'مضى موعدها بلا تأكيد';
+
+  @override
+  String get travelGapCancelledTrip => 'على رحلة ملغاة';
+
+  @override
+  String get travelMarkDoesNotTravel => 'لا يسافر هذا الموسم';
+
+  @override
+  String travelMarkDoesNotTravelConfirm(String name) {
+    return 'تعليم $name كمن لا يسافر هذا الموسم؟ يُرفع من هذه القائمة، ويبقى تسجيل أي حركة له ممكناً.';
+  }
+
+  @override
+  String get travelRecordTitle => 'تسجيل حركة تنقّل';
+
+  @override
+  String get travelRecordSubtitle =>
+      'للحركات التي رتّبها الموظف بنفسه — سيارة خاصة أو غيرها.';
+
+  @override
+  String get travelRecordAlreadyHappened => 'حدثت بالفعل';
+
+  @override
+  String get travelRecordSaved => 'سُجّلت الحركة';
+
+  @override
+  String get travelAttachments => 'المرفقات';
+
+  @override
+  String get travelNoAttachments => 'لا مرفقات';
+
+  @override
+  String get travelNoAttachmentsHint =>
+      'أرفق تذكرة أو كشف ركّاب أو صورة — PDF أو صورة.';
+
+  @override
+  String get travelAddAttachment => 'إضافة مرفق';
 }

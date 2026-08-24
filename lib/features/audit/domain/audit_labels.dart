@@ -106,6 +106,14 @@ class AuditLabels {
       name: LocalizedName(ar: 'البلاغات العاجلة', en: 'Urgent reports'),
       tables: ['incidents', 'incident_attachments'],
     ),
+    // 0129. Logged from the day the tables existed, and it matters more here
+    // than in most places: half of "what was planned, what changed" — who moved
+    // this man off that flight, and when — is answerable only from the log.
+    AuditEntityGroup(
+      key: 'travel',
+      name: LocalizedName(ar: 'السفر والتنقّل', en: 'Travel'),
+      tables: ['trips', 'journey_legs'],
+    ),
     AuditEntityGroup(
       key: 'reference',
       name: LocalizedName(ar: 'البيانات المرجعية', en: 'Master data'),
@@ -237,6 +245,8 @@ class AuditLabels {
       en: 'Report attachment',
     ),
     'report_misses': LocalizedName(ar: 'تقرير متأخر', en: 'Late report'),
+    'trips': LocalizedName(ar: 'رحلة', en: 'Trip'),
+    'journey_legs': LocalizedName(ar: 'حركة تنقّل', en: 'Movement'),
     'module_type_teams': LocalizedName(ar: 'فريق نوع ملف', en: 'File type team'),
     'module_reports': LocalizedName(ar: 'تقرير ملف', en: 'File report'),
     'module_report_attachments': LocalizedName(

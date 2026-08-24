@@ -325,6 +325,32 @@ class AppIcons {
   static const dashboard = Iconsax.chart_2;
   static const trend = Iconsax.chart_success;
   static const rating = Iconsax.star_1;
+
+  // ── السفر والتنقّل ───────────────────────────────────────────────────────
+  //
+  // One glyph per WAY OF MOVING, and that is the whole set: the feature draws a
+  // movement by what carried it, so a new mode of transport costs exactly one
+  // line here and one arm of `travelModeIcon`.
+  //
+  // [travelRoad] is the important one. It is what a man who drove himself from
+  // مكة to المدينة gets, and it is a car — a real means of travel drawn as
+  // plainly as the aeroplane beside it, never a gap, a question mark or a
+  // warning. The whole design rests on that being unremarkable.
+  static const travel = Iconsax.routing;
+  static const travelAir = Iconsax.airplane;
+  static const travelRail = Iconsax.bus;
+  static const travelRoad = Iconsax.car;
+  static const travelOther = Iconsax.driving;
+
+  /// The way home. Drawn apart from [travelAir] because the return is the one
+  /// movement the whole app counts down to.
+  static const travelReturn = Iconsax.airplane_square;
+
+  /// A booking — the ticket, the seat, the reference.
+  static const travelTicket = Iconsax.ticket;
+
+  /// A moment on the line: when a movement is due, and when it happened.
+  static const travelWhen = Iconsax.calendar_1;
 }
 
 /// A trailing chevron that points toward the navigation direction, mirrored

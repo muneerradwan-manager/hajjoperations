@@ -167,6 +167,11 @@ void main() {
         // Writing tasks onto OTHER people's lists (0105). A person's own list
         // is `/tasks` and is deliberately not here — see the open list below.
         '/tasks/manage',
+        // The season's flights and who is on them (0129). A man's own route
+        // home is `/my-journey` and is deliberately not here, for the same
+        // reason `/tasks` is not: reading where you yourself are being sent is
+        // not a privilege anybody grants.
+        '/travel',
       });
     });
 
@@ -196,6 +201,11 @@ void main() {
       // somebody grants: everybody has one by existing, and what was assigned
       // to them arrived by NAME. Writing onto other people's lists is
       // `/tasks/manage`, and that one IS guarded.
+      // /my-journey is where a man is being sent and when he comes home. RLS
+      // says the same thing in 0129 — his own legs are readable by him with no
+      // code held — and a record of a man's own travel that he cannot open is
+      // not a record worth keeping. The season's whole board is `/travel`, and
+      // that one IS guarded.
       for (final open in [
         '/modules',
         '/reports',
@@ -205,6 +215,7 @@ void main() {
         '/incident',
         '/check-in',
         '/tasks',
+        '/my-journey',
         '/',
       ]) {
         expect(

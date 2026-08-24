@@ -229,6 +229,43 @@ List<HomeDestination> homeDestinations(
       route: Routes.evaluations,
       accent: Accent.plum,
     ),
+        // Where this person has been, and the way to add to it. Two verbs on one
+    // door, and they belong together: the man about to scan a code is the same
+    // man wondering whether last night's scan registered.
+    //
+    // Gated by nothing, twice over. Filing your own arrival needs no grant —
+    // the code on the wall and the phone's position are the credential, and a
+    // system in which only certain people may report where they are is a system
+    // that does not know where anybody is. Reading your own record needs none
+    // either: `place_check_ins` opens its policy with `profile_id = auth.uid()`,
+    // and §30.3 of 0098 says so in words.
+    //
+    // The door itself stays on every platform — a man reads where he has been
+    // from whatever is in front of him — and only the ACT goes, on a machine
+    // with no camera to open. See [isPlaceScannerSupported].
+    HomeDestination(
+      group: HomeGroup.general,
+      icon: AppIcons.auditLog,
+      title: l.myCheckInsTitle,
+      subtitle: l.navMyCheckInsSubtitle,
+      route: Routes.myCheckIns,
+      accent: Accent.greenDark,
+      action: isPlaceScannerSupported ? '${Routes.myCheckIns}?compose=1' : null,
+      actionLabel: l.checkInAction,
+      actionIcon: AppIcons.qrCode,
+    ),
+    // Gated by nothing, and for the same reason as the two above: a man reading
+    // where he himself is being sent, and when he flies home, is not exercising
+    // a privilege. RLS says the same thing (0129) — his own journey is his
+    // whatever else he holds.
+    HomeDestination(
+      group: HomeGroup.general,
+      icon: AppIcons.travel,
+      title: l.navMyJourney,
+      subtitle: l.navMyJourneySubtitle,
+      route: Routes.myJourney,
+      accent: Accent.greenDeep,
+    ),
     // Gated by nothing: everyone owns a task list by existing (0105), and what
     // was assigned to them arrived by name, not by grant. No relation to the
     // operational files — that is the whole point of it.
@@ -273,31 +310,7 @@ List<HomeDestination> homeDestinations(
       action: '${Routes.myIncidents}?compose=1',
       actionLabel: l.incidentTitle,
     ),
-    // Where this person has been, and the way to add to it. Two verbs on one
-    // door, and they belong together: the man about to scan a code is the same
-    // man wondering whether last night's scan registered.
-    //
-    // Gated by nothing, twice over. Filing your own arrival needs no grant —
-    // the code on the wall and the phone's position are the credential, and a
-    // system in which only certain people may report where they are is a system
-    // that does not know where anybody is. Reading your own record needs none
-    // either: `place_check_ins` opens its policy with `profile_id = auth.uid()`,
-    // and §30.3 of 0098 says so in words.
-    //
-    // The door itself stays on every platform — a man reads where he has been
-    // from whatever is in front of him — and only the ACT goes, on a machine
-    // with no camera to open. See [isPlaceScannerSupported].
-    HomeDestination(
-      group: HomeGroup.general,
-      icon: AppIcons.auditLog,
-      title: l.myCheckInsTitle,
-      subtitle: l.navMyCheckInsSubtitle,
-      route: Routes.myCheckIns,
-      accent: Accent.greenDark,
-      action: isPlaceScannerSupported ? '${Routes.myCheckIns}?compose=1' : null,
-      actionLabel: l.checkInAction,
-      actionIcon: AppIcons.qrCode,
-    ),
+
     // No door for the profile: the greeting panel already carries the user's
     // face and name, and tapping something with your own name on it is where
     // anyone looks for it first.
@@ -434,6 +447,17 @@ List<HomeDestination> homeDestinations(
         title: l.navReferenceData,
         subtitle: l.navReferenceDataSubtitle,
         route: Routes.referenceData,
+      ),
+    // The season's flights and movements. It belongs on the season's shelf
+    // rather than with the people: what is administered here is the year's
+    // travel, and the men on it are who each trip happens to be carrying.
+    if (session.can(PermissionCodes.travelViewAll))
+      HomeDestination(
+        group: HomeGroup.season,
+        icon: AppIcons.travel,
+        title: l.navTravel,
+        subtitle: l.navTravelSubtitle,
+        route: Routes.travel,
       ),
 
     // ── الإدارة · الإشراف والسجلات ───────────────────────────────────────

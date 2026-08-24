@@ -118,7 +118,9 @@ class EmployeePickerState extends Equatable {
       filter: filter ?? this.filter,
       // Sentinels: null is a real value for these two — it is what "any post"
       // and "any city" mean — so `??` could never clear them.
-      jobTitleId: jobTitleId == _unset ? this.jobTitleId : jobTitleId as String?,
+      jobTitleId: jobTitleId == _unset
+          ? this.jobTitleId
+          : jobTitleId as String?,
       cityId: cityId == _unset ? this.cityId : cityId as String?,
       onlyFree: onlyFree ?? this.onlyFree,
       jobTitles: jobTitles ?? this.jobTitles,
@@ -280,6 +282,51 @@ class EmployeePickerCubit extends SafeCubit<EmployeePickerState> {
   /// name is tapped.
   void selectOnly(String profileId) =>
       emit(state.copyWith(selected: {profileId}));
+
+  /// Whether everybody currently narrowed to is already chosen.
+  ///
+  /// Asked of the LOADED rows, which is the only set this page can answer for
+  /// without going back to the server — see [selectAllMatching] for what
+  /// happens when there are more.
+  bool get allShownSelected =>
+      state.people.isNotEmpty &&
+      state.people.every((p) => state.selected.contains(p.profile.id));
+
+  /// Everybody the current filters match — not merely everybody on screen.
+  ///
+  /// The distinction matters and is the whole reason this is not two lines. The
+  /// list arrives forty at a time, so a "select all" that took the loaded rows
+  /// would quietly choose forty of four hundred and look exactly like success.
+  /// Somebody putting a whole intake on one flight would then find three
+  /// hundred and sixty people missing from it, days later, with nothing
+  /// anywhere saying why.
+  ///
+  /// So the rest is fetched first. It is up to ten round trips on a season's
+  /// whole roster, which is why the page shows its loading state throughout and
+  /// why this is a deliberate press rather than something offered casually.
+  Future<void> selectAllMatching() async {
+    final generation = _generation;
+    while (state.hasMore && !isClosed && generation == _generation) {
+      final before = state.people.length;
+      await loadMore();
+      // A page that added nothing means the server has no more to give,
+      // whatever `hasMore` believed. Without this the loop is unbounded.
+      if (state.people.length == before) break;
+    }
+    if (isClosed || generation != _generation) return;
+    emit(
+      state.copyWith(
+        selected: {
+          ...state.selected,
+          for (final person in state.people) person.profile.id,
+        },
+      ),
+    );
+  }
+
+  /// Unchooses everybody — including anybody chosen before this page opened,
+  /// which is what "الغاء الكل" means to the person pressing it.
+  void clearSelection() => emit(state.copyWith(selected: const {}));
 
   /// The chosen people, resolved. Everything in [EmployeePickerState.selected]
   /// that this page has actually shown; an id handed in by the caller and never

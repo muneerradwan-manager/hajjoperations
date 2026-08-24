@@ -527,6 +527,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonSearch => 'Search';
 
   @override
+  String get commonClearAll => 'Clear selection';
+
+  @override
+  String pickerSelectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
   String get commonSelectAll => 'Select all';
 
   @override
@@ -5088,4 +5096,395 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get roadmapNoteArchive =>
       'Everything filed against a past season stays readable exactly as it was. Closing a year hides nothing.';
+
+  @override
+  String get navMyJourney => 'My journey';
+
+  @override
+  String get navMyJourneySubtitle =>
+      'Your arrival, your movements and when you fly home, from end to end.';
+
+  @override
+  String get navTravel => 'Travel and movement';
+
+  @override
+  String get navTravelSubtitle =>
+      'The season\'s trips, and who is on each of them.';
+
+  @override
+  String get perm_travel => 'Travel and movement';
+
+  @override
+  String get permTravelView => 'Read a colleague\'s journey on their page';
+
+  @override
+  String get permTravelViewAll => 'Read every trip of the season';
+
+  @override
+  String get permTravelEdit => 'Create trips and change their details';
+
+  @override
+  String get permTravelAssign =>
+      'Put people on trips and move them between them';
+
+  @override
+  String get permTravelConfirm =>
+      'Record what actually happened — departures and arrivals';
+
+  @override
+  String get permTravelDelete => 'Delete a trip';
+
+  @override
+  String get travelMyJourneyTitle => 'My journey';
+
+  @override
+  String get travelJourneyTitle => 'Journey';
+
+  @override
+  String get travelSectionTitle => 'Travel and movement';
+
+  @override
+  String get travelViewFullJourney => 'See the whole journey';
+
+  @override
+  String get travelNoJourney => 'No travel recorded for this season yet';
+
+  @override
+  String get travelNoJourneyHint =>
+      'The arrival flight, the movements and the return will appear here as they are recorded.';
+
+  @override
+  String get travelNotInSeason =>
+      'This account is not among this season\'s participants';
+
+  @override
+  String travelCurrentlyIn(String place) {
+    return 'Now in $place';
+  }
+
+  @override
+  String get travelCurrentLocation => 'Current location';
+
+  @override
+  String get travelHereNow => 'Here now';
+
+  @override
+  String get travelNotDepartedYet => 'The journey has not begun';
+
+  @override
+  String get travelJourneyComplete => 'The journey is over';
+
+  @override
+  String travelDayOf(int day) {
+    return 'Day $day of the journey';
+  }
+
+  @override
+  String travelSinceDays(int days) {
+    return 'for $days days';
+  }
+
+  @override
+  String travelReturnIn(int days) {
+    return 'Home in $days days';
+  }
+
+  @override
+  String get travelReturnTomorrow => 'Flies home tomorrow';
+
+  @override
+  String get travelReturnToday => 'Flies home today';
+
+  @override
+  String get travelReturnPassed => 'The return date has passed';
+
+  @override
+  String get travelNoReturnYet => 'No return flight set yet';
+
+  @override
+  String get travelNoReturnYetHint =>
+      'A return is usually booked only a few days beforehand.';
+
+  @override
+  String travelBetween(String from, String to) {
+    return 'From $from to $to';
+  }
+
+  @override
+  String get travelUntrackedTransferOptional =>
+      'No means of travel recorded — optional';
+
+  @override
+  String get travelRecordTransferShort => 'Record';
+
+  @override
+  String get travelUntrackedTransfer => 'No means of travel recorded';
+
+  @override
+  String get travelRecordTransfer => 'Record how he travelled';
+
+  @override
+  String get travelSelfArranged => 'Self-arranged';
+
+  @override
+  String get travelConfirmArrival => 'Confirm arrival';
+
+  @override
+  String travelConfirmedBy(String name) {
+    return 'Confirmed by $name';
+  }
+
+  @override
+  String get travelNeedsYourWord =>
+      'Nothing else can confirm this one — it is yours to record';
+
+  @override
+  String travelPlannedAt(String time) {
+    return 'Planned $time';
+  }
+
+  @override
+  String travelActualAt(String time) {
+    return 'Actual $time';
+  }
+
+  @override
+  String travelDepartedAt(String time) {
+    return 'Left $time';
+  }
+
+  @override
+  String travelArrivedAt(String time) {
+    return 'Arrived $time';
+  }
+
+  @override
+  String get travelRoleInbound => 'Arrival';
+
+  @override
+  String get travelRoleInternal => 'Internal movement';
+
+  @override
+  String get travelRoleOutbound => 'Return';
+
+  @override
+  String get travelModeAir => 'Flight';
+
+  @override
+  String get travelModeRail => 'Train';
+
+  @override
+  String get travelModeRoad => 'By road';
+
+  @override
+  String get travelModeOther => 'Other';
+
+  @override
+  String get travelLegPlanned => 'Planned';
+
+  @override
+  String get travelLegConfirmed => 'Confirmed';
+
+  @override
+  String get travelLegCompleted => 'Done';
+
+  @override
+  String get travelLegMissed => 'Did not travel';
+
+  @override
+  String get travelLegCancelled => 'Cancelled';
+
+  @override
+  String get travelLegRebooked => 'Moved to another';
+
+  @override
+  String get travelTripState => 'Trip status';
+
+  @override
+  String get travelTripScheduled => 'On time';
+
+  @override
+  String get travelTripDelayed => 'Delayed';
+
+  @override
+  String get travelTripDeparted => 'Departed';
+
+  @override
+  String get travelTripArrived => 'Arrived';
+
+  @override
+  String get travelTripCancelled => 'Cancelled';
+
+  @override
+  String get travelTripsTitle => 'Season trips';
+
+  @override
+  String get travelNewTrip => 'New trip';
+
+  @override
+  String get travelEditTrip => 'Edit trip';
+
+  @override
+  String get travelTripDetailTitle => 'Trip';
+
+  @override
+  String get travelNoTrips => 'No trips in this season yet';
+
+  @override
+  String get travelNoTripsHint =>
+      'Create a trip, then assign people to it in one go.';
+
+  @override
+  String get travelNoTripsMatch => 'No trip matches the search';
+
+  @override
+  String travelAssignedCount(int count) {
+    return '$count assigned';
+  }
+
+  @override
+  String travelConfirmedOf(int done, int total) {
+    return '$done of $total confirmed';
+  }
+
+  @override
+  String get travelAssign => 'Assign people';
+
+  @override
+  String get travelPassengers => 'Passengers';
+
+  @override
+  String get travelNoPassengers => 'Nobody is on this trip yet';
+
+  @override
+  String travelAssignOutcome(int assigned, int rebooked, int skipped) {
+    return '$assigned assigned, $rebooked moved, $skipped left alone';
+  }
+
+  @override
+  String travelAssignNotInSeason(int count) {
+    return 'and $count are not participants this season';
+  }
+
+  @override
+  String get travelConfirmAll => 'Confirm everybody arrived';
+
+  @override
+  String travelConfirmAllPrompt(int count) {
+    return 'Mark all $count assigned as arrived? This records what happened; it never happens on its own.';
+  }
+
+  @override
+  String get travelRemoveFromTrip => 'Take off this trip';
+
+  @override
+  String travelRemoveFromTripConfirm(String name) {
+    return 'Take $name off this trip? The movement is kept in the record, not deleted.';
+  }
+
+  @override
+  String get travelCancelTrip => 'Cancel the trip';
+
+  @override
+  String get travelDeleteTrip => 'Delete the trip';
+
+  @override
+  String get travelDeleteTripConfirm =>
+      'Delete this trip for good? A trip with passengers cannot be deleted — cancel it instead.';
+
+  @override
+  String get travelFieldMode => 'Mode';
+
+  @override
+  String get travelFieldRole => 'Kind of movement';
+
+  @override
+  String get travelFieldFrom => 'From';
+
+  @override
+  String get travelFieldTo => 'To';
+
+  @override
+  String get travelFieldNumber => 'Trip number';
+
+  @override
+  String get travelFieldDeparture => 'Departs';
+
+  @override
+  String get travelFieldArrival => 'Arrives';
+
+  @override
+  String get travelFieldNote => 'Note';
+
+  @override
+  String get travelFieldTicket => 'Ticket number';
+
+  @override
+  String get travelFieldSeat => 'Seat';
+
+  @override
+  String get travelFieldRequired => 'This field is required';
+
+  @override
+  String get travelPickDateTime => 'Pick a date and time';
+
+  @override
+  String get travelSameEndpoints =>
+      'The start and the destination cannot be the same';
+
+  @override
+  String get travelGapsTitle => 'What is unanswered';
+
+  @override
+  String get travelGapsClear => 'Nothing outstanding';
+
+  @override
+  String get travelGapsClearHint =>
+      'No participant without a flight, and no movement past its hour without a word.';
+
+  @override
+  String get travelGapNoInbound => 'No arrival flight';
+
+  @override
+  String get travelGapNoOutbound => 'No return flight';
+
+  @override
+  String get travelGapUnconfirmed => 'Past its hour, unconfirmed';
+
+  @override
+  String get travelGapCancelledTrip => 'On a cancelled trip';
+
+  @override
+  String get travelMarkDoesNotTravel => 'Does not travel this season';
+
+  @override
+  String travelMarkDoesNotTravelConfirm(String name) {
+    return 'Mark $name as not travelling this season? They come off this list, and movements may still be recorded for them.';
+  }
+
+  @override
+  String get travelRecordTitle => 'Record a movement';
+
+  @override
+  String get travelRecordSubtitle =>
+      'For movements arranged privately — a car, or anything else.';
+
+  @override
+  String get travelRecordAlreadyHappened => 'It has already happened';
+
+  @override
+  String get travelRecordSaved => 'Movement recorded';
+
+  @override
+  String get travelAttachments => 'Attachments';
+
+  @override
+  String get travelNoAttachments => 'No attachments';
+
+  @override
+  String get travelNoAttachmentsHint =>
+      'Attach a ticket, a manifest or a photograph — PDF or image.';
+
+  @override
+  String get travelAddAttachment => 'Add an attachment';
 }

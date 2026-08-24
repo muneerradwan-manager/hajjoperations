@@ -26,6 +26,7 @@ import '../../modules/domain/operational_module.dart';
 import '../../modules/presentation/module_detail_screen.dart';
 import '../../profile/domain/profile.dart';
 import '../../seasons/data/seasons_repository.dart';
+import '../../travel/presentation/widgets/travel_section.dart';
 import '../../notifications/presentation/send_notification_sheet.dart';
 import '../application/employee_manage_cubit.dart';
 import '../data/employees_repository.dart';
@@ -168,6 +169,7 @@ class _View extends StatelessWidget {
         session.can(PermissionCodes.modulesMembers);
     final canSeeComplaints = session.can(PermissionCodes.complaintsView);
     final canSeeEvaluations = session.can(PermissionCodes.evaluationsView);
+    final canSeeTravel = session.can(PermissionCodes.travelView);
     final showManagement = canSuspend || canExternal || canManageParticipants;
 
     return Scaffold(
@@ -393,6 +395,14 @@ class _View extends StatelessWidget {
                     ),
                   ],
                 ),
+              ],
+              // Where he is and when he goes home. High on the page rather than
+              // at the foot with the registers, because it is a fact ABOUT the
+              // man in the same way his telephone number is — not a judgement
+              // recorded against him.
+              if (canSeeTravel) ...[
+                const SizedBox(height: AppSpacing.lg),
+                TravelSection(profileId: p.id, canRead: canSeeTravel),
               ],
               // Last, and only for whoever keeps the register. What is being
               // said about a person belongs at the foot of their page rather
@@ -627,13 +637,10 @@ class _GrantedPermissionsSectionState
               // No editor door on an administrator: is_admin outranks the
               // whole table, so a sheet of switches would change nothing.
               if (widget.canManage)
-                Align(
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: TextButton.icon(
-                    onPressed: _openEditor,
-                    icon: const Icon(AppIcons.permissions, size: 18),
-                    label: Text(l.employeePermissionsEdit),
-                  ),
+                TextButton.icon(
+                  onPressed: _openEditor,
+                  icon: const Icon(AppIcons.permissions, size: 18),
+                  label: Text(l.employeePermissionsEdit),
                 ),
             ],
           ],
