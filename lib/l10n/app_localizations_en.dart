@@ -405,9 +405,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navApprovalsSubtitle => 'Review pending registrations';
 
   @override
-  String get navMyProfile => 'My profile';
-
-  @override
   String get approvalQueueTitle => 'Pending approvals';
 
   @override
@@ -1387,6 +1384,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get employeeModulesEmpty => 'Not assigned to any operational module';
+
+  @override
+  String get navMyProfile => 'My profile';
 
   @override
   String get navMyProfileSubtitle => 'View and edit your details';

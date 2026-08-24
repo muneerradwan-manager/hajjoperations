@@ -404,9 +404,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navApprovalsSubtitle => 'مراجعة طلبات التسجيل المعلّقة';
 
   @override
-  String get navMyProfile => 'ملفي الشخصي';
-
-  @override
   String get approvalQueueTitle => 'الحسابات قيد الانتظار';
 
   @override
@@ -1392,6 +1389,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get employeeModulesEmpty => 'لم يُسند إلى أي ملف تشغيلي';
+
+  @override
+  String get navMyProfile => 'ملفي الشخصي';
 
   @override
   String get navMyProfileSubtitle => 'عرض وتعديل بياناتك';

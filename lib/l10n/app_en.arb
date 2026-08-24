@@ -143,7 +143,6 @@
 
   "navApprovals": "Account approvals",
   "navApprovalsSubtitle": "Review pending registrations",
-  "navMyProfile": "My profile",
 
   "approvalQueueTitle": "Pending approvals",
   "approvalEmpty": "No accounts are waiting for approval",

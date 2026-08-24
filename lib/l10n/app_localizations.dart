@@ -836,12 +836,6 @@ abstract class AppLocalizations {
   /// **'Review pending registrations'**
   String get navApprovalsSubtitle;
 
-  /// No description provided for @navMyProfile.
-  ///
-  /// In en, this message translates to:
-  /// **'My profile'**
-  String get navMyProfile;
-
   /// No description provided for @approvalQueueTitle.
   ///
   /// In en, this message translates to:
@@ -2623,6 +2617,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not assigned to any operational module'**
   String get employeeModulesEmpty;
+
+  /// No description provided for @navMyProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'My profile'**
+  String get navMyProfile;
 
   /// No description provided for @navMyProfileSubtitle.
   ///
