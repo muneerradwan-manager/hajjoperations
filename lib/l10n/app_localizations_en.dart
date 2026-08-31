@@ -4701,10 +4701,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exportPickFirstHint =>
-      'Once you have, the columns you can take, the shape of the file, and the save and send buttons appear here.';
+      'Once you have, what can be taken from it, the shape of the file, and the save and send buttons appear here.';
 
   @override
   String get exportWhichColumns => 'Columns';
+
+  @override
+  String get exportWholeRecord => 'Exported in full';
+
+  @override
+  String get exportWholeRecordHint =>
+      'Nothing to tick here: the document is prose written in its own order, so it is printed whole — its details, its content block by block, its tables and what was attached.';
 
   @override
   String get exportColumnsDefault => 'Default';
@@ -4714,6 +4721,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exportPickAtLeastOne => 'Choose at least one column';
+
+  @override
+  String exportSensitiveNotice(String column) {
+    return '\"$column\" is internal: whoever holds it can tie the person to their records in any other table. The file leaves under your name and outlives this screen — let it reach only whoever needs it.';
+  }
 
   @override
   String get exportOptionAny => 'Leave empty to include all';
@@ -4751,6 +4763,17 @@ class AppLocalizationsEn extends AppLocalizations {
       locale: localeName,
       other: '$count rows exported',
       one: '1 row exported',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String exportDoneRecords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count complete records exported',
+      one: '1 complete record exported',
     );
     return '$_temp0';
   }

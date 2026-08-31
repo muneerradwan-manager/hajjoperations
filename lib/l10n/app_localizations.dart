@@ -8069,7 +8069,7 @@ abstract class AppLocalizations {
   /// No description provided for @exportPickFirstHint.
   ///
   /// In en, this message translates to:
-  /// **'Once you have, the columns you can take, the shape of the file, and the save and send buttons appear here.'**
+  /// **'Once you have, what can be taken from it, the shape of the file, and the save and send buttons appear here.'**
   String get exportPickFirstHint;
 
   /// No description provided for @exportWhichColumns.
@@ -8077,6 +8077,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Columns'**
   String get exportWhichColumns;
+
+  /// No description provided for @exportWholeRecord.
+  ///
+  /// In en, this message translates to:
+  /// **'Exported in full'**
+  String get exportWholeRecord;
+
+  /// No description provided for @exportWholeRecordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to tick here: the document is prose written in its own order, so it is printed whole — its details, its content block by block, its tables and what was attached.'**
+  String get exportWholeRecordHint;
 
   /// No description provided for @exportColumnsDefault.
   ///
@@ -8095,6 +8107,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose at least one column'**
   String get exportPickAtLeastOne;
+
+  /// No description provided for @exportSensitiveNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{column}\" is internal: whoever holds it can tie the person to their records in any other table. The file leaves under your name and outlives this screen — let it reach only whoever needs it.'**
+  String exportSensitiveNotice(String column);
 
   /// No description provided for @exportOptionAny.
   ///
@@ -8155,6 +8173,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{1 row exported} other{{count} rows exported}}'**
   String exportDoneRows(int count);
+
+  /// No description provided for @exportDoneRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 complete record exported} other{{count} complete records exported}}'**
+  String exportDoneRecords(int count);
 
   /// No description provided for @exportNothingMatched.
   ///

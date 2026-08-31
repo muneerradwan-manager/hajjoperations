@@ -1,18 +1,20 @@
 import '../../../core/constants/permission_codes.dart';
 import '../../../core/l10n/localized_name.dart';
 import '../../complaints/data/complaints_repository.dart';
+import '../../complaints/domain/complaint.dart';
 import '../../complaints/presentation/widgets/complaint_labels.dart';
 import '../../employees/data/employees_repository.dart';
 import '../../evaluations/data/evaluations_repository.dart';
+import '../../evaluations/domain/evaluation.dart';
 import '../../evaluations/presentation/widgets/evaluation_labels.dart';
 import '../../modules/data/modules_repository.dart';
-import '../../modules/domain/module_task.dart';
 import '../../profile/domain/profile.dart';
 import '../../profile/domain/profile_enums.dart';
-import '../../reports/data/reports_repository.dart';
 import '../../seasons/data/seasons_repository.dart';
 import '../domain/export_dataset.dart';
+import 'decision_export.dart';
 import 'export_values.dart';
+import 'module_export.dart';
 
 LocalizedName _n(String ar, String en) => LocalizedName(ar: ar, en: en);
 
@@ -39,15 +41,25 @@ LocalizedName _n(String ar, String en) => LocalizedName(ar: ar, en: en);
 /// about the holder HIMSELF. 0079 and 0084 fence a manager off his own case so
 /// that a read permission cannot become the way to find out who accused you,
 /// and 0100 widens the helper INSIDE that fence rather than around it.
+///
+/// **Two kinds of dataset live here.** Most are tables — a row per thing, and
+/// the person picks which of its columns he wants, which is what this screen
+/// was built around. Two are [ExportRecordDataset]s: the operational files and
+/// the decisions hand over WHOLE RECORDS rather than a line about one. They are
+/// written out in `module_export.dart` and `decision_export.dart`, which is
+/// also where the case for the difference is made — including why the files
+/// still offer columns and the decisions cannot.
+///
+/// **And every one of them asks the same shape of question**, in the same
+/// order: the SEASON first, because it is the widest, then what within it, then
+/// which one in particular — «الكل» or one by name. A person who has run one
+/// export has run them all.
 abstract final class ExportCatalog {
   static final List<ExportDataset> all = [
-    _EmployeesDataset(),
-    _SeasonParticipantsDataset(),
-    _ModulesDataset(),
-    _ModuleMembersDataset(),
-    _ModuleTasksDataset(),
+    _PeopleDataset(),
+    ModuleExportDataset(),
     _ReferenceItemsDataset(),
-    _ReportsDataset(),
+    DecisionExportDataset(),
     _ComplaintsDataset(),
     _EvaluationsDataset(),
   ];
@@ -64,6 +76,11 @@ abstract final class ExportCatalog {
   /// The per-dataset check is kept for the admin case and for a future grant
   /// that is narrower than this one. Nothing today reaches it except an admin,
   /// who passes the first clause anyway.
+  ///
+  /// ANY of a dataset's codes opens it, not all of them: «الموظفون والمشاركون»
+  /// is a merge of two things that two grants opened separately, and a reader
+  /// holding either should meet the chip — and then be offered only the half he
+  /// holds. See [ExportViewer].
   static List<ExportDataset> visibleTo({
     required bool isAdmin,
     required Set<String> permissions,
@@ -71,8 +88,8 @@ abstract final class ExportCatalog {
     for (final dataset in all)
       if (isAdmin ||
           permissions.contains(PermissionCodes.exportData) ||
-          dataset.permission == null ||
-          permissions.contains(dataset.permission))
+          dataset.permissions.isEmpty ||
+          dataset.permissions.any(permissions.contains))
         dataset,
   ];
 
@@ -109,7 +126,16 @@ List<ExportColumn> _profileColumns() => [
   ExportColumn(key: 'external_title', label: _n('الصفة', 'Title'), byDefault: false),
   ExportColumn(key: 'account_status', label: _n('حالة الحساب', 'Account status'), byDefault: false),
   ExportColumn(key: 'is_suspended', label: _n('موقوف', 'Suspended'), byDefault: false),
-  ExportColumn(key: 'id', label: _n('المعرّف', 'Id'), byDefault: false),
+  // Marked sensitive, and it is the only column in the app that is. On the
+  // screen it is a row nobody reads; in a sheet on somebody else's desk it is
+  // the key that joins this man to every other table he appears in. The screen
+  // says so once and lets him take it — see [ExportColumn.isSensitive].
+  ExportColumn(
+    key: 'id',
+    label: _n('المعرّف', 'Id'),
+    byDefault: false,
+    isSensitive: true,
+  ),
 ];
 
 Map<String, String> _profileRow(Profile profile, ExportRequest request) {
@@ -145,245 +171,165 @@ Map<String, String> _profileRow(Profile profile, ExportRequest request) {
   };
 }
 
-class _EmployeesDataset extends ExportDataset {
+/// The people of the mission — the permanent staff, this season's
+/// participants, the externals — under one chip.
+///
+/// These were two datasets, «الموظفون» and «مشاركو الموسم», and the split was a
+/// distinction the person exporting does not have. He is after a list of
+/// PEOPLE, with their trades and their telephones, and «مشاركو الموسم» is not a
+/// different kind of thing from «الملاك الدائم» — it is the same thing asked of
+/// a season. Two chips carrying identical columns and near-identical questions
+/// made him choose between them before he was told what the difference was, and
+/// there was no answer on either chip that spanned both.
+///
+/// So it is one chip and the difference is an ANSWER: the season first, because
+/// it is the wider question, then who within it. The columns are what they
+/// always were, shared by every answer, which is what makes them comparable —
+/// two sheets of people that disagree about what «المهنة» means are two sheets
+/// nobody can put side by side.
+///
+/// **The two grants survive the merge.** They open different halves and always
+/// did, so the chip appears for whoever holds EITHER, and «من يُصدَّر» offers
+/// only the halves this reader may actually read — see [ExportViewer]. Offering
+/// him the rest would hand him an empty file and no error.
+class _PeopleDataset extends ExportDataset {
   @override
-  String get id => 'employees';
+  String get id => 'people';
 
   @override
-  LocalizedName get name => _n('الموظفون', 'Employees');
+  LocalizedName get name =>
+      _n('الموظفون والمشاركون', 'Employees and participants');
 
   @override
-  String? get permission => PermissionCodes.employeesView;
+  Set<String> get permissions => {
+    PermissionCodes.employeesView,
+    PermissionCodes.seasonsParticipantsView,
+  };
 
   @override
   List<ExportColumn> get columns => _profileColumns();
 
   @override
   List<ExportOption> get options => [
+    _seasonOption(),
     ExportOption(
       key: 'kind',
       label: _n('من يُصدَّر', 'Who'),
-      choices: () async => [
-        ExportChoice(id: 'permanent', label: _n('الملاك الدائم', 'Permanent staff')),
-        ExportChoice(id: 'external', label: _n('الخارجيون', 'External')),
-        ExportChoice(id: 'both', label: _n('الجميع', 'Everyone')),
-      ],
+      initial: 'permanent',
+      choices: (chosen, viewer) async {
+        final season = chosen['season'];
+        final hasSeason = season != null && season != ExportOption.anyId;
+        return [
+          if (viewer.can(PermissionCodes.employeesView)) ...[
+            ExportChoice(
+              id: 'permanent',
+              label: _n('الملاك الدائم', 'Permanent staff'),
+            ),
+            ExportChoice(id: 'external', label: _n('الخارجيون', 'External')),
+            ExportChoice(id: 'both', label: _n('الملاك والخارجيون', 'Staff and external')),
+          ],
+          // Only under a season, because it is not a question otherwise:
+          // participation IS in a season, and `fetchParticipants` has no shape
+          // that spans all of them. Offering it under «كل المواسم» would be
+          // offering a question with no answer.
+          if (hasSeason && viewer.can(PermissionCodes.seasonsParticipantsView))
+            ExportChoice(
+              id: 'participants',
+              label: _n('مشاركو الموسم', "The season's participants"),
+            ),
+        ];
+      },
     ),
-    _seasonOption(
-      label: _n('الموسم (للخارجيين)', 'Season (for external)'),
-      required: false,
+    ExportOption(
+      key: 'person',
+      label: _n('الشخص', 'Person'),
+      initial: ExportOption.anyId,
+      // Narrowed by the two above it, so that the names offered are the names
+      // the file would contain. A picker listing the whole directory under a
+      // question already narrowed to one season's externals would offer people
+      // the export cannot return.
+      choices: (chosen, viewer) async {
+        final people = await _people(
+          kind: chosen['kind'] ?? 'permanent',
+          seasonId: _narrow(chosen['season']),
+        );
+        return [
+          ExportChoice(id: ExportOption.anyId, label: _n('الكل', 'All')),
+          // Two men sharing a name is not an edge case in a mission of four
+          // hundred, so the trade goes on the line and the id breaks whatever
+          // that does not.
+          ...ExportChoice.distinct([
+            for (final person in people)
+              ExportChoice(
+                id: person.id,
+                label: LocalizedName(
+                  ar: [
+                    person.fullName,
+                    person.jobTitleName?.ar ?? '',
+                  ].where((part) => part.isNotEmpty).join(' — '),
+                  en: [
+                    person.fullName,
+                    person.jobTitleName?.en ?? person.jobTitleName?.ar ?? '',
+                  ].where((part) => part.isNotEmpty).join(' — '),
+                ),
+              ),
+          ]),
+        ];
+      },
     ),
   ];
 
   @override
   Future<List<Map<String, String>>> fetch(ExportRequest request) async {
-    final repo = EmployeesRepository();
-    final kind = request.option('kind') ?? 'permanent';
-    final seasonId = request.option('season');
+    final people = await _people(
+      kind: request.option('kind') ?? 'permanent',
+      seasonId: request.narrowing('season'),
+    );
 
-    final people = <Profile>[
+    final one = request.narrowing('person');
+    final chosen = one == null
+        ? people
+        : people.where((person) => person.id == one).toList();
+
+    return [for (final person in chosen) _profileRow(person, request)];
+  }
+
+  /// The people a set of answers names, resolved the same way for the picker
+  /// and for the fetch.
+  ///
+  /// One method for both on purpose: a picker offering a name that the export
+  /// then does not return is the worst failure this screen has, because it
+  /// produces an empty file and looks like the data is gone.
+  static Future<List<Profile>> _people({
+    required String kind,
+    String? seasonId,
+  }) async {
+    if (kind == 'participants') {
+      if (seasonId == null) return const [];
+      return SeasonsRepository().fetchParticipants(seasonId);
+    }
+
+    final repo = EmployeesRepository();
+    return [
       // `.data` because the read may have come off disk. An export IS allowed
       // to be built from a saved copy — the alternative is refusing to produce
       // a file at all with no signal — and the ordinary case here is a desk
       // with a network, where it is live anyway.
       if (kind != 'external') ...(await repo.fetchPermanent()).data,
       // An external belongs to a season rather than to the mission, which is
-      // why the season is offered here and why leaving it off lists everyone
-      // who has ever been one.
+      // why the season narrows this and why «كل المواسم» lists everyone who has
+      // ever been one.
       if (kind != 'permanent') ...await repo.fetchExternal(seasonId: seasonId),
     ];
-
-    return [for (final person in people) _profileRow(person, request)];
   }
+
+  static String? _narrow(String? value) =>
+      (value == null || value.isEmpty || value == ExportOption.anyId)
+      ? null
+      : value;
 }
 
-class _SeasonParticipantsDataset extends ExportDataset {
-  @override
-  String get id => 'season_participants';
-
-  @override
-  LocalizedName get name => _n('مشاركو الموسم', 'Season participants');
-
-  @override
-  String? get permission => PermissionCodes.seasonsParticipantsView;
-
-  @override
-  List<ExportColumn> get columns => _profileColumns();
-
-  @override
-  List<ExportOption> get options => [_seasonOption()];
-
-  @override
-  Future<List<Map<String, String>>> fetch(ExportRequest request) async {
-    final seasonId = request.option('season');
-    if (seasonId == null) return [];
-    final people = await SeasonsRepository().fetchParticipants(seasonId);
-    return [for (final person in people) _profileRow(person, request)];
-  }
-}
-
-// ------------------------------------------------------- the files and their
-
-class _ModulesDataset extends ExportDataset {
-  @override
-  String get id => 'modules';
-
-  @override
-  LocalizedName get name => _n('الملفات التشغيلية', 'Operational files');
-
-  @override
-  String? get permission => null;
-
-  @override
-  List<ExportColumn> get columns => [
-    ExportColumn(key: 'type', label: _n('نوع الملف', 'File type')),
-    ExportColumn(key: 'season', label: _n('الموسم', 'Season')),
-    ExportColumn(key: 'decision_number', label: _n('رقم القرار', 'Decision number')),
-    ExportColumn(key: 'starts_on', label: _n('تاريخ البدء', 'Starts on')),
-    ExportColumn(key: 'ends_on', label: _n('تاريخ الانتهاء', 'Ends on')),
-    // Prose, and usually empty — offered beside their dates, but off by
-    // default: a sheet of files is read as a table of dates and states.
-    ExportColumn(
-      key: 'start_note',
-      label: _n('ملاحظة بداية العمل', 'Start note'),
-      byDefault: false,
-    ),
-    ExportColumn(
-      key: 'end_note',
-      label: _n('ملاحظة نهاية العمل', 'End note'),
-      byDefault: false,
-    ),
-    ExportColumn(key: 'is_active', label: _n('مُفعَّل', 'Active')),
-    ExportColumn(key: 'is_running', label: _n('قائم', 'Running'), byDefault: false),
-    ExportColumn(key: 'report_cadence', label: _n('دورية التقرير', 'Report cadence'), byDefault: false),
-    ExportColumn(key: 'id', label: _n('المعرّف', 'Id'), byDefault: false),
-  ];
-
-  @override
-  List<ExportOption> get options => [_seasonOption(required: false)];
-
-  @override
-  Future<List<Map<String, String>>> fetch(ExportRequest request) async {
-    final modules = await ModulesRepository().fetchModules(
-      seasonId: request.option('season'),
-    );
-    final l = request.l;
-    return [
-      for (final module in modules)
-        {
-          'type': request.text(module.moduleTypeName),
-          'season': module.seasonHijriYear?.toString() ?? '',
-          'decision_number': ExportValues.text(module.decisionNumber),
-          'starts_on': ExportValues.date(module.startsOn),
-          'ends_on': ExportValues.date(module.endsOn),
-          'start_note': ExportValues.text(module.startNote),
-          'end_note': ExportValues.text(module.endNote),
-          'is_active': ExportValues.yesNo(l, module.isActive),
-          'is_running': ExportValues.yesNo(l, module.isRunning),
-          'report_cadence': module.reportCadence.name,
-          'id': module.id,
-        },
-    ];
-  }
-}
-
-class _ModuleMembersDataset extends ExportDataset {
-  @override
-  String get id => 'module_members';
-
-  @override
-  LocalizedName get name => _n('أعضاء ملف تشغيلي', 'Members of a file');
-
-  @override
-  String? get permission => null;
-
-  @override
-  List<ExportColumn> get columns => [
-    ExportColumn(key: 'name', label: _n('الاسم', 'Name')),
-    ExportColumn(key: 'job_title', label: _n('المهنة', 'Job title')),
-    ExportColumn(key: 'phone_sa', label: _n('الهاتف (السعودية)', 'Phone (SA)')),
-    ExportColumn(key: 'phone_sy', label: _n('الهاتف (سوريا)', 'Phone (SY)'), byDefault: false),
-    ExportColumn(key: 'email', label: _n('البريد الإلكتروني', 'Email'), byDefault: false),
-    ExportColumn(key: 'profile_id', label: _n('معرّف الموظف', 'Employee id'), byDefault: false),
-  ];
-
-  @override
-  List<ExportOption> get options => [_moduleOption()];
-
-  @override
-  Future<List<Map<String, String>>> fetch(ExportRequest request) async {
-    final moduleId = request.option('module');
-    if (moduleId == null) return [];
-
-    final repo = ModulesRepository();
-    // Both halves: a man may hold a post on the file itself or at one of its
-    // towers, and a roster missing either is a roster of half the file.
-    final members = await repo.fetchMembers(moduleId);
-    final nodes = await repo.fetchNodes(moduleId);
-    final everyone = [
-      ...members,
-      for (final node in nodes) ...node.members,
-    ];
-
-    return [
-      for (final member in everyone)
-        {
-          'name': member.profile?.fullName ?? '',
-          'job_title': request.text(member.profile?.jobTitleName),
-          'phone_sa': ExportValues.text(member.profile?.phoneSa),
-          'phone_sy': ExportValues.text(member.profile?.phoneSy),
-          'email': ExportValues.text(member.profile?.email),
-          'profile_id': member.profileId,
-        },
-    ];
-  }
-}
-
-class _ModuleTasksDataset extends ExportDataset {
-  @override
-  String get id => 'module_tasks';
-
-  @override
-  LocalizedName get name => _n('مهام ملف تشغيلي', 'Duties of a file');
-
-  @override
-  String? get permission => null;
-
-  @override
-  List<ExportColumn> get columns => [
-    ExportColumn(key: 'title', label: _n('المهمة', 'Duty')),
-    ExportColumn(key: 'scope', label: _n('النطاق', 'Scope')),
-    ExportColumn(key: 'due_on', label: _n('تاريخ الاستحقاق', 'Due on')),
-    ExportColumn(key: 'description', label: _n('الوصف', 'Description'), byDefault: false),
-  ];
-
-  @override
-  List<ExportOption> get options => [_moduleOption()];
-
-  @override
-  Future<List<Map<String, String>>> fetch(ExportRequest request) async {
-    final moduleId = request.option('module');
-    if (moduleId == null) return [];
-
-    // Description only, since 0105: the lists carry no states and nobody's
-    // name. What people track is their own list, outside the files.
-    final list = await ModulesRepository().fetchModuleTasks(moduleId);
-    final l = request.l;
-
-    return [
-      for (final task in list.tasks)
-        {
-          'title': request.text(task.title),
-          'scope': switch (task.scope) {
-            TaskScope.file => l.moduleTaskScopeFile,
-            TaskScope.role => l.moduleTaskScopeRole,
-          },
-          'due_on': ExportValues.date(task.dueOn),
-          'description': request.text(task.description),
-        },
-    ];
-  }
-}
+// ------------------------------------------------------- the master data
 
 /// The master-data lists — التكتلات, the hotels, the camps, the groups.
 ///
@@ -399,7 +345,7 @@ class _ReferenceItemsDataset extends ExportDataset {
   LocalizedName get name => _n('البيانات المرجعية', 'Master data');
 
   @override
-  String? get permission => PermissionCodes.referenceView;
+  Set<String> get permissions => {PermissionCodes.referenceView};
 
   @override
   List<ExportColumn> get columns => [
@@ -411,17 +357,20 @@ class _ReferenceItemsDataset extends ExportDataset {
 
   @override
   List<ExportOption> get options => [
+    // The season first, then the list. It is the wider question — every
+    // narrowing on this screen reads from the widest down — even though here it
+    // narrows the ENTRIES rather than which lists exist.
+    _seasonOption(),
     ExportOption(
       key: 'set',
       label: _n('القائمة', 'List'),
-      choices: () async {
+      choices: (_, _) async {
         final sets = await ModulesRepository().fetchReferenceSets();
         return [
           for (final set in sets) ExportChoice(id: set.id, label: set.name),
         ];
       },
     ),
-    _seasonOption(required: false),
   ];
 
   @override
@@ -458,7 +407,7 @@ class _ReferenceItemsDataset extends ExportDataset {
     // season-scoped holds a separate row per season, and one that is not holds
     // rows belonging to no season at all. Filtering the second kind by season
     // would return nothing and look like an empty list.
-    final seasonId = request.option('season');
+    final seasonId = request.narrowing('season');
     final items = (set.isSeasonScoped && seasonId != null)
         ? set.items.where((item) => item.seasonId == seasonId).toList()
         : set.items;
@@ -492,54 +441,6 @@ class _ReferenceItemsDataset extends ExportDataset {
 
 // --------------------------------------------------------------- the records
 
-class _ReportsDataset extends ExportDataset {
-  @override
-  String get id => 'reports';
-
-  @override
-  // القرارات, not التقارير. The identifiers in this feature all say `report`
-  // — see the note on the `Report` class for why they were left alone — but
-  // what the reader is choosing to export is the mission's decisions.
-  LocalizedName get name => _n('القرارات', 'Decisions');
-
-  @override
-  String? get permission => null;
-
-  @override
-  List<ExportColumn> get columns => [
-    ExportColumn(key: 'title', label: _n('العنوان', 'Title')),
-    ExportColumn(key: 'number', label: _n('الرقم', 'Number')),
-    ExportColumn(key: 'type', label: _n('النوع', 'Type')),
-    ExportColumn(key: 'season', label: _n('الموسم', 'Season')),
-    ExportColumn(key: 'is_published', label: _n('منشور', 'Published')),
-    ExportColumn(key: 'updated_at', label: _n('آخر تحديث', 'Last updated')),
-    ExportColumn(key: 'id', label: _n('المعرّف', 'Id'), byDefault: false),
-  ];
-
-  @override
-  List<ExportOption> get options => [_seasonOption(required: false)];
-
-  @override
-  Future<List<Map<String, String>>> fetch(ExportRequest request) async {
-    final reports = await ReportsRepository().fetchReports(
-      seasonId: request.option('season'),
-    );
-    final l = request.l;
-    return [
-      for (final report in reports)
-        {
-          'title': report.title,
-          'number': ExportValues.text(report.number),
-          'type': request.text(report.typeName),
-          'season': report.seasonHijriYear?.toString() ?? '',
-          'is_published': ExportValues.yesNo(l, report.isPublished),
-          'updated_at': ExportValues.moment(report.updatedAt),
-          'id': report.id,
-        },
-    ];
-  }
-}
-
 class _ComplaintsDataset extends ExportDataset {
   @override
   String get id => 'complaints';
@@ -548,7 +449,7 @@ class _ComplaintsDataset extends ExportDataset {
   LocalizedName get name => _n('الشكاوى', 'Complaints');
 
   @override
-  String? get permission => PermissionCodes.complaintsView;
+  Set<String> get permissions => {PermissionCodes.complaintsView};
 
   @override
   List<ExportColumn> get columns => [
@@ -564,11 +465,34 @@ class _ComplaintsDataset extends ExportDataset {
   ];
 
   @override
+  List<ExportOption> get options => [
+    ExportOption(
+      key: 'complaint',
+      label: _n('الشكوى', 'Complaint'),
+      initial: ExportOption.anyId,
+      choices: (_, _) async {
+        final complaints = await ComplaintsRepository().fetchList(all: true);
+        return [
+          ExportChoice(id: ExportOption.anyId, label: _n('الكل', 'All')),
+          ...ExportChoice.distinct([
+            for (final complaint in complaints)
+              ExportChoice(id: complaint.id, label: _complaintTitle(complaint)),
+          ]),
+        ];
+      },
+    ),
+  ];
+
+  @override
   Future<List<Map<String, String>>> fetch(ExportRequest request) async {
     // `all` is the register, and it is what `complaints.view` grants. The
     // complainant's name comes back only where the caller is entitled to it —
     // the RPC redacts it otherwise, and this exports what it is given.
-    final complaints = await ComplaintsRepository().fetchList(all: true);
+    final all = await ComplaintsRepository().fetchList(all: true);
+    final one = request.narrowing('complaint');
+    final complaints = one == null
+        ? all
+        : all.where((complaint) => complaint.id == one).toList();
     final l = request.l;
     return [
       for (final complaint in complaints)
@@ -595,7 +519,7 @@ class _EvaluationsDataset extends ExportDataset {
   LocalizedName get name => _n('التقييمات', 'Evaluations');
 
   @override
-  String? get permission => PermissionCodes.evaluationsView;
+  Set<String> get permissions => {PermissionCodes.evaluationsView};
 
   @override
   List<ExportColumn> get columns => [
@@ -614,8 +538,34 @@ class _EvaluationsDataset extends ExportDataset {
   ];
 
   @override
+  List<ExportOption> get options => [
+    ExportOption(
+      key: 'evaluation',
+      label: _n('التقييم', 'Evaluation'),
+      initial: ExportOption.anyId,
+      choices: (_, _) async {
+        final evaluations = await EvaluationsRepository().fetchList(all: true);
+        return [
+          ExportChoice(id: ExportOption.anyId, label: _n('الكل', 'All')),
+          ...ExportChoice.distinct([
+            for (final evaluation in evaluations)
+              ExportChoice(
+                id: evaluation.id,
+                label: _evaluationTitle(evaluation),
+              ),
+          ]),
+        ];
+      },
+    ),
+  ];
+
+  @override
   Future<List<Map<String, String>>> fetch(ExportRequest request) async {
-    final evaluations = await EvaluationsRepository().fetchList(all: true);
+    final all = await EvaluationsRepository().fetchList(all: true);
+    final one = request.narrowing('evaluation');
+    final evaluations = one == null
+        ? all
+        : all.where((evaluation) => evaluation.id == one).toList();
     final l = request.l;
     return [
       for (final evaluation in evaluations)
@@ -639,44 +589,80 @@ class _EvaluationsDataset extends ExportDataset {
   }
 }
 
+/// How one complaint is named in a picker.
+///
+/// Its date and what it is ABOUT, and the first words of it when there is no
+/// subject to name — a shelf of «شكوى» repeated forty times is not a list of
+/// anything. Built from content strings rather than from the ARB on purpose:
+/// the choices are resolved while the form is being answered, and there is no
+/// [AppLocalizations] there — the file's own language is settled later, when it
+/// is written.
+LocalizedName _complaintTitle(Complaint complaint) {
+  final said = complaint.body.replaceAll(RegExp(r'\s+'), ' ').trim();
+  return LocalizedName(
+    ar: [
+      ExportValues.date(complaint.createdAt),
+      (complaint.targetLabel ?? '').trim(),
+      // The opening words STAY even when there is a subject to name. Two
+      // complaints about one hotel on one day are ordinary — that is what a bad
+      // week at a tower looks like — and «2026-08-20 — فندق الصفوة» twice over
+      // is a list a person cannot choose from.
+      said.length <= 40 ? said : '${said.substring(0, 40)}…',
+    ].where((part) => part.isNotEmpty).join(' — '),
+  );
+}
+
+/// And one evaluation: the form, whom it is about, WHO IS JUDGING, and when it
+/// was opened.
+///
+/// The evaluator is the whole point of the line, and leaving him off is what
+/// made this list unreadable. `assign_evaluations` writes the cartesian product
+/// (0084) — one form put to a committee before twenty judges is twenty separate
+/// evaluations — so the template, the subject and the date are IDENTICAL across
+/// all twenty and the only thing that differs is the name of the man holding
+/// the pen. That is exactly the thing a person is choosing between.
+///
+/// Null where the reader may not know it: 0084 fences the subject off from the
+/// names of his judges, and the RPC does not send them at all rather than
+/// sending them empty. The line simply stands without it — and
+/// [ExportChoice.distinct] then tells the twins apart by id, since nothing
+/// readable can.
+LocalizedName _evaluationTitle(Evaluation evaluation) => LocalizedName(
+  ar: [
+    evaluation.templateTitle,
+    (evaluation.targetLabel ?? '').trim(),
+    (evaluation.evaluatorName ?? '').trim(),
+    ExportValues.date(evaluation.createdAt),
+  ].where((part) => part.isNotEmpty).join(' — '),
+);
+
 // ----------------------------------------------------------- shared options
 
-/// Which season. Offered by nearly everything, because nearly everything in
-/// this app is scoped to one and an export that silently spanned all of them
-/// would be read as this year's.
-ExportOption _seasonOption({LocalizedName? label, bool required = true}) =>
-    ExportOption(
-      key: 'season',
-      label: label ?? _n('الموسم', 'Season'),
-      required: required,
-      choices: () async {
-        final seasons = await SeasonsRepository().fetchSeasons();
-        return [
-          for (final season in seasons)
-            ExportChoice(
-              id: season.id,
-              label: LocalizedName(ar: '${season.hijriYear}هـ'),
-            ),
-        ];
-      },
-    );
-
-/// Which operational file. Required: "the members" of no file in particular is
-/// not a question with an answer.
-ExportOption _moduleOption() => ExportOption(
-  key: 'module',
-  label: _n('الملف التشغيلي', 'Operational file'),
-  choices: () async {
-    final modules = await ModulesRepository().fetchModules();
+/// Which season, and it is asked FIRST wherever it is asked.
+///
+/// Offered by nearly everything, because nearly everything in this app is
+/// scoped to one and an export that silently spanned all of them would be read
+/// as this year's.
+///
+/// «كل المواسم» is a real answer with an id rather than an empty dropdown. The
+/// two are the same query — do not filter — and they read completely
+/// differently: an unanswered field says «لم يُختر بعد» and a person leaves it
+/// alone wondering what he missed.
+ExportOption _seasonOption({LocalizedName? label}) => ExportOption(
+  key: 'season',
+  label: label ?? _n('الموسم', 'Season'),
+  initial: ExportOption.anyId,
+  choices: (_, _) async {
+    final seasons = await SeasonsRepository().fetchSeasons();
     return [
-      for (final module in modules)
+      ExportChoice(
+        id: ExportOption.anyId,
+        label: _n('كل المواسم', 'All seasons'),
+      ),
+      for (final season in seasons)
         ExportChoice(
-          id: module.id,
-          label: LocalizedName(
-            ar: '${module.moduleTypeName?.ar ?? ''} — '
-                '${module.seasonHijriYear ?? ''}هـ',
-            en: module.moduleTypeName?.en,
-          ),
+          id: season.id,
+          label: LocalizedName(ar: '${season.hijriYear}هـ'),
         ),
     ];
   },

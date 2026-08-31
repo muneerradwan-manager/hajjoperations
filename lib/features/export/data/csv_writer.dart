@@ -39,15 +39,48 @@ class CsvWriter {
   static const _bom = [0xEF, 0xBB, 0xBF];
   static const _crlf = '\r\n';
 
-  static Uint8List write(ExportTable table) {
-    final buffer = StringBuffer()
-      ..write(table.headers.map(escape).join(','))
-      ..write(_crlf);
+  static Uint8List write(ExportTable table) => writeAll([table]);
 
-    for (final row in table.rows) {
-      buffer
-        ..write(row.map(escape).join(','))
-        ..write(_crlf);
+  /// Several tables in one sheet, which is what a whole-record export is.
+  ///
+  /// Excel has no notion of a section, so the blocks are laid one under another
+  /// with a blank line between them and each one's caption on a line of its
+  /// own. That is not a compromise for want of something better — it is how
+  /// every sheet a person has ever built by hand is laid out, and it opens in
+  /// anything.
+  ///
+  /// The caption goes in the FIRST CELL rather than being spread across the
+  /// width. A merged banner is not expressible in CSV at all, and a caption
+  /// repeated across six columns is six cells to delete before the block can be
+  /// sorted.
+  static Uint8List writeAll(List<ExportTable> tables) {
+    final buffer = StringBuffer();
+
+    for (var i = 0; i < tables.length; i++) {
+      final table = tables[i];
+      if (i > 0) buffer.write(_crlf);
+
+      final caption = table.caption;
+      if (caption != null && caption.isNotEmpty) {
+        buffer
+          ..write(escape(caption))
+          ..write(_crlf);
+      }
+
+      // An empty heading list is deliberate — see [ExportTable.headers] — and
+      // writing it would put a bare line above a two-column block of
+      // «البيان / القيمة» that reads perfectly well without one.
+      if (table.headers.isNotEmpty) {
+        buffer
+          ..write(table.headers.map(escape).join(','))
+          ..write(_crlf);
+      }
+
+      for (final row in table.rows) {
+        buffer
+          ..write(row.map(escape).join(','))
+          ..write(_crlf);
+      }
     }
 
     return Uint8List.fromList([..._bom, ...utf8.encode(buffer.toString())]);

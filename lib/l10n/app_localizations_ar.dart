@@ -4735,7 +4735,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get exportTitle => 'تصدير البيانات';
 
   @override
-  String get exportSubtitle => 'أخرج أي قائمة كملف — باختيار الأعمدة';
+  String get exportSubtitle => 'أخرج أي قائمة كملف — بالأعمدة التي تختارها';
 
   @override
   String get exportWhat => 'ما الذي تريد تصديره؟';
@@ -4745,10 +4745,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get exportPickFirstHint =>
-      'بعد الاختيار تظهر هنا الأعمدة التي يمكن أخذها، وصيغة الملف، وزرّا الحفظ والإرسال.';
+      'بعد الاختيار يظهر هنا ما يمكن أخذه منه، وصيغة الملف، وزرّا الحفظ والإرسال.';
 
   @override
   String get exportWhichColumns => 'الأعمدة';
+
+  @override
+  String get exportWholeRecord => 'يُصدَّر كاملاً';
+
+  @override
+  String get exportWholeRecordHint =>
+      'لا أعمدة تُختار هنا: المستند نصٌّ كُتب بترتيبه، فيُطبع كاملاً — بياناته، ومحتواه كتلةً كتلة، وجداوله، وما أُرفق به.';
 
   @override
   String get exportColumnsDefault => 'الافتراضية';
@@ -4758,6 +4765,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get exportPickAtLeastOne => 'اختر عموداً واحداً على الأقل';
+
+  @override
+  String exportSensitiveNotice(String column) {
+    return '«$column» بيانٌ داخلي: من يحمله يستطيع أن يربط الشخص بسجلّاته في أي جدولٍ آخر. الملف يخرج باسمك ويبقى بعد إغلاق الشاشة — فليصل إلى من يحتاجه وحده.';
+  }
 
   @override
   String get exportOptionAny => 'اتركه فارغاً ليشمل الجميع';
@@ -4797,6 +4809,19 @@ class AppLocalizationsAr extends AppLocalizations {
       few: 'صُدِّرت $count أسطر',
       two: 'صُدِّر سطران',
       one: 'صُدِّر سطر واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String exportDoneRecords(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'صُدِّر $count سجلّاً كاملاً',
+      few: 'صُدِّرت $count سجلّات كاملة',
+      two: 'صُدِّر سجلّان كاملان',
+      one: 'صُدِّر سجلّ واحد كاملاً',
     );
     return '$_temp0';
   }

@@ -30,12 +30,16 @@ void main() {
 
       expect(offered.length, lessThan(ExportCatalog.all.length));
       expect(
-        offered.any((d) => d.permission == PermissionCodes.employeesView),
+        offered.any(
+          (d) => d.permissions.contains(PermissionCodes.employeesView),
+        ),
         isFalse,
         reason: 'the employees were offered to somebody who cannot read them',
       );
       expect(
-        offered.any((d) => d.permission == PermissionCodes.referenceView),
+        offered.any(
+          (d) => d.permissions.contains(PermissionCodes.referenceView),
+        ),
         isTrue,
       );
     });

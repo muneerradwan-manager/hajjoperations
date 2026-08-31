@@ -31,6 +31,7 @@ class ExportState extends Equatable {
     this.status = ExportStatus.choosing,
     this.error,
     this.lastRowCount,
+    this.lastRecordCount,
     this.savedPath,
   });
 
@@ -66,11 +67,30 @@ class ExportState extends Equatable {
   /// after a save, which hands back a document URI rather than a path.
   final String? savedPath;
 
+  /// How many whole records the last export carried, for the datasets that
+  /// carry records. Null after an ordinary one — see [ExportFile.recordCount].
+  final int? lastRecordCount;
+
+  /// The ticked columns that are worth a word of warning, if any.
+  ///
+  /// Read off the ticking rather than remembered, so that unticking the column
+  /// takes the notice away with it — a warning that outlived what caused it is
+  /// a warning people learn to ignore.
+  List<ExportColumn> get sensitiveColumns => [
+    for (final column in columns)
+      if (column.isSensitive && selected.contains(column.key)) column,
+  ];
+
   /// Whether there is anything to export yet: a dataset, at least one column,
   /// and an answer to every option that insists on one.
+  ///
+  /// "At least one column" only where there ARE columns. A record dataset has
+  /// none by construction — it hands over the whole record — and a ticking rule
+  /// applied to it would leave its export button permanently dead.
   bool get canRun {
     final target = dataset;
-    if (target == null || selected.isEmpty) return false;
+    if (target == null) return false;
+    if (columns.isNotEmpty && selected.isEmpty) return false;
     for (final option in target.options) {
       if (option.required && (options[option.key] ?? '').isEmpty) return false;
     }
@@ -89,6 +109,7 @@ class ExportState extends Equatable {
     String? error,
     bool clearError = false,
     int? lastRowCount,
+    int? lastRecordCount,
     bool clearRowCount = false,
     String? savedPath,
     bool clearSavedPath = false,
@@ -103,6 +124,9 @@ class ExportState extends Equatable {
     status: status ?? this.status,
     error: clearError ? null : (error ?? this.error),
     lastRowCount: clearRowCount ? null : (lastRowCount ?? this.lastRowCount),
+    lastRecordCount: clearRowCount
+        ? null
+        : (lastRecordCount ?? this.lastRecordCount),
     savedPath: clearSavedPath ? null : (savedPath ?? this.savedPath),
   );
 
@@ -118,6 +142,7 @@ class ExportState extends Equatable {
     status,
     error,
     lastRowCount,
+    lastRecordCount,
     savedPath,
   ];
 }
@@ -125,7 +150,8 @@ class ExportState extends Equatable {
 /// Drives the export screen: what can be exported, what of it, and in what.
 class ExportCubit extends SafeCubit<ExportState> {
   ExportCubit({required bool isAdmin, required Set<String> permissions})
-    : super(
+    : viewer = ExportViewer(isAdmin: isAdmin, permissions: permissions),
+      super(
         ExportState(
           datasets: ExportCatalog.visibleTo(
             isAdmin: isAdmin,
@@ -133,6 +159,12 @@ class ExportCubit extends SafeCubit<ExportState> {
           ),
         ),
       );
+
+  /// Who is asking. Held rather than re-derived: it decides which HALF of a
+  /// merged dataset is offered — the permanent staff or the season's
+  /// participants — so the options need it while the form is being answered,
+  /// not only when the file is built.
+  final ExportViewer viewer;
 
   Future<void> selectDataset(ExportDataset dataset) async {
     emit(
@@ -146,36 +178,77 @@ class ExportCubit extends SafeCubit<ExportState> {
       ),
     );
 
-    try {
-      final choices = <String, List<ExportChoice>>{};
-      for (final option in dataset.options) {
-        choices[option.key] = await option.choices();
-      }
-      emit(state.copyWith(choices: choices, status: ExportStatus.choosing));
-    } catch (e) {
-      emit(state.copyWith(status: ExportStatus.error, error: e.toString()));
-    }
+    await _resolve(dataset, const {}, dataset.defaultColumns);
   }
 
   Future<void> setOption(String key, String value) async {
     final dataset = state.dataset;
     if (dataset == null) return;
 
-    final options = {...state.options, key: value};
-    emit(state.copyWith(options: options, status: ExportStatus.preparing));
+    emit(state.copyWith(status: ExportStatus.preparing));
+    await _resolve(dataset, {...state.options, key: value}, state.selected);
+  }
 
+  /// Works out what the form now offers, and what of it is still answered.
+  ///
+  /// One method for opening a dataset and for changing an answer, because the
+  /// two do the same work: an option's list may DEPEND on the answers above it
+  /// — the operational files offered are the chosen season's, the decisions
+  /// offered are the chosen scope's — so a list resolved once when the screen
+  /// opened would go on offering last question's answers.
+  ///
+  /// Which is why the options are walked in order and each is resolved against
+  /// what has been settled ABOVE it, sequentially. They cannot go out together.
+  ///
+  /// An answer that is no longer among its option's choices falls back to that
+  /// option's opening answer rather than being cleared: choosing 1448هـ under a
+  /// file that belonged to 1447 should land on «الكل» for 1448, not on an empty
+  /// dropdown with the export button dead and nothing saying why.
+  Future<void> _resolve(
+    ExportDataset dataset,
+    Map<String, String> answers,
+    Set<String> selected,
+  ) async {
     try {
+      final choices = <String, List<ExportChoice>>{};
+      final settled = <String, String>{};
+
+      for (final option in dataset.options) {
+        final list = await option.choices(settled, viewer);
+        choices[option.key] = list;
+
+        bool offered(String? id) =>
+            id != null && list.any((choice) => choice.id == id);
+
+        final wanted = answers[option.key];
+        if (offered(wanted)) {
+          settled[option.key] = wanted!;
+        } else if (offered(option.initial)) {
+          settled[option.key] = option.initial!;
+        } else if (option.required && list.isNotEmpty) {
+          // A question that INSISTS on an answer gets the first one on offer
+          // rather than none. This is the case where a reader holds only
+          // `seasons.participants_view`: «الملاك الدائم» is the opening answer
+          // of «من يُصدَّر» and is not among his choices at all, and leaving it
+          // unanswered would kill the export button with nothing saying why.
+          settled[option.key] = list.first.id;
+        }
+      }
+
       // The extra columns depend on the answers, so they are re-resolved rather
       // than added to: changing the chosen list from the hotels to the camps
       // must take the hotels' own fields away with it, or the sheet offers
       // columns that no row has anything for.
-      final extra = await dataset.extraColumns(options);
+      final extra = await dataset.extraColumns(settled);
       final columns = [...dataset.columns, ...extra];
       final live = {for (final column in columns) column.key};
+
       emit(
         state.copyWith(
+          choices: choices,
+          options: settled,
           columns: columns,
-          selected: state.selected.where(live.contains).toSet(),
+          selected: selected.where(live.contains).toSet(),
           status: ExportStatus.choosing,
           clearRowCount: true,
         ),
@@ -268,6 +341,7 @@ class ExportCubit extends SafeCubit<ExportState> {
           options: state.options,
           l: l,
           languageCode: languageCode,
+          viewer: viewer,
         ),
         format: state.format,
         columns: state.columns,
@@ -305,6 +379,7 @@ class ExportCubit extends SafeCubit<ExportState> {
           state.copyWith(
             status: ExportStatus.choosing,
             lastRowCount: file.rowCount,
+            lastRecordCount: file.recordCount,
             // Null on Android, which answers with a document URI rather than a
             // path anybody would recognise. The message that reads this says
             // "saved" without a where in that case, which is the truth.
@@ -325,6 +400,7 @@ class ExportCubit extends SafeCubit<ExportState> {
         state.copyWith(
           status: ExportStatus.choosing,
           lastRowCount: file.rowCount,
+          lastRecordCount: file.recordCount,
         ),
       );
     } catch (e) {

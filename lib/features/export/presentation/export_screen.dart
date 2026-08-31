@@ -51,6 +51,7 @@ class _ExportView extends StatelessWidget {
         listenWhen: (a, b) =>
             a.error != b.error ||
             a.lastRowCount != b.lastRowCount ||
+            a.lastRecordCount != b.lastRecordCount ||
             a.savedPath != b.savedPath,
         listener: (context, state) {
           final messenger = ScaffoldMessenger.of(context);
@@ -72,6 +73,7 @@ class _ExportView extends StatelessWidget {
           if (rows == null) return;
 
           final path = state.savedPath;
+          final records = state.lastRecordCount;
           messenger
             ..hideCurrentSnackBar()
             ..showSnackBar(
@@ -86,6 +88,12 @@ class _ExportView extends StatelessWidget {
                       ? l.exportNothingMatched
                       : (path != null && path.isNotEmpty)
                       ? l.exportSavedTo(path)
+                      // Records where the export carried records: one whole
+                      // operational file is thirty-odd lines across five
+                      // blocks, and «صُدِّر 34 سطراً» says nothing about
+                      // whether he got the file he asked for.
+                      : records != null
+                      ? l.exportDoneRecords(records)
                       : l.exportDoneRows(rows),
                 ),
               ),
@@ -122,11 +130,22 @@ class _ExportView extends StatelessWidget {
                   for (final option in state.dataset!.options)
                     _OptionPicker(option: option, state: state),
                   const SizedBox(height: AppSpacing.md),
-                  SectionHeader(
-                    l.exportWhichColumns,
-                    trailing: _ColumnActions(state: state),
-                  ),
-                  _ColumnPicker(state: state),
+                  // A record dataset offers no columns — it hands over the
+                  // whole record — so there is no checklist to draw. The space
+                  // says so rather than closing over silently: a person who has
+                  // exported the employees knows this step exists, and its
+                  // absence would read as a screen that failed to load.
+                  if (state.columns.isEmpty) ...[
+                    SectionHeader(l.exportWholeRecord),
+                    _WholeRecordNote(state: state),
+                  ] else ...[
+                    SectionHeader(
+                      l.exportWhichColumns,
+                      trailing: _ColumnActions(state: state),
+                    ),
+                    _ColumnPicker(state: state),
+                    _SensitiveNotice(state: state),
+                  ],
                   const SizedBox(height: AppSpacing.md),
                   SectionHeader(l.exportFormat),
                   _FormatPicker(state: state),
@@ -194,6 +213,58 @@ class _AwaitingDataset extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// What stands where the column checklist would be, for a dataset that has no
+/// columns to offer.
+///
+/// The heading above it says «يُصدَّر كاملاً» and this says what "كاملاً"
+/// covers. Both are needed: a person who has exported the employees has ticked
+/// columns before and will look for them here, and a step that simply vanished
+/// would read as a screen that half-loaded rather than as a deliberate answer.
+class _WholeRecordNote extends StatelessWidget {
+  const _WholeRecordNote({required this.state});
+  final ExportState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    // The same loader the checklist shows, for the same reason: the options
+    // above are being resolved and the form below them is not settled yet.
+    if (state.status == ExportStatus.preparing) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+        child: AppLoader(),
+      );
+    }
+
+    return GlassCard(
+      subtle: true,
+      shadow: false,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            AppIcons.file,
+            size: 18,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              context.l10n.exportWholeRecordHint,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                height: 1.5,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -324,6 +395,59 @@ class _ColumnPicker extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// A word about a column that leaves the screen's protections behind it.
+///
+/// Under the checklist rather than beside the export button, because it is
+/// caused by a tick and unticking it should take it away — a warning that
+/// outlives what caused it is a warning people stop reading. And it appears
+/// only when something is ticked that earns it: see [ExportColumn.isSensitive],
+/// which is deliberately set on one column in the whole app.
+///
+/// It does not block, and there is no second confirmation on the button. The
+/// person is entitled to the column — he would not be on this screen otherwise
+/// — and the thing he may not have in mind is not the permission but the FILE:
+/// it outlives the screen, and it carries his name out with it.
+class _SensitiveNotice extends StatelessWidget {
+  const _SensitiveNotice({required this.state});
+  final ExportState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final ticked = state.sensitiveColumns;
+    if (ticked.isEmpty) return const SizedBox.shrink();
+
+    final language = Localizations.localeOf(context).languageCode;
+    final theme = Theme.of(context);
+    final tint = theme.colorScheme.tertiary;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.md),
+      child: GlassCard(
+        tint: tint,
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(AppIcons.pending, size: 18, color: tint),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Text(
+                // Named, not listed: one column carries this mark, and a
+                // sentence that says WHICH one is a sentence a person can act
+                // on by finding it in the list above.
+                context.l10n.exportSensitiveNotice(
+                  ticked.first.label.inLanguage(language),
+                ),
+                style: theme.textTheme.bodySmall?.copyWith(height: 1.5),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
