@@ -1,1 +1,17 @@
 include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  # `flutter analyze` walks the whole directory, and `build/` is inside it.
+  #
+  # On Windows and the web that costs nothing — those outputs are compiled and
+  # hold no Dart. iOS is different: `build/ios/SourcePackages` is Swift Package
+  # Manager's checkout directory, and the packages it checks out are the plugin
+  # repositories WHOLE — their own `test/` folders included. Those tests import
+  # mockito, which is a dev dependency of firebase_messaging and not of this
+  # app, so they cannot resolve here and never could.
+  #
+  # The result was 80 errors from code nobody in this project wrote, in a step
+  # whose entire purpose is to fail on code somebody here did. Analysing a
+  # build output says nothing about this app either way.
+  exclude:
+    - build/**
