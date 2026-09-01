@@ -9182,6 +9182,12 @@ abstract class AppLocalizations {
   /// **'Create a trip, then assign people to it in one go.'**
   String get travelNoTripsHint;
 
+  /// No description provided for @travelNoTripsInRole.
+  ///
+  /// In en, this message translates to:
+  /// **'No trips in this part yet'**
+  String get travelNoTripsInRole;
+
   /// No description provided for @travelNoTripsMatch.
   ///
   /// In en, this message translates to:

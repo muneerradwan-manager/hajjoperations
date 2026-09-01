@@ -21,9 +21,14 @@ import 'travel_labels.dart';
 import 'trip_detail_screen.dart';
 import 'widgets/trip_editor_sheet.dart';
 
-/// Every trip of the season, grouped by what part of it they are.
+/// The season's trips, one part of it at a time — القدوم, التنقل الداخلي,
+/// العودة — chosen with the segmented control at the top rather than shown
+/// all together. A season may carry a huge number of each, and a board that
+/// concatenated all three into one scroll would bury العودة under however
+/// many arrivals came before it; the segmented control is the navigation, not
+/// a narrowing on top of some other view.
 ///
-/// The counter on each row is the number the room lives by: a flight is
+/// The counter on each card is the number the room lives by: a flight is
 /// interesting when it is full and alarming when it is empty two days out. It
 /// counts LIVE legs only — people moved off a flight are kept in the table
 /// precisely so that nobody has to delete them to make this figure right.
@@ -114,13 +119,23 @@ class _View extends StatelessWidget {
                         title: l.travelNoTrips,
                         message: l.travelNoTripsHint,
                       ),
+                      // Two different empty screens: switching to a part of
+                      // the season nothing has been entered for yet is not a
+                      // failed search, and must not read as one.
+                      TripsStatus.ready
+                          when state.filtered.isEmpty && !state.isNarrowed =>
+                        EmptyState(
+                          icon: AppIcons.travel,
+                          title: l.travelNoTripsInRole,
+                          message: l.travelNoTripsHint,
+                        ),
                       TripsStatus.ready when state.filtered.isEmpty =>
                         EmptyState(
                           icon: AppIcons.travel,
                           title: l.travelNoTripsMatch,
                         ),
                       TripsStatus.ready => _Board(
-                        grouped: state.grouped,
+                        trips: state.inRole,
                         gutter: size.gutter,
                       ),
                     },
@@ -135,6 +150,11 @@ class _View extends StatelessWidget {
   }
 }
 
+/// Which part of the season the board is open on. Always exactly one
+/// selected — a [SegmentedButton], not chips that toggle off, because with a
+/// season able to carry a "huge number" of arrivals, transfers and
+/// departures apiece there is no view of "all of them" worth having; the
+/// question the room actually asks is always "which of the three".
 class _Filters extends StatelessWidget {
   const _Filters({required this.state, required this.cubit});
 
@@ -144,45 +164,57 @@ class _Filters extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.xs,
-      crossAxisAlignment: WrapCrossAlignment.center,
+    final role = state.role ?? LegRole.inbound;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final role in LegRole.values)
-          FilterChip(
-            selected: state.role == role,
-            onSelected: (_) => cubit.filterRole(role),
-            label: Text(legRoleLabel(context, role)),
-            visualDensity: VisualDensity.compact,
+        SegmentedButton<LegRole>(
+          segments: [
+            for (final r in LegRole.values)
+              ButtonSegment(
+                value: r,
+                icon: Icon(legRoleIcon(r), size: 16),
+                label: Text(legRoleLabel(context, r)),
+              ),
+          ],
+          selected: {role},
+          showSelectedIcon: false,
+          onSelectionChanged: (s) => cubit.filterRole(s.first),
+        ),
+        // Search text is the one thing left that narrows a role rather than
+        // choosing between them, so it is the one thing "مسح" still answers
+        // for.
+        if (state.isNarrowed) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              onPressed: cubit.clearFilters,
+              icon: const Icon(AppIcons.reject, size: 16),
+              label: Text(l.moduleRosterClear),
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
           ),
-        if (state.isNarrowed)
-          TextButton.icon(
-            onPressed: cubit.clearFilters,
-            icon: const Icon(AppIcons.reject, size: 16),
-            label: Text(l.moduleRosterClear),
-            style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
-          ),
+        ],
       ],
     );
   }
 }
 
 class _Board extends StatelessWidget {
-  const _Board({required this.grouped, required this.gutter});
+  const _Board({required this.trips, required this.gutter});
 
-  final Map<LegRole, List<Trip>> grouped;
+  final List<Trip> trips;
   final double gutter;
 
   @override
   Widget build(BuildContext context) {
-    final entries = grouped.entries.toList();
-
-    // The same sectioned grid the rest of the app lists things with: one column
-    // on a phone, three or four on the operations-room desktop, and the columns
-    // counted once for the whole board so a heading never re-flows the cards
-    // under it.
-    return AdaptiveGridView.sectioned(
+    // The same grid every list in this app uses: one column on a phone, three
+    // or four on the operations-room desktop.
+    return AdaptiveGridView(
       padding: EdgeInsets.fromLTRB(
         gutter,
         AppSpacing.sm,
@@ -190,21 +222,17 @@ class _Board extends StatelessWidget {
         AppSpacing.xxl * 2 + MediaQuery.viewPaddingOf(context).bottom,
       ),
       spacing: AppSpacing.sm,
-      sections: [
-        for (final entry in entries)
-          GridSection(
-            header: SectionHeader(
-              legRoleLabel(context, entry.key),
-              icon: legRoleIcon(entry.key),
-            ),
-            itemCount: entry.value.length,
-            itemBuilder: (context, i) => _TripCard(trip: entry.value[i]),
-          ),
-      ],
+      itemCount: trips.length,
+      itemBuilder: (context, i) => _TripCard(trip: trips[i]),
     );
   }
 }
 
+/// One vehicle, drawn the way every other card in this app draws a thing: an
+/// accent icon block, a title, two lines of meta under it, and a row of
+/// badges at the foot — not the thin single-row tile this card used to be,
+/// which read as a list app borrowed for a screen the rest of the app was
+/// never built like.
 class _TripCard extends StatelessWidget {
   const _TripCard({required this.trip});
 
@@ -218,85 +246,92 @@ class _TripCard extends StatelessWidget {
     final accent = legRoleAccent(trip.role).of(context);
 
     return GlassCard(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       onTap: () => Navigator.of(
         context,
       ).push(fadeThroughRoute((_) => TripDetailScreen(tripId: trip.id))),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(AppSpacing.sm),
+            width: 46,
+            height: 46,
             decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.12),
+              color: accent.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(AppRadius.xs),
+              border: Border.all(color: accent.withValues(alpha: 0.18)),
             ),
-            child: Icon(travelModeIcon(trip.mode), size: 20, color: accent),
+            child: Icon(travelModeIcon(trip.mode), size: 22, color: accent),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        '${trip.fromPoint.of(context)} ← '
-                        '${trip.toPoint.of(context)}',
-                        style: text.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (trip.status != TripStatus.scheduled) ...[
-                      const SizedBox(width: AppSpacing.sm),
-                      GlassBadge(
-                        label: tripStatusLabel(context, trip.status),
-                        color: tripStatusColor(context, trip.status),
-                        dense: true,
-                      ),
-                    ],
-                  ],
+                // The route is the identity: a flight is created once and
+                // never renamed, same as a file's type in الملفات.
+                Text(
+                  '${trip.fromPoint.of(context)} ← ${trip.toPoint.of(context)}',
+                  style: text.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  [
-                    travelWhen(context, trip.plannedDepartureAt),
-                    if (trip.label != null) trip.label!,
-                  ].join(' · '),
+                  travelWhen(context, trip.plannedDepartureAt),
                   style: text.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+                if (trip.label != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    trip.label!,
+                    style: text.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+                const SizedBox(height: AppSpacing.sm),
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.xs,
+                  children: [
+                    // Absence is never red (BR-12) — scheduled wears no badge
+                    // at all, and only what actually happened earns a colour.
+                    if (trip.status != TripStatus.scheduled)
+                      GlassBadge(
+                        label: tripStatusLabel(context, trip.status),
+                        color: tripStatusColor(context, trip.status),
+                        dense: true,
+                      ),
+                    GlassBadge(
+                      label: l.travelAssignedCount(trip.assignedCount),
+                      icon: AppIcons.travel,
+                      color: trip.assignedCount == 0
+                          ? scheme.onSurfaceVariant
+                          : accent,
+                      dense: true,
+                    ),
+                    if (trip.assignedCount > 0)
+                      GlassBadge(
+                        label: l.travelConfirmedOf(
+                          trip.completedCount,
+                          trip.assignedCount,
+                        ),
+                        color: scheme.onSurfaceVariant,
+                        dense: true,
+                      ),
+                  ],
+                ),
               ],
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                l.travelAssignedCount(trip.assignedCount),
-                style: text.labelMedium?.copyWith(
-                  color: trip.assignedCount == 0
-                      ? scheme.onSurfaceVariant
-                      : accent,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              if (trip.assignedCount > 0)
-                Text(
-                  l.travelConfirmedOf(trip.completedCount, trip.assignedCount),
-                  style: text.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-            ],
-          ),
           const NavChevron(),
         ],
       ),

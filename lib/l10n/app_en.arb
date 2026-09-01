@@ -1844,6 +1844,7 @@
   "travelTripDetailTitle": "Trip",
   "travelNoTrips": "No trips in this season yet",
   "travelNoTripsHint": "Create a trip, then assign people to it in one go.",
+  "travelNoTripsInRole": "No trips in this part yet",
   "travelNoTripsMatch": "No trip matches the search",
   "travelAssignedCount": "{count} assigned",
   "@travelAssignedCount": { "placeholders": { "count": { "type": "int" } } },

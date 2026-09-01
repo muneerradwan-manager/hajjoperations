@@ -5440,6 +5440,9 @@ class AppLocalizationsAr extends AppLocalizations {
       'أنشئ رحلة، ثم أسند إليها الموظفين دفعةً واحدة.';
 
   @override
+  String get travelNoTripsInRole => 'لا رحلات في هذا القسم بعد';
+
+  @override
   String get travelNoTripsMatch => 'لا رحلة تطابق البحث';
 
   @override

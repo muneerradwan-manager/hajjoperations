@@ -1833,6 +1833,7 @@
   "travelTripDetailTitle": "تفاصيل الرحلة",
   "travelNoTrips": "لا رحلات في هذا الموسم بعد",
   "travelNoTripsHint": "أنشئ رحلة، ثم أسند إليها الموظفين دفعةً واحدة.",
+  "travelNoTripsInRole": "لا رحلات في هذا القسم بعد",
   "travelNoTripsMatch": "لا رحلة تطابق البحث",
   "travelAssignedCount": "{count} مسنَد",
   "@travelAssignedCount": { "placeholders": { "count": { "type": "int" } } },

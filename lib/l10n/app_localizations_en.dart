@@ -5391,6 +5391,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Create a trip, then assign people to it in one go.';
 
   @override
+  String get travelNoTripsInRole => 'No trips in this part yet';
+
+  @override
   String get travelNoTripsMatch => 'No trip matches the search';
 
   @override

@@ -55,21 +55,21 @@ class TripsState extends Equatable {
         .toList(growable: false);
   }
 
-  /// The board, cut into the three parts of a season and each in time order.
-  /// Grouped rather than flat because "which flights bring people in" and
-  /// "which take them home" are different questions asked on different days.
-  Map<LegRole, List<Trip>> get grouped {
-    final out = <LegRole, List<Trip>>{};
-    for (final role in LegRole.values) {
-      final of = filtered.where((t) => t.role == role).toList()
-        ..sort((a, b) => a.plannedDepartureAt.compareTo(b.plannedDepartureAt));
-      if (of.isNotEmpty) out[role] = of;
-    }
-    return out;
+  /// The selected part of the season, in time order. `role` is always set
+  /// once the board is [TripsStatus.ready] — see [TripsCubit.load] — so this
+  /// is never the mixed pile of a whole season's arrivals, transfers and
+  /// departures at once. A season with a hundred arrivals is a hundred cards
+  /// under القدوم and none of them wait for المدينة to finish loading.
+  List<Trip> get inRole {
+    final of = filtered.toList()
+      ..sort((a, b) => a.plannedDepartureAt.compareTo(b.plannedDepartureAt));
+    return of;
   }
 
-  bool get isNarrowed =>
-      query.trim().isNotEmpty || role != null || mode != null;
+  /// Whether anything BESIDES the mandatory role choice has narrowed the
+  /// list. The segmented control always has one part selected — that is
+  /// navigation, not narrowing, and does not belong in this count.
+  bool get isNarrowed => query.trim().isNotEmpty || mode != null;
 
   TripsState copyWith({
     TripsStatus? status,
@@ -85,7 +85,9 @@ class TripsState extends Equatable {
     trips: trips ?? this.trips,
     points: points ?? this.points,
     query: clearFilters ? '' : (query ?? this.query),
-    role: clearFilters ? null : (role ?? this.role),
+    // The role is never one of the things "مسح" clears — it is which part of
+    // the season is open, not a narrowing of it. See [isNarrowed].
+    role: role ?? this.role,
     mode: clearFilters ? null : (mode ?? this.mode),
     error: error,
   );
@@ -123,26 +125,39 @@ class TripsCubit extends SafeCubit<TripsState> {
           ? await _repo.fetchPoints()
           : state.points;
       emit(
-        state.copyWith(status: TripsStatus.ready, trips: trips, points: points),
+        state.copyWith(
+          status: TripsStatus.ready,
+          trips: trips,
+          points: points,
+          // First time the board has anything to show, open on the part of
+          // the season that actually has trips in it rather than on القدوم
+          // by rote — a reload later never overrides what the reader already
+          // chose.
+          role: state.role ?? _defaultRole(trips),
+        ),
       );
     } catch (e) {
       emit(state.copyWith(status: TripsStatus.error, error: '$e'));
     }
   }
 
+  /// القدوم first, then التنقل الداخلي, then العودة — the order the season
+  /// itself runs in. Falls back to القدوم when nothing has been entered yet,
+  /// so a brand-new season still opens on a sensible part rather than an
+  /// empty screen with no filter selected at all.
+  LegRole _defaultRole(List<Trip> trips) {
+    for (final role in LegRole.values) {
+      if (trips.any((t) => t.role == role)) return role;
+    }
+    return LegRole.inbound;
+  }
+
   void search(String value) => emit(state.copyWith(query: value));
 
-  /// Passing the value already selected clears it — a filter pill toggles.
-  void filterRole(LegRole? value) => emit(
-    TripsState(
-      status: state.status,
-      trips: state.trips,
-      points: state.points,
-      query: state.query,
-      role: state.role == value ? null : value,
-      mode: state.mode,
-    ),
-  );
+  /// Switches which part of the season is open. A [SegmentedButton], not a
+  /// toggling chip — one of the three is always selected, so this never
+  /// clears to null.
+  void filterRole(LegRole value) => emit(state.copyWith(role: value));
 
   void filterMode(TravelMode? value) => emit(
     TripsState(
