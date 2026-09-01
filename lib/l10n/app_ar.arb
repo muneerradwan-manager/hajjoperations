@@ -1867,6 +1867,7 @@
   "travelFieldRequired": "هذا الحقل مطلوب",
   "travelPickDateTime": "اختر التاريخ والوقت",
   "travelSameEndpoints": "نقطة الانطلاق والوصول لا يمكن أن تكونا واحدة",
+  "travelMustStartWhereHeIs": "تبدأ الحركة من حيث تركته الحركة السابقة",
 
   "travelGapsTitle": "ما لم يُجَب عنه",
   "travelGapsClear": "لا ثغرات — كل شيء مُجاب عنه",

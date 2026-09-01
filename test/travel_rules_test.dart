@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hajjoperations/core/l10n/localized_name.dart';
+import 'package:hajjoperations/features/travel/domain/journey_leg.dart';
 import 'package:hajjoperations/features/travel/domain/travel_rules.dart';
 import 'package:hajjoperations/features/travel/domain/trip.dart';
 
@@ -213,6 +214,102 @@ void main() {
         ),
         isFalse,
       );
+    });
+  });
+
+  group('where the record already puts him', () {
+    // The season that asked for this rule: دمشق → جدة by air, then the train
+    // مكة → المدينة, and then a SECOND مكة → المدينة recorded for a man who
+    // was already in المدينة. Each movement is a legal train between the two
+    // holy cities on its own, so `travel_shape_is_sane` passed all three — and
+    // the chain came back out of `ensure_participant_stays` as «مكة ٢٠ يوماً»
+    // followed by «مكة ١٠ أيام», with nothing between them that could have
+    // carried him back.
+    JourneyLeg leg(String id, String from, String to, DateTime at) =>
+        JourneyLeg(
+          id: id,
+          role: LegRole.internal,
+          mode: TravelMode.rail,
+          status: LegStatus.completed,
+          selfArranged: false,
+          fromPointId: from,
+          toPointId: to,
+          plannedDepartureAt: at,
+        );
+
+    final toMadinah = leg(
+      'to-madinah',
+      makkahStation.id,
+      madinahStation.id,
+      DateTime(2026, 8, 14),
+    );
+
+    test('nothing recorded yet narrows nothing', () {
+      expect(
+        TravelRules.internalOriginCity(
+          legs: const [],
+          points: all,
+          at: DateTime(2026, 8, 20),
+        ),
+        isNull,
+      );
+    });
+
+    test('a movement sets out from where the last one left him', () {
+      expect(
+        TravelRules.internalOriginCity(
+          legs: [toMadinah],
+          points: all,
+          at: DateTime(2026, 8, 20),
+        ),
+        'المدينة المنورة',
+      );
+    });
+
+    test('so مكة is no longer somewhere he can leave from', () {
+      final city = TravelRules.internalOriginCity(
+        legs: [toMadinah],
+        points: all,
+        at: DateTime(2026, 8, 20),
+      );
+      expect(TravelRules.canDepartFrom(makkahStation, city), isFalse);
+      expect(TravelRules.canDepartFrom(madinahStation, city), isTrue);
+      expect(TravelRules.canDepartFrom(madinah, city), isTrue);
+    });
+
+    test('a movement backdated before that one is judged where he was', () {
+      // Written down after the fact, for a day before the train ran: he was
+      // in مكة then, and the record must be read at that date rather than at
+      // the moment somebody is typing.
+      expect(
+        TravelRules.internalOriginCity(
+          legs: [toMadinah],
+          points: all,
+          at: DateTime(2026, 8, 1),
+        ),
+        isNull,
+      );
+    });
+
+    test('a point master data has no city for narrows nothing', () {
+      final unknown = TravelPoint(
+        id: 'nowhere',
+        name: LocalizedName(ar: 'نقطة بلا مدينة'),
+        countryCode: 'SA',
+        kind: TravelPointKind.station,
+      );
+      expect(
+        TravelRules.internalOriginCity(
+          legs: [
+            leg('x', makkahStation.id, unknown.id, DateTime(2026, 8, 14)),
+          ],
+          points: [...all, unknown],
+          at: DateTime(2026, 8, 20),
+        ),
+        isNull,
+      );
+      // And an unknown city must never empty the picker.
+      expect(TravelRules.canDepartFrom(makkahStation, null), isTrue);
     });
   });
 

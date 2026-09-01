@@ -58,7 +58,13 @@ class _View extends StatelessWidget {
 
   Future<void> _record(BuildContext context) async {
     final cubit = context.read<JourneyCubit>();
-    final draft = await showRecordLegSheet(context, points: cubit.state.points);
+    final draft = await showRecordLegSheet(
+      context,
+      points: cubit.state.points,
+      // What he already has. The sheet offers an internal movement only out
+      // of the city these legs leave him in — see [showRecordLegSheet].
+      legs: cubit.state.journey?.legs ?? const [],
+    );
     if (draft == null) return;
     await cubit.recordSelfLeg(draft);
   }

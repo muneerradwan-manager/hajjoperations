@@ -1,3 +1,4 @@
+import 'journey_leg.dart';
 import 'trip.dart';
 
 /// What shape a movement of each kind may take.
@@ -81,6 +82,71 @@ abstract final class TravelRules {
 
   /// The mode to fall back on when the role changes under a half-filled form.
   static TravelMode defaultModeFor(LegRole role) => modesFor(role).first;
+
+  // ─────────────────────────── where the man actually is ──────────────────
+  //
+  // Everything above judges ONE movement against the office's rules and could
+  // be decided with the form in front of you. The two below judge it against
+  // the movements ALREADY RECORDED, which the form cannot do on its own and
+  // which nothing else was doing either.
+  //
+  // The season that produced this: a man flew دمشق → جدة, took the train مكة →
+  // المدينة, and then a second مكة → المدينة was recorded for him while he was
+  // already in المدينة. Every movement passed `travel_shape_is_sane` on its
+  // own — each one is a legal train between the two holy cities — and the
+  // chain they made was impossible. `ensure_participant_stays` (0135) names a
+  // stay by where the NEXT movement sets out from, so the impossible chain
+  // came back as «مكة ٢٠ يوماً» followed by «مكة ١٠ أيام» with no movement
+  // between them that could have brought him back. The register said he was in
+  // two places, and it said it in the one voice the office trusts.
+  //
+  // There is no twin for these on the server yet, and that is stated rather
+  // than hidden: `travel_shape_is_sane` judges a movement in isolation and
+  // knows nothing of the participant's other legs. So this pair narrows the
+  // FORM — it cannot stop a contradictory leg arriving by another road.
+
+  /// Where a تنقّل داخلي departing at [at] must set out from: the city the
+  /// movement before it left him in.
+  ///
+  /// Null means unconstrained, and it means it for three different honest
+  /// reasons — nothing recorded before [at] (this is his first movement),
+  /// the previous movement names no destination, or that destination is a
+  /// point master data has no city for. A rule that cannot be evaluated must
+  /// not narrow anything: an empty picker is a worse answer than a wide one.
+  ///
+  /// Keyed on [at] rather than simply taking the last leg, because a movement
+  /// is very often written down after the fact — a man recording the drive he
+  /// made last Tuesday must be judged against where he was last Tuesday, not
+  /// against where he is standing while he types.
+  static String? internalOriginCity({
+    required List<JourneyLeg> legs,
+    required List<TravelPoint> points,
+    required DateTime at,
+  }) {
+    JourneyLeg? previous;
+    DateTime? previousAt;
+    for (final leg in legs) {
+      final departs = leg.effectiveDepartureAt;
+      if (departs == null || departs.isAfter(at)) continue;
+      if (previousAt == null || departs.isAfter(previousAt)) {
+        previous = leg;
+        previousAt = departs;
+      }
+    }
+
+    final toId = previous?.toPointId;
+    if (toId == null) return null;
+    for (final point in points) {
+      if (point.id == toId) return point.city;
+    }
+    return null;
+  }
+
+  /// Whether [point] may start a تنقّل داخلي for a man the record puts in
+  /// [city]. A null [city] is "unknown, so do not narrow" — see
+  /// [internalOriginCity].
+  static bool canDepartFrom(TravelPoint point, String? city) =>
+      city == null || point.city == city;
 
   /// Whether a chosen combination could be saved at all. Not a substitute for
   /// the server's refusal — it is what stops the form ever asking.

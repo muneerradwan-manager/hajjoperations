@@ -18,9 +18,17 @@ import '../travel_labels.dart';
 ///
 /// It defaults to [SelfLegDraft.completed] because the common case by far is a
 /// man recording a journey he has already made, not one he intends to make.
+///
+/// [legs] is what he has already — see [TravelRules.internalOriginCity]. The
+/// sheet offers an internal movement only out of the city the record already
+/// puts him in, because the alternative is what happened: a second مكة →
+/// المدينة recorded for a man who was in المدينة, which no single-movement
+/// rule can catch and which comes back out of the register as two stays in
+/// مكة with nothing in between that could have taken him back.
 Future<SelfLegDraft?> showRecordLegSheet(
   BuildContext context, {
   required List<TravelPoint> points,
+  List<JourneyLeg> legs = const [],
   LegRole role = LegRole.internal,
   String? fromPointId,
   String? toPointId,
@@ -28,6 +36,7 @@ Future<SelfLegDraft?> showRecordLegSheet(
   context: context,
   builder: (_) => _RecordLegSheet(
     points: points,
+    legs: legs,
     role: role,
     fromPointId: fromPointId,
     toPointId: toPointId,
@@ -37,12 +46,18 @@ Future<SelfLegDraft?> showRecordLegSheet(
 class _RecordLegSheet extends StatefulWidget {
   const _RecordLegSheet({
     required this.points,
+    required this.legs,
     required this.role,
     this.fromPointId,
     this.toPointId,
   });
 
   final List<TravelPoint> points;
+
+  /// The movements already recorded for this man, which decide where a new one
+  /// may set out from.
+  final List<JourneyLeg> legs;
+
   final LegRole role;
   final String? fromPointId;
   final String? toPointId;
@@ -72,19 +87,48 @@ class _RecordLegSheetState extends State<_RecordLegSheet> {
       if (!TravelRules.modesFor(role).contains(_mode)) {
         _mode = TravelRules.defaultModeFor(role);
       }
-      if (!TravelRules.originsFor(
-        role,
-        widget.points,
-      ).any((p) => p.id == _from)) {
-        _from = null;
-      }
-      if (!TravelRules.destinationsFor(
-        role,
-        widget.points,
-      ).any((p) => p.id == _to)) {
-        _to = null;
-      }
+      _prune();
     });
+  }
+
+  /// The city the record already puts him in when this movement sets out, or
+  /// null where nothing narrows it. Only asked of a تنقّل داخلي: a man in مكة
+  /// flies home from جدة, so «the airport must be in the city he is in» is
+  /// false of a return and would refuse the commonest one there is.
+  String? get _mustDepartFrom => _role != LegRole.internal
+      ? null
+      : TravelRules.internalOriginCity(
+          legs: widget.legs,
+          points: widget.points,
+          at: _at,
+        );
+
+  /// Where this movement may start: the office's rule, narrowed to where he
+  /// actually is.
+  List<TravelPoint> get _origins {
+    final city = _mustDepartFrom;
+    return TravelRules.originsFor(_role, widget.points)
+        .where((p) => TravelRules.canDepartFrom(p, city))
+        .toList();
+  }
+
+  /// Where it may end — never a point in the city it started from. The id
+  /// check alone lets «مكة المكرمة → محطة مكة المكرمة» through, which is two
+  /// rows of master data and one place, and would land in the register as a
+  /// movement that carried him nowhere.
+  List<TravelPoint> get _destinations {
+    final from = _origins.where((p) => p.id == _from).firstOrNull;
+    return TravelRules.destinationsFor(_role, widget.points)
+        .where((p) => p.id != _from && (from == null || p.city != from.city))
+        .toList();
+  }
+
+  /// Drops a choice the current shape no longer allows, so nothing is refused
+  /// at the last step that could have been withdrawn when it stopped being
+  /// possible.
+  void _prune() {
+    if (!_origins.any((p) => p.id == _from)) _from = null;
+    if (!_destinations.any((p) => p.id == _to)) _to = null;
   }
 
   DateTime _at = DateTime.now();
@@ -119,6 +163,11 @@ class _RecordLegSheetState extends State<_RecordLegSheet> {
         time?.hour ?? _at.hour,
         time?.minute ?? _at.minute,
       );
+      _error = null;
+      // The day decides which movement came before this one, so moving it can
+      // move where he was — a drive backdated to before the train sets out
+      // from مكة, the same drive dated after it sets out from المدينة.
+      _prune();
     });
   }
 
@@ -128,8 +177,21 @@ class _RecordLegSheetState extends State<_RecordLegSheet> {
       setState(() => _error = l.travelFieldRequired);
       return;
     }
-    if (_from == _to) {
-      setState(() => _error = l.travelSameEndpoints);
+    // Both lists are already narrowed to what may be chosen; this is the same
+    // question asked once more at the last moment, because the day can change
+    // under a choice already made.
+    if (!_origins.any((p) => p.id == _from)) {
+      setState(() {
+        _error = l.travelMustStartWhereHeIs;
+        _prune();
+      });
+      return;
+    }
+    if (!_destinations.any((p) => p.id == _to)) {
+      setState(() {
+        _error = l.travelSameEndpoints;
+        _prune();
+      });
       return;
     }
     Navigator.of(context).pop(
@@ -204,17 +266,29 @@ class _RecordLegSheetState extends State<_RecordLegSheet> {
 
             _PointField(
               label: l.travelFieldFrom,
-              points: TravelRules.originsFor(_role, widget.points),
+              points: _origins,
               value: _from,
               onChanged: (v) => setState(() {
                 _from = v;
                 _error = null;
+                // The destination cannot be in the city just chosen to leave.
+                _prune();
               }),
             ),
+            // Why the list is short, said rather than left to be discovered.
+            // A picker that has quietly dropped مكة is a picker the reader
+            // thinks is broken until somebody tells him he is in المدينة.
+            if (_mustDepartFrom case final city?) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                l.travelCurrentlyIn(city),
+                style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+            ],
             const SizedBox(height: AppSpacing.sm),
             _PointField(
               label: l.travelFieldTo,
-              points: TravelRules.destinationsFor(_role, widget.points),
+              points: _destinations,
               value: _to,
               onChanged: (v) => setState(() {
                 _to = v;

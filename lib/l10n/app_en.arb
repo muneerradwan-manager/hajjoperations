@@ -1878,6 +1878,7 @@
   "travelFieldRequired": "This field is required",
   "travelPickDateTime": "Pick a date and time",
   "travelSameEndpoints": "The start and the destination cannot be the same",
+  "travelMustStartWhereHeIs": "A movement starts where the one before it left him",
 
   "travelGapsTitle": "What is unanswered",
   "travelGapsClear": "Nothing outstanding",

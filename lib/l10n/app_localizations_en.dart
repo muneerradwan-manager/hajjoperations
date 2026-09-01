@@ -5483,6 +5483,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'The start and the destination cannot be the same';
 
   @override
+  String get travelMustStartWhereHeIs =>
+      'A movement starts where the one before it left him';
+
+  @override
   String get travelGapsTitle => 'What is unanswered';
 
   @override

@@ -5532,6 +5532,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'نقطة الانطلاق والوصول لا يمكن أن تكونا واحدة';
 
   @override
+  String get travelMustStartWhereHeIs =>
+      'تبدأ الحركة من حيث تركته الحركة السابقة';
+
+  @override
   String get travelGapsTitle => 'ما لم يُجَب عنه';
 
   @override

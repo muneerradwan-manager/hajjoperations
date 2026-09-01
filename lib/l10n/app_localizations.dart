@@ -9338,6 +9338,12 @@ abstract class AppLocalizations {
   /// **'The start and the destination cannot be the same'**
   String get travelSameEndpoints;
 
+  /// No description provided for @travelMustStartWhereHeIs.
+  ///
+  /// In en, this message translates to:
+  /// **'A movement starts where the one before it left him'**
+  String get travelMustStartWhereHeIs;
+
   /// No description provided for @travelGapsTitle.
   ///
   /// In en, this message translates to:
