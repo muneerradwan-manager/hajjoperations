@@ -1,5 +1,5 @@
 name: hajjoperations
-description: "A new Flutter project."
+description: "Field operations management for Hajj and Umrah seasons: staffing, tasks, check-ins, incidents, complaints, evaluations and reporting."
 publish_to: 'none'
 
 version: 0.1.0+1
