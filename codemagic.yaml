@@ -24,6 +24,10 @@ definitions:
   # kept out of the repository all the same, so the file is rebuilt here from
   # Codemagic variables.
   #
+  # The same three keys .github/workflows/site.yml already writes from repo
+  # secrets, and the same names as .env.example. Three places now say this
+  # list; they are meant to agree, and a fourth key goes in all of them.
+  #
   # Set them once in Codemagic under
   #   Teams / Personal account -> Environment variables -> group `hajj_env`
   # as SUPABASE_URL, SUPABASE_ANON_KEY, GOOGLE_WEB_CLIENT_ID.
