@@ -25,7 +25,6 @@ class Profile {
     this.isSuspended = false,
     this.isExternal = false,
     this.externalOrganization,
-    this.externalTitle,
     this.jobTitleName,
     this.cityId,
     this.cityName,
@@ -60,7 +59,6 @@ class Profile {
   final bool isSuspended;
   final bool isExternal;
   final String? externalOrganization;
-  final String? externalTitle;
 
   /// Joined from the `job_titles` list when the query embeds it, in both
   /// languages — a job description is content, and reads in whichever one the
@@ -88,7 +86,6 @@ class Profile {
     bool? isSuspended,
     bool? isExternal,
     String? externalOrganization,
-    String? externalTitle,
     AccountStatus? accountStatus,
   }) {
     return Profile(
@@ -113,7 +110,6 @@ class Profile {
       isSuspended: isSuspended ?? this.isSuspended,
       isExternal: isExternal ?? this.isExternal,
       externalOrganization: externalOrganization ?? this.externalOrganization,
-      externalTitle: externalTitle ?? this.externalTitle,
       jobTitleName: jobTitleName,
       cityId: cityId,
       cityName: cityName,
@@ -146,7 +142,6 @@ class Profile {
       isSuspended: (map['is_suspended'] as bool?) ?? false,
       isExternal: (map['is_external'] as bool?) ?? false,
       externalOrganization: map['external_organization'] as String?,
-      externalTitle: map['external_title'] as String?,
       jobTitleName: jobTitleNameOrNull(map),
       cityId: map['city_id'] as String?,
       cityName: _embedded(map['city']),

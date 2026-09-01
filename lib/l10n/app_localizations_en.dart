@@ -1362,9 +1362,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get employeeOrganization => 'Organization / ministry';
 
   @override
-  String get employeeExternalRole => 'Role at organization';
-
-  @override
   String get employeeExternalSaved => 'Employee updated';
 
   @override

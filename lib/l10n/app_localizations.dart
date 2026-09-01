@@ -2570,12 +2570,6 @@ abstract class AppLocalizations {
   /// **'Organization / ministry'**
   String get employeeOrganization;
 
-  /// No description provided for @employeeExternalRole.
-  ///
-  /// In en, this message translates to:
-  /// **'Role at organization'**
-  String get employeeExternalRole;
-
   /// No description provided for @employeeExternalSaved.
   ///
   /// In en, this message translates to:

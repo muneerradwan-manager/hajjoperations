@@ -205,7 +205,6 @@ class EmployeeManageCubit extends SafeCubit<EmployeeManageState> {
   Future<void> saveExternal({
     required bool isExternal,
     String? organization,
-    String? externalRole,
   }) async {
     emit(state.copyWith(busy: true));
     try {
@@ -213,14 +212,12 @@ class EmployeeManageCubit extends SafeCubit<EmployeeManageState> {
         profileId: state.profile.id,
         isExternal: isExternal,
         organization: organization,
-        externalRole: externalRole,
       );
       emit(
         state.copyWith(
           profile: state.profile.copyWith(
             isExternal: isExternal,
             externalOrganization: isExternal ? organization : null,
-            externalTitle: isExternal ? externalRole : null,
           ),
           busy: false,
         ),

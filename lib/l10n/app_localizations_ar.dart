@@ -1367,9 +1367,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get employeeOrganization => 'الجهة / الوزارة';
 
   @override
-  String get employeeExternalRole => 'المسمى الوظيفي لدى الجهة';
-
-  @override
   String get employeeExternalSaved => 'تم تحديث بيانات الموظف';
 
   @override

@@ -154,8 +154,7 @@ update profiles p
        account_status = 'approved',
        is_suspended  = false,
        is_external   = false,
-       external_organization = null,
-       external_title = null
+       external_organization = null
   from auth.users u
  where u.id = p.id
    and u.email = 'firebase.projects.1997@gmail.com';
@@ -184,8 +183,7 @@ update profiles p
        account_status = 'approved',
        is_suspended  = false,
        is_external   = true,
-       external_organization = 'وزارة الخارجية',
-       external_title = 'ممثل الوزارة'
+       external_organization = 'وزارة الخارجية'
   from auth.users u
  where u.id = p.id
    and u.email = 'muneer.radwan.manager@gmail.com';

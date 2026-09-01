@@ -81,7 +81,6 @@ class CreateEmployeeCubit extends SafeCubit<CreateEmployeeState> {
     String? phoneSa,
     bool isExternal = false,
     String? externalOrganization,
-    String? externalTitle,
   }) async {
     emit(state.copyWith(status: CreateEmployeeStatus.submitting));
     try {
@@ -99,7 +98,6 @@ class CreateEmployeeCubit extends SafeCubit<CreateEmployeeState> {
         phoneSa: phoneSa,
         isExternal: isExternal,
         externalOrganization: externalOrganization,
-        externalTitle: externalTitle,
       );
       emit(state.copyWith(status: CreateEmployeeStatus.created));
     } catch (e) {

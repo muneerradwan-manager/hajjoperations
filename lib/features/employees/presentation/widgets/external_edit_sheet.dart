@@ -6,8 +6,9 @@ import '../../../../core/widgets/app_sheet.dart';
 import '../../../profile/domain/profile.dart';
 import '../../application/employee_manage_cubit.dart';
 
-/// Bottom sheet for toggling an employee's external designation and capturing
-/// their organization + role.
+/// Bottom sheet for toggling an employee's external designation and naming the
+/// body he comes from. Not his post there — الوصف الوظيفي on the profile is
+/// already that, and always was; see 0138.
 Future<void> showExternalEditSheet(
   BuildContext context,
   EmployeeManageCubit cubit,
@@ -34,12 +35,10 @@ class _ExternalEditFormState extends State<_ExternalEditForm> {
   late final _org = TextEditingController(
     text: widget.profile.externalOrganization,
   );
-  late final _role = TextEditingController(text: widget.profile.externalTitle);
 
   @override
   void dispose() {
     _org.dispose();
-    _role.dispose();
     super.dispose();
   }
 
@@ -47,7 +46,6 @@ class _ExternalEditFormState extends State<_ExternalEditForm> {
     widget.cubit.saveExternal(
       isExternal: _isExternal,
       organization: _org.text.trim().isEmpty ? null : _org.text.trim(),
-      externalRole: _role.text.trim().isEmpty ? null : _role.text.trim(),
     );
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context)
@@ -86,14 +84,6 @@ class _ExternalEditFormState extends State<_ExternalEditForm> {
               decoration: InputDecoration(
                 labelText: l.employeeOrganization,
                 prefixIcon: const Icon(AppIcons.organization),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _role,
-              decoration: InputDecoration(
-                labelText: l.employeeExternalRole,
-                prefixIcon: const Icon(AppIcons.jobTitle),
               ),
             ),
           ],

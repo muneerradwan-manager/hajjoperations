@@ -49,7 +49,6 @@ class _ViewState extends State<_View> {
   final _phoneSy = TextEditingController();
   final _phoneSa = TextEditingController();
   final _org = TextEditingController();
-  final _externalRole = TextEditingController();
 
   String? _jobTitleId;
   Gender? _gender;
@@ -68,7 +67,6 @@ class _ViewState extends State<_View> {
       _phoneSy,
       _phoneSa,
       _org,
-      _externalRole,
     ]) {
       c.dispose();
     }
@@ -109,9 +107,6 @@ class _ViewState extends State<_View> {
       isExternal: _isExternal,
       externalOrganization: _isExternal && _org.text.trim().isNotEmpty
           ? _org.text.trim()
-          : null,
-      externalTitle: _isExternal && _externalRole.text.trim().isNotEmpty
-          ? _externalRole.text.trim()
           : null,
     );
   }
@@ -235,22 +230,17 @@ class _ViewState extends State<_View> {
                         value: _isExternal,
                         onChanged: (v) => setState(() => _isExternal = v),
                       ),
+                      // The organization, and nothing else: الوصف الوظيفي
+                      // above is already his post at that ministry, not a role
+                      // held on the mission — see 0138.
                       if (_isExternal) ...[
                         const SizedBox(height: 8),
-                        fields([
-                          _text(
-                            _org,
-                            l.employeeOrganization,
-                            AppIcons.organization,
-                            required: false,
-                          ),
-                          _text(
-                            _externalRole,
-                            l.employeeExternalRole,
-                            AppIcons.jobTitle,
-                            required: false,
-                          ),
-                        ]),
+                        _text(
+                          _org,
+                          l.employeeOrganization,
+                          AppIcons.organization,
+                          required: false,
+                        ),
                       ],
                       const SizedBox(height: 28),
                       // Full width on a phone, where a button is the bottom of

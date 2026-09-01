@@ -388,11 +388,6 @@ class _View extends StatelessWidget {
                       label: l.employeeOrganization,
                       value: p.externalOrganization,
                     ),
-                    InfoRow(
-                      icon: AppIcons.jobTitle,
-                      label: l.employeeExternalRole,
-                      value: p.externalTitle,
-                    ),
                   ],
                 ),
               ],

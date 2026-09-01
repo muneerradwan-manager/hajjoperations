@@ -356,6 +356,10 @@ class AuditLabels {
       ar: 'الجهة الخارجية',
       en: 'Organization',
     ),
+    // Dropped from profiles in 0138 — الوصف الوظيفي was already the man's post
+    // at his own ministry. Kept here because the log rows that recorded it are
+    // still on the shelf, and a history that renders a raw column name is a
+    // history nobody reads.
     'external_title': LocalizedName(ar: 'الصفة الخارجية', en: 'External title'),
     // Naming
     'name': LocalizedName(ar: 'الاسم', en: 'Name'),

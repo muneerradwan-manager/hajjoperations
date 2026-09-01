@@ -3,10 +3,25 @@
 > **الغرض:** هذا المستند هو المرجع التعاقدي بين تطبيق Flutter وفريق الـ Backend في حال
 > الانتقال من Supabase إلى REST API مخصص. تم استخراجه من **الكود الفعلي** للتطبيق
 > (كل استدعاء `supabase.from / rpc / storage / functions / auth` موجود في المشروع)
-> ومن ملفات الـ migrations (`supabase/migrations/0001 → 0136`).
+> ومن ملفات الـ migrations (`supabase/migrations/0001 → 0138`).
 >
 > **تاريخ الإعداد:** 2026-07-31 — فرع `operational-files`.
-> **آخر تحديث:** 2026-08-31 — **التصدير يُسأل سؤالاً واحداً، من الأعمّ إلى
+> **آخر تحديث:** 2026-09-01 — **الوصف الوظيفي يقول ما يعمله لدى جهته**
+> (migration 0138): كان على الموظف الخارجي منصبان مسجَّلان وهو لا يحمل إلا
+> واحداً — `job_title_id` من قائمة مضبوطة، و`external_title` نصٌّ حرّ يُكتب
+> باليد. وكان للعمودين معنيان مختلفان يوم كانت قائمة الوصف الوظيفي قائمةَ البعثة
+> نفسها (رئيس البعثة، مرشد ديني، عامل خدمات — 0010): الأولى تقول ما يفعله **في
+> الحج**، فاحتاج مندوب وزارةٍ أخرى مكاناً يقول فيه ما هو بقيّة السنة. ثم أخذت
+> 0124 القائمة من البعثة وأعطتها لإدارة الحج والعمرة — محاسب، مدخل بيانات، مهندس
+> معلوماتية، سائق، طبيب، مترجم — فصار الوصف الوظيفي **منصبَه الدائم لدى الجهة
+> التي توظّفه**، للداخلي والخارجي على السواء؛ وما يفعله على البعثة يقوله دورُه في
+> الملف التشغيلي ونوعُ البعثة، لا هذان العمودان. فصار الثاني السؤالَ نفسه
+> مسؤولاً مرّتين — مرّةً من قائمة ومرّةً بخانةِ نصٍّ حرّ — وواحدةٌ منهما وحدها هي
+> التي تستطيع أن تخالف السجلّ. وما يحتاجه الخارجي ولا يحتاجه الدائم هو
+> **الجهة/الوزارة** التي جاء منها (`external_organization`، وتبقى)، لا مسمّاه
+> فيها. حُذف العمود ومعه الحقل من الشاشتين ومن التصدير: §1.5 و§5.1 و§5.9 و§9.10.
+>
+> وقبله 2026-08-31 — **التصدير يُسأل سؤالاً واحداً، من الأعمّ إلى
 > الأخصّ** (بلا migration — الوصلات هي هي): الشاشة كانت تسع مجموعات يسأل كلٌّ
 > منها بترتيبه، وثلاثٌ منها عن الملفات التشغيلية: «الملفات» سطرٌ لكل ملف،
 > و«أعضاء ملف»، و«مهام ملف». فمن أراد ملف الطوافة والنقل صدّر ثلاث مرّات وخرج
@@ -466,7 +481,6 @@
   "is_admin": false,
   "is_external": false,
   "external_organization": null,
-  "external_title": null,
   "is_suspended": false,
   "account_status": "approved",
   "rejection_reason": null,
@@ -930,15 +944,14 @@ POST /admin/employees
   "phone_sa": null,
   "date_of_birth": "1980-05-14",
   "is_external": false,
-  "external_organization": null,
-  "external_title": null
+  "external_organization": null
 }
 ```
 
 **Response 201:** `{ "id": "uuid" }`
 
 **سلوك إلزامي:** إنشاء مستخدم Auth بالبريد **مؤكَّداً مسبقاً**، ثم تعبئة الـ profile
-وضبط `account_status = "approved"` مباشرة. حقلا external يُحفظان فقط إذا
+وضبط `account_status = "approved"` مباشرة. `external_organization` يُحفظ فقط إذا
 `is_external = true`.
 **أخطاء:** `401 unauthorized`، `403 forbidden`، `400` مع رسالة (بريد مكرر…).
 
@@ -1069,12 +1082,14 @@ PATCH /employees/{profileId}/external-status
 ```json
 {
   "is_external": true,
-  "organization": "وزارة الخارجية",
-  "external_title": "مندوب"
+  "organization": "وزارة الخارجية"
 }
 ```
 
-عند `is_external = false` يمسح الخادم الحقلين الآخرين. **Response:** `204`.
+عند `is_external = false` يمسح الخادم `external_organization`. **Response:** `204`.
+
+لا يوجد «مسمى وظيفي لدى الجهة»: `job_title_id` على الـ profile هو منصبه الدائم
+لدى جهته أصلاً — للداخلي والخارجي على السواء (migration 0138).
 
 ---
 
@@ -1503,7 +1518,6 @@ GET /modules/assignable-employees?season_id={uuid}&query={text}&is_external={boo
     "photo_url": null,
     "is_external": false,
     "external_organization": null,
-    "external_title": null,
     "job_title_name": "طبيب",
     "job_title_name_en": "Physician",
     "phone_sy": "+963...",

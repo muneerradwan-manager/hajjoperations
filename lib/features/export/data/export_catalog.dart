@@ -123,7 +123,6 @@ List<ExportColumn> _profileColumns() => [
   ExportColumn(key: 'date_of_birth', label: _n('تاريخ الميلاد', 'Date of birth'), byDefault: false),
   ExportColumn(key: 'is_external', label: _n('خارجي', 'External'), byDefault: false),
   ExportColumn(key: 'external_organization', label: _n('الجهة', 'Organization'), byDefault: false),
-  ExportColumn(key: 'external_title', label: _n('الصفة', 'Title'), byDefault: false),
   ExportColumn(key: 'account_status', label: _n('حالة الحساب', 'Account status'), byDefault: false),
   ExportColumn(key: 'is_suspended', label: _n('موقوف', 'Suspended'), byDefault: false),
   // Marked sensitive, and it is the only column in the app that is. On the
@@ -159,7 +158,6 @@ Map<String, String> _profileRow(Profile profile, ExportRequest request) {
     'date_of_birth': ExportValues.date(profile.dateOfBirth),
     'is_external': ExportValues.yesNo(l, profile.isExternal),
     'external_organization': ExportValues.text(profile.externalOrganization),
-    'external_title': ExportValues.text(profile.externalTitle),
     'account_status': switch (profile.accountStatus) {
       AccountStatus.incomplete => l.accountStatusIncomplete,
       AccountStatus.pending => l.accountStatusPending,

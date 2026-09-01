@@ -22,7 +22,6 @@ class EmployeesRepository {
     String? phoneSa,
     bool isExternal = false,
     String? externalOrganization,
-    String? externalTitle,
   }) async {
     final res = await supabase.functions.invoke(
       'admin-create-user',
@@ -40,7 +39,6 @@ class EmployeesRepository {
         'date_of_birth': dateOfBirth.toIso8601String().split('T').first,
         'is_external': isExternal,
         'external_organization': externalOrganization,
-        'external_title': externalTitle,
       },
     );
     final data = res.data;
@@ -245,14 +243,12 @@ class EmployeesRepository {
     required String profileId,
     required bool isExternal,
     String? organization,
-    String? externalRole,
   }) async {
     await supabase
         .from('profiles')
         .update({
           'is_external': isExternal,
           'external_organization': isExternal ? organization : null,
-          'external_title': isExternal ? externalRole : null,
         })
         .eq('id', profileId);
   }

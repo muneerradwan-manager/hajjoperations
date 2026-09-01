@@ -78,7 +78,6 @@ Deno.serve(async (req) => {
       date_of_birth,
       is_external,
       external_organization,
-      external_title,
     } = body ?? {};
 
     if (!email || !password) {
@@ -112,7 +111,6 @@ Deno.serve(async (req) => {
         date_of_birth,
         is_external: is_external ?? false,
         external_organization: is_external ? external_organization : null,
-        external_title: is_external ? external_title : null,
         account_status: 'approved',
       })
       .eq('id', newId);
