@@ -489,6 +489,113 @@ class AdaptiveGrid extends StatelessWidget {
   }
 }
 
+/// Lays [children] into independent columns that each flow top to bottom on
+/// their own, rather than into rows that share a height.
+///
+/// [AdaptiveGrid] puts children into a grid by POSITION: item *n* always
+/// falls in row *n ~/ columns*, so two neighbours on the same row are held to
+/// the same height even when [equalHeights] is false — the row itself still
+/// does not end until its tallest member does. That is invisible when every
+/// card is roughly the same size, and it is a wall of empty glass under the
+/// short one the moment they are not: a permission group of two sitting next
+/// to a permission group of fifteen loses thirteen rows of nothing under it,
+/// which is exactly the gap this widget was written to close. Bin-packing by
+/// column instead of by row means a short card is simply followed by the next
+/// card in ITS column — there is no row for the tall neighbour to hold open.
+///
+/// This is the price a masonry grid always charges: reading order becomes
+/// column-then-row rather than the row-then-column [AdaptiveGrid] keeps, so a
+/// reader scanning top to bottom in the first column meets item 4 before item
+/// 2 if item 2 landed in the second column. Fine for a catalog of independent
+/// groups — nobody reads "الملفات" only after finishing "المواسم" — wrong for
+/// anything where the sequence itself is the content.
+///
+/// Columns are balanced by [weightOf], an estimate of each child's height
+/// (its row count is a good proxy — see the permission screens for how they
+/// build one), not by counting children: two five-row sections belong on
+/// different columns from one thirty-row section even though "two" is more
+/// than "one".
+class MasonryGrid extends StatelessWidget {
+  const MasonryGrid({
+    super.key,
+    required this.children,
+    required this.weightOf,
+    this.minTileWidth = CardWidth.list,
+    this.maxColumns = 4,
+    this.spacing = AppSpacing.md,
+  });
+
+  final List<Widget> children;
+
+  /// The estimated height of `children[index]`, in the same unit for every
+  /// index — only the relative sizes matter, since this is what balances the
+  /// columns against each other.
+  final double Function(int index) weightOf;
+
+  /// See [AdaptiveGrid.minTileWidth].
+  final double minTileWidth;
+
+  /// See [AdaptiveGrid.maxColumns].
+  final int maxColumns;
+
+  final double spacing;
+
+  @override
+  Widget build(BuildContext context) {
+    if (children.isEmpty) return const SizedBox.shrink();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = columnsFor(
+          constraints.maxWidth,
+          minTileWidth: minTileWidth,
+          maxColumns: maxColumns,
+          spacing: spacing,
+        );
+
+        if (columns == 1) {
+          return Column(
+            children: [
+              for (var i = 0; i < children.length; i++) ...[
+                if (i > 0) SizedBox(height: spacing),
+                children[i],
+              ],
+            ],
+          );
+        }
+
+        // Greedy bin-packing: each child, in order, goes to whichever column
+        // is currently shortest. Simple rather than optimal — an optimal
+        // packing is not worth chasing for a handful of sections that change
+        // rarely, and greedy keeps the columns visibly balanced regardless.
+        final buckets = List.generate(columns, (_) => <Widget>[]);
+        final totals = List.filled(columns, 0.0);
+        for (var i = 0; i < children.length; i++) {
+          var shortest = 0;
+          for (var c = 1; c < columns; c++) {
+            if (totals[c] < totals[shortest]) shortest = c;
+          }
+          if (buckets[shortest].isNotEmpty) {
+            buckets[shortest].add(SizedBox(height: spacing));
+          }
+          buckets[shortest].add(children[i]);
+          totals[shortest] += weightOf(i) + spacing;
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (var c = 0; c < columns; c++) ...[
+              if (c > 0) SizedBox(width: spacing),
+              Expanded(child: Column(children: buckets[c])),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
 /// One run of cards under a heading, for [AdaptiveGridView.sectioned].
 ///
 /// The cards are given as a count and a builder rather than as a list, for the

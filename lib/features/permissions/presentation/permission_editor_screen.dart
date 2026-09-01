@@ -96,9 +96,14 @@ class _View extends StatelessWidget {
                       // Each group is an independent decision — nobody reads
                       // "الملفات" before "المواسم" — so on a wide window they stand
                       // beside each other instead of forming a column half a screen
-                      // wide and several screens long.
-                      AdaptiveGrid(
-                        equalHeights: false,
+                      // wide and several screens long. A masonry grid rather than a
+                      // row-major one: "الملفات" runs to fifteen actions and
+                      // "المواسم" to two, and a grid that held them to one row's
+                      // height would leave thirteen rows of glass under the short
+                      // one before the next row was allowed to start.
+                      MasonryGrid(
+                        weightOf: (i) =>
+                            _sectionWeight(cubit.childrenOf(parents[i].id)),
                         children: staggered([
                           for (final parent in parents)
                             _PermissionSection(
@@ -123,6 +128,15 @@ class _View extends StatelessWidget {
     );
   }
 }
+
+/// A rough estimate of a section's height, in rows, for [MasonryGrid] to
+/// balance columns by. Exactness is not the point — only that "المواسم" with
+/// two actions is treated as far shorter than "الملفات" with fifteen. The
+/// header line counts as one row and the trailing spacer as a fraction of
+/// one; every action counts as a row, plus most of another when it carries a
+/// "يتطلب" subtitle under its name.
+double _sectionWeight(List<Permission> children) =>
+    1.2 + children.length + children.length * 0.35;
 
 class _CountHeader extends StatelessWidget {
   const _CountHeader({required this.granted, required this.total});

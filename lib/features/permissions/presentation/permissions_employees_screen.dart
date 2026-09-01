@@ -152,8 +152,13 @@ class _View extends StatelessWidget {
                         : cubit.clearSelection,
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  AdaptiveGrid(
-                    equalHeights: false,
+                  // A masonry grid, not a row-major one: "الملفات" runs to
+                  // fifteen actions and "المواسم" to two, and a grid that held
+                  // them to one row's height would leave thirteen rows of
+                  // glass under the short one before the next row started.
+                  MasonryGrid(
+                    weightOf: (i) =>
+                        _sectionWeight(cubit.childrenOf(parents[i].id)),
                     children: staggered([
                       for (final parent in parents)
                         _SelectSection(
@@ -200,6 +205,15 @@ class _View extends StatelessWidget {
 
 /// What this page is and where the basket stands: the one-sentence concept,
 /// and the running count that turns choosing into visible progress.
+/// A rough estimate of a section's height, in rows, for [MasonryGrid] to
+/// balance columns by. Exactness is not the point — only that "المواسم" with
+/// two actions is treated as far shorter than "الملفات" with fifteen. The
+/// header line counts as one row and the trailing spacer as a fraction of
+/// one; every action counts as a row, plus most of another when it carries a
+/// "يتطلب" subtitle under its name.
+double _sectionWeight(List<Permission> children) =>
+    1.2 + children.length + children.length * 0.35;
+
 class _BasketHeader extends StatelessWidget {
   const _BasketHeader({required this.count, this.onClear});
 
