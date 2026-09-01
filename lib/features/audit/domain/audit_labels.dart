@@ -404,6 +404,7 @@ class AuditLabels {
     'assigned_by': LocalizedName(ar: 'أُسندت من', en: 'Assigned by'),
     'node_id': LocalizedName(ar: 'القطاع/العنصر', en: 'Node'),
     'role_id': LocalizedName(ar: 'الدور', en: 'Role'),
+    'housing_item_id': LocalizedName(ar: 'السكن', en: 'Housing'),
     'task_id': LocalizedName(ar: 'المهمة', en: 'Task'),
     'type_task_id': LocalizedName(ar: 'مهمة من الكتالوج', en: 'Catalog duty'),
     'module_task_id': LocalizedName(ar: 'مهمة الملف', en: 'File duty'),

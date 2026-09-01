@@ -49,6 +49,7 @@ class NodeDraft {
     this.label,
     this.data = const {},
     this.roleMembers = const {},
+    this.housing = const {},
   });
 
   /// Null when adding; set when editing an existing node.
@@ -71,7 +72,14 @@ class NodeDraft {
 
   final Map<String, Set<String>> roleMembers;
 
+  /// The hotel each man on this node sleeps in — role id, then profile id, then
+  /// the hotel entry. Filled only by levels that are not themselves a place: a
+  /// tower member's مسكن is his tower and nobody is asked for it (0139).
+  final Map<String, Map<String, String?>> housing;
+
   Set<String> membersOf(String roleId) => roleMembers[roleId] ?? const {};
+
+  Map<String, String?> housingOf(String roleId) => housing[roleId] ?? const {};
 }
 
 class ModuleEditorState extends Equatable {
@@ -204,6 +212,12 @@ class ModuleEditorState extends Equatable {
 
   ReferenceSet? referenceSetById(String? id) =>
       referenceSets.where((s) => s.id == id).firstOrNull;
+
+  /// The hotels, for the one question a level that is not a place has to ask
+  /// out loud: where does this man sleep (0139).
+  ReferenceSet? get hotelsSet => referenceSets
+      .where((s) => s.code == ReferenceSet.hotelsCode)
+      .firstOrNull;
 
   ReferenceItem? referenceItem(String? setId, String? itemId) {
     if (itemId == null) return null;
@@ -594,10 +608,17 @@ class ModuleEditorCubit extends SafeCubit<ModuleEditorState> {
       }
 
       for (final role in level.roles) {
+        final members = draft.membersOf(role.id);
         await _repo.setNodeRoleMembers(
           nodeId: id,
           roleId: role.id,
-          profileIds: draft.membersOf(role.id),
+          profileIds: members,
+          // A key for every man on the role, so that clearing his hotel is told
+          // apart from the level never having asked — and nothing at all for a
+          // level whose node IS the place.
+          housing: level.isPlace
+              ? const {}
+              : {for (final p in members) p: draft.housingOf(role.id)[p]},
         );
       }
 

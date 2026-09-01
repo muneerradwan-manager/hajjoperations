@@ -371,6 +371,13 @@ class ModuleExportDataset extends ExportRecordDataset {
       cell: (post) => post.place,
     ),
     (
+      // The hotel he sleeps in. Empty on a برج post, and deliberately: there
+      // the مكان column already says it, and a roster repeating one hotel in
+      // two columns invites the reader to look for the difference (0139).
+      column: ExportColumn(key: 'member_housing', label: _n('السكن', 'Housing')),
+      cell: (post) => post.housing,
+    ),
+    (
       column: ExportColumn(
         key: 'member_job_title',
         label: _n('المهنة', 'Job title'),
@@ -440,11 +447,20 @@ class ModuleExportDataset extends ExportRecordDataset {
       ].where((part) => part.isNotEmpty).join(': ');
     }
 
+    // Resolved against every season's entries, not this file's: a قطاع
+    // supervisor housed last season still has to export his hotel's name.
+    final hotels = {
+      for (final set in sets)
+        if (set.code == ReferenceSet.hotelsCode)
+          for (final item in set.items) item.id: item.name,
+    };
+
     List<String> row(ModuleMember member, String place) {
       final post = _Post(
         member: member,
         role: roleName(member.roleId),
         place: place,
+        housing: request.text(hotels[member.housingItemId]),
         request: request,
       );
       return [for (final column in wanted) column.cell(post)];
@@ -704,6 +720,7 @@ class _Post {
     required this.member,
     required this.role,
     required this.place,
+    required this.housing,
     required this.request,
   });
 
@@ -713,6 +730,10 @@ class _Post {
   /// Where in the file — «البرج/الفندق: فندق الصفوة». Empty for a post held on
   /// the file itself, where the file IS the place.
   final String place;
+
+  /// The hotel he sleeps in, where the post is somewhere he cannot be housed by
+  /// standing — a قطاع (0139). Empty everywhere else.
+  final String housing;
 
   final ExportRequest request;
 }

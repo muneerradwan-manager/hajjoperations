@@ -458,6 +458,16 @@
   "@referenceOverCapacity": {
     "placeholders": { "excess": { "type": "int" } }
   },
+  "placeOccupants": "Occupants",
+  "placeOccupantsBreakdown": "{pilgrims} pilgrims, {staff} staff",
+  "@placeOccupantsBreakdown": {
+    "placeholders": {
+      "pilgrims": { "type": "int" },
+      "staff": { "type": "int" }
+    }
+  },
+  "placeOccupantsStaff": "Staff housed",
+  "placeOccupantsPilgrims": "Pilgrims",
   "employeePermissionsSection": "Granted permissions",
   "employeePermissionsEmpty": "No permissions granted",
   "employeePermissionsAdmin": "An administrator — holds every permission, without needing to be granted them.",
@@ -838,6 +848,9 @@
   "@moduleMembersCount": { "placeholders": { "count": { "type": "int" } } },
   "moduleNoMembers": "No one has been assigned here yet",
   "moduleRoleUnassigned": "Not assigned",
+  "moduleMemberHousing": "Housing",
+  "moduleHousingUnset": "No housing set",
+  "moduleHousedHere": "Housed here",
   "moduleSaved": "Saved",
   "moduleActivate": "Activate file",
   "moduleDeactivate": "Deactivate file",

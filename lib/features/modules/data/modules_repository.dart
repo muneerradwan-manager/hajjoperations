@@ -577,19 +577,24 @@ class ModulesRepository {
 
   /// Replaces the people holding [roleId] on a node. Members that stay are left
   /// untouched so they are not re-notified.
+  ///
+  /// [housing] carries the hotel written against each man — profile id to hotel
+  /// entry, or null for one not said. Only levels that are not themselves a
+  /// place ask for it (0139); everywhere else it arrives empty and nothing here
+  /// writes a housing column at all.
   Future<void> setNodeRoleMembers({
     required String nodeId,
     required String roleId,
     required Set<String> profileIds,
+    Map<String, String?> housing = const {},
   }) async {
     final existing = await supabase
         .from('module_node_members')
-        .select('profile_id')
+        .select('profile_id, housing_item_id')
         .eq('node_id', nodeId)
         .eq('role_id', roleId);
-    final current = (existing as List)
-        .map((r) => r['profile_id'] as String)
-        .toSet();
+    final rows = (existing as List).cast<Map<String, dynamic>>();
+    final current = rows.map((r) => r['profile_id'] as String).toSet();
 
     final removed = current.difference(profileIds);
     if (removed.isNotEmpty) {
@@ -609,9 +614,30 @@ class ModulesRepository {
             'node_id': nodeId,
             'role_id': roleId,
             'profile_id': id,
+            'housing_item_id': housing[id],
             'assigned_by': supabase.auth.currentUser?.id,
           },
       ]);
+    }
+
+    // A man who stays is updated rather than replaced, and only when his hotel
+    // actually moved: the notify trigger fires `after insert`, so deleting and
+    // re-inserting him to change one column would tell him he had been posted
+    // all over again.
+    for (final row in rows) {
+      final id = row['profile_id'] as String;
+      // Not asked about is not the same as cleared: a level that does not offer
+      // housing passes an empty map and must leave the column exactly as it is.
+      if (!profileIds.contains(id) || !housing.containsKey(id)) continue;
+      final was = row['housing_item_id'] as String?;
+      final now = housing[id];
+      if (was == now) continue;
+      await supabase
+          .from('module_node_members')
+          .update({'housing_item_id': now})
+          .eq('node_id', nodeId)
+          .eq('role_id', roleId)
+          .eq('profile_id', id);
     }
   }
 
@@ -701,6 +727,26 @@ class ModulesRepository {
   static void invalidateReferenceSets() {
     _setsCache = null;
     _setsFetchedAt = null;
+  }
+
+  /// How full one place is this season. Server-side because neither half is
+  /// reachable from here: the staff are counted across every file of the season
+  /// and this screen has loaded none of them, and the pilgrims are a sum over a
+  /// list that may not be in hand either.
+  ///
+  /// Null where the caller may not see it — the function returns no row rather
+  /// than a row of zeros, so "not allowed" is never drawn as "empty".
+  Future<PlaceOccupancy?> fetchPlaceOccupancy({
+    required String itemId,
+    String? seasonId,
+  }) async {
+    final rows = await supabase.rpc(
+      'place_occupancy',
+      params: {'p_item_id': itemId, 'p_season_id': seasonId},
+    );
+    final list = (rows as List?)?.cast<Map<String, dynamic>>() ?? const [];
+    if (list.isEmpty) return null;
+    return PlaceOccupancy.fromRow(list.first);
   }
 
   Future<List<ReferenceSet>> fetchReferenceSets({bool activeOnly = true}) async {

@@ -1,6 +1,40 @@
 import '../../../core/l10n/localized_name.dart';
 import 'module_type.dart';
 
+/// How full a place is: the mission's own people housed or posted there, the
+/// pilgrims its dependent entries add up to, and the ceiling the entry states.
+///
+/// The two counts were each true and never added together — the pilgrims were
+/// worked out on this screen and the staff nowhere at all, so a فندق of 130 beds
+/// holding 128 حاجّ and 8 of the mission read as comfortably inside its
+/// capacity. A bed is a bed (0139).
+class PlaceOccupancy {
+  const PlaceOccupancy({
+    required this.staff,
+    required this.pilgrims,
+    this.capacity,
+  });
+
+  final int staff;
+  final int pilgrims;
+
+  /// Null where the entry states none — 3142 states no capacity for some
+  /// hotels, and a ceiling nobody set is not a ceiling of zero.
+  final int? capacity;
+
+  int get total => staff + pilgrims;
+
+  bool get isOver => capacity != null && total > capacity!;
+
+  int get excess => capacity == null ? 0 : total - capacity!;
+
+  factory PlaceOccupancy.fromRow(Map<String, dynamic> row) => PlaceOccupancy(
+    staff: (row['staff'] as int?) ?? 0,
+    pilgrims: (row['pilgrims'] as int?) ?? 0,
+    capacity: row['capacity'] as int?,
+  );
+}
+
 /// One admin-managed master-data list (hotels, clusters, cities, …).
 ///
 /// A set carries its own item schema in [fields], the same way a module type
@@ -17,6 +51,12 @@ class ReferenceSet {
     this.isPlace = false,
     this.section,
   });
+
+  /// The one list this app names by code. Accommodation is hotels and not
+  /// places-in-general: a مخيم is a place a man works at for five days of the
+  /// rites, not the bed he keeps for a month, and `housing_for` says the same
+  /// thing in SQL (0136, 0139).
+  static const hotelsCode = 'hotels';
 
   final String id;
   final String code;

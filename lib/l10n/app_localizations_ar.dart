@@ -1253,6 +1253,20 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get placeOccupants => 'الشاغلون';
+
+  @override
+  String placeOccupantsBreakdown(int pilgrims, int staff) {
+    return '$pilgrims حاجّ، $staff من الكوادر';
+  }
+
+  @override
+  String get placeOccupantsStaff => 'الكوادر المُسكَّنون';
+
+  @override
+  String get placeOccupantsPilgrims => 'الحجاج';
+
+  @override
   String get employeePermissionsSection => 'الصلاحيات الممنوحة';
 
   @override
@@ -2347,6 +2361,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get moduleRoleUnassigned => 'غير مُسند';
+
+  @override
+  String get moduleMemberHousing => 'السكن';
+
+  @override
+  String get moduleHousingUnset => 'لم يُحدَّد السكن';
+
+  @override
+  String get moduleHousedHere => 'يسكنون هنا';
 
   @override
   String get moduleSaved => 'تم الحفظ';

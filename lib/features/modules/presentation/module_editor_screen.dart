@@ -246,6 +246,7 @@ class _ViewState extends State<_View> {
       employees: state.employees,
       referenceSet: state.referenceSetById(level.referenceSetId),
       secondarySet: state.referenceSetById(level.secondaryReferenceSetId),
+      hotelsSet: state.hotelsSet,
       referenceSets: state.referenceSets,
       takenEntries: state.takenEntries(level.id, except: node?.id),
       takenSecondaryEntries: state.takenSecondaryEntries(
@@ -272,6 +273,9 @@ class _ViewState extends State<_View> {
               roleMembers: {
                 for (final role in level.roles)
                   role.id: node.profileIdsOf(role.id),
+              },
+              housing: {
+                for (final role in level.roles) role.id: node.housingOf(role.id),
               },
             ),
     );

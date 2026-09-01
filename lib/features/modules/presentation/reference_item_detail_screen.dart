@@ -136,6 +136,13 @@ class ReferenceItemDetailScreen extends StatelessWidget {
                       subtitle: _placeSubtitle(context, state, set, item),
                     ),
                   ],
+                  // How full it is, where it is somewhere people are. Above the
+                  // dependent cards on purpose: the sum is the answer and the
+                  // التكتلات underneath it are the working.
+                  if (set.isPlace) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    _OccupancyCard(itemId: item.id),
+                  ],
                   // What has been put INSIDE this entry, where something can be.
                   // A تكتل holds مجموعات and they add up to a number of their
                   // own; nothing else in the master data nests yet.
@@ -155,6 +162,91 @@ class ReferenceItemDetailScreen extends StatelessWidget {
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+}
+
+/// How full this place is, counted at the server.
+///
+/// The staff half is why this exists. Until 0139 the only occupancy figure on
+/// this page was the pilgrims of the التكتلات pointing at the hotel, and the
+/// mission's own people — a مشرف برج, his نائب, أعضاء البعثة, and now the مشرف
+/// قطاع housed here — occupied beds that nothing counted.
+///
+/// Drawn only once it has an answer, and not at all when the answer is nothing:
+/// an empty camp saying «0 من أصل —» is a row that costs a reader a moment and
+/// tells him what he could already see.
+class _OccupancyCard extends StatefulWidget {
+  const _OccupancyCard({required this.itemId});
+
+  final String itemId;
+
+  @override
+  State<_OccupancyCard> createState() => _OccupancyCardState();
+}
+
+class _OccupancyCardState extends State<_OccupancyCard> {
+  late Future<PlaceOccupancy?> _future = context
+      .read<ReferenceDataCubit>()
+      .occupancyOf(widget.itemId);
+
+  @override
+  void didUpdateWidget(_OccupancyCard old) {
+    super.didUpdateWidget(old);
+    if (old.itemId != widget.itemId) {
+      _future = context.read<ReferenceDataCubit>().occupancyOf(widget.itemId);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+
+    return FutureBuilder<PlaceOccupancy?>(
+      future: _future,
+      builder: (context, snap) {
+        final o = snap.data;
+        if (o == null || (o.total == 0 && o.capacity == null)) {
+          return const SizedBox.shrink();
+        }
+
+        return InfoSection(
+          title: l.placeOccupants,
+          icon: AppIcons.participants,
+          children: [
+            InfoRow(
+              icon: AppIcons.participants,
+              label: l.placeOccupants,
+              value: o.capacity == null
+                  ? '${o.total}'
+                  : l.referenceOfCapacity(o.total, o.capacity!),
+            ),
+            // The two halves beneath the sum, because they are read differently:
+            // the حجاج are a contract and the كوادر are a posting, and whoever
+            // is over capacity needs to know which of the two he can move.
+            InfoRow(
+              icon: AppIcons.referenceData,
+              label: l.placeOccupantsPilgrims,
+              value: '${o.pilgrims}',
+            ),
+            InfoRow(
+              icon: AppIcons.roles,
+              label: l.placeOccupantsStaff,
+              value: '${o.staff}',
+            ),
+            if (o.isOver)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.sm),
+                child: Text(
+                  l.referenceOverCapacity(o.excess),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                ),
+              ),
+          ],
         );
       },
     );
@@ -220,7 +312,14 @@ List<Widget> _dependentCards(
 
     // A ceiling that has been passed is the whole reason the two numbers are
     // shown together, so it is said rather than left to be worked out.
-    final over = capacity != null && total != null && total > capacity;
+    //
+    // Except on a place, where [_OccupancyCard] above states the ceiling
+    // against the FULL count — pilgrims and staff both. Two ceilings on one
+    // page, one of them ignoring eight men asleep in the building, is worse
+    // than none: the reader believes the reassuring one.
+    final ownsCeiling = !set.isPlace;
+    final over =
+        ownsCeiling && capacity != null && total != null && total > capacity;
 
     cards
       ..add(const SizedBox(height: AppSpacing.md))
@@ -238,7 +337,7 @@ List<Widget> _dependentCards(
               InfoRow(
                 icon: AppIcons.document,
                 label: childNumber!.label.of(context),
-                value: capacity == null
+                value: capacity == null || !ownsCeiling
                     ? '$total'
                     : l.referenceOfCapacity(total, capacity),
               ),

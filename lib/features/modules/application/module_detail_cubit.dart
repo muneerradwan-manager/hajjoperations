@@ -229,6 +229,18 @@ class ModuleDetailState extends Equatable {
   ReferenceSet? referenceSetById(String? id) =>
       id == null ? null : referenceSets.where((s) => s.id == id).firstOrNull;
 
+  /// One hotel by id, whatever list it was reached through. Resolved against
+  /// every season's entries rather than this one's: a قطاع supervisor housed
+  /// last season still has to render his hotel's name this season.
+  ReferenceItem? hotel(String? itemId) {
+    if (itemId == null) return null;
+    for (final set in referenceSets) {
+      if (set.code != ReferenceSet.hotelsCode) continue;
+      return set.items.where((i) => i.id == itemId).firstOrNull;
+    }
+    return null;
+  }
+
   /// Resolves a stored reference id to its display name.
   ReferenceItem? referenceItem(String? setId, Object? value) {
     if (setId == null || value is! String) return null;

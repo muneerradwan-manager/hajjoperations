@@ -2372,6 +2372,30 @@ abstract class AppLocalizations {
   /// **'Over capacity by {excess}'**
   String referenceOverCapacity(int excess);
 
+  /// No description provided for @placeOccupants.
+  ///
+  /// In en, this message translates to:
+  /// **'Occupants'**
+  String get placeOccupants;
+
+  /// No description provided for @placeOccupantsBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'{pilgrims} pilgrims, {staff} staff'**
+  String placeOccupantsBreakdown(int pilgrims, int staff);
+
+  /// No description provided for @placeOccupantsStaff.
+  ///
+  /// In en, this message translates to:
+  /// **'Staff housed'**
+  String get placeOccupantsStaff;
+
+  /// No description provided for @placeOccupantsPilgrims.
+  ///
+  /// In en, this message translates to:
+  /// **'Pilgrims'**
+  String get placeOccupantsPilgrims;
+
   /// No description provided for @employeePermissionsSection.
   ///
   /// In en, this message translates to:
@@ -4267,6 +4291,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not assigned'**
   String get moduleRoleUnassigned;
+
+  /// No description provided for @moduleMemberHousing.
+  ///
+  /// In en, this message translates to:
+  /// **'Housing'**
+  String get moduleMemberHousing;
+
+  /// No description provided for @moduleHousingUnset.
+  ///
+  /// In en, this message translates to:
+  /// **'No housing set'**
+  String get moduleHousingUnset;
+
+  /// No description provided for @moduleHousedHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Housed here'**
+  String get moduleHousedHere;
 
   /// No description provided for @moduleSaved.
   ///

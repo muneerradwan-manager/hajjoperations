@@ -30,6 +30,7 @@ Future<NodeDraft?> showNodeEditorSheet(
   required List<Profile> employees,
   ReferenceSet? referenceSet,
   ReferenceSet? secondarySet,
+  ReferenceSet? hotelsSet,
   List<ReferenceSet> referenceSets = const [],
   Set<String> takenEntries = const {},
   Set<String> takenSecondaryEntries = const {},
@@ -48,6 +49,7 @@ Future<NodeDraft?> showNodeEditorSheet(
       employees: employees,
       referenceSet: referenceSet,
       secondarySet: secondarySet,
+      hotelsSet: hotelsSet,
       referenceSets: referenceSets,
       takenEntries: takenEntries,
       takenSecondaryEntries: takenSecondaryEntries,
@@ -64,6 +66,7 @@ class _NodeEditorSheet extends StatefulWidget {
     required this.employees,
     required this.referenceSet,
     required this.secondarySet,
+    required this.hotelsSet,
     required this.referenceSets,
     required this.takenEntries,
     required this.takenSecondaryEntries,
@@ -82,6 +85,12 @@ class _NodeEditorSheet extends StatefulWidget {
   /// The list the level ties a node to, as opposed to the one it is drawn from
   /// — the التكتلات behind a برج. Null for a level that ties to nothing.
   final ReferenceSet? secondarySet;
+
+  /// The الفنادق, for asking where each man on this node sleeps. Offered only
+  /// where the node is not a place itself: a برج IS a hotel and its people are
+  /// housed by being posted to it, so asking there would be asking somebody to
+  /// re-enter what the file already says (0136, 0139).
+  final ReferenceSet? hotelsSet;
 
   /// Every list loaded, for a level field of the `reference` kind to resolve
   /// its own against.
@@ -109,6 +118,16 @@ class _NodeEditorSheetState extends State<_NodeEditorSheet> {
     for (final role in widget.level.roles)
       role.id: {...(widget.existing?.membersOf(role.id) ?? const <String>{})},
   };
+  late final Map<String, Map<String, String?>> _housing = {
+    for (final role in widget.level.roles)
+      role.id: {
+        ...(widget.existing?.housingOf(role.id) ?? const <String, String?>{}),
+      },
+  };
+
+  /// Whether this level asks where its people sleep. A tower does not: it IS
+  /// the hotel.
+  bool get _asksHousing => !widget.level.isPlace && widget.hotelsSet != null;
 
   @override
   void dispose() {
@@ -177,7 +196,35 @@ class _NodeEditorSheetState extends State<_NodeEditorSheet> {
       selected: _members[role.id] ?? const {},
     );
     if (result != null && mounted) {
-      setState(() => _members[role.id] = result);
+      setState(() {
+        _members[role.id] = result;
+        // A man taken off the role takes his hotel with him: leaving the entry
+        // behind would put it back on him if he were ever added again.
+        _housing[role.id]?.removeWhere((id, _) => !result.contains(id));
+      });
+    }
+  }
+
+  /// Where one man on this node sleeps. Any hotel of this season — he may well
+  /// be housed in a tower of a different sector, and the office is the judge of
+  /// that rather than this list.
+  Future<void> _pickHousing(ModuleRole role, Profile person) async {
+    final l = context.l10n;
+    final set = widget.hotelsSet;
+    if (set == null) return;
+    final current = _housing[role.id]?[person.id];
+    final result = await showPickerSheet(
+      context,
+      title: '${l.moduleMemberHousing} — ${person.fullName}',
+      options: [
+        for (final i in set.itemsForSeason(widget.seasonId))
+          PickerOption(id: i.id, label: i.name.of(context)),
+      ],
+      selected: {?current},
+      emptyMessage: l.referenceEmpty,
+    );
+    if (result != null && mounted) {
+      setState(() => _housing[role.id]![person.id] = result.firstOrNull);
     }
   }
 
@@ -192,6 +239,7 @@ class _NodeEditorSheetState extends State<_NodeEditorSheet> {
         label: widget.level.isNamedByHand ? _label.text.trim() : null,
         data: _data,
         roleMembers: _members,
+        housing: _asksHousing ? _housing : const {},
       ),
     );
   }
@@ -352,6 +400,13 @@ class _NodeEditorSheetState extends State<_NodeEditorSheet> {
                                   e,
                             ],
                             onTap: () => _pickRole(role),
+                            // Null where the level does not ask — a تكتل and a
+                            // برج are not asked the same question.
+                            housing: _asksHousing
+                                ? (_housing[role.id] ?? const {})
+                                : null,
+                            hotels: widget.hotelsSet,
+                            onPickHousing: (p) => _pickHousing(role, p),
                           ),
                         ],
                       const SizedBox(height: AppSpacing.lg),
@@ -377,44 +432,65 @@ class _NodeEditorSheetState extends State<_NodeEditorSheet> {
 
 /// One role and who holds it. Nothing stops the same person appearing under two
 /// roles here — a sector supervisor commonly stands in as his own deputy.
+///
+/// Where the level asks where its people sleep, the names stop being chips and
+/// become rows: a chip cannot carry a second fact, and the hotel has to be
+/// readable and tappable per man. A برج passes [housing] null and the card is
+/// exactly what it always was.
 class _RolePicker extends StatelessWidget {
   const _RolePicker({
     required this.role,
     required this.people,
     required this.onTap,
+    this.housing,
+    this.hotels,
+    this.onPickHousing,
   });
 
   final ModuleRole role;
   final List<Profile> people;
   final VoidCallback onTap;
 
+  /// Profile id to hotel entry id, or null for a level that does not ask.
+  final Map<String, String?>? housing;
+  final ReferenceSet? hotels;
+  final void Function(Profile)? onPickHousing;
+
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
     final scheme = Theme.of(context).colorScheme;
+    final asksHousing = housing != null && hotels != null;
 
     return GlassCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      onTap: onTap,
+      // Tapping the card picks the PEOPLE. With housing rows inside it the card
+      // is no longer one target, so the header carries the tap instead.
+      onTap: asksHousing ? null : onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  role.isRequired
-                      ? '${role.name.of(context)} *'
-                      : role.name.of(context),
-                  style: Theme.of(context).textTheme.titleSmall,
+          InkWell(
+            onTap: asksHousing ? onTap : null,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    role.isRequired
+                        ? '${role.name.of(context)} *'
+                        : role.name.of(context),
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
                 ),
-              ),
-              Icon(
-                role.allowsMultiple ? AppIcons.participants : AppIcons.jobTitle,
-                size: 16,
-                color: scheme.onSurfaceVariant,
-              ),
-            ],
+                Icon(
+                  role.allowsMultiple
+                      ? AppIcons.participants
+                      : AppIcons.jobTitle,
+                  size: 16,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           if (people.isEmpty)
@@ -425,7 +501,7 @@ class _RolePicker extends StatelessWidget {
                 fontStyle: FontStyle.italic,
               ),
             )
-          else
+          else if (!asksHousing)
             Wrap(
               spacing: AppSpacing.sm,
               runSpacing: AppSpacing.sm,
@@ -441,8 +517,84 @@ class _RolePicker extends StatelessWidget {
                     visualDensity: VisualDensity.compact,
                   ),
               ],
-            ),
+            )
+          else
+            for (final p in people)
+              _HousedPerson(
+                person: p,
+                // Resolved against every entry rather than this season's: a
+                // hotel chosen last year still has to render its name.
+                hotel: hotels!.items
+                    .where((i) => i.id == housing![p.id])
+                    .firstOrNull,
+                onTap: () => onPickHousing?.call(p),
+              ),
         ],
+      ),
+    );
+  }
+}
+
+/// One man on a role, and the hotel he sleeps in. Left blank rather than
+/// required: a قطاع entered before anyone has been told where its supervisor is
+/// staying is still a قطاع, and a required field would make it unsaveable.
+class _HousedPerson extends StatelessWidget {
+  const _HousedPerson({
+    required this.person,
+    required this.hotel,
+    required this.onTap,
+  });
+
+  final Profile person;
+  final ReferenceItem? hotel;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
+    final unset = hotel == null;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+          child: Row(
+            children: [
+              ProfileAvatar(
+                photoUrl: person.photoUrl,
+                name: person.fullName,
+                radius: 14,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      person.fullName,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    Text(
+                      unset
+                          ? l.moduleHousingUnset
+                          : '${l.moduleMemberHousing}: '
+                                '${hotel!.name.of(context)}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontStyle: unset ? FontStyle.italic : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(AppIcons.organization, size: 16, color: scheme.primary),
+            ],
+          ),
+        ),
       ),
     );
   }

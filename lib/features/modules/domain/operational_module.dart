@@ -31,6 +31,7 @@ class ModuleMember {
     required this.profileId,
     this.moduleId,
     this.nodeId,
+    this.housingItemId,
     this.profile,
   });
 
@@ -44,6 +45,13 @@ class ModuleMember {
   /// Set for a role held on a sector or a tower; null for a file-level role.
   final String? nodeId;
 
+  /// The hotel he sleeps in, written against this posting — asked for only
+  /// where the node itself is not a place, which is where it cannot be worked
+  /// out: a برج IS one hotel, a قطاع is four of them and says nothing about
+  /// which holds his bed. Null everywhere else, and a tower member's مسكن stays
+  /// derived from his tower (0136, 0139).
+  final String? housingItemId;
+
   /// Joined when the query embeds `profiles(...)`.
   final Profile? profile;
 
@@ -55,6 +63,7 @@ class ModuleMember {
       profileId: map['profile_id'] as String,
       moduleId: map['module_id'] as String?,
       nodeId: map['node_id'] as String?,
+      housingItemId: map['housing_item_id'] as String?,
       profile: joined is Map<String, dynamic> ? Profile.fromMap(joined) : null,
     );
   }
@@ -106,6 +115,14 @@ class ModuleNode {
 
   Set<String> profileIdsOf(String roleId) =>
       members.where((m) => m.roleId == roleId).map((m) => m.profileId).toSet();
+
+  /// The hotel written against each holder of [roleId], keyed by profile. An
+  /// entry with a null value is a man on the posting whose bed has not been
+  /// said yet, which is different from his not being on it.
+  Map<String, String?> housingOf(String roleId) => {
+    for (final m in members.where((m) => m.roleId == roleId))
+      m.profileId: m.housingItemId,
+  };
 
   ModuleNode withMembers(List<ModuleMember> members) => ModuleNode(
     id: id,

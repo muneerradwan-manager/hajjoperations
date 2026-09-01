@@ -448,6 +448,16 @@
   "@referenceOverCapacity": {
     "placeholders": { "excess": { "type": "int" } }
   },
+  "placeOccupants": "الشاغلون",
+  "placeOccupantsBreakdown": "{pilgrims} حاجّ، {staff} من الكوادر",
+  "@placeOccupantsBreakdown": {
+    "placeholders": {
+      "pilgrims": { "type": "int" },
+      "staff": { "type": "int" }
+    }
+  },
+  "placeOccupantsStaff": "الكوادر المُسكَّنون",
+  "placeOccupantsPilgrims": "الحجاج",
   "employeePermissionsSection": "الصلاحيات الممنوحة",
   "employeePermissionsEmpty": "لا توجد صلاحيات ممنوحة",
   "employeePermissionsAdmin": "مدير — يملك جميع الصلاحيات دون الحاجة إلى منحها.",
@@ -828,6 +838,9 @@
   "@moduleMembersCount": { "placeholders": { "count": { "type": "int" } } },
   "moduleNoMembers": "لم يُسند أي عضو هنا بعد",
   "moduleRoleUnassigned": "غير مُسند",
+  "moduleMemberHousing": "السكن",
+  "moduleHousingUnset": "لم يُحدَّد السكن",
+  "moduleHousedHere": "يسكنون هنا",
   "moduleSaved": "تم الحفظ",
   "moduleActivate": "تفعيل الملف",
   "moduleDeactivate": "إلغاء تفعيل الملف",

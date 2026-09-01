@@ -1082,11 +1082,17 @@ class _SectorCard extends StatelessWidget {
     final towers = state.childrenOf(sector.id);
 
     // Whoever runs the sector itself, in the order the level lists the roles.
+    // A قطاع is not a place, so each of them carries the hotel he was put in —
+    // the one fact about him this file cannot work out for itself (0139).
     final supervisors = <Widget>[
       for (final role in level.roles)
         for (final member in sector.membersOf(role.id))
           if (filter.keeps(member, role))
-            _MemberTile(member: member, roleName: role.name.of(context)),
+            _MemberTile(
+              member: member,
+              roleName: role.name.of(context),
+              housingName: state.hotel(member.housingItemId)?.name.of(context),
+            ),
     ];
 
     // A whole قطاع with nobody matching in it, nor in any برج beneath it, is
@@ -1286,10 +1292,39 @@ class _TowerCard extends StatelessWidget {
             _MemberTile(member: member, roleName: role.name.of(context)),
     ];
 
+    // And whoever sleeps in this hotel without serving in it — the قطاع
+    // supervisor housed here, who is posted to the sector above and would
+    // otherwise be a man nobody in the building knows is in it (0139).
+    //
+    // Read off the file that is already in hand: every node of it is in state,
+    // so this is a walk over what has been loaded rather than a second query.
+    final housed = <Widget>[
+      if (tower.referenceItemId case final hotelId?)
+        for (final other in state.nodes)
+          if (other.id != tower.id)
+            for (final member in other.members)
+              if (member.housingItemId == hotelId)
+                if (state.roleById(member.roleId) case final role?)
+                  if (filter.keeps(member, role))
+                    _MemberTile(
+                      member: member,
+                      // Role AND post: «مشرف القطاع — القطاع: قطاع ٣». He is
+                      // in this card because of where he sleeps, so what the
+                      // reader still needs is where he actually serves.
+                      roleName: [
+                        role.name.of(context),
+                        ?state.placeOf(other.id)?.of(context),
+                      ].join(' — '),
+                    ),
+    ];
+
     // The برج itself is only shown while it still has somebody the reader is
-    // looking for. Its hotel, its تكتل and its capacity are context for the
-    // people in it, not an answer on their own.
-    if (filter.isActive && serving.isEmpty) return const SizedBox.shrink();
+    // looking for — whether he serves in it or only sleeps in it. Its hotel,
+    // its تكتل and its capacity are context for the people in it, not an answer
+    // on their own.
+    if (filter.isActive && serving.isEmpty && housed.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -1410,6 +1445,30 @@ class _TowerCard extends StatelessWidget {
                   children: serving,
                 ),
               ),
+            // Under its own heading, and after them: these men are in the
+            // building without being on its staff, and running the two lists
+            // together would read as the برج having more people in it than it
+            // does.
+            if (housed.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.md),
+                child: Text(
+                  l.moduleHousedHere,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.sm),
+                child: AdaptiveGrid(
+                  minTileWidth: CardWidth.nested,
+                  spacing: AppSpacing.lg,
+                  equalHeights: false,
+                  children: housed,
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -1544,13 +1603,18 @@ class _TaskCard extends StatelessWidget {
 /// tap: coordinating between a tower and its sector is the everyday use of
 /// this screen, and it is why members can see each other at all.
 class _MemberTile extends StatelessWidget {
-  const _MemberTile({required this.member, this.roleName});
+  const _MemberTile({required this.member, this.roleName, this.housingName});
 
   final ModuleMember member;
 
   /// Shown as a badge — inside a tower the same card carries a supervisor, his
   /// deputies and the mission members, so the role has to be on the row.
   final String? roleName;
+
+  /// The hotel he sleeps in, where somebody had to say it — a قطاع supervisor
+  /// (0139). Null on a tower tile: his bed is the tower he is standing in and
+  /// printing it under his name would be printing the card's own heading again.
+  final String? housingName;
 
   @override
   Widget build(BuildContext context) {
@@ -1629,6 +1693,15 @@ class _MemberTile extends StatelessWidget {
                   else if (profile.jobTitleName != null)
                     Text(
                       profile.jobTitleName!.of(context),
+                      style: text.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  if (housingName case final hotel?)
+                    Text(
+                      '${l.moduleMemberHousing}: $hotel',
                       style: text.bodySmall?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),

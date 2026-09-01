@@ -132,6 +132,20 @@ class ReferenceDataCubit extends SafeCubit<ReferenceDataState> {
     }
   }
 
+  /// How full one place is in the season in force. Not held in state: it is one
+  /// entry's figure on one page, and putting it in the list's state would mean
+  /// counting every hotel in the season to draw a page about one of them.
+  Future<PlaceOccupancy?> occupancyOf(String itemId) async {
+    try {
+      return await _repo.fetchPlaceOccupancy(
+        itemId: itemId,
+        seasonId: state.season?.id,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// The seasons an import could draw from: every one but the one in force.
   Future<List<Season>> otherSeasons() async {
     final seasons = await _seasons.fetchSeasons();
