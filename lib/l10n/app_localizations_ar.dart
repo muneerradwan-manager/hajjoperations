@@ -3424,6 +3424,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get complaintTargetPick => 'اختر ما الشكوى عليه';
 
   @override
+  String complaintTargetNone(String kind) {
+    return 'لا يوجد $kind تستطيع الشكوى عليه: تظهر هنا الملفات التي أُسندت إليها ومن يعمل معك فيها. اختر «شكوى أخرى» واشرح الأمر بنصّ الشكوى.';
+  }
+
+  @override
   String complaintTargetPicked(String name) {
     return 'المُختار: $name';
   }

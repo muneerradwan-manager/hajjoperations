@@ -6044,6 +6044,12 @@ abstract class AppLocalizations {
   /// **'Choose what this is about'**
   String get complaintTargetPick;
 
+  /// No description provided for @complaintTargetNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No {kind} you can complain about: this lists the files you are posted to and the people you work with in them. Choose “Something else” and explain it in the complaint itself.'**
+  String complaintTargetNone(String kind);
+
   /// No description provided for @complaintTargetPicked.
   ///
   /// In en, this message translates to:

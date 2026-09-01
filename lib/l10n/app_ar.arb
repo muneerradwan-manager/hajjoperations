@@ -1190,6 +1190,10 @@
   "complaintTargetGroup": "مجموعة",
   "complaintTargetOther": "شكوى أخرى",
   "complaintTargetPick": "اختر ما الشكوى عليه",
+  "complaintTargetNone": "لا يوجد {kind} تستطيع الشكوى عليه: تظهر هنا الملفات التي أُسندت إليها ومن يعمل معك فيها. اختر «شكوى أخرى» واشرح الأمر بنصّ الشكوى.",
+  "@complaintTargetNone": {
+    "placeholders": { "kind": { "type": "String" } }
+  },
   "complaintTargetPicked": "المُختار: {name}",
   "@complaintTargetPicked": {
     "placeholders": {

@@ -146,6 +146,32 @@ class _TargetSection extends StatelessWidget {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
               )
+            // Nothing to point at. Said out loud, because an empty dropdown is
+            // read as a broken screen: since 0140 the list is the colleagues of
+            // the files he is posted to and those files themselves, so a man in
+            // no file has none — and «شكوى أخرى» is where his complaint goes.
+            else if (state.options.isEmpty)
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    AppIcons.emptyInbox,
+                    size: 18,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      l.complaintTargetNone(
+                        complaintTargetLabel(l, state.target!),
+                      ),
+                      style: text.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              )
             else
               DropdownButtonFormField<String>(
                 initialValue: state.targetId,

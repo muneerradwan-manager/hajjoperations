@@ -3409,6 +3409,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get complaintTargetPick => 'Choose what this is about';
 
   @override
+  String complaintTargetNone(String kind) {
+    return 'No $kind you can complain about: this lists the files you are posted to and the people you work with in them. Choose “Something else” and explain it in the complaint itself.';
+  }
+
+  @override
   String complaintTargetPicked(String name) {
     return 'Selected: $name';
   }
