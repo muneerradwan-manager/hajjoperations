@@ -57,6 +57,15 @@ class LocalNotifications {
     await plugin.initialize(
       settings: const InitializationSettings(
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        // Every request flag off: `FirebaseMessaging.requestPermission` in
+        // PushService already raises the one iOS permission prompt there is,
+        // and leaving these at their `true` default would race it — two calls
+        // for the same authorization, at two different moments in startup.
+        iOS: DarwinInitializationSettings(
+          requestAlertPermission: false,
+          requestSoundPermission: false,
+          requestBadgePermission: false,
+        ),
       ),
       onDidReceiveNotificationResponse: (response) =>
           _dispatch(response.payload),
@@ -84,11 +93,12 @@ class LocalNotifications {
 
   /// Where [ensureReady] may be called at all.
   ///
-  /// Android alone, and not because the plugin is Android-only: `initialize`
-  /// THROWS on a platform whose settings are absent from the const above, and
-  /// iOS, Linux and Windows each need their own. This app ships its
-  /// notifications on Android; the day another platform wants them, its
-  /// settings go in the same object and its name goes here.
+  /// Not a statement about the plugin, which covers more than this: it is that
+  /// `initialize` THROWS on a platform whose settings are absent from the const
+  /// above. So this list and that object are the same list, written twice, and
+  /// a platform is added to both or to neither. Linux and Windows have neither.
   static bool get supported =>
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
 }

@@ -256,6 +256,16 @@ flutter_launcher_icons:
     image_path: assets/images/app_icon.png
     icon_size: 256
 
+  # ----------------------------------------------------------
+  # iOS
+  # ----------------------------------------------------------
+  ios: true
+
+  # assets/images/app_icon.png is RGBA. iOS is the one platform that will not
+  # take that: an icon carrying an alpha channel is rejected at upload, not at
+  # review, so it is caught late and by a machine. The flag flattens it.
+  remove_alpha_ios: true
+
 
 # ============================================================
 # Microsoft Store / MSIX Configuration
