@@ -123,6 +123,66 @@ workflows:
           failure: true
 
   # ==========================================================
+  #  For Appetize, and for anyone who wants to hold the app without an
+  #  iPhone in the room.
+  #
+  #  Appetize runs iOS apps in a SIMULATOR, so it needs a simulator build —
+  #  `ios-unsigned` above produces an iphoneos/arm64 bundle for real hardware
+  #  and Appetize will not take it. This is the same source, built for the
+  #  other architecture.
+  #
+  #  Debug, and not by choice: Flutter cannot AOT-compile for the simulator,
+  #  so `--simulator` forces debug mode and any other mode exits with
+  #  "RELEASE mode is not supported for simulators". The app therefore runs
+  #  slower than it will on a phone and carries the debug banner. It is for
+  #  showing and trying, not for judging performance.
+  #
+  #  Run it from the Codemagic UI when a build is wanted; it is not on the
+  #  push trigger, because every push does not need one.
+  # ==========================================================
+  ios-simulator:
+    name: iOS — build for the Simulator (Appetize)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+
+    environment:
+      flutter: 3.44.1
+      xcode: latest
+      cocoapods: default
+      groups:
+        - hajj_env
+
+    scripts:
+      - *write_env
+
+      - name: Fetch packages
+        script: flutter pub get
+
+      - *verify
+
+      - name: Install pods
+        script: |
+          set -e
+          cd ios
+          pod install
+
+      - name: Build for the simulator
+        script: flutter build ios --simulator --debug
+
+    # Codemagic zips a .app directory on its way out, which is the shape
+    # Appetize's upload wants — a .zip with the .app inside it.
+    artifacts:
+      - build/ios/iphonesimulator/*.app
+
+    publishing:
+      email:
+        recipients:
+          - ghaith.audi.its@gmail.com
+        notify:
+          success: true
+          failure: true
+
+  # ==========================================================
   #  TestFlight. Commented out because running it before the pieces below
   #  exist fails at signing, several minutes in, with an error about
   #  provisioning profiles that says nothing about what is actually missing.
