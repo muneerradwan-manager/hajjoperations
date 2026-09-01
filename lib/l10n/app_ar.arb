@@ -1766,6 +1766,8 @@
   "travelStayResidence": "إقامة",
   "travelStayRites": "المشاعر",
   "travelHereNow": "هنا الآن",
+  "travelSeasonBreakdown": "أين قضيت الموسم",
+  "travelSeasonBreakdownHint": "أيام الإقامة في كل مدينة",
   "travelNotDepartedYet": "لم تبدأ الرحلة بعد",
   "travelJourneyComplete": "انتهت الرحلة",
   "travelDayOf": "اليوم {day} من الرحلة",

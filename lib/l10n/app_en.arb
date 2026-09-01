@@ -1777,6 +1777,8 @@
   "travelStayResidence": "Stay",
   "travelStayRites": "The rites",
   "travelHereNow": "Here now",
+  "travelSeasonBreakdown": "Where the season went",
+  "travelSeasonBreakdownHint": "Days based in each city",
   "travelNotDepartedYet": "The journey has not begun",
   "travelJourneyComplete": "The journey is over",
   "travelDayOf": "Day {day} of the journey",

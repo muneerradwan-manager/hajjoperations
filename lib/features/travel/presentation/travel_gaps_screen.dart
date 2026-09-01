@@ -200,14 +200,7 @@ class _GapRow extends StatelessWidget {
 
     return GlassCard(
       padding: const EdgeInsets.all(AppSpacing.md),
-      onTap: () => Navigator.of(context).push(
-        fadeThroughRoute(
-          (_) => JourneyScreen(
-            participantId: gap.participantId,
-            title: gap.fullName,
-          ),
-        ),
-      ),
+      onTap: () => _open(context),
       child: Row(
         children: [
           ProfileAvatar(photoUrl: gap.photoUrl, name: gap.fullName, radius: 20),
@@ -250,6 +243,26 @@ class _GapRow extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Opens the man's own مساري, then re-asks the board once he is back.
+  ///
+  /// Confirming his arrival is the ordinary way an `unconfirmed` row on THIS
+  /// screen gets answered, and it happens on the very screen this push opens
+  /// — so a board that did not reload on return would keep showing him as
+  /// outstanding until the reader left and came back, which read as the
+  /// confirmation not having worked at all.
+  Future<void> _open(BuildContext context) async {
+    final cubit = context.read<TravelGapsCubit>();
+    await Navigator.of(context).push(
+      fadeThroughRoute(
+        (_) => JourneyScreen(
+          participantId: gap.participantId,
+          title: gap.fullName,
+        ),
+      ),
+    );
+    if (context.mounted) await cubit.load();
   }
 
   Future<void> _markStays(BuildContext context) async {

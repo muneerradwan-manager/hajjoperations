@@ -14,6 +14,7 @@ import '../data/travel_repository.dart';
 import '../domain/journey_leg.dart';
 import 'travel_labels.dart';
 import 'widgets/journey_header.dart';
+import 'widgets/journey_season_chart.dart';
 import 'widgets/journey_timeline.dart';
 import 'widgets/record_leg_sheet.dart';
 
@@ -137,23 +138,35 @@ class _View extends StatelessWidget {
                 children: staggered([
                   JourneyHeader(journey: journey),
                   const SizedBox(height: AppSpacing.lg),
-                  GlassCard(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: JourneyTimeline(
-                      journey: journey,
-                      busyLegId: state.busyLegId,
-                      onConfirm: (leg) => _confirm(context, leg),
+                  // The shape of the season before its detail: two cities and
+                  // how the days fell between them, answered by the length of
+                  // a bar rather than by subtracting one date from another in
+                  // your head. Draws nothing until there are two cities to
+                  // compare.
+                  JourneySeasonChart(journey: journey),
+                  // No pane around it any more: every stay is its own card
+                  // now, and a card inside a card is a border the page does
+                  // not need.
+                  JourneyTimeline(
+                    journey: journey,
+                    busyLegId: state.busyLegId,
+                    onConfirm: (leg) => _confirm(context, leg),
+                  ),
+                  // Offered wherever the journey is still open, not only
+                  // where the line shows a gap — a man may need to record a
+                  // movement the app has no reason to expect at all. Once
+                  // العودة has actually happened ([Journey.isHome]) there is
+                  // nothing left to travel for, and the button disappears
+                  // with the question it answers rather than sitting there
+                  // unanswerable.
+                  if (!journey.isHome) ...[
+                    const SizedBox(height: AppSpacing.lg),
+                    OutlinedButton.icon(
+                      onPressed: () => _record(context),
+                      icon: const Icon(AppIcons.add),
+                      label: Text(l.travelRecordTransfer),
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  // Always offered, not only where the line shows a gap: a man
-                  // may need to record a movement the app has no reason to
-                  // expect at all.
-                  OutlinedButton.icon(
-                    onPressed: () => _record(context),
-                    icon: const Icon(AppIcons.add),
-                    label: Text(l.travelRecordTransfer),
-                  ),
+                  ],
                 ]),
               ),
             );

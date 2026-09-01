@@ -88,10 +88,15 @@ class JourneyHeader extends StatelessWidget {
               ),
             ),
           ],
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.md),
+          // Stacked rather than run together on one line: two short facts
+          // beside each other — one of them sometimes bold and gold with an
+          // urgent countdown — read as a cluttered line when they share it.
+          // Each on its own row is the same two facts, just given room to be
+          // read one at a time instead of raced through together.
           Wrap(
-            spacing: AppSpacing.md,
-            runSpacing: AppSpacing.xs,
+            direction: Axis.vertical,
+            spacing: AppSpacing.sm,
             children: [
               if (journey.daysInCurrentStay case final days?
                   when days > 0 && journey.currentStay?.kind.isHoused == true)

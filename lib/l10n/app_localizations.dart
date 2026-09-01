@@ -8882,6 +8882,18 @@ abstract class AppLocalizations {
   /// **'Here now'**
   String get travelHereNow;
 
+  /// No description provided for @travelSeasonBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Where the season went'**
+  String get travelSeasonBreakdown;
+
+  /// No description provided for @travelSeasonBreakdownHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Days based in each city'**
+  String get travelSeasonBreakdownHint;
+
   /// No description provided for @travelNotDepartedYet.
   ///
   /// In en, this message translates to:

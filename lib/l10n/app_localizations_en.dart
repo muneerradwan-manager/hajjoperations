@@ -5219,6 +5219,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get travelHereNow => 'Here now';
 
   @override
+  String get travelSeasonBreakdown => 'Where the season went';
+
+  @override
+  String get travelSeasonBreakdownHint => 'Days based in each city';
+
+  @override
   String get travelNotDepartedYet => 'The journey has not begun';
 
   @override

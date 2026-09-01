@@ -5269,6 +5269,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get travelHereNow => 'هنا الآن';
 
   @override
+  String get travelSeasonBreakdown => 'أين قضيت الموسم';
+
+  @override
+  String get travelSeasonBreakdownHint => 'أيام الإقامة في كل مدينة';
+
+  @override
   String get travelNotDepartedYet => 'لم تبدأ الرحلة بعد';
 
   @override

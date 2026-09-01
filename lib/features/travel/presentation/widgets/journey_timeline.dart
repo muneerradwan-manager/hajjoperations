@@ -4,23 +4,32 @@ import '../../../../core/l10n/l10n_extension.dart';
 import '../../../../core/theme/app_accents.dart';
 import '../../../../core/theme/app_icons.dart';
 import '../../../../core/theme/glass_tokens.dart';
+import '../../../../core/widgets/glass.dart';
 import '../../domain/journey.dart';
 import '../../domain/journey_leg.dart';
 import '../../domain/journey_stay.dart';
 import '../travel_labels.dart';
 
-/// A man's season drawn as a line of PLACES HE LIVED, connected by the
-/// movements that carried him between them.
+/// A man's season drawn as a short stack of PLACES HE LIVED, each card joined
+/// to the next by the movement that carried him there.
 ///
 /// The proportions are the point. A season is thirty-five days — about thirty
 /// in مكة and five in المدينة — and a few hours of aeroplane and train. So a
-/// stay is a card carrying its city, its مسكن and its length, and a movement is
-/// a thin line between two cards with its terminals in small type.
+/// stay is a card carrying its city, its مسكن and its length, and a movement
+/// is a caption inside the card it delivered him to.
 ///
-/// The first version of this widget had it the other way round and drew a spine
-/// of airports. That put the hours on the page and left the month off it, and
-/// it invented a "gap" between مطار جدة and محطة مكة that had never been a gap:
-/// جدة is where the aeroplane touched down on the way to مكة.
+/// **The movement is folded into the stay.** That is the change this version
+/// makes, and it halves the page: the earlier drawing gave a flight its own
+/// row on a spine, so a four-stay season was eight blocks of near-identical
+/// weight and the eye had nothing to hold on to. But a flight is not a place
+/// he went — «وصل بـ SR441 في ٢٥ يوليو» is a fact ABOUT arriving in مكة, and
+/// the schema already says so: `stays.arrival_leg_id` names the very leg. One
+/// card per place, the flight written inside it in small type, is the same
+/// information in half the blocks.
+///
+/// The exception is a movement that needs somebody to DO something — waiting
+/// on his word, running late, or gone wrong. Those keep a card of their own,
+/// because being impossible to scroll past is the entire job of that card.
 ///
 /// Two rules still govern every colour, both from 0129:
 ///
@@ -41,312 +50,329 @@ class JourneyTimeline extends StatelessWidget {
 
   final Journey journey;
 
-  /// The leg mid-write, so its row alone shows a spinner.
+  /// The leg mid-write, so its card alone shows a spinner.
   final String? busyLegId;
 
   /// Offered on a movement waiting for somebody's word. Null when this reader
-  /// may not confirm anything — the row then simply states its status.
+  /// may not confirm anything — the card then simply states its status.
   final void Function(JourneyLeg leg)? onConfirm;
 
   final void Function(JourneyLeg leg)? onOpenLeg;
+
+  /// Whether this movement has anything the reader must DO or NOTICE beyond
+  /// the plain fact of it. Everything else — the great majority of a season's
+  /// legs, which simply happened as planned — is a caption, not a card.
+  bool _needsAttention(JourneyLeg leg) =>
+      busyLegId == leg.id ||
+      (leg.needsManualConfirmation && onConfirm != null) ||
+      (leg.isOverdue && onConfirm != null) ||
+      leg.status.isFailure;
 
   @override
   Widget build(BuildContext context) {
     final entries = journey.line;
     if (entries.isEmpty) return const SizedBox.shrink();
 
+    // Walk the line pairing each movement with the stay it delivered him to.
+    // [Journey.line] already emits them in that order — the move, then the
+    // stop it leads into — and already looked the pairing up by
+    // `arrival_leg_id`, so nothing is re-derived here.
+    //
+    // `reached` travels with each card because the connector ABOVE it is
+    // drawn in the mission's green only where he has actually got that far.
+    final blocks = <({Widget card, bool reached})>[];
+    for (var i = 0; i < entries.length; i++) {
+      final entry = entries[i];
+
+      if (entry is JourneyMove) {
+        final next = i + 1 < entries.length ? entries[i + 1] : null;
+        if (next is JourneyStop && !_needsAttention(entry.leg)) {
+          blocks.add((
+            card: _StayCard(
+              stay: next.stay,
+              arrival: entry.leg,
+              onOpenLeg: onOpenLeg,
+            ),
+            reached: !next.stay.isFuture,
+          ));
+          i++;
+          continue;
+        }
+        blocks.add((
+          card: _MoveCard(
+            leg: entry.leg,
+            busy: busyLegId == entry.leg.id,
+            onConfirm: onConfirm,
+            onOpen: onOpenLeg,
+          ),
+          reached: entry.leg.status.isDone,
+        ));
+        continue;
+      }
+
+      if (entry is JourneyStop) {
+        blocks.add((
+          card: _StayCard(stay: entry.stay, onOpenLeg: onOpenLeg),
+          reached: !entry.stay.isFuture,
+        ));
+      }
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (var i = 0; i < entries.length; i++)
-          _Entry(
-            entry: entries[i],
-            isFirst: i == 0,
-            isLast: i == entries.length - 1,
-            busyLegId: busyLegId,
-            onConfirm: onConfirm,
-            onOpenLeg: onOpenLeg,
-          ),
-      ],
-    );
-  }
-}
-
-/// The width of the spine column — the node plus the air around it.
-const double _spineWidth = 44;
-const double _nodeSize = 26;
-
-class _Entry extends StatelessWidget {
-  const _Entry({
-    required this.entry,
-    required this.isFirst,
-    required this.isLast,
-    this.busyLegId,
-    this.onConfirm,
-    this.onOpenLeg,
-  });
-
-  final JourneyEntry entry;
-  final bool isFirst;
-  final bool isLast;
-  final String? busyLegId;
-  final void Function(JourneyLeg leg)? onConfirm;
-  final void Function(JourneyLeg leg)? onOpenLeg;
-
-  @override
-  Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SizedBox(
-            width: _spineWidth,
-            child: _Spine(entry: entry, isFirst: isFirst, isLast: isLast),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-              child: switch (entry) {
-                JourneyStop() => _StayCard(stay: (entry as JourneyStop).stay),
-                JourneyMove() => _MoveCard(
-                  leg: (entry as JourneyMove).leg,
-                  busy: busyLegId == (entry as JourneyMove).leg.id,
-                  onConfirm: onConfirm,
-                  onOpen: onOpenLeg,
-                ),
-              },
-            ),
-          ),
+        for (var i = 0; i < blocks.length; i++) ...[
+          if (i > 0) _Connector(reached: blocks[i].reached),
+          blocks[i].card,
         ],
-      ),
-    );
-  }
-}
-
-/// The line, and what sits on it at this row.
-class _Spine extends StatelessWidget {
-  const _Spine({
-    required this.entry,
-    required this.isFirst,
-    required this.isLast,
-  });
-
-  final JourneyEntry entry;
-  final bool isFirst;
-  final bool isLast;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final dim = scheme.outlineVariant;
-
-    final stop = entry is JourneyStop ? entry as JourneyStop : null;
-    final move = entry is JourneyMove ? entry as JourneyMove : null;
-
-    final reached = stop != null && !stop.stay.isFuture;
-    final lineColor = reached ? Accent.green.of(context) : dim;
-
-    return Column(
-      children: [
-        Expanded(
-          child: Container(
-            width: 2,
-            color: isFirst ? Colors.transparent : lineColor,
-          ),
-        ),
-        if (stop != null)
-          _StayNode(stay: stop.stay)
-        else if (move != null)
-          _ModeDot(leg: move.leg),
-        Expanded(
-          child: Container(
-            width: 2,
-            color: isLast ? Colors.transparent : (reached ? lineColor : dim),
-          ),
-        ),
       ],
     );
   }
 }
 
-/// A place he stayed. Larger than the mode dot, because it is the larger fact.
-class _StayNode extends StatelessWidget {
-  const _StayNode({required this.stay});
+/// Where the medallion's centre falls: the card's own padding plus half the
+/// medallion. The connector is drawn to this line so the joins run straight
+/// down through every card's icon rather than wandering with the text.
+const double _medallion = 40;
+const double _spineOffset = AppSpacing.lg + _medallion / 2;
 
-  final JourneyStay stay;
+/// The line between two cards.
+///
+/// Short, and it is the whole of what used to be a 44-pixel gutter running the
+/// full height of every row inside an [IntrinsicHeight]. The cards carry the
+/// content; the line only has to say "and then".
+class _Connector extends StatelessWidget {
+  const _Connector({required this.reached});
+
+  final bool reached;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final green = Accent.green.of(context);
-    final icon = switch (stay.kind) {
-      StayKind.home => AppIcons.myProfile,
-      StayKind.rites => AppIcons.checkIn,
-      StayKind.residence => AppIcons.organization,
-    };
-
-    if (stay.isCurrent) {
-      // Where he is now: a heavier ring, so the eye finds it before it reads
-      // anything else on the page.
-      return Container(
-        width: _nodeSize + 6,
-        height: _nodeSize + 6,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: green.withValues(alpha: 0.16),
-          border: Border.all(color: green, width: 2.5),
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(start: _spineOffset - 1.5),
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: Container(
+          width: 3,
+          height: 18,
+          decoration: BoxDecoration(
+            color: reached ? Accent.green.of(context) : scheme.outlineVariant,
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+          ),
         ),
-        child: Icon(icon, size: 14, color: green),
-      );
-    }
-
-    if (stay.isPast) {
-      return Container(
-        width: _nodeSize,
-        height: _nodeSize,
-        decoration: BoxDecoration(color: green, shape: BoxShape.circle),
-        child: Icon(icon, size: 13, color: scheme.surface),
-      );
-    }
-
-    return Container(
-      width: _nodeSize,
-      height: _nodeSize,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: scheme.surface,
-        border: Border.all(color: scheme.outlineVariant, width: 2),
       ),
-      child: Icon(icon, size: 13, color: scheme.onSurfaceVariant),
     );
   }
 }
 
-/// The way he travelled, drawn small on the line itself.
-class _ModeDot extends StatelessWidget {
-  const _ModeDot({required this.leg});
-
-  final JourneyLeg leg;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final colour = leg.status.isFailure
-        ? scheme.error
-        : leg.status.isDone
-        ? Accent.green.of(context)
-        : scheme.onSurfaceVariant;
-
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(shape: BoxShape.circle, color: scheme.surface),
-      // The car and the aeroplane are drawn identically. That is the point.
-      child: Icon(travelModeIcon(leg.mode), size: 16, color: colour),
-    );
-  }
-}
-
-/// Where he was based: the city, the مسكن, and how long — the substantial card.
+/// Where he was based: the city, the مسكن, how long — and, in small type at
+/// the foot, what carried him here.
 class _StayCard extends StatelessWidget {
-  const _StayCard({required this.stay});
+  const _StayCard({required this.stay, this.arrival, this.onOpenLeg});
 
   final JourneyStay stay;
+  final JourneyLeg? arrival;
+  final void Function(JourneyLeg leg)? onOpenLeg;
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
+    final green = Accent.green.of(context);
+
+    final icon = switch (stay.kind) {
+      StayKind.home => AppIcons.myProfile,
+      StayKind.rites => AppIcons.checkIn,
+      StayKind.residence => AppIcons.organization,
+    };
+
+    // Reached or not, and nothing in between: a city still ahead of him is
+    // drawn quiet, a city he has left or is in is drawn in the mission's
+    // green. Never red — a stay cannot go wrong, it can only not have
+    // happened yet.
+    final tone = stay.isFuture ? scheme.onSurfaceVariant : green;
     final nights = stay.nights;
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 2, bottom: AppSpacing.xs),
+    return GlassCard(
+      emphasised: stay.isCurrent,
+      tint: stay.isCurrent ? green : null,
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Flexible(
-                child: Text(
-                  stay.city?.of(context) ?? '—',
-                  style: text.titleSmall?.copyWith(
-                    fontWeight: stay.isCurrent
-                        ? FontWeight.w700
-                        : FontWeight.w600,
-                    color: stay.isFuture
-                        ? scheme.onSurfaceVariant
-                        : scheme.onSurface,
+              Container(
+                width: _medallion,
+                height: _medallion,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: tone.withValues(alpha: stay.isPast ? 0.16 : 0.10),
+                  border: Border.all(
+                    color: tone.withValues(alpha: stay.isCurrent ? 0.9 : 0.24),
+                    width: stay.isCurrent ? 2 : 1,
                   ),
                 ),
+                child: Icon(icon, size: 18, color: tone),
               ),
-              if (stay.isCurrent) ...[
-                const SizedBox(width: AppSpacing.sm),
-                _Pill(label: l.travelHereNow, color: Accent.green.of(context)),
-              ],
-              const Spacer(),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      stay.city?.of(context) ?? '—',
+                      style: text.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: stay.isFuture
+                            ? scheme.onSurfaceVariant
+                            : scheme.onSurface,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    // The مسكن. Never asked for here: nobody types a hotel,
+                    // and a stay with none resolved simply omits the line —
+                    // that is a fact about the paperwork (0136), not a blank
+                    // the traveller should be handed.
+                    if (stay.place case final place?) ...[
+                      const SizedBox(height: 2),
+                      _Line(
+                        icon: AppIcons.organization,
+                        label: place.of(context),
+                      ),
+                    ],
+                    if (stay.arrivedAt != null) ...[
+                      const SizedBox(height: 2),
+                      _Line(
+                        icon: AppIcons.travelWhen,
+                        label: stay.departedAt == null
+                            ? l.travelSince(
+                                travelWhen(
+                                  context,
+                                  stay.arrivedAt,
+                                  withTime: false,
+                                ),
+                              )
+                            : '${travelWhen(context, stay.arrivedAt, withTime: false)}'
+                                  ' — '
+                                  '${travelWhen(context, stay.departedAt, withTime: false)}',
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
               // How long he was there — the number this whole arrangement
-              // exists to put on the page.
+              // exists to put on the page, and the one the chart above ranks
+              // the cities by.
               if (nights != null && (nights > 0 || stay.isCurrent))
-                Text(
-                  stay.isCurrent
+                GlassBadge(
+                  label: stay.isCurrent
                       ? l.travelDaysSoFar(nights)
                       : l.travelDays(nights),
-                  style: text.labelMedium?.copyWith(
-                    color: stay.isCurrent
-                        ? Accent.green.of(context)
-                        : scheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  color: stay.isCurrent ? green : scheme.onSurfaceVariant,
+                  dense: true,
                 ),
             ],
           ),
-          const SizedBox(height: 2),
-          // The مسكن, when the operational files post him to one (0136). It is
-          // never asked for here: nobody types a hotel, and a stay with none
-          // resolved simply does not draw the line — that is a fact about the
-          // paperwork, not a blank the traveller should be handed.
-          if (stay.place != null)
-            Row(
-              children: [
-                Icon(
-                  AppIcons.organization,
-                  size: 14,
-                  color: scheme.onSurfaceVariant,
+          if (stay.isCurrent) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Padding(
+              // Under the city, not under the medallion: the text column
+              // starts past the medallion and the gap after it.
+              padding: const EdgeInsetsDirectional.only(
+                start: _medallion + AppSpacing.md,
+              ),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: GlassBadge(
+                  label: l.travelHereNow,
+                  icon: AppIcons.location,
+                  color: green,
                 ),
-                const SizedBox(width: AppSpacing.xs),
-                Flexible(
-                  child: Text(
-                    stay.place!.of(context),
-                    style: text.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          if (stay.arrivedAt != null)
-            Text(
-              stay.departedAt == null
-                  ? l.travelSince(
-                      travelWhen(context, stay.arrivedAt, withTime: false),
-                    )
-                  : '${travelWhen(context, stay.arrivedAt, withTime: false)}'
-                        ' — '
-                        '${travelWhen(context, stay.departedAt, withTime: false)}',
-              style: text.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
               ),
             ),
+          ],
+          // What carried him here, in small type at the foot — a detail of
+          // the arrival, not a destination. Drawing a terminal as a place he
+          // went is exactly what 0135 was written to undo.
+          if (arrival case final leg?) ...[
+            const SizedBox(height: AppSpacing.md),
+            Divider(height: 1, color: scheme.outlineVariant),
+            const SizedBox(height: AppSpacing.sm),
+            _ArrivalCaption(leg: leg, onOpen: onOpenLeg),
+          ],
         ],
       ),
     );
   }
 }
 
-/// One movement: what carried him, when, and — where nothing else can say —
-/// the button that closes it out.
+/// «✈ SR441 · مطار دمشق ← مطار الملك عبدالعزيز · وصل ٢٥ يوليو» — one line,
+/// and the only place a flight appears when it has nothing to answer for.
+class _ArrivalCaption extends StatelessWidget {
+  const _ArrivalCaption({required this.leg, this.onOpen});
+
+  final JourneyLeg leg;
+  final void Function(JourneyLeg leg)? onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final text = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+
+    // A flight number when it had one, the plain name of the way he travelled
+    // when it did not. A private car gets «برّاً · ترتيب ذاتي» and no empty
+    // carrier row.
+    final title =
+        leg.carrierLabel ??
+        (leg.selfArranged
+            ? '${travelModeLabel(context, leg.mode)} · ${l.travelSelfArranged}'
+            : travelModeLabel(context, leg.mode));
+
+    final at = leg.actualArrivalAt ?? leg.plannedArrivalAt;
+    final when = at == null
+        ? null
+        : l.travelArrivedAt(travelWhen(context, at, withTime: false));
+
+    return InkWell(
+      onTap: onOpen == null ? null : () => onOpen!(leg),
+      borderRadius: BorderRadius.circular(AppRadius.xs),
+      child: Row(
+        children: [
+          // The car and the aeroplane are drawn identically. That is the
+          // point.
+          Icon(
+            travelModeIcon(leg.mode),
+            size: 15,
+            color: scheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              [title, ?when].join(' · '),
+              style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One movement standing on its own — which now happens only when it needs
+/// somebody: waiting on his word, running late, or gone wrong.
+///
+/// It keeps a card of its own and the full account — what carried him, when,
+/// the terminals, and the button that closes it out — because being
+/// impossible to scroll past is the entire job of this card.
 class _MoveCard extends StatelessWidget {
   const _MoveCard({
     required this.leg,
@@ -366,9 +392,12 @@ class _MoveCard extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
 
-    // What this movement WAS: a flight number when it had one, the plain name
-    // of the way he travelled when it did not. A private car gets «برّاً ·
-    // ترتيب ذاتي» and no empty carrier row.
+    // Red for what happened and went wrong; gold for a question nobody has
+    // answered. The two are never swapped — BR-12 is the whole of it.
+    final tone = leg.status.isFailure
+        ? scheme.error
+        : travelPendingColor(context);
+
     final title =
         leg.carrierLabel ??
         (leg.selfArranged
@@ -379,133 +408,145 @@ class _MoveCard extends StatelessWidget {
     final from = leg.fromPoint?.of(context);
     final to = leg.toPoint?.of(context);
 
-    return InkWell(
+    return GlassCard(
+      tint: tone,
+      padding: const EdgeInsets.all(AppSpacing.lg),
       onTap: onOpen == null ? null : () => onOpen!(leg),
-      borderRadius: BorderRadius.circular(AppRadius.xs),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: AppSpacing.xs,
-          horizontal: AppSpacing.xs,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Flexible(
-                  child: Text(
-                    title,
-                    style: text.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: _medallion,
+                height: _medallion,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: tone.withValues(alpha: 0.12),
+                  border: Border.all(color: tone.withValues(alpha: 0.3)),
+                ),
+                child: Icon(travelModeIcon(leg.mode), size: 18, color: tone),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: text.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                    if (from != null && to != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        '$from ← $to',
+                        style: text.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    const SizedBox(height: 2),
+                    _Line(
+                      icon: AppIcons.travelWhen,
+                      label: travelWhen(context, when, withTime: false),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  travelWhen(context, when, withTime: false),
-                  style: text.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              if (leg.status.isFailure)
+                GlassBadge(
+                  label: legStatusLabel(context, leg.status),
+                  color: legStatusColor(context, leg.status),
+                  dense: true,
                 ),
-                if (leg.status.isFailure) ...[
-                  const SizedBox(width: AppSpacing.xs),
-                  _Pill(
-                    label: legStatusLabel(context, leg.status),
-                    color: legStatusColor(context, leg.status),
-                  ),
-                ],
-              ],
+            ],
+          ),
+          if (busy)
+            const Padding(
+              padding: EdgeInsets.only(top: AppSpacing.md),
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          else if (leg.needsManualConfirmation && onConfirm != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            // Said in words, because it is not obvious: for a private car
+            // there IS no airline feed and no gate. If he does not say he
+            // arrived, nothing ever will.
+            Text(
+              l.travelNeedsYourWord,
+              style: text.bodySmall?.copyWith(
+                color: travelPendingColor(context),
+              ),
             ),
-            // The terminals, small and underneath — a detail of the vehicle,
-            // not somewhere he went. Drawing these as destinations is exactly
-            // what 0135 was written to undo.
-            if (from != null && to != null)
-              Text(
-                '$from ← $to',
-                style: text.bodySmall?.copyWith(
-                  fontSize: 11,
-                  color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            if (busy)
-              const Padding(
-                padding: EdgeInsets.only(top: AppSpacing.sm),
-                child: SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              )
-            else if (leg.needsManualConfirmation && onConfirm != null) ...[
-              const SizedBox(height: AppSpacing.xs),
-              // Said in words, because it is not obvious: for a private car
-              // there IS no airline feed and no gate. If he does not say he
-              // arrived, nothing ever will.
-              Text(
-                l.travelNeedsYourWord,
-                style: text.bodySmall?.copyWith(
-                  color: travelPendingColor(context),
+            const SizedBox(height: AppSpacing.sm),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: FilledButton.tonalIcon(
+                onPressed: () => onConfirm!(leg),
+                icon: const Icon(AppIcons.approve, size: 18),
+                label: Text(l.travelConfirmArrival),
+                style: FilledButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
                 ),
               ),
-              const SizedBox(height: AppSpacing.xs),
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: FilledButton.tonalIcon(
-                  onPressed: () => onConfirm!(leg),
-                  icon: const Icon(AppIcons.approve, size: 18),
-                  label: Text(l.travelConfirmArrival),
-                  style: FilledButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                  ),
+            ),
+          ] else if (leg.isOverdue && onConfirm != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: FilledButton.tonalIcon(
+                onPressed: () => onConfirm!(leg),
+                icon: const Icon(AppIcons.approve, size: 18),
+                label: Text(l.travelConfirmArrival),
+                style: FilledButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
                 ),
               ),
-            ] else if (leg.isOverdue && onConfirm != null)
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: TextButton.icon(
-                  onPressed: () => onConfirm!(leg),
-                  icon: const Icon(AppIcons.approve, size: 18),
-                  label: Text(l.travelConfirmArrival),
-                  style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                  ),
-                ),
-              ),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
 }
 
-/// The small status chip used across the line.
-class _Pill extends StatelessWidget {
-  const _Pill({required this.label, required this.color});
+/// A small icon and a line of quiet text — the shape every secondary fact on
+/// a card here takes, so they line up with each other down the page.
+class _Line extends StatelessWidget {
+  const _Line({required this.icon, required this.label});
 
+  final IconData icon;
   final String label;
-  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    if (label.trim().isEmpty) return const SizedBox.shrink();
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(AppRadius.pill),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w600,
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: scheme.onSurfaceVariant),
+        const SizedBox(width: AppSpacing.xs),
+        Flexible(
+          child: Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
-      ),
+      ],
     );
   }
 }
